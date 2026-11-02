@@ -78,6 +78,10 @@ Round 1 results stay on record as they are. These rulings fix how a gate is eval
 - **V4 method.** The gate says "published kinematics", and round 1 trimmed instead. V4 imposes the published kinematics (2 Hz, about 0.3 m plunge, about 9 deg pitch, from Send et al. 2012) at 4.7 m/s on the published geometry and mass. It reports the cycle-mean net streamwise force, which should be near zero in steady flight, and electrical power including motor, gearbox, ESC and avionics. Pass needs power in 12.6-23.4 W. Every unpublished quantity is listed as an assumption.
 - **Control envelope.** Limits on stroke frequency and amplitude come from component ratings (gear, servo, motor), not from fixed multipliers.
 - **Gear ratings.** A gear without a published torque rating may be rated by the Lewis bending equation with the published yield strength of its material and a factor of safety of 1.5. The evidence shows the calculation.
+- **No regeneration credit.** Electrical power is the cycle mean of max(0, battery power), unless the chosen ESC's own documentation states regenerative operation, in which case regeneration counts with that ESC's stated efficiency. A flywheel may smooth the crank only if its mass is in the BOM. This is conservative and is what M2 and V4 use.
+- **Leading-edge suction.** The suction efficiency at the flight Reynolds number must come from an independent published source (for example DeLaurier's ornithopter model or measured flapping-plate data) or from our own LBM and OpenFOAM results. It must never be fitted to SmartBird, because V4 would then test nothing.
+- **Converged or failed.** A trim that does not converge is reported as a failure, never as a result.
+- **Structural loads.** M7 uses loads from M1-M3, M5 and the M4 seeds that pass, with load factor at the CG. Peak loads must be converged in time step: halving the step changes them by less than 10%. Any gate on a time-integrated quantity reports the same check.
 
 ### Public repository
 
