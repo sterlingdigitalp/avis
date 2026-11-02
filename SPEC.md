@@ -127,6 +127,22 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
   - bonded joints against the adhesive maker's published strength on that substrate.
 - **No modifications against maker advice.** A part modified against its maker's stated advice (drilling, re-boring, cutting) is ineligible. The maker's own machined or keyed variants are fine.
 
+### Rulings after physics round 8 (2026-11-02)
+
+- **A rating with a stated calculation basis counts in full, under its stated conditions.** KHK's allowable gear torques are an example: they are computed to JGMA 401/402 with stated safety factors.
+  - Check every stated condition against the design: mating material and hardness, lubrication, load direction, speed and cycles.
+  - Where a condition does not hold, apply that standard's own correction. For example, JGMA 401 reduces the allowable bending stress to 2/3 for reversing load. If the standard gives no correction, count the value at half.
+  - Figures labelled "reference" with no stated basis still count at half. KHK's DSF slipping torque is one.
+  - This clarifies the round 7 rule. Its wording, read literally, would also have halved ratings that do state a basis. Gear ratings have been used at full value since round 2, and they are now subject to the condition check.
+- **Bearing below the source's edge distance.**
+  - A seat with less edge distance than its bearing source states gets the lesser of two values:
+    - that source's value under the half rule;
+    - the bolt-bearing resistance of EN 1999-1-1 (aluminium) or EN 1993-1-8 (steel): k1·αb·fu·d·t/γM2 with γM2 = 1.25, using specified-minimum fu at the actual end and edge distances.
+  - Either edge distance below 1.2·d0 makes the seat unrated.
+  - The old fallback to tensile yield could give a higher allowable at a smaller edge distance. That was a bug.
+- **Springs.** A catalogue spring may carry load up to its maker's published maximum load, deflection or torque, read like a rated value. Its seats and mounts are linkage at FoS 1.5.
+- **Launch speed.** M1's "8 m/s or less" caps the release speed. The design names its release speed, which must be 8 m/s or less, and M1 is gated at that speed. Report the lowest passing speed for information.
+
 ### Public repository
 
 `github.com/sterlingdigitalp/avis` is public. UIUC-derived tables and airfoil coordinate files stay local and gitignored (`data/references/airfoil-e387.json`, `data/references/airfoils/`), because their licence terms are unclear or reserved. Our own CFD polars are ours to publish. Copernicus terrain, if used, requires the notice in `data/references/credits.md` in the film credits and README.
