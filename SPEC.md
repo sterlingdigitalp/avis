@@ -100,6 +100,12 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
 - **Mixed-material gear meshes.** Contact stress is computed by Hertz with the pair's combined modulus and the real face width. It is judged against each member's published allowable surface stress, or the maker's published rating for the pair. Bending is checked by Lewis for each member in its own material. A steel-on-steel surface figure is never applied to a steel pinion meshing with plastic.
 - **V2 stays a FAIL.** Its grid study converges: the AR 4 slope moves 0.2% from 12x48 to 16x64. So the 4.28% gap at AR 8 is not resolution, and the reference is not changed again. The final report states that V5's reference model fails V2 by that margin.
 
+### Rulings after physics round 5 (2026-11-02)
+
+- **The 20 ms control delay applies to every loop closed on the flight controller.** That includes the crank governor and the current clamp, not just attitude control. A function closed inside the ESC's own firmware is exempt from that delay. It must use the behaviour and loop rate that the firmware's documentation states.
+- **Every loaded part is linkage.** M7 checks each shaft, pin, plate bearing seat, end fitting and bore adapter in its load path, using published material strength at FoS 1.5. M6 requires each of those parts to be in the BOM with a cited or stated mass.
+- **Motor bearings carrying a pinion.** Rate them by the bearing size the motor maker publishes, for example a spare-part listing, using that bearing maker's C0. If no size is published, an outboard support bearing must carry the side load.
+
 ### Public repository
 
 `github.com/sterlingdigitalp/avis` is public. UIUC-derived tables and airfoil coordinate files stay local and gitignored (`data/references/airfoil-e387.json`, `data/references/airfoils/`), because their licence terms are unclear or reserved. Our own CFD polars are ours to publish. Copernicus terrain, if used, requires the notice in `data/references/credits.md` in the film credits and README.
