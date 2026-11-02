@@ -49,6 +49,9 @@ test('battery servo supply: 20% charge less sag at the pack rating for performan
 test('a design with HV servos on the 2S pack: servo figures interpolated at 6.62 V, through the horn ratio', () => {
   const p = v9params();
   p.servoSupply = 'battery';
+  // Round 4's configuration: no charge limit, the ESC's BEC (the design file may carry round-5 parameters).
+  p.chargeLimit = null;
+  p.becFrom = null;
   p.parts = { ...p.parts, battery: 'batt-gensace-1300-2s-45c', esc: 'esc-hobbywing-skywalker-30a-v2-mini' };
   const d = buildDesign(p, catalog);
   // HV6160 rows 6.0 V: 1.422 N m, 0.182 s/60; 7.4 V: 1.6671, 0.147. At 6.62 V: f = 0.4429; 1.5306 N m, 0.16650 s/60.
@@ -139,7 +142,8 @@ test('envelope lookup: linear in amplitude and in airspeed, held outside the mea
 });
 
 test('bearing layout and derived parts: counts from the drive, masses from catalogue materials', () => {
-  const p = { ...v9params(), bearingLayout: 'auto', derivedParts: true, elbowGain: 0.5, parts: { ...v9params().parts, gears: ['gear-khk-ds0.8-20', 'gear-khk-ds0.8-80', 'gear-khk-msga1-18', 'gear-khk-msgb1-40', 'gear-khk-msga1-18', 'gear-khk-msgb1-40'] } };
+  // Round 4's slotted drive with one bearing type (the design file may carry round-5 parameters: joints, fixed stroke).
+  const p = { ...v9params(), joints: null, fixedStroke: false, bearingLayout: 'auto', derivedParts: true, elbowGain: 0.5, parts: { ...v9params().parts, strokeServo: 'servo-mks-hv6160', bearing: v9params().parts.bearing ?? 'bearing-skf-618-4', gears: ['gear-khk-ds0.8-20', 'gear-khk-ds0.8-80', 'gear-khk-msga1-18', 'gear-khk-msgb1-40', 'gear-khk-msga1-18', 'gear-khk-msgb1-40'] } };
   const hinged = buildDesign(p, catalog);
   // 2 per shoulder + 2 per gearbox shaft (3 stages) + 2 per hinged elbow = 4 + 6 + 4.
   assert.deepEqual(hinged.drive.bearings.map((b) => b.count), [4, 6, 4]);

@@ -9,9 +9,20 @@ export function protrusions(fit) {
   return fit.issues.filter((i) => i.mm > 0.5);
 }
 
+/**
+ * The design as the film's packing check needs it. Round 5: a fixed stroke has no stroke servo, but layoutParts
+ * places one from its lump unconditionally, so a massless placeholder lump stands in for it: the packing then keeps a
+ * servo-sized box free that nothing fills (conservative: the pod is at least as big as the parts need). The lump is
+ * only in this view, never in the design's mass.
+ */
+export function packingView(design) {
+  if (design.mass.lumps.some((l) => l.name === 'stroke servo')) return design;
+  return { ...design, mass: { ...design.mass, lumps: [...design.mass.lumps, { name: 'stroke servo', mass_kg: 0, pos: design.params?.lumpPos?.['stroke servo'] ?? [-0.03, 0, 0], gyration_m: 0, placeholder: 'no stroke servo (fixed stroke): kept free by the packing check' }] } };
+}
+
 /** Packing of a built design: { model, issues, cgShift_m }. */
 export function packDesign(design, catalog) {
-  const model = prepare(design, partsIndex(design, catalog));
+  const model = prepare(packingView(design), partsIndex(design, catalog));
   return { model, issues: protrusions(model.fit), cgShift_m: model.fit.cgShift_m };
 }
 
@@ -89,7 +100,7 @@ export function fitBody(params, catalog, { widths = [0.06, 0.07, 0.08, 0.09, 0.1
 
 /** Left-right stroke difference (rad) at the drive's minimum, nominal and maximum amplitudes, one crank pin. */
 export function strokeAsymmetry(design, catalog) {
-  const model = prepare(design, partsIndex(design, catalog));
+  const model = prepare(packingView(design), partsIndex(design, catalog));
   const d = design.drive;
   return { min: leftRightAsymmetry(model, d.ampMin), nominal: leftRightAsymmetry(model, d.ampNominal), max: leftRightAsymmetry(model, d.ampMax) };
 }

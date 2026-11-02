@@ -11,11 +11,11 @@
   "taper": 0.6,
   "elbowFrac": 0.5,
   "elbowGain": 0,
-  "amp_deg": 34,
+  "amp_deg": 38,
   "ampMax_deg": 48,
   "phiMean_deg": 5,
-  "gearRatio": 24.691358024691358,
-  "crankRating": 11.60493827160494,
+  "gearRatio": 28.093278463648836,
+  "crankRating": 14.155555555555557,
   "staticMargin": 0.1,
   "sparFrac": 0.35,
   "crank_mm": 12,
@@ -23,12 +23,12 @@
   "parts": {
    "coupler": "tube-ec-woven-7x5",
    "motor": "motor-cobra-c-2820-14",
-   "esc": "esc-hobbywing-skywalker-30a-v2-mini",
-   "battery": "batt-gensace-1300-2s-45c",
+   "esc": "esc-holybro-tekko32-f4-45a-am32",
+   "battery": "batt-gensace-2200-2s-60c",
    "twistServo": "servo-mks-hv6160",
    "tailServo": "servo-mks-hv6160",
-   "strokeServo": "servo-mks-hv6160",
-   "fc": "fc-ark-v6x",
+   "strokeServo": null,
+   "fc": "fc-matek-f405-wmo",
    "gps": "gps-3dr-mini-m10136",
    "airspeed": "aspd-matek-4525",
    "receiver": "rx-tbs-crossfire-nano",
@@ -40,45 +40,46 @@
    "film": "film-oracover-air-light",
    "keel": "tube-ec-woven-8x6",
    "gears": [
-    "gear-khk-ds0.8-20",
-    "gear-khk-ds0.8-30",
-    "gear-khk-msga1-18",
-    "gear-khk-ps1-60",
+    "gear-khk-ds1-18",
+    "gear-khk-ds1-32",
+    "gear-khk-ds1-20",
+    "gear-khk-ds1-64",
     "gear-khk-msga1-18",
     "gear-khk-msgb1-40",
     "gear-khk-msga1-18",
     "gear-khk-msgb1-40"
    ],
    "bearing": "bearing-skf-618-4",
-   "twistRod": "mtube-tigertitanium-ti3al2.5v-6.35x5.54"
+   "twistRod": "mtube-tigertitanium-ti3al2.5v-6.35x5.54",
+   "crankEncoder": "sensor-rls-orbis-br10",
+   "encoderMagnet": "sensor-rls-orbis-actuator-8mm"
   },
   "twistServoAt": "elbow",
   "twistLinkageRatio": 1.6,
   "bearingCount": 10,
   "gearboxPlate_g": 11,
-  "escCurrentClamp_A": 34,
+  "escCurrentClamp_A": null,
   "servoSupply": "battery",
   "pinLayout": "shared",
   "derivedParts": true,
   "bearingLayout": "auto",
   "escActiveFreewheeling": {
-   "esc": "esc-hobbywing-skywalker-30a-v2-mini",
-   "family": "esc-hobbywing-skywalker-",
-   "quote": "\"DEO Technology/ Active Freewheeling\" (feature row, page 1)",
-   "source": "https://cdn.shopify.com/s/files/1/0109/9702/files/SKYWALKER_V2_mini_Leaflet_EN.pdf"
+   "esc": "esc-holybro-tekko32-f4-45a-am32",
+   "quote": "AM32 'Complementary PWM: Applies PWM to the complementary output during the PWM off time. This acts as a brake slowing the motor when going from a higher duty cycle to lower duty cycle'; default on (EEPROM byte 20 = 1)",
+   "source": "https://github.com/AlkaMotors/AM32-MultiRotor-ESC-firmware/wiki/ESC-Settings-Explained"
   },
-  "bodyWidth_m": 0.08,
-  "bodyHeight_m": 0.12,
-  "bodyY_m": -0.02,
+  "bodyWidth_m": 0.07,
+  "bodyHeight_m": 0.14,
+  "bodyY_m": -0.01,
   "lumpPos": {
    "flap motor": [
-    0.086,
-    0,
+    0.093,
+    0.0128,
     0
    ],
    "ESC": [
     0.074,
-    -0.025,
+    -0.035,
     0
    ],
    "flight controller": [
@@ -92,8 +93,8 @@
     0
    ],
    "receiver and airspeed": [
-    0.11,
-    -0.012,
+    0.1135,
+    -0.014,
     0
    ],
    "tail servos": [
@@ -107,15 +108,58 @@
     0
    ],
    "gears and bearings": [
-    0.0262,
-    -0.0338,
-    -0.0062
+    0.0238,
+    -0.0332,
+    0.0053
    ],
    "crank, rockers, plates": [
     0.0015,
     -0.056,
     0
    ]
+  },
+  "fixedStroke": true,
+  "elbowTwist": 0,
+  "becFrom": "fc",
+  "avionicsExtra_A": 0.065,
+  "avionicsExtraNote": "RLS Orbis BR10 encoder, typical 65 mA (BRD01 datasheet)",
+  "chargeLimit": {
+   "V_per_cell": 4.1,
+   "published_fraction": 0.861,
+   "source": "Battery University BU-808 Table 4 read linearly between its 4.06 V (81%) and 4.13 V (90%) rows (our arithmetic); BU-409 Table 2 gives 90% at 4.10 V; the lower is used"
+  },
+  "currentSense": {
+   "part": "fc-matek-f405-wmo",
+   "lsb_A": 0.03223,
+   "basis": "40 A/V over 3.3 V at 12 bits (STM32F405 ADC, 12-bit; the ST page was not readable this round)"
+  },
+  "joints": {
+   "shoulder": "bushing-igus-GFM-0608-06",
+   "shoulderSpan_mm": 24,
+   "crankShaft": "bushing-igus-GFM-0810-10",
+   "shafts": [
+    "bushing-igus-GFM-0810-06",
+    "bushing-igus-GFM-0810-06",
+    "bearing-skf-619-5-2z"
+   ],
+   "couplerEyes": "bushing-igus-GFM-0608-06"
+  },
+  "governor": {
+   "location": "flight controller",
+   "rate_Hz": 960,
+   "clamp_A": 34,
+   "encoder": {
+    "id": "sensor-rls-orbis-br10",
+    "bits": 14,
+    "window": 2,
+    "update_Hz": 50000
+   },
+   "voltage": {
+    "id": "fc-matek-f405-wmo",
+    "lsb_V": 0.01692,
+    "tau_s": 0.002
+   },
+   "path": "encoder (SPI, 50 kHz updates) and battery sense read at each 960 Hz tick; duty to the ESC by DShot600 (26.7 us frame); applied at the next tick (one 1.04 ms period of latency, held between ticks)"
   }
  },
  "atmosphere": {
@@ -147,7 +191,7 @@
     "xle_out": 0.11822951304219313,
     "gain": 0,
     "twist_in": 0,
-    "twist_out": 0.3
+    "twist_out": 0
    },
    {
     "length": 0.4875,
@@ -156,7 +200,7 @@
     "xle_in": 0.11822951304219313,
     "xle_out": -0.0009651388819771067,
     "gain": 0,
-    "twist_in": 0.3,
+    "twist_in": 0,
     "twist_out": 1
    }
   ]
@@ -170,7 +214,7 @@
   "chord_elbow_m": 0.3209086782573814,
   "chord_tip_m": 0.19254520695442884,
   "tail_arm_m": 0.810716660860753,
-  "wing_loading_N_m2": 18.94060857860058,
+  "wing_loading_N_m2": 18.428094511776326,
   "x_np_m": -0.019462698564759025,
   "x_cg_m": 0.01052966435952759,
   "static_margin": 0.1
@@ -180,18 +224,18 @@
   "a": 0.012,
   "b": 0.08,
   "d": 0.08,
-  "ampMin": 0.3560471674068432,
-  "ampMax": 0.8377580409572782,
-  "ampNominal": 0.5934119456780721,
+  "ampMin": 0.6632251157578453,
+  "ampMax": 0.6632251157578453,
+  "ampNominal": 0.6632251157578453,
   "phiMean": 0.08726646259971647,
-  "gearRatio": 24.691358024691358,
+  "gearRatio": 28.093278463648836,
   "gearEfficiency": 0.85,
   "crankFriction_Nm": 0.01,
   "gears": [
-   "gear-khk-ds0.8-20",
-   "gear-khk-ds0.8-30",
-   "gear-khk-msga1-18",
-   "gear-khk-ps1-60",
+   "gear-khk-ds1-18",
+   "gear-khk-ds1-32",
+   "gear-khk-ds1-20",
+   "gear-khk-ds1-64",
    "gear-khk-msga1-18",
    "gear-khk-msgb1-40",
    "gear-khk-msga1-18",
@@ -200,23 +244,54 @@
   "pinLayout": "shared",
   "bearings": [
    {
-    "where": "shoulder pivots",
+    "where": "shoulder pivots, two per side",
     "count": 4,
-    "id": "bearing-skf-618-4"
+    "id": "bushing-igus-GFM-0608-06"
    },
    {
-    "where": "gearbox shafts (4 shafts, crank included)",
-    "count": 8,
-    "id": "bearing-skf-618-4"
+    "where": "crank shaft",
+    "count": 2,
+    "id": "bushing-igus-GFM-0810-10"
    },
    {
-    "where": "elbow hinges",
-    "count": 0,
-    "note": "rigid elbow: the hand wing is not hinged (elbowGain 0)",
-    "id": "bearing-skf-618-4"
+    "where": "gear shaft 1",
+    "count": 2,
+    "id": "bushing-igus-GFM-0810-06"
+   },
+   {
+    "where": "gear shaft 2",
+    "count": 2,
+    "id": "bushing-igus-GFM-0810-06"
+   },
+   {
+    "where": "gear shaft 3",
+    "count": 2,
+    "id": "bearing-skf-619-5-2z"
+   },
+   {
+    "where": "coupler eyes, two per coupler",
+    "count": 4,
+    "id": "bushing-igus-GFM-0608-06"
    }
   ],
-  "escCurrentClamp_A": 34
+  "fixedStroke": true,
+  "governor": {
+   "location": "flight controller",
+   "rate_Hz": 960,
+   "clamp_A": 34,
+   "encoder": {
+    "id": "sensor-rls-orbis-br10",
+    "bits": 14,
+    "window": 2,
+    "update_Hz": 50000
+   },
+   "voltage": {
+    "id": "fc-matek-f405-wmo",
+    "lsb_V": 0.01692,
+    "tau_s": 0.002
+   },
+   "path": "encoder (SPI, 50 kHz updates) and battery sense read at each 960 Hz tick; duty to the ESC by DShot600 (26.7 us frame); applied at the next tick (one 1.04 ms period of latency, held between ticks)"
+  }
  },
  "tail": {
   "x_m": -0.810716660860753,
@@ -240,87 +315,87 @@
    "sections": [
     {
      "x_m": 0.2274112486936694,
-     "y_m": -0.02,
+     "y_m": -0.01,
      "width_m": 0,
      "height_m": 0
     },
     {
      "x_m": 0.19131422509149967,
-     "y_m": -0.02,
-     "width_m": 0.04562491263620376,
-     "height_m": 0.06843736895430563
+     "y_m": -0.01,
+     "width_m": 0.039921798556678295,
+     "height_m": 0.07984359711335659
     },
     {
      "x_m": 0.15521720148932994,
-     "y_m": -0.02,
-     "width_m": 0.06127888739864918,
-     "height_m": 0.09191833109797377
+     "y_m": -0.01,
+     "width_m": 0.05361902647381804,
+     "height_m": 0.10723805294763608
     },
     {
      "x_m": 0.11912017788716017,
-     "y_m": -0.02,
-     "width_m": 0.07085483867221283,
-     "height_m": 0.10628225800831922
+     "y_m": -0.01,
+     "width_m": 0.06199798383818623,
+     "height_m": 0.12399596767637246
     },
     {
      "x_m": 0.08302315428499044,
-     "y_m": -0.02,
-     "width_m": 0.07666518779999279,
-     "height_m": 0.11499778169998917
+     "y_m": -0.01,
+     "width_m": 0.0670820393249937,
+     "height_m": 0.1341640786499874
     },
     {
      "x_m": 0.04692613068282067,
-     "y_m": -0.02,
-     "width_m": 0.07953949089757174,
-     "height_m": 0.11930923634635761
+     "y_m": -0.01,
+     "width_m": 0.06959705453537528,
+     "height_m": 0.13919410907075055
     },
     {
      "x_m": 0.010829107080650935,
-     "y_m": -0.02,
-     "width_m": 0.08,
-     "height_m": 0.12
+     "y_m": -0.01,
+     "width_m": 0.07,
+     "height_m": 0.14
     },
     {
      "x_m": -0.02526791652151883,
-     "y_m": -0.02,
-     "width_m": 0.08,
-     "height_m": 0.12
+     "y_m": -0.01,
+     "width_m": 0.07,
+     "height_m": 0.14
     },
     {
      "x_m": -0.06136494012368854,
-     "y_m": -0.02,
-     "width_m": 0.08,
-     "height_m": 0.12
+     "y_m": -0.01,
+     "width_m": 0.07,
+     "height_m": 0.14
     },
     {
      "x_m": -0.09746196372585836,
-     "y_m": -0.02,
-     "width_m": 0.08,
-     "height_m": 0.12
+     "y_m": -0.01,
+     "width_m": 0.07,
+     "height_m": 0.14
     },
     {
      "x_m": -0.13355898732802807,
-     "y_m": -0.0163265306122449,
-     "width_m": 0.0653061224489796,
-     "height_m": 0.09795918367346938
+     "y_m": -0.00816326530612245,
+     "width_m": 0.05714285714285715,
+     "height_m": 0.1142857142857143
     },
     {
      "x_m": -0.16965601093019783,
-     "y_m": -0.012244897959183675,
-     "width_m": 0.0489795918367347,
-     "height_m": 0.07346938775510203
+     "y_m": -0.006122448979591837,
+     "width_m": 0.042857142857142864,
+     "height_m": 0.08571428571428573
     },
     {
      "x_m": -0.20575303453236754,
-     "y_m": -0.008163265306122451,
-     "width_m": 0.032653061224489806,
-     "height_m": 0.048979591836734705
+     "y_m": -0.004081632653061226,
+     "width_m": 0.02857142857142858,
+     "height_m": 0.05714285714285716
     },
     {
      "x_m": -0.24185005813453736,
-     "y_m": -0.004081632653061221,
-     "width_m": 0.01632653061224489,
-     "height_m": 0.024489795918367332
+     "y_m": -0.0020408163265306107,
+     "width_m": 0.01428571428571428,
+     "height_m": 0.02857142857142856
     },
     {
      "x_m": -0.27794708173670707,
@@ -336,11 +411,11 @@
     }
    ]
   },
-  "loft_wetted_area_m2": 0.13658703710454964,
-  "CdA_front_m2": 0.001884955592153876,
-  "CdA_top_m2": 0.0323429331475441,
-  "CdA_side_m2": 0.048514399721316145,
-  "volume_m3": 0.0024184761241214017,
+  "loft_wetted_area_m2": 0.1450373712365781,
+  "CdA_front_m2": 0.0019242255003237487,
+  "CdA_top_m2": 0.028300066504101086,
+  "CdA_side_m2": 0.05660013300820217,
+  "volume_m3": 0.0024681969191083434,
   "kMunk": 0.8,
   "cp": [
    0.05,
@@ -348,36 +423,36 @@
    0
   ],
   "length_m": 0.5053583304303765,
-  "width_m": 0.08,
-  "height_m": 0.12,
+  "width_m": 0.07,
+  "height_m": 0.14,
   "bottom_y_m": -0.08,
-  "centre_y_m": -0.02
+  "centre_y_m": -0.01
  },
  "mass": {
-  "total_kg": 1.1036597515010196,
-  "total_g": 1103.6597515010196,
-  "parts_g": 735.43,
-  "structure_g": 224.27413174001725,
-  "margin_g": 143.95561976100257,
+  "total_kg": 1.0737958141684514,
+  "total_g": 1073.7958141684514,
+  "parts_g": 711.9114000000001,
+  "structure_g": 221.8240905812624,
+  "margin_g": 140.06032358718934,
   "margin_frac": 0.15,
   "lumps": [
    {
     "name": "flap motor",
     "mass_kg": 0.161,
     "pos": [
-     0.086,
-     0,
+     0.093,
+     0.0128,
      0
     ],
     "gyration_m": 0
    },
    {
     "name": "gears and bearings",
-    "mass_kg": 0.3583745,
+    "mass_kg": 0.32339310999999993,
     "pos": [
-     0.0262,
-     -0.0338,
-     -0.0062
+     0.0238,
+     -0.0332,
+     0.0053
     ],
     "gyration_m": 0
    },
@@ -403,17 +478,17 @@
    },
    {
     "name": "ESC",
-    "mass_kg": 0.026449999999999998,
+    "mass_kg": 0.006669999999999999,
     "pos": [
      0.074,
-     -0.025,
+     -0.035,
      0
     ],
     "gyration_m": 0
    },
    {
     "name": "flight controller",
-    "mass_kg": 0.00575,
+    "mass_kg": 0.010349999999999998,
     "pos": [
      -0.016,
      -0.01,
@@ -425,8 +500,8 @@
     "name": "receiver and airspeed",
     "mass_kg": 0.0046,
     "pos": [
-     0.11,
-     -0.012,
+     0.1135,
+     -0.014,
      0
     ],
     "gyration_m": 0
@@ -452,11 +527,11 @@
     "gyration_m": 0
    },
    {
-    "name": "stroke servo",
-    "mass_kg": 0.0384192,
+    "name": "crank encoder",
+    "mass_kg": 0.01242,
     "pos": [
-     -0.03,
      0,
+     -0.05,
      0
     ],
     "gyration_m": 0
@@ -483,7 +558,7 @@
    },
    {
     "name": "fuselage shell and formers",
-    "mass_kg": 0.010763053348637582,
+    "mass_kg": 0.01105970601606946,
     "pos": [
      -0.05,
      0,
@@ -503,9 +578,9 @@
    },
    {
     "name": "battery",
-    "mass_kg": 0.1035,
+    "mass_kg": 0.1495,
     "pos": [
-     0.1620823259114884,
+     0.11645616060631928,
      -0.005,
      0
     ],
@@ -537,7 +612,7 @@
    ],
    "one_wing_kg": 0.11586266786167129
   },
-  "x_battery_m": 0.1620823259114884
+  "x_battery_m": 0.11645616060631928
  },
  "motor": {
   "id": "motor-cobra-c-2820-14",
@@ -551,44 +626,47 @@
   "J_kg_m2": 0.00001389150000000001,
   "mass_kg": 0.14,
   "J_estimated": true,
-  "regenLimit_A": -30,
-  "regenLimit_basis": "ESC documentation: \"DEO Technology/ Active Freewheeling\" (feature row, page 1) (https://cdn.shopify.com/s/files/1/0109/9702/files/SKYWALKER_V2_mini_Leaflet_EN.pdf); braking current bounded at the lower continuous rating"
+  "regenLimit_A": -36,
+  "regenLimit_basis": "ESC documentation: AM32 'Complementary PWM: Applies PWM to the complementary output during the PWM off time. This acts as a brake slowing the motor when going from a higher duty cycle to lower duty cycle'; default on (EEPROM byte 20 = 1) (https://github.com/AlkaMotors/AM32-MultiRotor-ESC-firmware/wiki/ESC-Settings-Explained); braking current bounded at the lower continuous rating"
  },
  "esc": {
-  "id": "esc-hobbywing-skywalker-30a-v2-mini",
-  "I_cont": 30,
-  "bec_A": 3,
+  "id": "esc-holybro-tekko32-f4-45a-am32",
+  "I_cont": 45,
+  "bec_A": 2,
   "bec_V": 5,
-  "bec_kind": "switching",
+  "bec_kind": null,
   "eta": 0.95,
   "eta_assumed": true,
   "regenerative": false,
   "regenerative_basis": "no regenerative operation stated in the ESC documentation read for the catalogue",
-  "cells_text": "2-4S LiPo"
+  "cells_text": "Holybro: '2-6s LIPO input'; RMRC: '2S – 6S LiPo (7.4V – 25.2V DC)'"
  },
  "battery": {
-  "id": "batt-gensace-1300-2s-45c",
+  "id": "batt-gensace-2200-2s-60c",
   "chemistry": "LiPo",
   "cells": 2,
   "V_nom": 7.4,
-  "capacity_Ah": 1.3,
-  "I_cont": 58.5,
-  "R_int": 0.012649572649572652,
+  "capacity_Ah": 2.2,
+  "I_cont": 132,
+  "R_int": 0.005606060606060607,
   "R_estimated": true,
   "cell_shift_V": 0,
   "ocv_assumed": "LiPo rested curve shifted to the published nominal cell voltage",
-  "mass_kg": 0.09
+  "mass_kg": 0.13,
+  "charge_limit_V_per_cell": 4.1,
+  "charge_fraction": 0.861,
+  "charge_basis": "charged to 4.1 V per cell (8.20 V): capacity fraction 0.861, the lower of the model's rested curve (0.911) and the published 0.861 (Battery University BU-808 Table 4 read linearly between its 4.06 V (81%) and 4.13 V (90%) rows (our arithmetic); BU-409 Table 2 gives 90% at 4.10 V; the lower is used)"
  },
  "servos": {
   "twist": {
    "id": "servo-mks-hv6160",
    "stall_Nm": 0.9565901785714285,
    "speed_rad_s": 10.063159651138477,
-   "stall_A": 2.5609756097560976,
+   "stall_A": 2.5,
    "tau_s": 0.02,
    "idle_A": 0,
    "volts": 6.62,
-   "current_volts": 8.4,
+   "current_volts": 8.2,
    "mass_kg": 0.030699999999999998,
    "linkage_ratio": 1.6,
    "servo_stall_Nm": 1.5305442857142857,
@@ -599,24 +677,12 @@
    "id": "servo-mks-hv6160",
    "stall_Nm": 1.5305442857142857,
    "speed_rad_s": 6.289474781961548,
-   "stall_A": 2.5609756097560976,
+   "stall_A": 2.5,
    "tau_s": 0.02,
    "idle_A": 0,
    "volts": 6.62,
-   "current_volts": 8.4,
+   "current_volts": 8.2,
    "mass_kg": 0.030699999999999998
-  },
-  "stroke": {
-   "id": "servo-mks-hv6160",
-   "stall_Nm": 1.5305442857142857,
-   "speed_rad_s": 6.289474781961548,
-   "stall_A": 2.5609756097560976,
-   "tau_s": 0.02,
-   "idle_A": 0,
-   "volts": 6.62,
-   "current_volts": 8.4,
-   "mass_kg": 0.030699999999999998,
-   "amp_rate_rad_s": 0.5
   }
  },
  "structure": {
@@ -689,15 +755,15 @@
     "name": "fuselage film shell",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 2.1591768249022447,
-    "basis": "0.127 m2",
+    "mass_g": 2.267135666147357,
+    "basis": "0.133 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "fuselage formers",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 7.2,
+    "mass_g": 7.350000000000001,
     "basis": "5 off, 50% lightened, 2 mm",
     "source_url": "https://www.wood-database.com/balsa/"
    },
@@ -716,14 +782,6 @@
     "mass_g": 4.848,
     "basis": "30.3 g/m x 80 mm x 2",
     "source_url": "https://www.easycomposites.co.uk/7mm-woven-finish-carbon-fibre-tube"
-   },
-   {
-    "name": "stroke servo linkage: 2 pushrods and a yoke",
-    "material_id": "rod-ec-2mm",
-    "material": "2 mm pultruded carbon rod",
-    "mass_g": 2.708,
-    "basis": "2 x 60 mm of rod-ec-2mm (4.5 g/m) + yoke 40 x 20 mm of plate-ec-2mm (2.71 kg/m2)",
-    "source_url": "https://www.easycomposites.co.uk/2mm-carbon-fibre-rod"
    },
    {
     "name": "pitot-static probe",
@@ -766,32 +824,60 @@
   },
   "gear_stages": [
    {
-    "pinion": "gear-khk-ds0.8-20",
-    "gear": "gear-khk-ds0.8-30",
-    "ratio": 1.5,
-    "pinion_allowable_Nm": 0.47,
-    "gear_allowable_Nm": 0.79
+    "pinion": "gear-khk-ds1-18",
+    "gear": "gear-khk-ds1-32",
+    "ratio": 1.7777777777777777,
+    "pinion_allowable_Nm": 0.83,
+    "gear_allowable_Nm": 1.75,
+    "pinion_material": "Duracon (R) acetal M90-44",
+    "gear_material": "Duracon (R) acetal M90-44",
+    "pinion_rp_m": 0.009,
+    "gear_rp_m": 0.016,
+    "pinion_face_m": 0.006,
+    "gear_face_m": 0.006,
+    "alpha_rad": 0.3490658503988659
    },
    {
-    "pinion": "gear-khk-msga1-18",
-    "gear": "gear-khk-ps1-60",
-    "ratio": 3.3333333333333335,
-    "pinion_allowable_Nm": 6.37,
-    "gear_allowable_Nm": 2.41
+    "pinion": "gear-khk-ds1-20",
+    "gear": "gear-khk-ds1-64",
+    "ratio": 3.2,
+    "pinion_allowable_Nm": 0.96,
+    "gear_allowable_Nm": 4.07,
+    "pinion_material": "Duracon (R) acetal M90-44",
+    "gear_material": "Duracon (R) acetal M90-44",
+    "pinion_rp_m": 0.01,
+    "gear_rp_m": 0.032,
+    "pinion_face_m": 0.006,
+    "gear_face_m": 0.006,
+    "alpha_rad": 0.3490658503988659
    },
    {
     "pinion": "gear-khk-msga1-18",
     "gear": "gear-khk-msgb1-40",
     "ratio": 2.2222222222222223,
     "pinion_allowable_Nm": 6.37,
-    "gear_allowable_Nm": 34.6
+    "gear_allowable_Nm": 34.6,
+    "pinion_material": "SCM415",
+    "gear_material": "SCM415",
+    "pinion_rp_m": 0.009,
+    "gear_rp_m": 0.02,
+    "pinion_face_m": 0.01,
+    "gear_face_m": 0.01,
+    "alpha_rad": 0.3490658503988659
    },
    {
     "pinion": "gear-khk-msga1-18",
     "gear": "gear-khk-msgb1-40",
     "ratio": 2.2222222222222223,
     "pinion_allowable_Nm": 6.37,
-    "gear_allowable_Nm": 34.6
+    "gear_allowable_Nm": 34.6,
+    "pinion_material": "SCM415",
+    "gear_material": "SCM415",
+    "pinion_rp_m": 0.009,
+    "gear_rp_m": 0.02,
+    "pinion_face_m": 0.01,
+    "gear_face_m": 0.01,
+    "alpha_rad": 0.3490658503988659
    }
   ],
   "coupler": {
@@ -810,6 +896,767 @@
    "length_m": 0.4875,
    "kind": "metal",
    "yield_MPa": 725
+  },
+  "joints": [
+   {
+    "name": "shoulder pivot right",
+    "part_id": "bushing-igus-GFM-0608-06",
+    "count": 2,
+    "span_m": 0.024,
+    "reacts": "the right wing's root force and moment, and the right coupler's force on the rocker horn",
+    "supports": [
+     {
+      "name": "aft",
+      "x_m": -0.012,
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.5,
+        "what": "wing root force normal to the hinge axis (air and inertia)"
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.6875,
+        "what": "coupler force on the rocker horn"
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 41.666667,
+        "what": "wing root moment normal to the hinge axis (lead-lag and pitch), as a couple"
+       }
+      ],
+      "axial": [
+       {
+        "ch": "root_x_R",
+        "k": 1,
+        "what": "wing root force along the hinge axis"
+       }
+      ],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0608-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0608-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0608-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 6,
+        "d2_mm": 8,
+        "b1_mm": 6,
+        "d3_mm": 12,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.001978
+     },
+     {
+      "name": "forward",
+      "x_m": 0.012,
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.5,
+        "what": "wing root force normal to the hinge axis (air and inertia)"
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.3125,
+        "what": "coupler force on the rocker horn"
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 41.666667,
+        "what": "wing root moment normal to the hinge axis (lead-lag and pitch), as a couple"
+       }
+      ],
+      "axial": [
+       {
+        "ch": "root_x_R",
+        "k": 1,
+        "what": "wing root force along the hinge axis"
+       }
+      ],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0608-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0608-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0608-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 6,
+        "d2_mm": 8,
+        "b1_mm": 6,
+        "d3_mm": 12,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.001978
+     }
+    ]
+   },
+   {
+    "name": "shoulder pivot left",
+    "part_id": "bushing-igus-GFM-0608-06",
+    "count": 2,
+    "span_m": 0.024,
+    "reacts": "the left wing's root force and moment, and the left coupler's force on the rocker horn",
+    "supports": [
+     {
+      "name": "aft",
+      "x_m": -0.012,
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.5,
+        "what": "wing root force normal to the hinge axis (air and inertia)"
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.895833,
+        "what": "coupler force on the rocker horn"
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 41.666667,
+        "what": "wing root moment normal to the hinge axis (lead-lag and pitch), as a couple"
+       }
+      ],
+      "axial": [
+       {
+        "ch": "root_x_L",
+        "k": 1,
+        "what": "wing root force along the hinge axis"
+       }
+      ],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0608-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0608-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0608-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 6,
+        "d2_mm": 8,
+        "b1_mm": 6,
+        "d3_mm": 12,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.001978
+     },
+     {
+      "name": "forward",
+      "x_m": 0.012,
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.5,
+        "what": "wing root force normal to the hinge axis (air and inertia)"
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.104167,
+        "what": "coupler force on the rocker horn"
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 41.666667,
+        "what": "wing root moment normal to the hinge axis (lead-lag and pitch), as a couple"
+       }
+      ],
+      "axial": [
+       {
+        "ch": "root_x_L",
+        "k": 1,
+        "what": "wing root force along the hinge axis"
+       }
+      ],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0608-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0608-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0608-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 6,
+        "d2_mm": 8,
+        "b1_mm": 6,
+        "d3_mm": 12,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.001978
+     }
+    ]
+   },
+   {
+    "name": "crank shaft",
+    "part_id": "bushing-igus-GFM-0810-10",
+    "count": 2,
+    "span_m": 0.065,
+    "reacts": "both couplers on the shared crank pin and the last stage's mesh",
+    "supports": [
+     {
+      "name": "aft",
+      "x_m": 0.0055,
+      "radial": [
+       {
+        "ch": "coupler_R",
+        "k": 1.153846,
+        "what": "right coupler on the crank pin (overhung)"
+       },
+       {
+        "ch": "coupler_L",
+        "k": 1.230769,
+        "what": "left coupler on the crank pin (overhung)"
+       },
+       {
+        "ch": "crank_torque",
+        "k": 47.478701,
+        "what": "stage 4 mesh, crank wheel gear-khk-msgb1-40"
+       }
+      ],
+      "axial": [],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0810-10",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0810-10",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0810-10",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 8,
+        "d2_mm": 10,
+        "b1_mm": 10,
+        "d3_mm": 15,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.004
+     },
+     {
+      "name": "forward",
+      "x_m": 0.0705,
+      "radial": [
+       {
+        "ch": "coupler_R",
+        "k": 0.153846,
+        "what": "right coupler on the crank pin (overhung)"
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.230769,
+        "what": "left coupler on the crank pin (overhung)"
+       },
+       {
+        "ch": "crank_torque",
+        "k": 5.730188,
+        "what": "stage 4 mesh, crank wheel gear-khk-msgb1-40"
+       }
+      ],
+      "axial": [],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0810-10",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0810-10",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0810-10",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 8,
+        "d2_mm": 10,
+        "b1_mm": 10,
+        "d3_mm": 15,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.004
+     }
+    ]
+   },
+   {
+    "name": "gear shaft 1",
+    "part_id": "bushing-igus-GFM-0810-06",
+    "count": 2,
+    "span_m": 0.065,
+    "reacts": "stage 3 and stage 4 meshes",
+    "supports": [
+     {
+      "name": "aft",
+      "x_m": 0.0055,
+      "radial": [
+       {
+        "ch": "crank_torque",
+        "k": 15.287323,
+        "what": "stage 3 mesh, wheel gear-khk-msgb1-40"
+       },
+       {
+        "ch": "crank_torque",
+        "k": 47.478701,
+        "what": "stage 4 mesh, pinion gear-khk-msga1-18"
+       }
+      ],
+      "axial": [],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0810-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0810-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0810-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 8,
+        "d2_mm": 10,
+        "b1_mm": 6,
+        "d3_mm": 15,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.008889
+     },
+     {
+      "name": "forward",
+      "x_m": 0.0705,
+      "radial": [
+       {
+        "ch": "crank_torque",
+        "k": 8.656677,
+        "what": "stage 3 mesh, wheel gear-khk-msgb1-40"
+       },
+       {
+        "ch": "crank_torque",
+        "k": 5.730188,
+        "what": "stage 4 mesh, pinion gear-khk-msga1-18"
+       }
+      ],
+      "axial": [],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0810-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0810-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0810-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 8,
+        "d2_mm": 10,
+        "b1_mm": 6,
+        "d3_mm": 15,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.008889
+     }
+    ]
+   },
+   {
+    "name": "gear shaft 2",
+    "part_id": "bushing-igus-GFM-0810-06",
+    "count": 2,
+    "span_m": 0.065,
+    "reacts": "stage 2 and stage 3 meshes",
+    "supports": [
+     {
+      "name": "aft",
+      "x_m": 0.0055,
+      "radial": [
+       {
+        "ch": "crank_torque",
+        "k": 2.797304,
+        "what": "stage 2 mesh, wheel gear-khk-ds1-64"
+       },
+       {
+        "ch": "crank_torque",
+        "k": 15.287323,
+        "what": "stage 3 mesh, pinion gear-khk-msga1-18"
+       }
+      ],
+      "axial": [],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0810-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0810-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0810-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 8,
+        "d2_mm": 10,
+        "b1_mm": 6,
+        "d3_mm": 15,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.019753
+     },
+     {
+      "name": "forward",
+      "x_m": 0.0705,
+      "radial": [
+       {
+        "ch": "crank_torque",
+        "k": 3.936946,
+        "what": "stage 2 mesh, wheel gear-khk-ds1-64"
+       },
+       {
+        "ch": "crank_torque",
+        "k": 8.656677,
+        "what": "stage 3 mesh, pinion gear-khk-msga1-18"
+       }
+      ],
+      "axial": [],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0810-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0810-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0810-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 8,
+        "d2_mm": 10,
+        "b1_mm": 6,
+        "d3_mm": 15,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.019753
+     }
+    ]
+   },
+   {
+    "name": "gear shaft 3",
+    "part_id": "bearing-skf-619-5-2z",
+    "count": 2,
+    "span_m": 0.065,
+    "reacts": "stage 1 and stage 2 meshes",
+    "supports": [
+     {
+      "name": "aft",
+      "x_m": 0.0055,
+      "radial": [
+       {
+        "ch": "crank_torque",
+        "k": 0.744653,
+        "what": "stage 1 mesh, wheel gear-khk-ds1-32"
+       },
+       {
+        "ch": "crank_torque",
+        "k": 2.797304,
+        "what": "stage 2 mesh, pinion gear-khk-ds1-20"
+       }
+      ],
+      "axial": [],
+      "X0": 0.6,
+      "Y0": 0.5,
+      "part": {
+       "id": "bearing-skf-619-5-2z",
+       "category": "bearing",
+       "name": "619/5-2Z deep groove ball bearing",
+       "kind": "deep-groove",
+       "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-619%2F5-2Z",
+       "specs": {
+        "dimensions_mm_d_D_B": "5x13x4",
+        "static_load_rating_kn": 0.335,
+        "dynamic_load_rating_kn": 0.884
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.039506
+     },
+     {
+      "name": "forward",
+      "x_m": 0.0705,
+      "radial": [
+       {
+        "ch": "crank_torque",
+        "k": 3.464254,
+        "what": "stage 1 mesh, wheel gear-khk-ds1-32"
+       },
+       {
+        "ch": "crank_torque",
+        "k": 3.936946,
+        "what": "stage 2 mesh, pinion gear-khk-ds1-20"
+       }
+      ],
+      "axial": [],
+      "X0": 0.6,
+      "Y0": 0.5,
+      "part": {
+       "id": "bearing-skf-619-5-2z",
+       "category": "bearing",
+       "name": "619/5-2Z deep groove ball bearing",
+       "kind": "deep-groove",
+       "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-619%2F5-2Z",
+       "specs": {
+        "dimensions_mm_d_D_B": "5x13x4",
+        "static_load_rating_kn": 0.335,
+        "dynamic_load_rating_kn": 0.884
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.039506
+     }
+    ]
+   },
+   {
+    "name": "coupler eye right, crank pin",
+    "part_id": "bushing-igus-GFM-0608-06",
+    "count": 1,
+    "reacts": "the right coupler's force at the crank pin",
+    "supports": [
+     {
+      "name": "eye",
+      "radial": [
+       {
+        "ch": "coupler_R",
+        "k": 1,
+        "what": "coupler force"
+       }
+      ],
+      "axial": [],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0608-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0608-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0608-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 6,
+        "d2_mm": 8,
+        "b1_mm": 6,
+        "d3_mm": 12,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.00345
+     }
+    ]
+   },
+   {
+    "name": "coupler eye right, rocker horn",
+    "part_id": "bushing-igus-GFM-0608-06",
+    "count": 1,
+    "reacts": "the right coupler's force at the rocker horn",
+    "supports": [
+     {
+      "name": "eye",
+      "radial": [
+       {
+        "ch": "coupler_R",
+        "k": 1,
+        "what": "coupler force"
+       }
+      ],
+      "axial": [],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0608-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0608-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0608-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 6,
+        "d2_mm": 8,
+        "b1_mm": 6,
+        "d3_mm": 12,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.002428
+     }
+    ]
+   },
+   {
+    "name": "coupler eye left, crank pin",
+    "part_id": "bushing-igus-GFM-0608-06",
+    "count": 1,
+    "reacts": "the left coupler's force at the crank pin",
+    "supports": [
+     {
+      "name": "eye",
+      "radial": [
+       {
+        "ch": "coupler_L",
+        "k": 1,
+        "what": "coupler force"
+       }
+      ],
+      "axial": [],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0608-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0608-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0608-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 6,
+        "d2_mm": 8,
+        "b1_mm": 6,
+        "d3_mm": 12,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.00345
+     }
+    ]
+   },
+   {
+    "name": "coupler eye left, rocker horn",
+    "part_id": "bushing-igus-GFM-0608-06",
+    "count": 1,
+    "reacts": "the left coupler's force at the rocker horn",
+    "supports": [
+     {
+      "name": "eye",
+      "radial": [
+       {
+        "ch": "coupler_L",
+        "k": 1,
+        "what": "coupler force"
+       }
+      ],
+      "axial": [],
+      "X0": null,
+      "Y0": null,
+      "part": {
+       "id": "bushing-igus-GFM-0608-06",
+       "category": "bushing",
+       "name": "iglidur G flange bearing GFM-0608-06",
+       "kind": "bushing",
+       "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0608-06",
+       "specs": {
+        "type": "flange",
+        "material": "iglidur G",
+        "d1_mm": 6,
+        "d2_mm": 8,
+        "b1_mm": 6,
+        "d3_mm": 12,
+        "b2_mm": 1,
+        "static_surface_pressure_mpa": 80,
+        "max_surface_speed_rotating_m_s": 1,
+        "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials"
+       }
+      },
+      "surface_m_s_per_crank_rad_s": 0.002428
+     }
+    ]
+   }
+  ],
+  "joints_unchecked": [
+   {
+    "name": "motor shaft",
+    "carries": "stage 1 mesh, pinion gear-khk-ds1-18",
+    "force_per_crank_Nm": 4.2089,
+    "note": "the motor's own bearings carry the first pinion; the motor maker publishes no bearing rating, so this load is reported, not checked"
+   }
+  ],
+  "joints_layout": {
+   "source": "sims/avis-shared/model.js placeFourBar, gearTrain, gearPlanes (film workstream), used unchanged",
+   "hinge_x_m": 0,
+   "shoulder_span_m": 0.024,
+   "planes_m": {
+    "plateAft": 0.0055,
+    "plateFwd": 0.07050000000000001,
+    "stage": [
+     0.059000000000000004,
+     0.043500000000000004,
+     0.029,
+     0.0125
+    ],
+    "couplerR": -0.0045,
+    "couplerL": -0.0095,
+    "crankArm": 0.0015
+   },
+   "max_stroke_velocity_ratio": 0.6593,
+   "mesh_force_per_crank_Nm": [
+    4.2089,
+    6.7342,
+    23.944,
+    53.2089
+   ]
   }
  },
  "bom": {
@@ -827,25 +1674,25 @@
     "pos": null
    },
    {
-    "id": "esc-hobbywing-skywalker-30a-v2-mini",
-    "name": "SkyWalker 30A V2 Mini",
-    "role": "flap ESC, its BEC supplies the avionics (servos on the pack)",
+    "id": "esc-holybro-tekko32-f4-45a-am32",
+    "name": "Tekko32 F4 45A ESC (AM32), single",
+    "role": "flap ESC (no BEC; the flight controller's 5 V BEC supplies the avionics)",
     "count": 1,
-    "unit_mass_g": 23,
-    "mass_g": 23,
-    "source_url": "https://cdn.shopify.com/s/files/1/0109/9702/files/SKYWALKER_V2_mini_Leaflet_EN.pdf",
-    "verified": "datasheet",
+    "unit_mass_g": 5.8,
+    "mass_g": 5.8,
+    "source_url": "https://holybro.com/products/tekko32-f4-45a-esc",
+    "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
    },
    {
-    "id": "batt-gensace-1300-2s-45c",
-    "name": "Gens Ace 1300mAh 2S 7.4V 45C G-Tech LiPo (Deans)",
+    "id": "batt-gensace-2200-2s-60c",
+    "name": "Gens Ace 2200mAh 2S 7.4V 60C G-Tech LiPo (XT60)",
     "role": "battery",
     "count": 1,
-    "unit_mass_g": 90,
-    "mass_g": 90,
-    "source_url": "https://genstattu.com/gens-ace-1300mah-2s-7-4v-45c-g-tech-lipo-battery-pack-with-deans-plug/",
+    "unit_mass_g": 130,
+    "mass_g": 130,
+    "source_url": "https://genstattu.com/gens-ace-2200mah-2s-60c-7-4v-g-tech-lipo-battery-pack-with-xt60-plug/",
     "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
@@ -875,25 +1722,13 @@
     "pos": null
    },
    {
-    "id": "servo-mks-hv6160",
-    "name": "HV6160 coreless digital wing servo (F3X/F5X)",
-    "role": "stroke amplitude servo",
-    "count": 1,
-    "unit_mass_g": 30.7,
-    "mass_g": 30.7,
-    "source_url": "https://www.lindinger.at/en/RC-ELECTRONICS/Servos-Accessories/Servos-Digital-High-Voltage/MKS-HV6160-Digital-Servo-F3X-F5X.../9794388",
-    "verified": "retailer-page",
-    "retrieved": "2026-11-02",
-    "pos": null
-   },
-   {
-    "id": "fc-ark-v6x",
-    "name": "ARKV6X flight controller module (Pixhawk Autopilot Bus)",
+    "id": "fc-matek-f405-wmo",
+    "name": "F405-WMO",
     "role": "flight controller with IMU and baro",
     "count": 1,
-    "unit_mass_g": 5,
-    "mass_g": 5,
-    "source_url": "https://arkelectron.com/product/arkv6x/",
+    "unit_mass_g": 9,
+    "mass_g": 9,
+    "source_url": "https://www.mateksys.com/?portfolio=f405-wmo",
     "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
@@ -935,50 +1770,74 @@
     "pos": null
    },
    {
-    "id": "gear-khk-ds0.8-20",
-    "name": "DS0.8-20 injection molded spur gear",
-    "role": "gear",
+    "id": "sensor-rls-orbis-br10",
+    "name": "Orbis true absolute through-hole rotary encoder, BR10 (14-bit)",
+    "role": "crank angle encoder (governor, clamp, twist sync)",
     "count": 1,
-    "unit_mass_g": 1.26,
-    "mass_g": 1.26,
-    "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+    "unit_mass_g": 5.3,
+    "mass_g": 5.3,
+    "source_url": "https://cdn.rls.si/documents/datasheets/BRD01.pdf",
     "verified": "datasheet",
     "retrieved": "2026-11-02",
     "pos": null
    },
    {
-    "id": "gear-khk-ds0.8-30",
-    "name": "DS0.8-30 injection molded spur gear",
-    "role": "gear",
+    "id": "sensor-rls-orbis-actuator-8mm",
+    "name": "Orbis magnetic actuator, 8 mm inner diameter (ring magnet in a hub for the BR10 readhead)",
+    "role": "crank encoder magnet",
     "count": 1,
-    "unit_mass_g": 2.37,
-    "mass_g": 2.37,
-    "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+    "unit_mass_g": 5.5,
+    "mass_g": 5.5,
+    "source_url": "https://cdn.rls.si/documents/datasheets/BRD01.pdf",
     "verified": "datasheet",
     "retrieved": "2026-11-02",
     "pos": null
    },
    {
-    "id": "gear-khk-msga1-18",
-    "name": "MSGA1-18 ground carburized SCM415 spur gear",
+    "id": "gear-khk-ds1-18",
+    "name": "DS1-18 injection-molded Duracon spur gear",
     "role": "gear",
     "count": 1,
-    "unit_mass_g": 20,
-    "mass_g": 20,
-    "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-18",
+    "unit_mass_g": 2.15,
+    "mass_g": 2.15,
+    "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-18",
     "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
    },
    {
-    "id": "gear-khk-ps1-60",
-    "name": "PS1-60 plastic spur gear",
+    "id": "gear-khk-ds1-32",
+    "name": "DS1-32 injection-molded Duracon spur gear",
     "role": "gear",
     "count": 1,
-    "unit_mass_g": 42,
-    "mass_g": 42,
-    "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0142.pdf",
-    "verified": "datasheet",
+    "unit_mass_g": 5.86,
+    "mass_g": 5.86,
+    "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-32",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "gear-khk-ds1-20",
+    "name": "DS1-20 injection-molded Duracon spur gear",
+    "role": "gear",
+    "count": 1,
+    "unit_mass_g": 2.85,
+    "mass_g": 2.85,
+    "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-20",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "gear-khk-ds1-64",
+    "name": "DS1-64 injection-molded Duracon spur gear",
+    "role": "gear",
+    "count": 1,
+    "unit_mass_g": 19.4,
+    "mass_g": 19.4,
+    "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-64",
+    "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
    },
@@ -1031,13 +1890,49 @@
     "pos": null
    },
    {
-    "id": "bearing-skf-618-4",
-    "name": "618/4 deep groove ball bearing",
-    "role": "bearing",
-    "count": 12,
-    "unit_mass_g": 0.5,
+    "id": "bushing-igus-GFM-0608-06",
+    "name": "iglidur G flange bearing GFM-0608-06",
+    "role": "bushing: shoulder pivots, two per side (4), coupler eyes, two per coupler (4)",
+    "count": 8,
+    "unit_mass_g": 0.2844,
+    "mass_g": 2.2752,
+    "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0608-06",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "bushing-igus-GFM-0810-10",
+    "name": "iglidur G flange bearing GFM-0810-10",
+    "role": "bushing: crank shaft (2)",
+    "count": 2,
+    "unit_mass_g": 0.5561,
+    "mass_g": 1.1122,
+    "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0810-10",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "bushing-igus-GFM-0810-06",
+    "name": "iglidur G flange bearing GFM-0810-06",
+    "role": "bushing: gear shaft 1 (2), gear shaft 2 (2)",
+    "count": 4,
+    "unit_mass_g": 0.391,
+    "mass_g": 1.564,
+    "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0810-06",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "bearing-skf-619-5-2z",
+    "name": "619/5-2Z deep groove ball bearing",
+    "role": "bearing: gear shaft 3 (2)",
+    "count": 2,
+    "unit_mass_g": 3,
     "mass_g": 6,
-    "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-618%2F4",
+    "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-619%2F5-2Z",
     "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
@@ -1112,15 +2007,15 @@
     "name": "fuselage film shell",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 2.1591768249022447,
-    "basis": "0.127 m2",
+    "mass_g": 2.267135666147357,
+    "basis": "0.133 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "fuselage formers",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 7.2,
+    "mass_g": 7.350000000000001,
     "basis": "5 off, 50% lightened, 2 mm",
     "source_url": "https://www.wood-database.com/balsa/"
    },
@@ -1141,14 +2036,6 @@
     "source_url": "https://www.easycomposites.co.uk/7mm-woven-finish-carbon-fibre-tube"
    },
    {
-    "name": "stroke servo linkage: 2 pushrods and a yoke",
-    "material_id": "rod-ec-2mm",
-    "material": "2 mm pultruded carbon rod",
-    "mass_g": 2.708,
-    "basis": "2 x 60 mm of rod-ec-2mm (4.5 g/m) + yoke 40 x 20 mm of plate-ec-2mm (2.71 kg/m2)",
-    "source_url": "https://www.easycomposites.co.uk/2mm-carbon-fibre-rod"
-   },
-   {
     "name": "pitot-static probe",
     "material_id": "mtube-tigertitanium-ti3al2.5v-6.35x5.54",
     "material": "3Al-2.5V (Grade 9) seamless tube, CWSR, 0.250 in OD x 0.016 in wall (SKU 80617)",
@@ -1165,36 +2052,41 @@
     "source_url": "https://www.tigertitanium.com/Store/ProductTube/80617"
    }
   ],
-  "parts_g": 735.43,
-  "structure_g": 224.27413174001725,
-  "margin_g": 143.95561976100257,
-  "total_g": 1103.6597515010196
+  "parts_g": 711.9114000000001,
+  "structure_g": 221.8240905812624,
+  "margin_g": 140.06032358718934,
+  "total_g": 1073.7958141684517
  },
  "electrical": {
-  "avionics_A_5V": 0.35,
-  "avionics_note": "FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw",
+  "avionics_A_5V": 0.415,
+  "avionics_note": "FC, GPS, receiver at 5 V, 0.35 A assumed (catalogue lists no current draw) plus 0.065 A published (RLS Orbis BR10 encoder, typical 65 mA (BRD01 datasheet))",
   "servo_source": "battery",
   "servo_supply_V": 6.62,
   "servo_supply": {
-   "part": "batt-gensace-1300-2s-45c",
+   "part": "batt-gensace-2200-2s-60c",
    "performance_V": 6.62,
-   "current_V": 8.4,
-   "rule": "torque and speed at 6.62 V: rested 7.36 V at 20% charge less 0.74 V sag at the pack's 58.5 A continuous rating; stall current at the full-charge 8.4 V"
+   "current_V": 8.2,
+   "rule": "torque and speed at 6.62 V: rested 7.36 V at 20% charge less 0.74 V sag at the pack's 132 A continuous rating; stall current at the charge-limited 8.2 V (4.1 V per cell)"
   },
   "bec": {
-   "part": "esc-hobbywing-skywalker-30a-v2-mini",
+   "part": "fc-matek-f405-wmo",
    "volts": 5,
-   "amps": 3,
-   "kind": "switching",
-   "published": "Switch 5V 3A",
+   "amps": 2,
+   "kind": null,
+   "published": "BEC 5V(4v5) 2A for FC & Peripherals",
    "carries": "avionics only",
-   "note": "built into the flap ESC; its mass is in the BOM with the ESC"
+   "note": "built into the flight controller; its mass is in the BOM with the FC"
+  },
+  "current_sense": {
+   "part": "fc-matek-f405-wmo",
+   "lsb_A": 0.03223,
+   "basis": "40 A/V over 3.3 V at 12 bits (STM32F405 ADC, 12-bit; the ST page was not readable this round)"
   }
  },
  "cruise": {
-  "V": 9.5,
-  "amp": 0.5934119456780721,
-  "dyn": 0.3839724354387525,
+  "V": 9,
+  "amp": 0.6632251157578453,
+  "dyn": 0.5235987755982988,
   "sym": 0,
   "lead": 0
  },
@@ -1206,36 +2098,39 @@
   "Servo current is the SPEC M8 estimate: stall current x (torque / stall torque), idle if published.",
   "Tail polar is an assumed thin plate.",
   "Gear trains mix steel pinions or gears with acetal mates of the same module; each gear is held to its own published rating.",
-  "Twist servo at the elbow drives the hand wing through a mtube-tigertitanium-ti3al2.5v-6.35x5.54 torque tube; M7 checks its torsion against the published minimum yield through von Mises (tau = sigma_y / sqrt 3).",
+  "Twist servo at the elbow drives the hand wing through a mtube-tigertitanium-ti3al2.5v-6.35x5.54 tube; M7 checks its torsion against the published minimum yield through von Mises (tau = sigma_y / sqrt 3).",
   "Twist horn linkage ratio is geometry: the servo's published torque and speed are scaled by it; linkage backlash and compliance not modelled.",
-  "Servos run straight off the 2S pack (HV servos; no regulator): torque and speed from the published rows at 6.62 V, stall current at the full-charge 8.4 V (above the top published row it is scaled by the voltage ratio).",
-  "Crank speed governor: a drive-firmware function (ESC or flight controller with the crank encoder); the catalogue ESC publishes no governor mode.",
-  "Drive-side current clamp at 34 A in the governor (duty <= (E + I R)/V from commutation speed and input voltage): a firmware function the catalogue ESC does not publish.",
+  "Round 5: servos run straight off the 2S pack, charged to 4.1 V per cell, so the pack presents at most 8.2 V: torque and speed from the published rows at 6.62 V, stall current at 8.2 V, all inside the published rows (no scaling). charged to 4.1 V per cell (8.20 V): capacity fraction 0.861, the lower of the model's rested curve (0.911) and the published 0.861 (Battery University BU-808 Table 4 read linearly between its 4.06 V (81%) and 4.13 V (90%) rows (our arithmetic); BU-409 Table 2 gives 90% at 4.10 V; the lower is used)",
+  "Round 5: the crank-speed governor and the 34 A drive-current clamp run in our controller on the flight controller at 960 Hz, reading the crank angle from the sensor-rls-orbis-br10 (14-bit; speed from 2-sample differences) and the battery voltage from the FC's sense input (0.01692 V resolution); the duty computed at one tick is applied at the next (one period of latency, held in between). The ESC is assumed to apply the commanded duty linearly; the clamp is a duty limit from measured speed and voltage with the motor's published Kv and resistance (its resistance at temperature is not modelled).",
+  "Round 5: the twist schedule takes the crank phase from the same encoder (last sample advanced at the measured speed); the servo PWM refresh is not modelled.",
   "One crank pin drives both couplers; the left wing flies its own mirrored linkage (left-right stroke difference in design.packing).",
-  "Rigid elbow: the outer spar is bonded into the inner one (spigot); the arm wing's own share of the twist (twist weights 0-0.3 inboard of the elbow) has no mechanism in the BOM and is a kinematic assumption.",
-  "Derived parts: stroke-servo pushrods and yoke, pitot-static probe (bases in the structure list); pitot pressure lines counted in the 15% margin with the wiring.",
-  "Bearings placed by the drive (drive.bearings); their load ratings are not checked (shoulder pivots react the coupler force).",
-  "Stroke envelope measured by flight test in calm air at a fraction of the gear, spar, coupler and servo ratings (control.envelopeAllowance: a rough-air allowance, a design choice); M7 judges full ratings on the flown loads."
+  "Round 5: fixed stroke, half-swing 38.0 deg: the coupler pins are pinned in the rockers (no slot, no stroke servo); thrust and lift are set by stroke frequency and twist.",
+  "Rigid elbow: the outer spar is bonded into the inner one (spigot); round 5 removes the arm wing's own twist (twist weight 0 at the elbow), so the arm wing flies at its fixed incidence and only the hand wing twists.",
+  "Derived parts: pitot-static probe (bases in the structure list); pitot pressure lines counted in the 15% margin with the wiring.",
+  "Round 5: every drive joint has its own rated bearing, bushing or rod end (structure.joints states which force each reacts); loads combine at every step in the flight model, as magnitudes (directions not credited). The motor's own bearings carry the first pinion and are reported, not checked (no published rating). Shafts, pins and the plates' bearing seats are not checked.",
+  "Stroke envelope measured by flight test in calm air at a fraction of the gear, spar, coupler, servo and bearing ratings (control.envelopeAllowance: a rough-air allowance, a design choice); M7 judges full ratings on the flown loads."
  ],
  "packing": {
   "checker": "sims/avis-shared/model.js prepare/layoutParts/fitReport (film workstream), used as is",
   "body_m": {
-   "width": 0.08,
-   "height": 0.12,
-   "centre_y": -0.02
+   "width": 0.07,
+   "height": 0.14,
+   "centre_y": -0.01
   },
   "protrusions": [],
-  "residual_cg_shift_m": 0,
-  "slides": [],
+  "residual_cg_shift_m": 4.656378739818436e-7,
+  "slides": [
+   "receiver moved 1 mm along x from its mass lump to fit"
+  ],
   "lump_positions": {
    "flap motor": [
-    0.086,
-    0,
+    0.093,
+    0.0128,
     0
    ],
    "ESC": [
     0.074,
-    -0.025,
+    -0.035,
     0
    ],
    "flight controller": [
@@ -1249,8 +2144,8 @@
     0
    ],
    "receiver and airspeed": [
-    0.11,
-    -0.012,
+    0.1135,
+    -0.014,
     0
    ],
    "tail servos": [
@@ -1264,9 +2159,9 @@
     0
    ],
    "gears and bearings": [
-    0.0262,
-    -0.0338,
-    -0.0062
+    0.0238,
+    -0.0332,
+    0.0053
    ],
    "crank, rockers, plates": [
     0.0015,
@@ -1276,397 +2171,331 @@
   },
   "crank_axis_y_m": -0.055993420767853325,
   "left_right_stroke_difference_deg": {
-   "min": 5.08,
-   "nominal": 4.44,
-   "max": 12.06
+   "min": 6.63,
+   "nominal": 6.63,
+   "max": 6.63
   },
-  "pin_layout": "shared"
+  "pin_layout": "shared",
+  "placeholder": "the film checker places a stroke servo unconditionally: a massless placeholder keeps a servo-sized box free that nothing fills (src/design/fit.js packingView)"
  },
  "calibration": {
   "file": "data/calibration/larus-gl-2.json",
   "source": "uvlm",
   "multipliers": {
-   "lift": 0.9775546583645854,
-   "suction": 0.9278457782364531,
-   "induced": 1.0335106453179366,
-   "lag": 0.9862100732018578,
-   "apparentMass": 0.994581572734347,
+   "lift": 0.9822426765213027,
+   "suction": 0.9320580908316523,
+   "induced": 1.024449309098006,
+   "lag": 0.988555307513711,
+   "apparentMass": 0.9937003440427739,
    "drag": 1
   },
   "fitted_wing": {
    "span_m": 2,
-   "area_m2": 0.5714285714285714
+   "area_m2": 0.5714285714285714,
+   "twist_weights": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ]
+   ],
+   "fixed_stroke": true
   }
  },
  "control": {
   "envelope": [
    {
-    "amp": 0.3560471674068432,
-    "freqMax": 3.801638933599704,
+    "amp": 0.6632251157578453,
+    "freqMax": 3.138149639402794,
     "limitedBy": "motor_speed",
-    "atV": 13,
-    "method": "flight test",
-    "edge_peaks": {
-     "crankTorque": 4.0557,
-     "rootBend": 9.4939,
-     "elbowBend": 2.6055,
-     "couplerForce": 309.3324,
-     "twistTorque": 0.2907,
-     "loadFactor": 1.9143,
-     "motorRms": 9.7027,
-     "battMean": 8.2956,
-     "crankFreqRatio": 0.9962,
-     "airspeed": 12.7786,
-     "dutySat": 0.0966
-    }
-   },
-   {
-    "amp": 0.47647488579445196,
-    "freqMax": 3.623432543874366,
-    "limitedBy": "motor_speed",
-    "atV": 13,
-    "method": "flight test",
-    "edge_peaks": {
-     "crankTorque": 6.0996,
-     "rootBend": 11.9321,
-     "elbowBend": 3.324,
-     "couplerForce": 551.2532,
-     "twistTorque": 0.3193,
-     "loadFactor": 2.3992,
-     "motorRms": 15.6697,
-     "battMean": 13.4973,
-     "crankFreqRatio": 0.9862,
-     "airspeed": 13.3971,
-     "dutySat": 0.0986
-    }
-   },
-   {
-    "amp": 0.5969026041820608,
-    "freqMax": 3.42292088500653,
-    "limitedBy": "motor_speed",
-    "atV": 13,
-    "method": "flight test",
-    "edge_peaks": {
-     "crankTorque": 8.191,
-     "rootBend": 14.4006,
-     "elbowBend": 3.9359,
-     "couplerForce": 864.1287,
-     "twistTorque": 0.405,
-     "loadFactor": 2.9474,
-     "motorRms": 21.4209,
-     "battMean": 18.5514,
-     "crankFreqRatio": 0.9765,
-     "airspeed": 13.9928,
-     "dutySat": 0.067
-    }
-   },
-   {
-    "amp": 0.7173303225696694,
-    "freqMax": 3.1599852928977388,
-    "limitedBy": "gear",
     "atV": 9,
     "method": "flight test",
     "edge_peaks": {
-     "crankTorque": 8.69,
-     "rootBend": 15.8117,
-     "elbowBend": 4.154,
-     "couplerForce": 1214.9161,
-     "twistTorque": 0.3887,
-     "loadFactor": 3.0421,
-     "motorRms": 23.2684,
-     "battMean": 18.8663,
-     "crankFreqRatio": 0.9557,
-     "airspeed": 10.6105,
-     "dutySat": 0
-    }
-   },
-   {
-    "amp": 0.8377580409572782,
-    "freqMax": 2.203554874886332,
-    "limitedBy": "gear",
-    "atV": 13,
-    "method": "flight test",
-    "edge_peaks": {
-     "crankTorque": 8.6953,
-     "rootBend": 8.946,
-     "elbowBend": 2.0916,
-     "couplerForce": 751.4715,
-     "twistTorque": 0.3403,
-     "loadFactor": 3.0609,
-     "motorRms": 20.8809,
-     "battMean": 12.8363,
-     "crankFreqRatio": 0.9451,
-     "airspeed": 14.2433,
-     "dutySat": 0
+     "crankTorque": 9.2584,
+     "rootBend": 13.2529,
+     "elbowBend": 3.5195,
+     "couplerForce": 911.0358,
+     "twistTorque": 0.247,
+     "loadFactor": 3.4367,
+     "motorRms": 21.1493,
+     "battMean": 18.5216,
+     "crankFreqRatio": 0.9745,
+     "airspeed": 10.482,
+     "dutySat": 0.0809,
+     "bearingRatio": 0.5027
     }
    }
   ],
   "envelopeBest": {
-   "amp": 0.7173303225696694,
-   "freqMax": 3.1599852928977388,
-   "limitedBy": "gear",
+   "amp": 0.6632251157578453,
+   "freqMax": 3.138149639402794,
+   "limitedBy": "motor_speed",
    "atV": 9,
    "method": "flight test",
    "edge_peaks": {
-    "crankTorque": 8.69,
-    "rootBend": 15.8117,
-    "elbowBend": 4.154,
-    "couplerForce": 1214.9161,
-    "twistTorque": 0.3887,
-    "loadFactor": 3.0421,
-    "motorRms": 23.2684,
-    "battMean": 18.8663,
-    "crankFreqRatio": 0.9557,
-    "airspeed": 10.6105,
-    "dutySat": 0
+    "crankTorque": 9.2584,
+    "rootBend": 13.2529,
+    "elbowBend": 3.5195,
+    "couplerForce": 911.0358,
+    "twistTorque": 0.247,
+    "loadFactor": 3.4367,
+    "motorRms": 21.1493,
+    "battMean": 18.5216,
+    "crankFreqRatio": 0.9745,
+    "airspeed": 10.482,
+    "dutySat": 0.0809,
+    "bearingRatio": 0.5027
    }
   },
-  "freqMax": 3.801638933599704,
+  "freqMax": 3.138149639402794,
   "dt": 0.0010416666666666667,
   "glide": [
    {
     "V": 6.5,
-    "theta": -0.011688644617866664,
-    "gamma": -0.15914477765984952,
-    "tail": 0.06516004818594343,
-    "sink": 1.0300800225724769,
-    "LD": 6.230448601733183,
-    "stalled": 0.02561565239899474
+    "theta": -0.014089890592334333,
+    "gamma": -0.15657458734405888,
+    "tail": 0.06272469931751298,
+    "sink": 1.0135815151879888,
+    "LD": 6.3344554346094935,
+    "stalled": 0.022938922397006897
    },
    {
     "V": 7,
-    "theta": -0.028004500648320454,
-    "gamma": -0.1406514663338133,
-    "tail": 0.04493465270739368,
-    "sink": 0.981317241601964,
-    "LD": 7.062827244158157,
-    "stalled": 0.01303853024040348
+    "theta": -0.03106097861187232,
+    "gamma": -0.13931713480344912,
+    "tail": 0.0426474239703402,
+    "sink": 0.9720682868476305,
+    "LD": 7.131368726957791,
+    "stalled": 0.011871190921059444
    },
    {
     "V": 7.5,
-    "theta": -0.04292797347509942,
-    "gamma": -0.12884197194439198,
-    "tail": 0.030880832134273326,
-    "sink": 0.9636434959723577,
-    "LD": 7.718451011269468,
-    "stalled": 0.0078091663279598765
+    "theta": -0.04596261384824503,
+    "gamma": -0.1279402108775635,
+    "tail": 0.028752915510279087,
+    "sink": 0.9569359549478591,
+    "LD": 7.773457596064911,
+    "stalled": 0.00719779480273868
    },
    {
     "V": 8,
-    "theta": -0.05601578636835664,
-    "gamma": -0.12007105431974203,
-    "tail": 0.01963713365199148,
-    "sink": 0.958262002631345,
-    "LD": 8.288339719634338,
-    "stalled": 0.005149726579546257
+    "theta": -0.0590849334721624,
+    "gamma": -0.1195775325075749,
+    "tail": 0.01764541178250862,
+    "sink": 0.9543421379480352,
+    "LD": 8.322877779707245,
+    "stalled": 0.0047937009332089
    },
    {
     "V": 8.5,
-    "theta": -0.06757036162125311,
-    "gamma": -0.11358117760183196,
-    "tail": 0.010616985749442497,
-    "sink": 0.963365542104649,
-    "LD": 8.766382688688568,
-    "stalled": 0.0036586133415642754
+    "theta": -0.0706898338716898,
+    "gamma": -0.11344686218738277,
+    "tail": 0.008739946691101157,
+    "sink": 0.9622312087148123,
+    "LD": 8.776851398457751,
+    "stalled": 0.003433321578950136
    },
    {
     "V": 9,
-    "theta": -0.07791650516412822,
-    "gamma": -0.1088866899335292,
-    "tail": 0.003280864176828436,
-    "sink": 0.9780448653307995,
-    "LD": 9.147534648206182,
-    "stalled": 0.0027542830005491967
+    "theta": -0.08109962146139067,
+    "gamma": -0.10907337695280772,
+    "tail": 0.0015001114623593636,
+    "sink": 0.9797150809010794,
+    "LD": 9.13175342845622,
+    "stalled": 0.002602039443031649
    },
    {
     "V": 9.5,
-    "theta": -0.08729655590568317,
-    "gamma": -0.10555675721486688,
-    "tail": -0.0027960367155571587,
-    "sink": 1.0009280129244318,
-    "LD": 9.438364612104234,
-    "stalled": 0.0021688100611175257
+    "theta": -0.09055250876170941,
+    "gamma": -0.10603305261723626,
+    "tail": -0.004494624087242705,
+    "sink": 1.0054275207264134,
+    "LD": 9.395650638901856,
+    "stalled": 0.0020604666005698737
    },
    {
     "V": 10,
-    "theta": -0.09587293598572953,
-    "gamma": -0.10328801326183773,
-    "tail": -0.007894006472924209,
-    "sink": 1.0310445799237253,
-    "LD": 9.647211702906803,
-    "stalled": 0.0017700232352177376
+    "theta": -0.09920830010530404,
+    "gamma": -0.10402828609897911,
+    "tail": -0.009521362308203649,
+    "sink": 1.0384075725235273,
+    "LD": 9.578068979066845,
+    "stalled": 0.001689631164270668
    },
    {
     "V": 11,
-    "theta": -0.11375324771475415,
-    "gamma": -0.10378205824235016,
-    "tail": -0.01600889647294533,
-    "sink": 1.1395544311135808,
-    "LD": 9.60095798568286,
-    "stalled": 0.001279775591375993
+    "theta": -0.11730432591795148,
+    "gamma": -0.10503412145448482,
+    "tail": -0.017520749164683595,
+    "sink": 1.1532521253063701,
+    "LD": 9.485678461728966,
+    "stalled": 0.0012309638354717019
    },
    {
     "V": 12,
-    "theta": -0.13120732509363808,
-    "gamma": -0.10823200252660939,
-    "tail": -0.02184687070223733,
-    "sink": 1.2962498197145127,
-    "LD": 9.20330587854104,
-    "stalled": 0.0010050198784168547
+    "theta": -0.13561349128945005,
+    "gamma": -0.1105506772148954,
+    "tail": -0.023320430217417903,
+    "sink": 1.3239075976845687,
+    "LD": 9.00874499020401,
+    "stalled": 0.0009719672359196559
    },
    {
     "V": 13,
-    "theta": -0.15377303981884527,
-    "gamma": -0.12062414399020396,
-    "tail": -0.026545320113222578,
-    "sink": 1.5643139131735908,
-    "LD": 8.249967167118658,
-    "stalled": 0.0008323781328434438
+    "theta": -0.1593355274778387,
+    "gamma": -0.12426580916874004,
+    "tail": -0.027962908205676252,
+    "sink": 1.611301086440509,
+    "LD": 8.005801188636383,
+    "stalled": 0.0008084391167186286
    }
   ],
-  "dThetaPerG": 0.06389715277997055,
+  "dThetaPerG": 0.06216815925297517,
   "trim": [
    {
     "V": 9,
-    "theta": 0.049144122651051635,
-    "freq": 1.8415280163867855,
-    "tail": 0.02433700310009935,
-    "amp": 0.5934119456780721,
+    "theta": 0.04513060856180595,
+    "freq": 1.7182515506594163,
+    "tail": 0.020334050046636225,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525
+    "dyn": 0.5235987755982988
    },
    {
     "V": 9.5,
-    "theta": 0.03403459981089355,
-    "freq": 1.8248298495614104,
-    "tail": 0.015391527728720223,
-    "amp": 0.5934119456780721,
+    "theta": 0.029477767956739457,
+    "freq": 1.7179077342110305,
+    "tail": 0.011380803503913189,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525
+    "dyn": 0.5235987755982988
    },
    {
     "V": 10,
-    "theta": 0.020225653991798393,
-    "freq": 1.8200149201000855,
-    "tail": 0.007796747102937008,
-    "amp": 0.5934119456780721,
+    "theta": 0.01402651485952569,
+    "freq": 1.7299971965913483,
+    "tail": 0.004006974315223623,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525
+    "dyn": 0.5235987755982988
    },
    {
     "V": 11,
-    "theta": 0.0018939716067580563,
-    "freq": 1.852216948297061,
-    "tail": -0.003697516932550713,
-    "amp": 0.5934119456780721,
+    "theta": -0.0032777101161735275,
+    "freq": 1.7971614336077208,
+    "tail": -0.007354889112630268,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525
+    "dyn": 0.5235987755982988
    },
    {
     "V": 12,
-    "theta": -0.014262077190092043,
-    "freq": 1.9348229068956952,
-    "tail": -0.012189187033850857,
-    "amp": 0.5934119456780721,
+    "theta": -0.018082314672393462,
+    "freq": 1.9051944820973585,
+    "tail": -0.015787288652783713,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525
+    "dyn": 0.5235987755982988
    },
    {
     "V": 13,
-    "theta": -0.02537045068032233,
-    "freq": 2.041719371331869,
-    "tail": -0.01865400824797083,
-    "amp": 0.5934119456780721,
+    "theta": -0.029903337710321984,
+    "freq": 2.046156361266775,
+    "tail": -0.022345415200350657,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525
+    "dyn": 0.5235987755982988
    }
   ],
   "trimDetail": [
    {
     "V": 9,
-    "power_w": 21.711164312548696,
-    "Irms_A": 6.939168029877299,
-    "stalled": 0.009961250618332073,
-    "crankPeak_Nm": 2.672326810053602,
-    "freq": 1.5434626145872714,
-    "theta_deg": 2.566098255412732,
+    "power_w": 21.481285173527986,
+    "Irms_A": 6.6708909640909475,
+    "stalled": 0.018884313757794705,
+    "crankPeak_Nm": 2.8748436292943906,
+    "freq": 1.4022553225232457,
+    "theta_deg": 2.5651061801013033,
     "tail_deg": 1.1459155902616465
    },
    {
     "V": 9.5,
-    "power_w": 21.70373787703995,
-    "Irms_A": 6.870585453948205,
-    "stalled": 0.006318564788012933,
-    "crankPeak_Nm": 2.6321967232391783,
-    "freq": 1.5363376907289483,
-    "theta_deg": 1.6881728115167225,
-    "tail_deg": 0.5537388743626721
+    "power_w": 21.822653952785018,
+    "Irms_A": 6.722063276489262,
+    "stalled": 0.011512864255915177,
+    "crankPeak_Nm": 2.909358504260452,
+    "freq": 1.4035382832648609,
+    "theta_deg": 1.6397841576587018,
+    "tail_deg": 0.5584249151045751
    },
    {
     "V": 10,
-    "power_w": 22.195517364188344,
-    "Irms_A": 6.88124731121543,
-    "stalled": 0.004475057359390853,
-    "crankPeak_Nm": 2.6230614878949634,
-    "freq": 1.5470359904742181,
-    "theta_deg": 0.9742255468002285,
-    "tail_deg": 0.14145643908091335
+    "power_w": 22.463495099385963,
+    "Irms_A": 6.8036524526062845,
+    "stalled": 0.007947022679241394,
+    "crankPeak_Nm": 2.952304553000397,
+    "freq": 1.4163770111045124,
+    "theta_deg": 0.8832368566075485,
+    "tail_deg": 0.09067325530810014
    },
    {
     "V": 11,
-    "power_w": 23.720175553051337,
-    "Irms_A": 6.978091697946089,
-    "stalled": 0.0026569475903796508,
-    "crankPeak_Nm": 2.6311622246714323,
-    "freq": 1.5892054194488892,
-    "theta_deg": -0.16429691119389475,
-    "tail_deg": -0.5046708521700008
+    "power_w": 24.461302895622783,
+    "Irms_A": 7.061689976453521,
+    "stalled": 0.004683323320826243,
+    "crankPeak_Nm": 3.052538587549119,
+    "freq": 1.4734904313638306,
+    "theta_deg": -0.28579626237914213,
+    "tail_deg": -0.5958962110664935
    },
    {
     "V": 12,
-    "power_w": 26.71156225246512,
-    "Irms_A": 7.332839437645091,
-    "stalled": 0.001900955830656473,
-    "crankPeak_Nm": 2.7332166647578604,
-    "freq": 1.6743763913433742,
-    "theta_deg": -1.0157226905029646,
-    "tail_deg": -0.9547091789180275
+    "power_w": 28.499525409160857,
+    "Irms_A": 7.6687470642808755,
+    "stalled": 0.003428214902171701,
+    "crankPeak_Nm": 3.295708037869533,
+    "freq": 1.5747781657995832,
+    "theta_deg": -1.1289891866078958,
+    "tail_deg": -1.0440253760750164
    },
    {
     "V": 13,
-    "power_w": 30.428565112858735,
-    "Irms_A": 7.800261157283339,
-    "stalled": 0.0014840452206411918,
-    "crankPeak_Nm": 2.8678781224195102,
-    "freq": 1.772358670755949,
-    "theta_deg": -1.6777144414618803,
-    "tail_deg": -1.3002107874104512
+    "power_w": 33.7315196058032,
+    "Irms_A": 8.437562543151996,
+    "stalled": 0.0027288424932576374,
+    "crankPeak_Nm": 3.6015451185731715,
+    "freq": 1.6941692296963284,
+    "theta_deg": -1.7978623884051186,
+    "tail_deg": -1.4027890053807228
    }
   ],
-  "Vcruise": 9.5,
+  "Vcruise": 9,
   "Vmin": 9,
-  "Md": 20.712819892080265,
-  "Ld": -28.52071729913148,
-  "Nd": -14.710179107706747,
-  "Tf": 2.1304014750130444,
-  "Mq": 1.2267613620757323,
-  "Lp": 3.371731878752858,
-  "Nr": 0.7165331293651511,
+  "Md": 20.608516725185417,
+  "Ld": -19.120296081471174,
+  "Nd": -14.656023146706069,
+  "Tf": 2.1316518392185997,
+  "Mq": 1.23073338341718,
+  "Lp": 3.3673512455090804,
+  "Nr": 0.7263522242801052,
   "inertia": {
-   "Ix": 0.0768950212905156,
-   "Iy": 0.09578904281830418,
-   "Iz": 0.022718387688575887,
-   "xCg": 0.009139118767431937,
-   "m": 1.1036597515010198
+   "Ix": 0.07691350039723684,
+   "Iy": 0.0951228686923143,
+   "Iz": 0.022054857763692516,
+   "xCg": 0.009100445524462946,
+   "m": 1.0737958141684514
   },
-  "kTheta": 0.18755290663777505,
+  "kTheta": 0.1887905821659646,
   "kQ": 0,
-  "kPhi": 0.31240180555414,
+  "kPhi": 0.4654262388687188,
   "kP": 0,
-  "kR": 0.024355010367948387,
-  "kFv": 0.12951311811946878,
-  "kFc": 0.15541574174336253,
-  "kFcFf": 0.23092542178296152,
+  "kR": 0.024779990349679284,
+  "kFv": 0.12593470875643475,
+  "kFc": 0.1511216505077217,
+  "kFcFf": 0.22454502029568923,
   "kH": 0.5,
   "kGamma": 1,
   "kIGamma": 0.15,
@@ -1675,12 +2504,12 @@
   "kChi": 1,
   "maxBank": 0.6108652381980153,
   "diffMax": 0.3141592653589793,
-  "diffRate_rad_s": 8.604003313499733,
+  "diffRate_rad_s": 8.93756363054632,
   "diffLimit": {
    "geometric_rad": 0.3141592653589793,
-   "servo_rad": 0.3141592653589793,
-   "twist_torque_trim_Nm": 0.13870540366787926,
-   "twist_torque_per_rad": -0.02986139163873247,
+   "servo_rad": 7.344427379801099,
+   "twist_torque_trim_Nm": 0.10699761661991793,
+   "twist_torque_per_rad": 0.11567852985899074,
    "servo_stall_Nm": 0.9565901785714285,
    "servo_speed_rad_s": 10.063159651138477,
    "supply_V": 6.62
@@ -1688,9 +2517,10 @@
   "climbMax": 2,
   "sinkMax": 2.5,
   "freqMin": 0.8,
-  "ampNominal": 0.5934119456780721,
-  "currentLimit_A": 30,
-  "ampMax": 0.8377580409572782,
+  "ampNominal": 0.6632251157578453,
+  "currentLimit_A": 36,
+  "currentSenseLsb_A": 0.03223,
+  "ampMax": 0.6632251157578453,
   "lead": 0,
   "parkPhase": 1.5707963267948966,
   "attGain": 0.15,
@@ -1699,116 +2529,116 @@
   "trimFlight": [
    {
     "V": 9,
-    "theta": 0.049144122651051635,
-    "freq": 1.8415280163867855,
-    "tail": 0.02433700310009935,
-    "amp": 0.5934119456780721,
+    "theta": 0.04513060856180595,
+    "freq": 1.7182515506594163,
+    "tail": 0.020334050046636225,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525,
-    "flight_power_w": 41.70991318522777,
-    "flight_power_regen_credit_w": 40.0572503612399,
-    "flight_V": 9.01106955236207,
+    "dyn": 0.5235987755982988,
+    "flight_power_w": 39.28710449133632,
+    "flight_power_regen_credit_w": 38.02533538373438,
+    "flight_V": 9.020248516547463,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.02738674919161005,
-     "speed_err_m_s": 0.011069552362069857,
-     "freq_drift_frac": 0.003590933628106746,
-     "tail_drift_rad": 0.00022605415788563843
+     "climb_m_s": 0.01705707447078592,
+     "speed_err_m_s": 0.02024851654746307,
+     "freq_drift_frac": 0.004329331809446409,
+     "tail_drift_rad": 0.0005915685490346136
     }
    },
    {
     "V": 9.5,
-    "theta": 0.03403459981089355,
-    "freq": 1.8248298495614104,
-    "tail": 0.015391527728720223,
-    "amp": 0.5934119456780721,
+    "theta": 0.029477767956739457,
+    "freq": 1.7179077342110305,
+    "tail": 0.011380803503913189,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525,
-    "flight_power_w": 40.65793868807757,
-    "flight_power_regen_credit_w": 39.02240084590861,
-    "flight_V": 9.504337458126837,
+    "dyn": 0.5235987755982988,
+    "flight_power_w": 39.90123427155892,
+    "flight_power_regen_credit_w": 38.71036058362335,
+    "flight_V": 9.514686563716069,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.0073399622991558115,
-     "speed_err_m_s": 0.00433745812683739,
-     "freq_drift_frac": 0.0041856630279030966,
-     "tail_drift_rad": 0.00020365395757528972
+     "climb_m_s": 0.0004937832942416981,
+     "speed_err_m_s": 0.01468656371606869,
+     "freq_drift_frac": 0.003146093401662823,
+     "tail_drift_rad": 0.0004637938525084394
     }
    },
    {
     "V": 10,
-    "theta": 0.020225653991798393,
-    "freq": 1.8200149201000855,
-    "tail": 0.007796747102937008,
-    "amp": 0.5934119456780721,
+    "theta": 0.01402651485952569,
+    "freq": 1.7299971965913483,
+    "tail": 0.004006974315223623,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525,
-    "flight_power_w": 40.86234608349496,
-    "flight_power_regen_credit_w": 39.28665501646389,
-    "flight_V": 10.016932061558473,
+    "dyn": 0.5235987755982988,
+    "flight_power_w": 41.30421224772093,
+    "flight_power_regen_credit_w": 40.14421373264481,
+    "flight_V": 10.007526948013895,
     "converged": true,
     "convergence": {
-     "climb_m_s": -0.002424715190191293,
-     "speed_err_m_s": 0.01693206155847271,
-     "freq_drift_frac": 0.0053326945565501105,
-     "tail_drift_rad": 0.000046306055790814975
+     "climb_m_s": -0.013862976179521378,
+     "speed_err_m_s": 0.007526948013895307,
+     "freq_drift_frac": 0.0009108329703385212,
+     "tail_drift_rad": 0.00013987485181754088
     }
    },
    {
     "V": 11,
-    "theta": 0.0018939716067580563,
-    "freq": 1.852216948297061,
-    "tail": -0.003697516932550713,
-    "amp": 0.5934119456780721,
+    "theta": -0.0032777101161735275,
+    "freq": 1.7971614336077208,
+    "tail": -0.007354889112630268,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525,
-    "flight_power_w": 42.26351209761459,
-    "flight_power_regen_credit_w": 40.63740944373469,
-    "flight_V": 11.026001942160224,
+    "dyn": 0.5235987755982988,
+    "flight_power_w": 45.729971924282594,
+    "flight_power_regen_credit_w": 44.6048466730005,
+    "flight_V": 10.994314337003,
     "converged": true,
     "convergence": {
-     "climb_m_s": -0.0019658694372224825,
-     "speed_err_m_s": 0.026001942160224445,
-     "freq_drift_frac": 0.0013846103644596073,
-     "tail_drift_rad": 0.00043858715161263287
+     "climb_m_s": 0.0063210143307835505,
+     "speed_err_m_s": -0.005685662996999241,
+     "freq_drift_frac": 0.0022370444717628394,
+     "tail_drift_rad": 0.00017045780110401618
     }
    },
    {
     "V": 12,
-    "theta": -0.014262077190092043,
-    "freq": 1.9348229068956952,
-    "tail": -0.012189187033850857,
-    "amp": 0.5934119456780721,
+    "theta": -0.018082314672393462,
+    "freq": 1.9051944820973585,
+    "tail": -0.015787288652783713,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525,
-    "flight_power_w": 47.146511124575326,
-    "flight_power_regen_credit_w": 45.428732701354996,
-    "flight_V": 12.034650560333018,
+    "dyn": 0.5235987755982988,
+    "flight_power_w": 52.721011807340844,
+    "flight_power_regen_credit_w": 51.552279940047534,
+    "flight_V": 11.985140707677596,
     "converged": true,
     "convergence": {
-     "climb_m_s": -0.007681500483530046,
-     "speed_err_m_s": 0.03465056033301828,
-     "freq_drift_frac": 0.0005190322624247714,
-     "tail_drift_rad": 0.0003866844351956972
+     "climb_m_s": 0.009280211244280768,
+     "speed_err_m_s": -0.014859292322404016,
+     "freq_drift_frac": 0.0021743979564471947,
+     "tail_drift_rad": 0.00024328178037511666
     }
    },
    {
     "V": 13,
-    "theta": -0.02537045068032233,
-    "freq": 2.041719371331869,
-    "tail": -0.01865400824797083,
-    "amp": 0.5934119456780721,
+    "theta": -0.029903337710321984,
+    "freq": 2.046156361266775,
+    "tail": -0.022345415200350657,
+    "amp": 0.6632251157578453,
     "sym": 0,
-    "dyn": 0.3839724354387525,
-    "flight_power_w": 54.91568229805542,
-    "flight_power_regen_credit_w": 53.16104855731683,
-    "flight_V": 13.041460973705165,
+    "dyn": 0.5235987755982988,
+    "flight_power_w": 62.557783044693714,
+    "flight_power_regen_credit_w": 61.23487722316535,
+    "flight_V": 12.99158515981834,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.02229835553802318,
-     "speed_err_m_s": 0.041460973705165216,
-     "freq_drift_frac": 0.0004081568629596678,
-     "tail_drift_rad": 0.0003527713183793975
+     "climb_m_s": 0.0010107627032049592,
+     "speed_err_m_s": -0.0084148401816595,
+     "freq_drift_frac": 0.0001788607388035918,
+     "tail_drift_rad": 0.00015708665209918093
     }
    }
   ],
@@ -1824,37 +2654,13 @@
    "Vmax": 15,
    "kV": 0.4,
    "band": 1.5,
-   "kTE": 1
+   "kTE": 1.5
   },
   "Vrough": 15,
   "envelopeFrozen": [
    {
-    "amp": 0.3560471674068432,
-    "freqMax": 3.7929230552612236,
-    "limitedBy": "motor_voltage",
-    "atV": 13
-   },
-   {
-    "amp": 0.47647488579445196,
-    "freqMax": 3.5859393203590897,
-    "limitedBy": "motor_voltage",
-    "atV": 13
-   },
-   {
-    "amp": 0.5969026041820608,
-    "freqMax": 3.416588991802798,
-    "limitedBy": "motor_voltage",
-    "atV": 13
-   },
-   {
-    "amp": 0.7173303225696694,
-    "freqMax": 3.2848720695923492,
-    "limitedBy": "motor_voltage",
-    "atV": 13
-   },
-   {
-    "amp": 0.8377580409572782,
-    "freqMax": 3.1719718505548213,
+    "amp": 0.6632251157578453,
+    "freqMax": 3.1134614164335623,
     "limitedBy": "motor_voltage",
     "atV": 13
    }
@@ -1864,65 +2670,68 @@
    "spar": 0.9,
    "coupler": 0.9,
    "servo": 0.9,
+   "bearing": 0.9,
    "note": "fraction of each rating the calm-air envelope may use, leaving the rest for rough-air load increments; M7 judges the full rating against the loads of the flights themselves"
   }
  },
- "round4_options": {
+ "round5_options": {
   "Vrough": 15,
   "dt": 0.0010416666666666667,
   "allowance": {
    "gear": 0.75,
    "spar": 0.9,
    "coupler": 0.9,
-   "servo": 0.9
+   "servo": 0.9,
+   "bearing": 0.9
   },
   "motorCurrentLimit": null,
-  "gla": null
+  "gla": null,
+  "kTE": 1.5
  },
  "selection": {
-  "pipeline": "src/design/round4.mjs",
-  "basis": "explicit round-4 parameters (ROUND4, ROUND4_OPT in the script and --set/--opt) on the round-3 Larus v9; screen not rerun",
+  "pipeline": "src/design/round5.mjs",
+  "basis": "explicit round-5 parameters (ROUND5, ROUND5_OPT in the script and --set/--opt) on Larus v12; screen not rerun",
   "set": {},
   "opt": {}
  },
  "performance": {
   "sustained_climb": [
    {
-    "V_target_m_s": 9.5,
-    "sustained_climb_m_s": 1.918,
-    "mean_airspeed_m_s": 9.79,
-    "climb_cmd_m_s": 3,
-    "mean_batt_A": 17.45,
-    "motor_rms_2s_max_A": 24.1,
+    "V_target_m_s": 9,
+    "sustained_climb_m_s": 1.776,
+    "mean_airspeed_m_s": 9.95,
+    "climb_cmd_m_s": 2,
+    "mean_batt_A": 16.71,
+    "motor_rms_2s_max_A": 21.92,
     "altitude_m": 1404.37
    },
    {
     "V_target_m_s": 10,
-    "sustained_climb_m_s": 2.058,
-    "mean_airspeed_m_s": 10.16,
+    "sustained_climb_m_s": 1.932,
+    "mean_airspeed_m_s": 9.86,
     "climb_cmd_m_s": 3,
-    "mean_batt_A": 17.69,
-    "motor_rms_2s_max_A": 24.25,
+    "mean_batt_A": 17.67,
+    "motor_rms_2s_max_A": 22.61,
     "altitude_m": 1404.37
    },
    {
     "V_target_m_s": 12,
-    "sustained_climb_m_s": 2.164,
-    "mean_airspeed_m_s": 11.47,
+    "sustained_climb_m_s": 2.144,
+    "mean_airspeed_m_s": 10.77,
     "climb_cmd_m_s": 3,
-    "mean_batt_A": 18.37,
-    "motor_rms_2s_max_A": 24.9,
+    "mean_batt_A": 18.58,
+    "motor_rms_2s_max_A": 23.19,
     "altitude_m": 1404.37
    }
   ],
-  "best_sustained_climb_m_s": 2.164,
-  "best_climb_speed_m_s": 11.47,
+  "best_sustained_climb_m_s": 2.144,
+  "best_climb_speed_m_s": 10.77,
   "corridor_elevation_m": 1444.37,
   "method": "src/physics/scenarios.js runClimb: closed loop with the flight controller, its stroke envelope and current limit; climb from 15 s to 45 s of steady climb, no wind, battery full; best over commanded climb rates 0.5-3 m/s",
   "for_environment": "the corridor can be re-solved to this climb with a margin: a gradient at speed V is climb / V",
-  "ran_at": "2026-11-02T15:49:30.346Z"
+  "ran_at": "2026-11-02T17:35:16.552Z"
  },
- "version": 12,
- "version_written": "2026-11-02T15:49:30.351Z",
- "supersedes_sha256": "e0218c7dbc7145dfb90e3bcdbe9ca0a4c880116b12a030ac52c9bb165ed1bf42"
+ "version": 14,
+ "version_written": "2026-11-02T17:35:16.555Z",
+ "supersedes_sha256": "96918011d8743aae8eb222ff4fc48dcf1165206acfcfccb4d4aa9bfb7f610055"
 }

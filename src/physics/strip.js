@@ -396,10 +396,14 @@ export function createStrip(wing, opts = {}) {
           Qpl += Qp;
           Qtl += wgt * mSpar;
         }
-        // Moment of aero about the shoulder of that wing, for the structure check
+        // Moment of aero about the shoulder of that wing, for the structure check (round 5: the shoulder bearings): the
+        // circulatory force at its quarter chord, the apparent-mass force at its half chord and the section moment.
         const dHx = p14x - hx, dHy = p14y - hy, dHz = p14z - side * hz;
+        const eHx = p12x - hx, eHy = p12y - hy, eHz = p12z - side * hz;
         const gx = fx + fxa, gy = fy + fya, gz = fz + fza;
-        const hmx = dHy * gz - dHz * gy, hmy = dHz * gx - dHx * gz, hmz = dHx * gy - dHy * gx;
+        const hmx = dHy * fz - dHz * fy + eHy * fza - eHz * fya + mS * mx;
+        const hmy = dHz * fx - dHx * fz + eHz * fxa - eHx * fza + mS * my;
+        const hmz = dHx * fy - dHy * fx + eHx * fya - eHy * fxa + mS * mz;
         if (w === 0) { rm0x += hmx; rm0y += hmy; rm0z += hmz; } else { rm1x += hmx; rm1y += hmy; rm1z += hmz; }
         // Output
         out.fx[q] = gx;

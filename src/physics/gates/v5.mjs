@@ -19,14 +19,19 @@ const rho = d.atmosphere.rho_kg_m3;
 const trims = d.control.trim;
 const pick = (V) => trims.reduce((a, b) => (Math.abs(b.V - V) < Math.abs(a.V - V) ? b : a));
 const cruise = pick(d.control.Vcruise);
-const lo = trims[0];
+// Round 5: when the cruise point is the slowest trim, the next trim is the slow held-out point (a fit point is not held out).
+const loIsCruise = Math.abs(trims[0].V - cruise.V) < 1e-9 && trims.length > 1;
+const lo = loIsCruise ? trims[1] : trims[0];
 const hi = trims[trims.length - 1];
-const op = (t, ampScale = 1, label) => ({ label, U: t.V, bodyAlpha: t.theta, freq: t.freq, amp: Math.min(d.drive.ampMax, t.amp * ampScale), law, sched: { sym: t.sym, dyn: t.dyn, lead: d.cruise?.lead ?? 0 }, rho, mu: d.atmosphere.mu_Pa_s });
+// Round 5: a fixed-stroke drive (no slot) flies one amplitude, so the points that scale the stroke scale the stroke
+// frequency instead: the same stroke speeds, on kinematics the bird actually has.
+const fixedStroke = !(d.drive.ampMax - d.drive.ampMin > 1e-9);
+const op = (t, scale = 1, label) => ({ label: fixedStroke ? label.replace('stroke', 'frequency') : label, U: t.V, bodyAlpha: t.theta, freq: fixedStroke ? t.freq * scale : t.freq, amp: fixedStroke ? t.amp : Math.min(d.drive.ampMax, t.amp * scale), law, sched: { sym: t.sym, dyn: t.dyn, lead: d.cruise?.lead ?? 0 }, rho, mu: d.atmosphere.mu_Pa_s });
 // Fit on two points that differ in stroke amplitude, so the multipliers see how the strip's error grows with stroke.
 // (A first protocol fitted the cruise point alone; on columba-rp-2 that left 11.4% held-out lift error, because the
 // strip's error rises with stroke amplitude and one point cannot show that. Recorded in the gate file.)
 const fitOps = [op(cruise, 1, 'cruise'), op(cruise, 1.3, 'cruise, stroke x1.3')];
-const testOps = [op(lo, 1, 'slowest trim'), op(hi, 1, 'fastest trim'), op(cruise, 0.8, 'cruise, stroke x0.8'), op(pick((lo.V + cruise.V) / 2), 1.15, 'mid speed, stroke x1.15')];
+const testOps = [op(lo, 1, loIsCruise ? 'second-slowest trim (the slowest is the cruise fit point)' : 'slowest trim'), op(hi, 1, 'fastest trim'), op(cruise, 0.8, 'cruise, stroke x0.8'), op(pick((lo.V + cruise.V) / 2), 1.15, 'mid speed, stroke x1.15')];
 
 // Round 2: the reference lattice is resolved chordwise. Round 1's nc = 5 under-resolved the cambered section's lift
 // (steady camber lift on larus-gl-2: 0.256 at nc 5, 0.282 at 10, 0.292 at 16, 0.298 at 24, against 0.30 from the
@@ -118,10 +123,10 @@ const worstL = Math.max(...held.map((r) => Math.abs(r.lift_err_pct)));
 const worstT = Math.max(...held.map((r) => Math.abs(r.thrust_err_pct)));
 const atBound = Object.entries(cal).filter(([k, v]) => CALIBRATION_BOUNDS[k] && (Math.abs(v - CALIBRATION_BOUNDS[k][0]) < 1e-9 || Math.abs(v - CALIBRATION_BOUNDS[k][1]) < 1e-9)).map(([k]) => k);
 writeJson(`data/calibration/${d.name}.json`, {
-  design: d.name, source: 'uvlm', fitted_on: fitOps.map((o) => o.label), wing: { span_m: d.geometry.span_m, area_m2: d.geometry.area_m2 }, multipliers: cal, bounds: CALIBRATION_BOUNDS, at_bounds: atBound,
+  design: d.name, source: 'uvlm', fitted_on: fitOps.map((o) => o.label), wing: { span_m: d.geometry.span_m, area_m2: d.geometry.area_m2, twist_weights: d.wing.segments.map((g) => [g.twist_in, g.twist_out]), fixed_stroke: fixedStroke }, multipliers: cal, bounds: CALIBRATION_BOUNDS, at_bounds: atBound,
   note: 'Multipliers of the inviscid strip terms fitted to UVLM on the cruise point. The drag multiplier is not touched here: UVLM has no viscous drag. LBM and OpenFOAM results are to refit these.',
   ran_at: new Date().toISOString(),
 });
 const ev = writeJson(`out/verification/evidence/V5-${d.name}.json`, { rows, calibration: cal, at_bounds: atBound, uvlm: { ...UV, wake: 'prescribed' }, uvlm_grid_check: gridCheck, strip_changes_round2: ['inviscid section uses the thin-airfoil zero-lift angle and moment of the wing\'s own NACA-type mean line (round 1: parabolic -2f)'] });
-writeGate({ gate: 'V5', design: d.name, passed: worstL <= 10 && worstT <= 10, measured: { protocol: 'multipliers fitted on cruise and cruise x1.3 stroke; judged on four other points', uvlm_grid: UV, uvlm_grid_check: gridCheck, earlier_protocol_note: 'single-point fit gave 11.4% held-out lift error on columba-rp-2 (2026-11-02), replaced before falco and larus ran', held_out_points: held.length, worst_lift_err_pct: worstL, worst_thrust_err_pct: worstT, calibration: cal, multipliers_at_bounds: atBound, rows: held.map((r) => [r.point, +r.lift_err_pct.toFixed(2), +r.thrust_err_pct.toFixed(2)]) }, limit: { lift_err_pct: 10, thrust_err_pct: 10 }, evidence: ev.slice(ROOT.length + 1) });
+writeGate({ gate: 'V5', design: d.name, passed: worstL <= 10 && worstT <= 10, measured: { protocol: fixedStroke ? 'fixed-stroke drive: multipliers fitted on cruise and cruise x1.3 stroke frequency; judged on four other points (frequency in place of stroke amplitude, round 5)' : 'multipliers fitted on cruise and cruise x1.3 stroke; judged on four other points', uvlm_grid: UV, uvlm_grid_check: gridCheck, earlier_protocol_note: 'single-point fit gave 11.4% held-out lift error on columba-rp-2 (2026-11-02), replaced before falco and larus ran', held_out_points: held.length, worst_lift_err_pct: worstL, worst_thrust_err_pct: worstT, calibration: cal, multipliers_at_bounds: atBound, rows: held.map((r) => [r.point, +r.lift_err_pct.toFixed(2), +r.thrust_err_pct.toFixed(2)]) }, limit: { lift_err_pct: 10, thrust_err_pct: 10 }, evidence: ev.slice(ROOT.length + 1) });
 console.log(`V5 ${d.name}: worst held-out lift ${worstL.toFixed(1)}% thrust ${worstT.toFixed(1)}%`, worstL <= 10 && worstT <= 10 ? 'PASS' : 'FAIL');

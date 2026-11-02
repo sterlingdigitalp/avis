@@ -2,6 +2,7 @@
 import { buildBird, createFlight, quatFromEuler } from '../physics/flight.js';
 import { designAtmosphere, G0 } from '../physics/atmosphere.js';
 import { couplerCheck } from '../physics/structure.js';
+import { checkJoints, jointsRatio } from '../physics/bearings.js';
 
 const TWO_PI = 2 * Math.PI;
 const DEG = Math.PI / 180;
@@ -307,6 +308,12 @@ function batteryOcvCells(bt, soc) {
   return bt.cells * (4.18 + shift);
 }
 
+/** Amplitudes an envelope is measured at: nAmp across the drive's range, or the one stroke of a fixed drive. */
+export function ampGrid(lo, hi, nAmp) {
+  if (!(hi - lo > 1e-9) || nAmp < 2) return [hi];
+  return Array.from({ length: nAmp }, (_, i) => lo + ((hi - lo) * i) / (nAmp - 1));
+}
+
 /**
  * Stroke envelope from component ratings (SPEC ruling: not from fixed multipliers). For amplitudes across the
  * drive's range, the highest frequency at which every rating in strokeLimits holds, at the slowest and fastest trims.
@@ -315,8 +322,7 @@ export function strokeEnvelope(design, bird, rows, { nAmp = 5, fCap = null } = {
   const lo = design.drive.ampMin, hi = design.drive.ampMax;
   const fTop = fCap ?? 3 * Math.max(...rows.map((r) => r.freq));
   const out = [];
-  for (let i = 0; i < nAmp; i++) {
-    const amp = lo + ((hi - lo) * i) / (nAmp - 1);
+  for (const amp of ampGrid(lo, hi, nAmp)) {
     let fmax = Infinity, limitedBy = null, at = null;
     for (const row of rows) {
       const okAt = (f) => strokeLimits(design, bird, row, f, amp);
@@ -362,6 +368,8 @@ export function flightRatios(design, pk, allowance = {}) {
     // running a few percent behind the command with duty to spare is the governor's own lag, not a limit, and the
     // peaks above are those of the stroke actually flown.
     motor_speed: pk.dutySat > 0.1 ? 2 : 0,
+    // Round 5: bearings and bushings against their static ratings (FoS 1.5 inside the ratio) and speed limits.
+    bearings: (pk.bearingRatio ?? 0) / al('bearing'),
     diverged: [pk.crankTorque, pk.rootBend, pk.couplerForce].every(Number.isFinite) && pk.loadFactor < 20 ? 0 : 2,
   };
   let worst = 'gear';
@@ -402,7 +410,7 @@ export async function strokeFlightTest(design, { V, freq, amp, ramp = 2, settle 
     sim.cmd.throttleOff = false;
     sim.cmd.parkPhase = null;
     sim.step();
-    if (k === w0) for (const kk of Object.keys(sim.peaks)) sim.peaks[kk] = 0;
+    if (k === w0) sim.resetPeaks();
     if (k > w0) {
       I2 += sim.tel.motor_I ** 2;
       Ib += sim.tel.batt_I;
@@ -412,10 +420,12 @@ export async function strokeFlightTest(design, { V, freq, amp, ramp = 2, settle 
       n++;
     }
   }
+  // Round 5: the drive's bearings, bushings and rod ends at the hold's peak loads (their worst rating use as a ratio).
+  const bearingRatio = design.structure?.joints ? jointsRatio(checkJoints(design.structure.joints, sim.peaks.supports, { crankRate: sim.peaks.crankRate })) : 0;
   return {
     crankTorque: sim.peaks.crankTorque, rootBend: sim.peaks.rootBend, elbowBend: sim.peaks.elbowBend, couplerForce: sim.peaks.couplerForce,
     twistTorque: sim.peaks.twistTorque, loadFactor: sim.peaks.loadFactor, motorRms: Math.sqrt(I2 / n), battMean: Ib / n,
-    crankFreqRatio: crankSum / n / (TWO_PI * freq), airspeed: Vsum / n, dutySat: sat / n,
+    crankFreqRatio: crankSum / n / (TWO_PI * freq), airspeed: Vsum / n, dutySat: sat / n, bearingRatio,
   };
 }
 
@@ -436,8 +446,7 @@ export async function flightEnvelope(design, { speeds, nAmp = 5, allowance = {},
   const trims = design.control.trim;
   const fT = fTop ?? 2.5 * Math.max(...trims.map((t) => t.freq));
   const out = [];
-  for (let i = 0; i < nAmp; i++) {
-    const amp = lo + ((hi - lo) * i) / (nAmp - 1);
+  for (const amp of ampGrid(lo, hi, nAmp)) {
     let fmax = Infinity, limitedBy = null, at = null, edge = null;
     for (const V of speeds) {
       const tr0 = trims.reduce((a, b) => (Math.abs(b.V - V) < Math.abs(a.V - V) ? b : a));
@@ -495,8 +504,7 @@ async function flightEnvelopeBySpeed(design, { speeds, nAmp, allowance, fTop, it
   const fT = fTop ?? 2.5 * Math.max(...trims.map((t) => t.freq));
   const round = (pk) => pk && Object.fromEntries(Object.entries(pk).map(([k, v]) => [k, +v.toFixed(4)]));
   const out = [];
-  for (let i = 0; i < nAmp; i++) {
-    const amp = lo + ((hi - lo) * i) / (nAmp - 1);
+  for (const amp of ampGrid(lo, hi, nAmp)) {
     const bySpeed = [];
     for (const V of speeds) {
       const tr0 = trims.reduce((a, b) => (Math.abs(b.V - V) < Math.abs(a.V - V) ? b : a));
@@ -630,6 +638,7 @@ export function buildControl(design, sched, { speeds, bird: given = null, omegaT
     ampNominal: sched.amp,
     // The flight controller's current limit: the lowest continuous rating in the power path.
     currentLimit_A: Math.min(design.motor.I_cont ?? Infinity, design.esc.I_cont ?? Infinity, design.battery.I_cont ?? Infinity),
+    ...(design.electrical?.current_sense?.lsb_A > 0 ? { currentSenseLsb_A: design.electrical.current_sense.lsb_A } : {}),
     ampMax: design.drive.ampMax,
     lead: sched.lead,
     parkPhase: Math.PI / 2,

@@ -13,6 +13,7 @@ import { makeWing, makeFlapDrive, strokeAngle, strokeAngleLeft, makeStations, ma
 import { createStrip } from './strip.js';
 import { POLARS, polarEval } from './polars.js';
 import { G0, densityAtAltitude, designAtmosphere } from './atmosphere.js';
+import { createFcGovernor } from './governor.js';
 
 const TWO_PI = 2 * Math.PI;
 
@@ -76,6 +77,32 @@ const NS = 23;
 // Round 1 and the first round-2 runs let the rate jump at each command update, which made twist acceleration, servo
 // torque and apparent-mass loads scale as 1/dt.
 export const SERVO_TAU_MECH_S = 0.01;
+
+/**
+ * Round 5: load channels the flight model computes every recorded step for the bearing check (all >= 0, N or N m):
+ * each coupler's force; its component along the rocker (what a slotted rocker's stroke servo must hold); the crank's
+ * load torque; and per wing the root force normal to the hinge axis, the root force along it, and the root moment
+ * normal to it (which a pivot's two bearings react as a couple).
+ */
+export const LOAD_CHANNELS = ['coupler_R', 'coupler_L', 'slot_R', 'slot_L', 'crank_torque', 'root_yz_R', 'root_x_R', 'root_mperp_R', 'root_yz_L', 'root_x_L', 'root_mperp_L'];
+
+/**
+ * Supports of design.structure.joints as channel indices and coefficients: { key, rc, rk, ac, ak, X0, Y0 } per support.
+ * A support names its loads as { ch, k } terms (bearings.js supportLoads); X0/Y0 are set for a rolling bearing (its
+ * ISO 76 equivalent is tracked over time), null for a bushing or rod end.
+ */
+export function compileSupports(joints) {
+  const idx = (c) => {
+    const i = LOAD_CHANNELS.indexOf(c);
+    if (i < 0) throw new Error(`unknown load channel ${c}`);
+    return i;
+  };
+  const out = [];
+  for (const j of joints ?? []) for (const s of j.supports ?? []) {
+    out.push({ key: `${j.name}/${s.name}`, rc: (s.radial ?? []).map((t) => idx(t.ch)), rk: (s.radial ?? []).map((t) => Math.abs(t.k)), ac: (s.axial ?? []).map((t) => idx(t.ch)), ak: (s.axial ?? []).map((t) => Math.abs(t.k)), X0: Number.isFinite(s.X0) ? s.X0 : null, Y0: Number.isFinite(s.Y0) ? s.Y0 : 0 });
+  }
+  return out;
+}
 
 /**
  * Everything physical about a bird, as numbers, from a design file. `perturb` applies the robustness cases:
@@ -229,6 +256,10 @@ export function createFlight(design, opts = {}) {
   const mid = new Float64Array(NS);
 
   const servoT = design.servos.twist;
+  // Round 5: the crank governor and drive clamp in the flight controller (governor.js), sampled from the encoder and the
+  // FC's voltage sense, when the design puts them there (drive.governor.location); otherwise round 4's ESC-side law.
+  const fcGov = design.drive.governor?.location === 'flight controller' ? createFcGovernor(design.drive.governor, { G, kv: motor.kv_rad_per_v_s, R: motor.R, cells: design.battery.cells, kp: motor.govKp ?? 0.5, ki: motor.govKi ?? 1.0 }) : null;
+  let tEval = 0; // time of the state deriv() is evaluating (the encoder phase is extrapolated to it)
   const servoP = design.servos.tail;
   const servoA = design.servos.stroke ?? null;
   const speedScale = bird.servoSpeedScale;
@@ -282,8 +313,13 @@ export function createFlight(design, opts = {}) {
     phi: 0, mu: Math.PI / 2, couplerForce: 0, loadFactor: 1, Fx: 0, Fy: 0, Fz: 0, climbRate: 0,
     residual: new Float64Array(6), Mx: 0, My: 0, Mz: 0, aeroPower: 0,
   };
+  // Round 5: load channels of the drive and the supports of design.structure.joints, compiled to channel indices.
+  const rootLoad = new Float64Array(6); // per wing: |F| normal to the hinge axis, |F| along it, |M| normal to it
+  const chv = new Float64Array(LOAD_CHANNELS.length);
+  const sup = compileSupports(design.structure?.joints);
+  const supLoad = new Float64Array(3 * sup.length);
   // Worst-case tracking for M7, M8
-  const peaks = { servoEach: 0, becI: 0, crankDrive: 0, crankBack: 0, rootBend: 0, elbowBend: 0, crankTorque: 0, motorI: 0, battI: 0, servoI: 0, twistTorque: 0, tailTorque: 0, couplerForce: 0, loadFactor: 0, shoulderTorque: 0 };
+  const peaks = { servoEach: 0, becI: 0, crankDrive: 0, crankBack: 0, rootBend: 0, elbowBend: 0, crankTorque: 0, motorI: 0, battI: 0, servoI: 0, twistTorque: 0, tailTorque: 0, couplerForce: 0, loadFactor: 0, shoulderTorque: 0, crankRate: 0, motorIDrive: 0, motorIBrake: 0, channels: Object.fromEntries(LOAD_CHANNELS.map((c) => [c, 0])), slotPair: 0, supports: sup.map((s) => ({ key: s.key, Fr: 0, Fa: 0, P0: 0 })) };
   const rmsAcc = { motorI2: 0, battI2: 0, servoI2: 0, servoItwist2: 0, n: 0, motorI2Win: 0, nWin: 0, motorRmsMax: 0, battRmsMax: 0, battI2Win: 0 };
   const servoSpec = (s) => s;
 
@@ -489,8 +525,12 @@ export function createFlight(design, opts = {}) {
     const motorKt = 1 / motor.kv_rad_per_v_s;
     const KpV = (motor.govKp ?? 0.5) * (G / motor.kv_rad_per_v_s); // volts per crank rad/s
     let dutyNow = duty;
+    let clamped = false;
     if (cmd.throttleOff && cmd.parkPhase === null) dutyNow = 0;
-    else {
+    else if (fcGov) {
+      dutyNow = fcGov.st.applied;
+      clamped = fcGov.st.clampedApplied;
+    } else {
       const errW = wantCrank - crank;
       const Vneed = wantCrank * G / motor.kv_rad_per_v_s;
       dutyNow = Math.max(0, Math.min(1, (Vneed + KpV * errW + iInt) / Vbus));
@@ -498,9 +538,8 @@ export function createFlight(design, opts = {}) {
     // Round 4 sensitivity (lever 1, fast form): a drive-side current clamp in the ESC, which knows its duty, its input
     // voltage and the commutation speed: duty <= (E + I_clamp R) / V caps the motor current at I_clamp whenever the
     // drive pushes. It cannot touch braking (the crank driving the motor). The catalogue ESC publishes no such feature.
-    let clamped = false;
     const Iclamp = design.drive.escCurrentClamp_A;
-    if (Number.isFinite(Iclamp) && !(cmd.throttleOff && cmd.parkPhase === null)) {
+    if (!fcGov && Number.isFinite(Iclamp) && !(cmd.throttleOff && cmd.parkPhase === null)) {
       const dMax = (omegaM / motor.kv_rad_per_v_s + Iclamp * motor.R) / Vbus;
       if (dutyNow > dMax) { dutyNow = Math.max(0, dMax); clamped = true; }
     }
@@ -517,7 +556,8 @@ export function createFlight(design, opts = {}) {
     // The motor's speed feedback (back-EMF plus governor) is a fast pole next to the time step: implicit.
     if (Iraw > Ilimit) {
       // At the clamp the current no longer falls with speed: no back-EMF or governor stiffness to treat implicitly.
-      const B = clamped ? 0 : (motorKt * etaG * G * (G / motor.kv_rad_per_v_s + (dutyNow > 0 && dutyNow < 1 ? KpV : 0))) / motor.R;
+      // With the governor in the flight controller the duty is held between its ticks: only the back-EMF is implicit.
+      const B = fcGov ? (motorKt * etaG * G * (G / motor.kv_rad_per_v_s)) / motor.R : clamped ? 0 : (motorKt * etaG * G * (G / motor.kv_rad_per_v_s + (dutyNow > 0 && dutyNow < 1 ? KpV : 0))) / motor.R;
       Jeff += 0.5 * dt * B;
     }
     const crankRhs = tauC + dph * (aero.Qphi[0] + wR.Qrest) + dphL * (aero.Qphi[1] + wL.Qrest) - (design.drive.crankFriction_Nm ?? 0) * Math.tanh(crank / 0.5);
@@ -650,8 +690,11 @@ export function createFlight(design, opts = {}) {
       for (let w = 0; w < 2; w++) {
         const W = w === 0 ? R : L;
         const side = w === 0 ? 1 : -1;
-        const hy = wing.hinge[1], hz = side * wing.hinge[2];
+        const hx = wing.hinge[0], hy = wing.hinge[1], hz = side * wing.hinge[2];
         let bend = 0, elbow = 0, chord = 0;
+        // Round 5: the whole root load of the wing at its shoulder, for the pivot bearings: force (air and inertia) and
+        // its moment about the hinge point; air at its own points (strip rootMoment), inertia at the lumps.
+        let rFx = 0, rFy = 0, rFz = 0, rMy = aero.rootMoment[3 * w + 1], rMz = aero.rootMoment[3 * w + 2];
         for (let i = 0; i < n; i++) {
           const j = 3 * i;
           const q = 3 * (i + w * n);
@@ -673,8 +716,15 @@ export function createFlight(design, opts = {}) {
           bend += armY * totZ - armZ * totY;
           chord += totX * Math.abs(st.s[i]);
           if (st.s[i] >= elbowS) elbow += (totY * W.e[j + 2] - totZ * W.e[j + 1]) * (st.s[i] - elbowS) * side;
+          const armX = rx - hx;
+          rFx += totX; rFy += totY; rFz += totZ;
+          rMy += armZ * fix - armX * fiz;
+          rMz += armX * fiy - armY * fix;
         }
         if (w === 0) { bendR = bend; elbowR = elbow; chordR = chord; } else { bendL = bend; elbowL = elbow; chordL = chord; }
+        rootLoad[3 * w] = Math.hypot(rFy, rFz);
+        rootLoad[3 * w + 1] = Math.abs(rFx);
+        rootLoad[3 * w + 2] = Math.hypot(rMy, rMz);
       }
     }
     if (record) {
@@ -696,7 +746,7 @@ export function createFlight(design, opts = {}) {
       lastTwistTorque[1] = -QtwL + Jtw * twistAccel[1] + (design.wing.twist_stiffness_Nm_rad ?? 0) * S[17];
       tailTorque[0] = tailMR;
       tailTorque[1] = tailML;
-      if (advanceDt > 0) {
+      if (advanceDt > 0 && !fcGov) {
         // ESC speed-governor integrator (volts)
         const err = wantCrank - crank;
         const Ki = (motor.govKi ?? 1.0) * KpV;
@@ -746,6 +796,24 @@ export function createFlight(design, opts = {}) {
       // floor on sin(mu): near toggle the force does grow without bound, and the design must keep mu away from it.
       // A sine stroke law has no linkage, so no coupler force is reported for it.
       tel.couplerForce = sa.c ? Math.max(Math.abs(qR) / (sa.c * sa.sinTrans), Math.abs(qL) / (saL.c * saL.sinTrans)) : 0;
+      // Round 5: the drive's load channels (LOAD_CHANNELS) and from them the load on every bearing, bushing and rod end
+      // of design.structure.joints at this instant. The slot channels are the coupler force's component along the
+      // rocker, which a slotted rocker's stroke servo must hold.
+      chv[0] = sa.c ? Math.abs(qR) / (sa.c * sa.sinTrans) : 0;
+      chv[1] = saL.c ? Math.abs(qL) / (saL.c * saL.sinTrans) : 0;
+      chv[2] = chv[0] * Math.abs(Math.cos(sa.mu ?? Math.PI / 2));
+      chv[3] = chv[1] * Math.abs(Math.cos(saL.mu ?? Math.PI / 2));
+      chv[4] = Math.abs(tel.crankTorque);
+      for (let k = 0; k < 6; k++) chv[5 + k] = rootLoad[k];
+      for (let k = 0; k < sup.length; k++) {
+        const s = sup[k];
+        let Fr = 0, Fa = 0;
+        for (let m = 0; m < s.rc.length; m++) Fr += s.rk[m] * chv[s.rc[m]];
+        for (let m = 0; m < s.ac.length; m++) Fa += s.ak[m] * chv[s.ac[m]];
+        supLoad[3 * k] = Fr;
+        supLoad[3 * k + 1] = Fa;
+        supLoad[3 * k + 2] = s.X0 !== null ? Math.max(Fr, s.X0 * Fr + s.Y0 * Fa) : Fr;
+      }
       tel.transmissionAngle = sa.mu;
       tel.Fx = Fx; tel.Fy = Fy; tel.Fz = Fz;
       tel.Mx = Mx; tel.My = My; tel.Mz = Mz;
@@ -756,8 +824,9 @@ export function createFlight(design, opts = {}) {
   }
 
   function phaseCmd(phase, crank) {
-    // The sync loop runs from a crank encoder with the control delay, predicting with measured speed.
-    return phase;
+    // The sync loop runs from a crank encoder, predicting with measured speed. Round 5: with the governor in the flight
+    // controller the encoder is modelled (its resolution and rate): the last sample advanced at the measured speed.
+    return fcGov ? fcGov.phaseAt(tEval) : phase;
   }
   function crankTarget(phase, crank) {
     if (cmd.parkPhase !== null) {
@@ -806,16 +875,24 @@ export function createFlight(design, opts = {}) {
     epsLag = s.epsLag ?? 0.5;
     iInt = s.iInt ?? 0;
     t = s.t ?? 0;
+    if (fcGov) fcGov.reset({ t, phase: x[13], crank: x[14], V: batteryState(x[20]), iInt: s.iInt ?? 0 });
     elapsed = 0;
   }
 
+  function govTick() {
+    const off = cmd.throttleOff && cmd.parkPhase === null;
+    fcGov.tick(t, x[13], batteryState(x[20]), (ph, w) => crankTarget(ph, w), off, cmd.freq > 0 || cmd.parkPhase !== null);
+  }
   function step() {
     if (windModel) {
       const speed = Math.max(tel.airspeed, 3);
       wind = windModel.step(t, dt, speed);
     }
+    if (fcGov && fcGov.st.fresh) govTick();
+    tEval = t;
     deriv(x, k1, 0, false);
     for (let i = 0; i < NS; i++) mid[i] = x[i] + 0.5 * dt * k1[i];
+    tEval = t + 0.5 * dt;
     deriv(mid, k2, dt, true);
     for (let i = 0; i < NS; i++) x[i] += dt * k2[i];
     // Renormalise the quaternion
@@ -825,6 +902,7 @@ export function createFlight(design, opts = {}) {
     if (x[13] < 0) x[13] += TWO_PI;
     t += dt;
     elapsed += dt;
+    if (fcGov && fcGov.due(t)) govTick();
     // Peaks
     if (tel.rootBend > peaks.rootBend) peaks.rootBend = tel.rootBend;
     if (tel.elbowBend > peaks.elbowBend) peaks.elbowBend = tel.elbowBend;
@@ -845,6 +923,19 @@ export function createFlight(design, opts = {}) {
     if (tel.couplerForce > peaks.couplerForce) peaks.couplerForce = tel.couplerForce;
     if (tel.loadFactor > peaks.loadFactor) peaks.loadFactor = tel.loadFactor;
     if (tel.shoulderTorque > peaks.shoulderTorque) peaks.shoulderTorque = tel.shoulderTorque;
+    if (Math.abs(x[14]) > peaks.crankRate) peaks.crankRate = Math.abs(x[14]);
+    // Round 5: the motor current split by sign, so the drive clamp (driving) and the braking limit show apart.
+    if (tel.motor_I > peaks.motorIDrive) peaks.motorIDrive = tel.motor_I;
+    if (-tel.motor_I > peaks.motorIBrake) peaks.motorIBrake = -tel.motor_I;
+    for (let k = 0; k < LOAD_CHANNELS.length; k++) if (chv[k] > peaks.channels[LOAD_CHANNELS[k]]) peaks.channels[LOAD_CHANNELS[k]] = chv[k];
+    // Both slots load the one stroke servo through its yoke at the same instant.
+    if (chv[2] + chv[3] > peaks.slotPair) peaks.slotPair = chv[2] + chv[3];
+    for (let k = 0; k < sup.length; k++) {
+      const p = peaks.supports[k];
+      if (supLoad[3 * k] > p.Fr) p.Fr = supLoad[3 * k];
+      if (supLoad[3 * k + 1] > p.Fa) p.Fa = supLoad[3 * k + 1];
+      if (supLoad[3 * k + 2] > p.P0) p.P0 = supLoad[3 * k + 2];
+    }
     // Running rms over 2 s windows for "continuous" current checks.
     rmsAcc.motorI2 += tel.motor_I * tel.motor_I;
     rmsAcc.battI2 += tel.batt_I * tel.batt_I;
@@ -957,7 +1048,15 @@ export function createFlight(design, opts = {}) {
     return KE + 0.5 * Jcrank * x[14] * x[14];
   }
 
-  return { dt, bird, cmd, x, step, setState, snapshot, momentum, energy, tel, peaks, rms: rmsAcc, get t() { return t; }, get wind() { return wind; }, ix: IX, get aBody() { return aBody; }, get wDot() { return wDot; }, get thetaDD() { return thetaDD; } };
+  /** Zero every peak (scalars, the load channels and the supports) in place. */
+  function resetPeaks() {
+    for (const k of Object.keys(peaks)) {
+      if (k === 'channels') for (const c of Object.keys(peaks.channels)) peaks.channels[c] = 0;
+      else if (k === 'supports') for (const p of peaks.supports) { p.Fr = 0; p.Fa = 0; p.P0 = 0; }
+      else peaks[k] = 0;
+    }
+  }
+  return { dt, bird, cmd, x, step, setState, snapshot, momentum, energy, tel, peaks, resetPeaks, rms: rmsAcc, get t() { return t; }, get wind() { return wind; }, ix: IX, get aBody() { return aBody; }, get wDot() { return wDot; }, get thetaDD() { return thetaDD; } };
 }
 
 /** Total momentum of the rigid body plus wing lumps in world axes, for conservation tests. */

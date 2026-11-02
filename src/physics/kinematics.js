@@ -133,8 +133,12 @@ export function rockerForAmplitude({ a, b, d }, amplitude) {
  */
 export function makeFlapDrive({ a, b, d, ampMin, ampMax, ampNominal, phiMean = 0, gearRatio = 1, nTable = 17 }) {
   const table = [];
+  // Round 5: a fixed stroke (ampMin = ampMax, a pinned rocker with no slot) is a table of one rocker, held twice so the
+  // lookup's interpolation needs no special case.
+  const fixed = !(ampMax - ampMin > 1e-9);
+  if (fixed) nTable = 2;
   for (let i = 0; i < nTable; i++) {
-    const amp = ampMin + ((ampMax - ampMin) * i) / (nTable - 1);
+    const amp = fixed ? ampMax : ampMin + ((ampMax - ampMin) * i) / (nTable - 1);
     const c = rockerForAmplitude({ a, b, d }, amp);
     if (c === null) throw new Error(`no rocker gives amplitude ${amp}`);
     const lim = crankRockerLimits({ a, b, c, d });
@@ -147,7 +151,8 @@ export function makeFlapDrive({ a, b, d, ampMin, ampMax, ampNominal, phiMean = 0
 
 function driveLookup(drive, amp) {
   const t = drive.table;
-  const x = ((amp - drive.ampMin) / (drive.ampMax - drive.ampMin)) * (t.length - 1);
+  const span = drive.ampMax - drive.ampMin;
+  const x = span > 1e-9 ? ((amp - drive.ampMin) / span) * (t.length - 1) : 0;
   const i = Math.max(0, Math.min(t.length - 2, Math.floor(x)));
   const f = Math.max(0, Math.min(1, x - i));
   const p = t[i];

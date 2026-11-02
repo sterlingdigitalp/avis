@@ -182,7 +182,9 @@ export function createController(design, opts = {}) {
     const baro = t.y + baroBias + k * noise.baroNoise * rng.normal();
     const pitot = t.airspeedX + k * noise.airspeedNoise * rng.normal();
     const mag = t.heading + magBias + k * noise.magNoise * rng.normal();
-    const amps = t.battI + k * 0.1 * rng.normal(); // power-module current sense
+    // Power-module current sense; round 5: at its published resolution when the design states one (FC ADC LSB).
+    const ampsRaw = t.battI + k * 0.1 * rng.normal();
+    const amps = cfg.currentSenseLsb_A > 0 ? Math.round(ampsRaw / cfg.currentSenseLsb_A) * cfg.currentSenseLsb_A : ampsRaw;
     // Power-module voltage sense, read only when the current limiter uses it (so designs without it keep their noise
     // sequence and their results).
     const volts = cfg.motorCurrentLimit ? (t.battV ?? 0) + k * 0.02 * rng.normal() : t.battV ?? 0;

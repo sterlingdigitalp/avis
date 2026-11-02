@@ -1,0 +1,23 @@
+{
+ "note": "Round 5 exploration ladder (Larus GL-2). Probes: nominal M1, M2 (60 s), M3, M5 and M4 seeds 1-N on scenarios.js through src/physics/gates/pool.js; corners as missions.mjs. Not gate files; the gate table is docs/status/round5-gates-larus.txt.",
+ "rows": [
+  { "tag": "v12", "what": "v12 as committed (33c598c), slotted rocker", "M4": "50/50", "stroke_servo_hold_Nm": 17.57, "stroke_servo_rated_Nm": 1.53, "verdict": "the stroke servo cannot hold the slots (out/sweep/round5/v12-stroke-servo-hold.json)" },
+  { "tag": "fix34", "what": "v12 with the rocker pinned at 34 deg (no rebuild)", "M4": "98/100", "fails": "seeds 15, 27 (altitude 11.0, 12.2 m)", "coupler_N": 1169 },
+  { "tag": "r5b", "what": "rebuilt: fixed 34 deg, joints, FC governor 480 Hz, charge limit 4.10 V, arm wing untwisted, DS1-18/DS1-60 stage, F405-WMO, Tekko32, Orbis encoder", "mass_g": 1019.6, "M4": "96/100", "crank_Nm": 11.63, "train_rating_Nm": 11.6, "verdict": "M4 short and the crank over the train rating" },
+  { "tag": "r5b-esc", "what": "r5b with the governor and clamp back in the ESC model (diagnostic)", "M4": "96/100", "verdict": "governor location is not the cause" },
+  { "tag": "r5-tw3", "what": "r5 with the arm-wing twist restored (diagnostic only; nothing in the BOM twists it)", "M4": "96/100" },
+  { "tag": "r5b-b84", "what": "r5b plus 84 g ballast at the CG (diagnostic only)", "M4": "97/100", "verdict": "mass is not the cause" },
+  { "tag": "Vrough 14/16/17", "what": "rough-air speed", "M4": "91/94/93 of 100", "verdict": "15 stays" },
+  { "tag": "g1", "what": "DS1-20/DS1-30 first stage: train 11.60 -> 13.66 N m", "M4": "96/100" },
+  { "tag": "g1 kTE 1.5", "what": "energy controller kTE 1 -> 1.5", "M4": "98/100", "motor_peak_A": 41.7, "note": "480 Hz FC clamp overshoots" },
+  { "tag": "g1 kTE 1.5, 960 Hz", "what": "FC governor at 960 Hz (one 1.04 ms period of latency)", "M4": "98/100", "motor_peak_A": 37.0 },
+  { "tag": "a38 (1300 pack)", "what": "fixed 38 deg", "M4": "100/100", "M2_min": 10.37, "corners": "M1 FAIL 1.51-1.64 m and M2 FAIL 9.5-9.9 min at mass 1.05" },
+  { "tag": "a41 (1300 pack)", "what": "fixed 41 deg", "M4": "100/100", "M2_min": 9.99, "verdict": "M2 fails nominal" },
+  { "tag": "b22a38", "what": "2200 mAh 2S pack, G 24.69", "M4": "100/100, corners >= 99", "M2_min": 16.87, "corners": "M1 FAIL 1.70-2.30 m at aero 0.9" },
+  { "tag": "G 23.05", "what": "lower ratio (DS1-20/DS1-28)", "M1_nominal_m": 1.06, "verdict": "worse: the launch is torque-limited" },
+  { "tag": "G 27.43 (1300)", "what": "DS1-18/DS1-30 first stage", "corners": "M1 all pass (1.33 m worst); M2 FAIL 9.86 min at aero 1.1 mass 1.05" },
+  { "tag": "G 29.26 a36 (1300)", "what": "DS1-18/DS1-32", "M4": "98/100", "corners": "M1 and M2 pass, M2 worst 10.15 min" },
+  { "tag": "G 32.92 a38 (1300)", "what": "DS1-18/DS1-36", "M4": "98/100", "crank_Nm": 14.39, "train_rating_Nm": 13.66, "verdict": "gear over rating" },
+  { "tag": "b22x38", "what": "2200 pack, DS1-18/DS1-32 + DS1-20/DS1-64, G 28.09, train 14.16 N m, fixed 38 deg, kTE 1.5, 960 Hz", "mass_g": 1073.8, "M4": "100/100", "M1_worst_corner_m": 1.44, "M2_worst_corner_min": 16.16, "crank_Nm": 12.92, "verdict": "chosen" }
+ ]
+}

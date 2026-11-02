@@ -6,6 +6,7 @@ import { designAtmosphere, DESIGN_ALTITUDE_M, DESIGN_TEMPERATURE_C } from '../ph
 import { POLARS } from '../physics/polars.js';
 import { podAndBoomLoft, loftVolume, loftWettedArea } from '../physics/geometry.js';
 import { CLAIM } from './schema.js';
+import { driveJoints } from './joints.js';
 
 const DEG = Math.PI / 180;
 export const MARGIN = 0.15; // M6: unlisted margin for wire, glue and fasteners
@@ -155,8 +156,10 @@ export function buildDesign(params, catalog) {
   if (p.derivedParts) {
     const rod2 = byId(catalog, 'rod-ec-2mm'), plate2 = byId(catalog, 'plate-ec-2mm');
     const pushL = p.strokePushrod_mm ?? 60;
-    strokeLinkG = 2 * rod2.mass_g * pushL / 1000 + plate2.specs.areal_density_kg_m2 * 1000 * 0.04 * 0.02;
-    addStruct('stroke servo linkage: 2 pushrods and a yoke', rod2, strokeLinkG, `2 x ${pushL} mm of ${rod2.id} (${rod2.mass_g} g/m) + yoke 40 x 20 mm of plate-ec-2mm (${plate2.specs.areal_density_kg_m2} kg/m2)`);
+    if (!p.fixedStroke) {
+      strokeLinkG = 2 * rod2.mass_g * pushL / 1000 + plate2.specs.areal_density_kg_m2 * 1000 * 0.04 * 0.02;
+      addStruct('stroke servo linkage: 2 pushrods and a yoke', rod2, strokeLinkG, `2 x ${pushL} mm of ${rod2.id} (${rod2.mass_g} g/m) + yoke 40 x 20 mm of plate-ec-2mm (${plate2.specs.areal_density_kg_m2} kg/m2)`);
+    }
     const ti = byId(catalog, 'mtube-tigertitanium-ti3al2.5v-6.35x5.54'), cst = byId(catalog, 'tube-cst-pultruded-5x4');
     const probeL = p.pitotLength_mm ?? 100;
     pitotG = (ti.mass_g + cst.mass_g) * probeL / 1000;
@@ -176,29 +179,54 @@ export function buildDesign(params, catalog) {
   const batP = byId(catalog, parts.battery);
   const twistP = byId(catalog, parts.twistServo);
   const tailP = byId(catalog, parts.tailServo);
-  const strokeP = byId(catalog, parts.strokeServo);
+  // Round 5: a fixed stroke (p.fixedStroke, a pinned rocker with no slot) has no stroke servo.
+  const strokeP = parts.strokeServo && !p.fixedStroke ? byId(catalog, parts.strokeServo) : null;
   const fcP = byId(catalog, parts.fc);
   const gpsP = byId(catalog, parts.gps);
   const aspdP = byId(catalog, parts.airspeed);
   const rxP = byId(catalog, parts.receiver);
   add(motorP, 1, 'flap motor');
-  add(escP, 1, p.servoSupply === 'battery' ? 'flap ESC, its BEC supplies the avionics (servos on the pack)' : 'flap ESC, its BEC supplies the servos and avionics');
+  const fcBec = p.becFrom === 'fc';
+  add(escP, 1, fcBec ? 'flap ESC (no BEC; the flight controller\'s 5 V BEC supplies the avionics)' : p.servoSupply === 'battery' ? 'flap ESC, its BEC supplies the avionics (servos on the pack)' : 'flap ESC, its BEC supplies the servos and avionics');
   add(batP, 1, 'battery');
   add(twistP, 2, 'wing twist servo');
   add(tailP, 2, 'tail servo');
-  add(strokeP, 1, 'stroke amplitude servo');
+  if (strokeP) add(strokeP, 1, 'stroke amplitude servo');
   add(fcP, 1, 'flight controller with IMU and baro');
   add(gpsP, 1, 'GPS');
   add(aspdP, 1, 'airspeed sensor');
   add(rxP, 1, 'receiver');
+  // Round 5: the sensors and supplies the controller's own functions read or need (SPEC ruling "Control functions need
+  // real hardware"; servo supply ruling), each in the BOM with its published mass.
+  for (const [key, role] of [['crankEncoder', 'crank angle encoder (governor, clamp, twist sync)'], ['encoderMagnet', 'crank encoder magnet'], ['powerModule', 'power module (battery voltage and current)'], ['servoRegulator', 'servo regulator']]) if (parts[key]) add(byId(catalog, parts[key]), 1, role);
   for (const g of parts.gears) add(byId(catalog, g), 1, 'gear');
-  // Bearings (round 4, p.bearingLayout 'auto'): two per shoulder pivot, two per gearbox shaft (one shaft per stage: the
-  // motor's own bearings carry the first pinion), two per elbow hinge if the hand wing is hinged (elbowGain > 0).
   const nStages = Math.floor(parts.gears.length / 2);
   const hinged = (p.elbowGain ?? 0.5) > 0;
-  const bearingLayout = p.bearingLayout === 'auto' ? [{ where: 'shoulder pivots', count: 4 }, { where: `gearbox shafts (${nStages} shafts, crank included)`, count: 2 * nStages }, { where: 'elbow hinges', count: hinged ? 4 : 0, ...(hinged ? {} : { note: 'rigid elbow: the hand wing is not hinged (elbowGain 0)' }) }] : null;
-  const nBearings = bearingLayout ? bearingLayout.reduce((a, b) => a + b.count, 0) : p.bearingCount ?? 8;
-  add(byId(catalog, parts.bearing), nBearings, 'bearing');
+  let bearingLayout = null;
+  if (p.joints) {
+    // Round 5: every joint of the drive with its own rated part (src/design/joints.js; load path filled in below).
+    const J = p.joints;
+    const shafts = Array.from({ length: nStages - 1 }, (_, j) => J.shafts[j] ?? J.shafts[J.shafts.length - 1]);
+    const rows = [[J.shoulder, 4, 'shoulder pivots, two per side'], [J.crankShaft, 2, 'crank shaft'], ...shafts.map((id, j) => [id, 2, `gear shaft ${j + 1}`]), [J.couplerEyes, 4, 'coupler eyes, two per coupler']];
+    const merged = new Map();
+    for (const [id, count, where] of rows) {
+      const m = merged.get(id) ?? { count: 0, where: [] };
+      m.count += count;
+      m.where.push(`${where} (${count})`);
+      merged.set(id, m);
+    }
+    for (const [id, m] of merged) {
+      const part = byId(catalog, id);
+      add(part, m.count, `${part.category === 'bushing' ? 'bushing' : part.category === 'rod_end' ? 'rod end' : 'bearing'}: ${m.where.join(', ')}`);
+    }
+    bearingLayout = rows.map(([id, count, where]) => ({ where, count, id }));
+  } else {
+    // Bearings (round 4, p.bearingLayout 'auto'): two per shoulder pivot, two per gearbox shaft (one shaft per stage:
+    // the motor's own bearings carry the first pinion), two per elbow hinge if the hand wing is hinged (elbowGain > 0).
+    bearingLayout = p.bearingLayout === 'auto' ? [{ where: 'shoulder pivots', count: 4 }, { where: `gearbox shafts (${nStages} shafts, crank included)`, count: 2 * nStages }, { where: 'elbow hinges', count: hinged ? 4 : 0, ...(hinged ? {} : { note: 'rigid elbow: the hand wing is not hinged (elbowGain 0)' }) }].map((b) => ({ ...b, id: parts.bearing })) : null;
+    const nBearings = bearingLayout ? bearingLayout.reduce((a, b) => a + b.count, 0) : p.bearingCount ?? 8;
+    add(byId(catalog, parts.bearing), nBearings, 'bearing');
+  }
   const partsG = bom.reduce((a, b) => a + b.mass_g, 0);
   const structG = structure.reduce((a, b) => a + b.mass_g, 0);
   const marginG = MARGIN * (partsG + structG);
@@ -240,7 +268,7 @@ export function buildDesign(params, catalog) {
   const lump = (name, g, x, y = 0, z = 0, k = 0) => lumps.push({ name, mass_kg: (g / 1000) * marginFrac, pos: p.lumpPos?.[name] ?? [x, y, z], gyration_m: k });
   const motorX = 0.04;
   lump('flap motor', motorP.mass_g, motorX, 0.0);
-  lump('gears and bearings', bom.filter((b) => b.role === 'gear' || b.role === 'bearing').reduce((a, b) => a + b.mass_g, 0), 0.015, 0.0);
+  lump('gears and bearings', bom.filter((b) => b.role === 'gear' || /^(bearing|bushing|rod end)/.test(b.role)).reduce((a, b) => a + b.mass_g, 0), 0.015, 0.0);
   lump('crank, rockers, plates', crankPlateG + (p.gearboxPlate_g ?? 8), 0.01, 0.01);
   lump('couplers', (2 * couplerRod.mass_g * bMm) / 1000, 0.0, 0.0);
   lump('ESC', escP.mass_g, 0.07, -0.01);
@@ -248,7 +276,13 @@ export function buildDesign(params, catalog) {
   lump('receiver and airspeed', rxP.mass_g + aspdP.mass_g, 0.11, 0.0);
   lump('GPS', gpsP.mass_g, -0.03, 0.03);
   lump('tail servos', 2 * tailP.mass_g, -0.08, 0.0);
-  lump('stroke servo', strokeP.mass_g + strokeLinkG, -0.03, 0.0);
+  if (strokeP) lump('stroke servo', strokeP.mass_g + strokeLinkG, -0.03, 0.0);
+  // Round 5: the crank encoder sits on the crank axis with its magnet; a separate power module or servo regulator sits
+  // with the flight controller.
+  const sensorG = ['crankEncoder', 'encoderMagnet'].reduce((a, k) => a + (parts[k] ? byId(catalog, parts[k]).mass_g : 0), 0);
+  if (sensorG > 0) lump('crank encoder', sensorG, 0.0, -0.05);
+  const supplyG = ['powerModule', 'servoRegulator'].reduce((a, k) => a + (parts[k] ? byId(catalog, parts[k]).mass_g : 0), 0);
+  if (supplyG > 0) lump('power module and regulator', supplyG, -0.01, -0.03);
   if (pitotG) lump('pitot-static probe', pitotG, Math.max(0.45 * bodyLen, 0.14) + 0.04, 0.0);
   lump('keel and boom', keel.mass_g * keelLen, -lt / 2 + noseLen * 0.25, 0.0, 0, 0.29 * keelLen);
   lump('fuselage shell and formers', (film.specs.areal_density_g_m2 ?? film.mass_g) * shell + 5 * bodyW * bodyH * 0.5 * 0.002 * ribDensity * 1000, -0.05, 0.0, 0, 0.3 * bodyLen);
@@ -272,9 +306,10 @@ export function buildDesign(params, catalog) {
   const a = (p.crank_mm ?? 12) / 1000;
   const b0 = (p.coupler_mm ?? 70) / 1000;
   const d0 = p.groundLink_mm ? p.groundLink_mm / 1000 : Math.max(0.05, b0);
-  const ampMax = (p.ampMax_deg ?? Math.min((p.amp_deg ?? 25) * 1.6, 60)) * DEG;
-  const ampMin = ampNom * 0.6;
-  const drive = { kind: 'crank-rocker', a, b: b0, d: d0, ampMin, ampMax, ampNominal: ampNom, phiMean: (p.phiMean_deg ?? 5) * DEG, gearRatio: p.gearRatio, gearEfficiency: p.gearEff ?? 0.85, crankFriction_Nm: 0.01, gears: parts.gears, ...(p.pinLayout ? { pinLayout: p.pinLayout } : {}), ...(bearingLayout ? { bearings: bearingLayout.map((b) => ({ ...b, id: parts.bearing })) } : {}), ...(Number.isFinite(p.escCurrentClamp_A) ? { escCurrentClamp_A: p.escCurrentClamp_A } : {}) };
+  const ampMax = p.fixedStroke ? ampNom : (p.ampMax_deg ?? Math.min((p.amp_deg ?? 25) * 1.6, 60)) * DEG;
+  // Round 5: a fixed stroke (no slot, no stroke servo) has one amplitude, the nominal one.
+  const ampMin = p.fixedStroke ? ampNom : ampNom * 0.6;
+  const drive = { kind: 'crank-rocker', a, b: b0, d: d0, ampMin, ampMax, ampNominal: ampNom, phiMean: (p.phiMean_deg ?? 5) * DEG, gearRatio: p.gearRatio, gearEfficiency: p.gearEff ?? 0.85, crankFriction_Nm: 0.01, gears: parts.gears, ...(p.pinLayout ? { pinLayout: p.pinLayout } : {}), ...(bearingLayout ? { bearings: bearingLayout } : {}), ...(p.fixedStroke ? { fixedStroke: true } : {}), ...(p.governor ? { governor: p.governor } : {}), ...(Number.isFinite(p.escCurrentClamp_A) ? { escCurrentClamp_A: p.escCurrentClamp_A } : {}) };
   const motor = motorModel(motorP);
   // Braking (round 4). The flight model's default lets the drive brake at only half the motor's rating (an assumption
   // with no source), so on the upstroke the wing back-drove the crank to twice its commanded speed and the reversal at
@@ -287,17 +322,19 @@ export function buildDesign(params, catalog) {
     motor.regenLimit_A = -Math.min(motor.I_cont ?? Infinity, escP.specs.continuous_current_a ?? Infinity);
     motor.regenLimit_basis = `ESC documentation: ${af.quote} (${af.source}); braking current bounded at the lower continuous rating`;
   }
-  const batt = batteryModel(batP);
+  const batt = applyChargeLimit(batteryModel(batP), p.chargeLimit);
   // SPEC ruling after catalogue round 2: the design states its servo supply voltage and the BEC that provides it
   // (here the flap ESC's built-in BEC, in the BOM with the ESC), and no servo figure is extrapolated outside its rows.
-  const bec = becOf(escP);
+  // Round 5 (p.becFrom 'fc'): the ESC has no BEC; the flight controller's own 5 V regulator feeds the avionics.
+  const becPart = fcBec ? byId(catalog, parts.fc) : escP;
+  const bec = becOf(becPart);
   const cellsOk = escCellsCover(escP, batP.specs.cells_series);
   if (cellsOk === false) throw new Error(`ESC ${escP.id} is not rated for a ${batP.specs.cells_series}S pack (${escP.specs.cells_text})`);
   // Servo supply. 'bec' (rounds 1-3): the ESC's BEC at its published voltage. 'battery' (round 4): HV servos straight
   // on the flight pack, as is usual for HV servos on 2S; no regulator, so the supply is the pack itself, in the BOM with
   // its mass. Its voltage moves with charge and load, so torque and speed are taken at the lowest terminal voltage in
   // use (20% charge, the M2 reserve, sagging at the pack's continuous rating) and stall current at full charge.
-  const supply = batteryServoSupply(p.servoSupply, batteryModel(batP));
+  const supply = batteryServoSupply(p.servoSupply, batt);
   const supplyV = supply ? supply.performance_V : (p.servoSupply_V ?? bec.volts);
   if (!Number.isFinite(supplyV)) throw new Error(`ESC ${escP.id} publishes no BEC voltage: no servo supply`);
   const esc = { id: escP.id, I_cont: escP.specs.continuous_current_a, bec_A: bec.amps, bec_V: bec.volts, bec_kind: bec.kind, eta: 0.95, eta_assumed: true, regenerative: false, regenerative_basis: 'no regenerative operation stated in the ESC documentation read for the catalogue', cells_text: escP.specs.cells_text ?? null };
@@ -322,7 +359,7 @@ export function buildDesign(params, catalog) {
   const servos = {
     twist: twistAtWing,
     tail: servoSpec(tailP, supplyV),
-    stroke: { ...servoSpec(strokeP, supplyV), amp_rate_rad_s: 0.5 },
+    ...(strokeP ? { stroke: { ...servoSpec(strokeP, supplyV), amp_rate_rad_s: 0.5 } } : {}),
   };
   // Body geometry: pod from the nose (ahead of the battery and receiver) back bodyLen, then the keel tube as a boom to
   // the tail's trailing edge. The tunnels, page and film build from this loft (src/physics/geometry.js).
@@ -373,9 +410,7 @@ export function buildDesign(params, catalog) {
     motor, esc, battery: batt, servos,
     structure: { items: structure, spar_inner: sparInner, spar_outer: sparOuter, gear_stages: gearStages, coupler: couplerSpec(couplerRod, bMm), ...(twistRod ? { twist_rod: twistRodSpec(twistRod, twistRodLen) } : {}) },
     bom: { parts: bom, structure, parts_g: partsG, structure_g: structG, margin_g: marginG, total_g: totalG },
-    electrical: supply
-      ? { avionics_A_5V: 0.35, avionics_note: 'FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw', servo_source: 'battery', servo_supply_V: supplyV, servo_supply: { part: batP.id, ...supply }, bec: { part: escP.id, volts: bec.volts, amps: bec.amps, kind: bec.kind, published: bec.text, carries: 'avionics only', note: 'built into the flap ESC; its mass is in the BOM with the ESC' } }
-      : { avionics_A_5V: 0.35, avionics_note: 'FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw', servo_source: 'bec', servo_supply_V: supplyV, bec: { part: escP.id, volts: bec.volts, amps: bec.amps, kind: bec.kind, published: bec.text, carries: 'servos and avionics', note: 'built into the flap ESC; its mass is in the BOM with the ESC' } },
+    electrical: { ...electricalOf({ supply, supplyV, batP, becPart, bec, fcBec, extraA: p.avionicsExtra_A ?? 0, extraNote: p.avionicsExtraNote }), ...(p.currentSense ? { current_sense: p.currentSense } : {}) },
     cruise: {},
     assumptions: [
       `Section polar ${polarName}: ${pol.assumed ?? 'measured table'}`,
@@ -386,6 +421,13 @@ export function buildDesign(params, catalog) {
       'Tail polar is an assumed thin plate.',
     ],
   };
+  if (p.joints) {
+    // Round 5: the drive's load path, which bearing, bushing or rod end reacts which force (SPEC ruling).
+    const jp = driveJoints(d, catalog, p.joints);
+    d.structure.joints = jp.joints;
+    d.structure.joints_unchecked = jp.unchecked;
+    d.structure.joints_layout = jp.layout;
+  }
   return d;
 }
 
@@ -399,9 +441,41 @@ export function batteryServoSupply(kind, batt) {
   const ocv20 = batteryOcv(batt, 0.2);
   const sag = (batt.I_cont ?? 0) * batt.R_int;
   const performance_V = +(ocv20 - sag).toFixed(3);
-  // A fresh LiPo charge ends at 4.20 V per cell (the model's rested curve tops out at 4.18).
-  const current_V = +Math.max(batteryOcv(batt, 1), batt.cells * (4.2 + (batt.cell_shift_V ?? 0))).toFixed(3);
-  return { performance_V, current_V, rule: `torque and speed at ${performance_V} V: rested ${ocv20.toFixed(2)} V at 20% charge less ${sag.toFixed(2)} V sag at the pack's ${batt.I_cont} A continuous rating; stall current at the full-charge ${current_V} V` };
+  // A fresh LiPo charge ends at 4.20 V per cell (the model's rested curve tops out at 4.18). Round 5: a pack charged to a
+  // limited voltage (battery.charge_limit_V_per_cell) can present no more than that.
+  const limit = batt.charge_limit_V_per_cell;
+  const current_V = Number.isFinite(limit) ? +(batt.cells * limit).toFixed(3) : +Math.max(batteryOcv(batt, 1), batt.cells * (4.2 + (batt.cell_shift_V ?? 0))).toFixed(3);
+  return { performance_V, current_V, rule: `torque and speed at ${performance_V} V: rested ${ocv20.toFixed(2)} V at 20% charge less ${sag.toFixed(2)} V sag at the pack's ${batt.I_cont} A continuous rating; stall current at the ${Number.isFinite(limit) ? `charge-limited ${current_V} V (${limit} V per cell)` : `full-charge ${current_V} V`}` };
+}
+
+/** The design's electrical block: servo supply and the 5 V regulator for the avionics (ESC's BEC or the FC's). */
+function electricalOf({ supply, supplyV, batP, becPart, bec, fcBec, extraA, extraNote }) {
+  const where = fcBec ? 'built into the flight controller; its mass is in the BOM with the FC' : 'built into the flap ESC; its mass is in the BOM with the ESC';
+  const avionics = { avionics_A_5V: +(0.35 + extraA).toFixed(4), avionics_note: `FC, GPS, receiver at 5 V, 0.35 A assumed (catalogue lists no current draw)${extraA ? ` plus ${extraA} A published (${extraNote ?? 'sensors'})` : ''}` };
+  const becBlock = (carries) => ({ part: becPart.id, volts: bec.volts, amps: bec.amps, kind: bec.kind, published: bec.text, carries, note: where });
+  return supply
+    ? { ...avionics, servo_source: 'battery', servo_supply_V: supplyV, servo_supply: { part: batP.id, ...supply }, bec: becBlock('avionics only') }
+    : { ...avionics, servo_source: 'bec', servo_supply_V: supplyV, bec: becBlock('servos and avionics') };
+}
+
+/**
+ * Round 5 (servo-voltage ruling): a pack charged only to lim.V_per_cell. Its capacity is derated to the lower of the
+ * model's rested curve at that voltage (the state of charge where batteryOcv reaches it) and any published figure
+ * (lim.published_fraction with its source), so M2 counts only what the pack holds.
+ */
+export function applyChargeLimit(batt, lim) {
+  if (!lim) return batt;
+  // The limit is the charger's terminal voltage per cell; the rested curve (shifted for Li-ion) is searched for it.
+  const vPack = batt.cells * lim.V_per_cell;
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 60; i++) {
+    const m = 0.5 * (lo + hi);
+    if (batteryOcv(batt, m) < vPack) lo = m; else hi = m;
+  }
+  const model = 0.5 * (lo + hi);
+  const pub = Number.isFinite(lim.published_fraction) ? lim.published_fraction : null;
+  const fraction = pub === null ? model : Math.min(model, pub);
+  return { ...batt, charge_limit_V_per_cell: lim.V_per_cell, charge_fraction: +fraction.toFixed(4), charge_basis: `charged to ${lim.V_per_cell} V per cell (${vPack.toFixed(2)} V): capacity fraction ${fraction.toFixed(3)}, the lower of the model's rested curve (${model.toFixed(3)})${pub === null ? '' : ` and the published ${pub} (${lim.source})`}` };
 }
 
 /**
@@ -434,7 +508,9 @@ export function stages(ids, catalog) {
   const out = [];
   for (let k = 0; k + 1 < parts.length; k += 2) {
     const pin = parts[k], gear = parts[k + 1];
-    out.push({ pinion: pin.id, gear: gear.id, ratio: gear.specs.teeth / pin.specs.teeth, pinion_allowable_Nm: minRating(pin), gear_allowable_Nm: minRating(gear) });
+    const ps = pin.specs, gs = gear.specs;
+    // Round 5: materials and mesh geometry for the mixed-material ruling (src/physics/structure.js mixedMeshCheck).
+    out.push({ pinion: pin.id, gear: gear.id, ratio: gs.teeth / ps.teeth, pinion_allowable_Nm: minRating(pin), gear_allowable_Nm: minRating(gear), pinion_material: ps.material ?? null, gear_material: gs.material ?? null, pinion_rp_m: (ps.module_mm * ps.teeth) / 2000, gear_rp_m: (gs.module_mm * gs.teeth) / 2000, pinion_face_m: (ps.face_width_mm ?? 0) / 1000, gear_face_m: (gs.face_width_mm ?? 0) / 1000, alpha_rad: ((gs.pressure_angle_deg ?? 20) * Math.PI) / 180 });
   }
   return out;
 }

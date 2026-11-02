@@ -89,6 +89,8 @@ export function setupFlight(design, { seed = 1, perturb = {}, wind = null, delay
     twistR: row.sym, twistL: row.sym,
     tailR: -row.tail, tailL: -row.tail,
     epsLag: 0.5,
+    // Round 5: a pack charged to a limited voltage (battery.charge_fraction < 1) starts the flight below full.
+    charge: init.charge ?? (1 - (design.battery.charge_fraction ?? 1)) * design.battery.capacity_Ah * 3600,
   });
   const c = createController(design, { seed, delay, sensorNoise });
   const truth0 = sensorTruth(sim);
@@ -169,8 +171,10 @@ export function runM2(design, { seed = 1, perturb = {}, sensorNoise = true, dela
   const Pc = sumP / n;
   const Ic = sumI / n;
   const bt = design.battery;
-  // Usable capacity: 80% of nominal, to keep the pack above its low-voltage knee.
-  const usable = (bt.capacity_Ah * 3600 * 0.8) / Ic;
+  // Usable capacity: 80% of nominal, to keep the pack above its low-voltage knee. Round 5: a pack charged to a limited
+  // voltage holds only battery.charge_fraction of its nominal capacity; the same 20% reserve stays.
+  const usableFrac = (bt.charge_fraction ?? 1) - 0.2;
+  const usable = (bt.capacity_Ah * 3600 * usableFrac) / Ic;
   const Vmid = bt.cells * 3.7 - Ic * bt.R_int;
   // Max continuous electrical power available at the shaft side: limited by motor, ESC and battery ratings.
   const Icont = Math.min(design.motor.I_cont ?? Infinity, design.esc.I_cont ?? Infinity, bt.I_cont ?? Infinity);
@@ -178,7 +182,7 @@ export function runM2(design, { seed = 1, perturb = {}, sensorNoise = true, dela
   const mean = Pc;
   const ratio = motorAvail / mean;
   const passed = usable >= 600 && ratio >= 1.3;
-  return { passed, measured: { cruise_power_w: Pc, cruise_batt_A: Ic, endurance_min: usable / 60, usable_fraction: 0.8, continuous_limit_A: Icont, power_available_w: motorAvail, power_ratio: ratio, altitude_dev_m: maxDev, simulated_s: tEnd, motor_rating_rule: design.motor.I_cont_rule, extrapolated_from_s: tEnd - 20 }, peaks: { ...sim.peaks }, rms: { ...sim.rms }, log: L?.output() };
+  return { passed, measured: { cruise_power_w: Pc, cruise_batt_A: Ic, endurance_min: usable / 60, usable_fraction: usableFrac, ...(bt.charge_fraction < 1 ? { charge_limit_V_per_cell: bt.charge_limit_V_per_cell, charge_fraction: bt.charge_fraction, charge_basis: bt.charge_basis } : {}), continuous_limit_A: Icont, power_available_w: motorAvail, power_ratio: ratio, altitude_dev_m: maxDev, simulated_s: tEnd, motor_rating_rule: design.motor.I_cont_rule, extrapolated_from_s: tEnd - 20 }, peaks: { ...sim.peaks }, rms: { ...sim.rms }, log: L?.output() };
 }
 
 // ---- M3 coordinated turn ---------------------------------------------------------------------------------------
