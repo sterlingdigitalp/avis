@@ -1,0 +1,176 @@
+{
+ "fps": 30,
+ "design": "larus-gl-2",
+ "blender": {
+  "res": "1920x1080",
+  "samples": 48,
+  "sun": 22,
+  "world": 0.4,
+  "haze": 1.6e-05,
+  "look": "AgX - Medium High Contrast"
+ },
+ "credits": [
+  [
+   "Terrain",
+   "NRCan HRDEM 2 m lidar and MRDEM-30. Contains information licensed under the Open Government Licence \u2013 Canada."
+  ],
+  [
+   "Copernicus",
+   "Produced using Copernicus WorldDEM-30 \u00a9 DLR e.V. 2010-2014 and \u00a9 Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved."
+  ],
+  [
+   "Sentinel-2",
+   "Contains modified Copernicus Sentinel data 2022, 2023."
+  ],
+  [
+   "Poly Haven",
+   "Textures and sky HDRI, CC0."
+  ],
+  [
+   "Teardown",
+   "Simulator kit, capture and sound engine (MIT): elvarofficial/teardown, after whaleyxbt/claude-motion."
+  ],
+  [
+   "SmartBird",
+   "Send, Fischer, Jebens, Mugrauer, Nagarathinam, Scharfe: Artificial hinged-wing bird with active torsion and partially linear kinematics, ICAS 2012."
+  ],
+  [
+   "Parts",
+   "Every part is a catalogue listing read from its maker or retailer. Names are their makers' trade marks; none were bought, weighed or tested."
+  ]
+ ],
+ "segments": [
+  {
+   "id": "title",
+   "kind": "td",
+   "seq": "title",
+   "dur": 4.0
+  },
+  {
+   "id": "wide",
+   "kind": "bl",
+   "scenario": "larus-gl-2-corridor",
+   "shot": "wide_valley",
+   "start_s": 20,
+   "dur": 5.0,
+   "caption": "Bow Valley, 1,800 m",
+   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
+   "fadeIn": 0.4,
+   "hud": false
+  },
+  {
+   "id": "track",
+   "kind": "bl",
+   "scenario": "larus-gl-2-corridor",
+   "shot": "track_side",
+   "start_s": 50,
+   "dur": 4.0,
+   "caption": "Cruise",
+   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor"
+  },
+  {
+   "id": "assembly",
+   "kind": "td",
+   "seq": "assembly",
+   "dur": 8.0,
+   "fadeIn": 0.4
+  },
+  {
+   "id": "drive",
+   "kind": "td",
+   "seq": "drive",
+   "dur": 8.0
+  },
+  {
+   "id": "twist",
+   "kind": "td",
+   "seq": "twist",
+   "dur": 6.5
+  },
+  {
+   "id": "power",
+   "kind": "td",
+   "seq": "power",
+   "dur": 5.5,
+   "fadeOut": 0.4
+  },
+  {
+   "id": "lead",
+   "kind": "bl",
+   "scenario": "larus-gl-2-corridor",
+   "shot": "lead_front",
+   "start_s": 66,
+   "dur": 4.0,
+   "caption": "Head on",
+   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
+   "fadeIn": 0.4
+  },
+  {
+   "id": "under",
+   "kind": "bl",
+   "scenario": "larus-gl-2-corridor",
+   "shot": "under_wing",
+   "start_s": 98,
+   "dur": 4.0,
+   "slow": 2,
+   "caption": "Under the wing",
+   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
+   "lens": 14
+  },
+  {
+   "id": "treetop",
+   "kind": "bl",
+   "scenario": "larus-gl-2-corridor",
+   "shot": "treetop_pass",
+   "start_s": 36,
+   "dur": 4.0,
+   "caption": "Over the bench",
+   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor"
+  },
+  {
+   "id": "topdown",
+   "kind": "bl",
+   "scenario": "larus-gl-2-corridor",
+   "shot": "top_down",
+   "start_s": 28,
+   "dur": 3.5,
+   "caption": "From above",
+   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor"
+  },
+  {
+   "id": "ridge",
+   "kind": "bl",
+   "scenario": "larus-gl-2-corridor",
+   "shot": "ridge_rise",
+   "start_s": 104,
+   "dur": 5.0,
+   "caption": "Banked turn",
+   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor"
+  },
+  {
+   "id": "river",
+   "kind": "bl",
+   "scenario": "larus-gl-2-corridor",
+   "shot": "river_low",
+   "start_s": 6,
+   "dur": 4.0,
+   "caption": "Bow River",
+   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
+   "fadeOut": 0.4
+  },
+  {
+   "id": "gates",
+   "kind": "td",
+   "seq": "gates",
+   "dur": 6.0,
+   "fadeIn": 0.4
+  },
+  {
+   "id": "credits",
+   "kind": "td",
+   "seq": "credits",
+   "dur": 7.0,
+   "fadeOut": 1.0
+  }
+ ]
+}

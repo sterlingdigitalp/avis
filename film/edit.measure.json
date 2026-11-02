@@ -1,0 +1,26 @@
+{
+ "fps": 30,
+ "design": "larus-gl-2",
+ "blender": {
+  "res": "1920x1080",
+  "samples": 48,
+  "sun": 22,
+  "world": 0.4,
+  "haze": 1.6e-05,
+  "look": "AgX - Medium High Contrast"
+ },
+ "credits": [],
+ "segments": [
+  {
+   "id": "m-track",
+   "kind": "bl",
+   "scenario": "larus-gl-2-corridor",
+   "shot": "track_side",
+   "start_s": 50,
+   "dur": 0.2,
+   "lens": 100,
+   "caption": "measure",
+   "sub": ""
+  }
+ ]
+}
