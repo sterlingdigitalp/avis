@@ -57,6 +57,23 @@ Every gate writes `out/verification/<gate>.json`:
 `{"gate":"M1","design":"larus-gl-2 or null","passed":bool,"measured":{...},"limit":{...},"evidence":"path","ran_at":"ISO","command":"exact command"}`.
 Only the script that measured a value writes its file. `tools/verify.mjs` aggregates; it never edits results.
 
+### Declared refinements (2026-11-02, before V4, V7 or any M gate had run)
+
+The research pass found places where the gates above were underspecified. These fill gaps; they do not relax a limit.
+
+- **V4 target.** Measured, not design-point: 18 W electrical at 4.7 m/s (Send et al. 2012), band 12.6-23.4 W, using the paper's 2 m, 0.48 kg, 0.5 m², 2 Hz. Report the 23 W at 5 m/s design point alongside it for information. Stroke kinematics not published are an assumption and must be listed as such in the evidence.
+- **V7 reference.** UIUC data, as the gate says. Report the NASA comparison and the two tunnels' own disagreement beside the result (up to 27% Cd at Re 100k). That context does not change pass or fail.
+- **M4 turbulence.** Dryden low-altitude form at flight altitude with σ_u = σ_v = 2 m/s and σ_w from the standard ratio at that altitude; the 2 m/s stands even though a 6 m/s mean wind would normally imply less. Scale lengths from the low-altitude formula at flight altitude.
+- **M4 gusts.** 1-cosine with gust length H drawn per seed from {5, 10, 20, 40} m, in both vertical and lateral, onset at random phase of the flap cycle, at least two gusts per run. The sweep must also report the worst H.
+- **M2/M8 continuous ratings.** A published continuous rating wins. Otherwise continuous = the lower of the top of the published efficient band and 50% of the published burst current, and the evidence says the rule was applied. A motor with neither is ineligible.
+- **M8 servos.** Only servos with published stall or rated current are eligible. Current estimate: stall current x (torque / stall torque), plus the published idle current if any.
+- **M7 materials.** Only published strength counts. Woven tube 650 MPa, 64 GPa; rods at the lower of their listed ranges, 400 MPa, 28 GPa. Roll-wrapped tubes carry no primary load, because no strength is published.
+- **Parts.** `specs.mass_basis` states whether `mass_g` is per part, metre, m² or litre. Parts flagged sold out or end-of-life are ineligible for the winning BOM.
+
+### Public repository
+
+`github.com/sterlingdigitalp/avis` is public. UIUC-derived tables and airfoil coordinate files stay local and gitignored (`data/references/airfoil-e387.json`, `data/references/airfoils/`), because their licence terms are unclear or reserved. Our own CFD polars are ours to publish. Copernicus terrain, if used, requires the notice in `data/references/credits.md` in the film credits and README.
+
 ## Layout and ownership
 
 Only write inside directories you own. Read anything. Ask the orchestrator through your final report if you need a change elsewhere.

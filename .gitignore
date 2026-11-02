@@ -6,3 +6,5 @@ target/
 __pycache__/
 *.pyc
 teardown-out/
+data/references/airfoil-e387.json
+data/references/airfoils/

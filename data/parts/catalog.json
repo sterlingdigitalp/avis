@@ -1,0 +1,2474 @@
+[
+ {
+  "id": "motor-axi-2203-46-v2",
+  "category": "motor",
+  "manufacturer": "Model Motors (AXI)",
+  "name": "AXI 2203/46 GOLD LINE V2",
+  "mass_g": 20.0,
+  "specs": {
+   "kv_rpm_per_v": 1720.0,
+   "no_load_current_a": 0.5,
+   "resistance_ohm": 0.199,
+   "current_capacity_a": 9.5,
+   "current_capacity_duration_s": 20.0,
+   "continuous_current_a": null,
+   "continuous_rating_note": "Manufacturer publishes a time-limited 'current capacity', not a continuous rating. Do not use current_capacity_a as continuous for M8. The published efficient band is max_efficiency_current_text.",
+   "max_efficiency_current_text": "2,5 - 7 A (>75%) |",
+   "max_efficiency_pct": 76.0,
+   "max_power_w_published": 58.0,
+   "cells_text": "2 Li-Poly |",
+   "dimensions_text_mm": "27,5x21 mm |",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://www.modelmotors.cz/product/detail/320/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-axi-2204-54-v2",
+  "category": "motor",
+  "manufacturer": "Model Motors (AXI)",
+  "name": "AXI 2204/54 GOLD LINE V2",
+  "mass_g": 27.4,
+  "specs": {
+   "kv_rpm_per_v": 1400.0,
+   "no_load_current_a": 0.35,
+   "resistance_ohm": 0.26,
+   "current_capacity_a": 8.5,
+   "current_capacity_duration_s": 30.0,
+   "continuous_current_a": null,
+   "continuous_rating_note": "Manufacturer publishes a time-limited 'current capacity', not a continuous rating. Do not use current_capacity_a as continuous for M8. The published efficient band is max_efficiency_current_text.",
+   "max_efficiency_current_text": "2 - 6 A (>67%) |",
+   "max_efficiency_pct": 78.0,
+   "max_power_w_published": 80.0,
+   "cells_text": "2 - 3 Li-Poly |",
+   "dimensions_text_mm": "27,5x23 mm |",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://www.modelmotors.cz/product/detail/328/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-axi-2208-34-v3",
+  "category": "motor",
+  "manufacturer": "Model Motors (AXI)",
+  "name": "AXI 2208/34 GOLD LINE V3",
+  "mass_g": 43.5,
+  "specs": {
+   "kv_rpm_per_v": 1100.0,
+   "no_load_current_a": 0.35,
+   "resistance_ohm": 0.157,
+   "current_capacity_a": 10.0,
+   "current_capacity_duration_s": 60.0,
+   "continuous_current_a": null,
+   "continuous_rating_note": "Manufacturer publishes a time-limited 'current capacity', not a continuous rating. Do not use current_capacity_a as continuous for M8. The published efficient band is max_efficiency_current_text.",
+   "max_efficiency_current_text": "4 - 7 A (>74%) |",
+   "max_efficiency_pct": 83.0,
+   "max_power_w_published": 100.0,
+   "cells_text": "3s Li-Poly |",
+   "dimensions_text_mm": "27,7x25,5 mm |",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://www.modelmotors.cz/product/detail/338/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-axi-2208-26-v3",
+  "category": "motor",
+  "manufacturer": "Model Motors (AXI)",
+  "name": "AXI 2208/26 GOLD LINE V3",
+  "mass_g": 43.5,
+  "specs": {
+   "kv_rpm_per_v": 1420.0,
+   "no_load_current_a": 0.6,
+   "resistance_ohm": 0.092,
+   "current_capacity_a": 13.0,
+   "current_capacity_duration_s": 60.0,
+   "continuous_current_a": null,
+   "continuous_rating_note": "Manufacturer publishes a time-limited 'current capacity', not a continuous rating. Do not use current_capacity_a as continuous for M8. The published efficient band is max_efficiency_current_text.",
+   "max_efficiency_current_text": "5 - 9 A (>74%) |",
+   "max_efficiency_pct": 84.0,
+   "max_power_w_published": 130.0,
+   "cells_text": "2-3s Li-Poly |",
+   "dimensions_text_mm": "27,7x25,5 mm |",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://www.modelmotors.cz/product/detail/336/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-axi-2208-20-v3",
+  "category": "motor",
+  "manufacturer": "Model Motors (AXI)",
+  "name": "AXI 2208/20 GOLD LINE V3",
+  "mass_g": 43.5,
+  "specs": {
+   "kv_rpm_per_v": 1820.0,
+   "no_load_current_a": 0.8,
+   "resistance_ohm": 0.089,
+   "current_capacity_a": 18.0,
+   "current_capacity_duration_s": 60.0,
+   "continuous_current_a": null,
+   "continuous_rating_note": "Manufacturer publishes a time-limited 'current capacity', not a continuous rating. Do not use current_capacity_a as continuous for M8. The published efficient band is max_efficiency_current_text.",
+   "max_efficiency_current_text": "8-12A |",
+   "max_efficiency_pct": 84.0,
+   "max_power_w_published": 182.0,
+   "cells_text": "2-3s Li-Poly |",
+   "dimensions_text_mm": "27,7 x 25,5 mm |",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://www.modelmotors.cz/product/detail/448/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-axi-2212-26-v3",
+  "category": "motor",
+  "manufacturer": "Model Motors (AXI)",
+  "name": "AXI 2212/26 GOLD LINE V3",
+  "mass_g": 56.0,
+  "specs": {
+   "kv_rpm_per_v": 920.0,
+   "no_load_current_a": 0.45,
+   "resistance_ohm": 0.124,
+   "current_capacity_a": 14.0,
+   "current_capacity_duration_s": 60.0,
+   "continuous_current_a": null,
+   "continuous_rating_note": "Manufacturer publishes a time-limited 'current capacity', not a continuous rating. Do not use current_capacity_a as continuous for M8. The published efficient band is max_efficiency_current_text.",
+   "max_efficiency_current_text": "6 - 10 A (>73%) |",
+   "max_efficiency_pct": 82.0,
+   "max_power_w_published": 138.0,
+   "cells_text": "2-3s Li-Poly |",
+   "dimensions_text_mm": "27,7x29,5 mm |",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://www.modelmotors.cz/product/detail/348/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-axi-2212-20-v3",
+  "category": "motor",
+  "manufacturer": "Model Motors (AXI)",
+  "name": "AXI 2212/20 GOLD LINE V3",
+  "mass_g": 56.0,
+  "specs": {
+   "kv_rpm_per_v": 1150.0,
+   "no_load_current_a": 0.7,
+   "resistance_ohm": 0.078,
+   "current_capacity_a": 18.0,
+   "current_capacity_duration_s": 60.0,
+   "continuous_current_a": null,
+   "continuous_rating_note": "Manufacturer publishes a time-limited 'current capacity', not a continuous rating. Do not use current_capacity_a as continuous for M8. The published efficient band is max_efficiency_current_text.",
+   "max_efficiency_current_text": "6 - 12 A (>75%) |",
+   "max_efficiency_pct": 84.0,
+   "max_power_w_published": 180.0,
+   "cells_text": "2-3s Li-Poly |",
+   "dimensions_text_mm": "27,7x29,5 mm |",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://www.modelmotors.cz/product/detail/344/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-axi-2217-20-v3",
+  "category": "motor",
+  "manufacturer": "Model Motors (AXI)",
+  "name": "AXI 2217/20 GOLD LINE V3",
+  "mass_g": 69.5,
+  "specs": {
+   "kv_rpm_per_v": 840.0,
+   "no_load_current_a": 0.4,
+   "resistance_ohm": 0.103,
+   "current_capacity_a": 20.0,
+   "current_capacity_duration_s": 60.0,
+   "continuous_current_a": null,
+   "continuous_rating_note": "Manufacturer publishes a time-limited 'current capacity', not a continuous rating. Do not use current_capacity_a as continuous for M8. The published efficient band is max_efficiency_current_text.",
+   "max_efficiency_current_text": "8 - 14 A (>75%) |",
+   "max_efficiency_pct": 84.0,
+   "max_power_w_published": 270.0,
+   "cells_text": "2-4s Li-Poly |",
+   "dimensions_text_mm": "27,7x34,5 mm |",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://www.modelmotors.cz/product/detail/362/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-axi-2217-16-v3",
+  "category": "motor",
+  "manufacturer": "Model Motors (AXI)",
+  "name": "AXI 2217/16 GOLD LINE V3",
+  "mass_g": 69.5,
+  "specs": {
+   "kv_rpm_per_v": 1050.0,
+   "no_load_current_a": 0.4,
+   "resistance_ohm": 0.065,
+   "current_capacity_a": 24.0,
+   "current_capacity_duration_s": 60.0,
+   "continuous_current_a": null,
+   "continuous_rating_note": "Manufacturer publishes a time-limited 'current capacity', not a continuous rating. Do not use current_capacity_a as continuous for M8. The published efficient band is max_efficiency_current_text.",
+   "max_efficiency_current_text": "10 - 18 A (>75%) |",
+   "max_efficiency_pct": 85.0,
+   "max_power_w_published": 245.0,
+   "cells_text": "2-3s Li-Poly |",
+   "dimensions_text_mm": "27,7x34,5 mm |",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://www.modelmotors.cz/product/detail/360/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-axi-2217-12-v3",
+  "category": "motor",
+  "manufacturer": "Model Motors (AXI)",
+  "name": "AXI 2217/12 GOLD LINE V3",
+  "mass_g": 69.5,
+  "specs": {
+   "kv_rpm_per_v": 1380.0,
+   "no_load_current_a": 0.4,
+   "resistance_ohm": 0.034,
+   "current_capacity_a": 32.0,
+   "current_capacity_duration_s": 60.0,
+   "continuous_current_a": null,
+   "continuous_rating_note": "Manufacturer publishes a time-limited 'current capacity', not a continuous rating. Do not use current_capacity_a as continuous for M8. The published efficient band is max_efficiency_current_text.",
+   "max_efficiency_current_text": "15 - 24 A (>75%) |",
+   "max_efficiency_pct": 86.0,
+   "max_power_w_published": 330.0,
+   "cells_text": "2-3s Li-Poly |",
+   "dimensions_text_mm": "27,7x34,5 mm |",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://www.modelmotors.cz/product/detail/358/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-axi-2220-16-v3",
+  "category": "motor",
+  "manufacturer": "Model Motors (AXI)",
+  "name": "AXI 2220/16 GOLD LINE V3",
+  "mass_g": 87.0,
+  "specs": {
+   "kv_rpm_per_v": 910.0,
+   "no_load_current_a": 1.5,
+   "resistance_ohm": 0.0756,
+   "current_capacity_a": 29.0,
+   "current_capacity_duration_s": 60.0,
+   "continuous_current_a": null,
+   "continuous_rating_note": "Manufacturer publishes a time-limited 'current capacity', not a continuous rating. Do not use current_capacity_a as continuous for M8. The published efficient band is max_efficiency_current_text.",
+   "max_efficiency_current_text": "20 - 28 A (>75%) |",
+   "max_efficiency_pct": 85.0,
+   "max_power_w_published": 400.0,
+   "cells_text": "2-3s Li-Poly |",
+   "dimensions_text_mm": "27,7 x 37,9 mm |",
+   "shaft_mm": 4.0
+  },
+  "price_usd": null,
+  "source_url": "https://www.modelmotors.cz/product/detail/501/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-eflite-park370-1080",
+  "category": "motor",
+  "manufacturer": "E-flite",
+  "name": "Park 370 Brushless Outrunner 1080Kv (EFLM1200)",
+  "mass_g": 45,
+  "specs": {
+   "kv_rpm_per_v": 1080,
+   "no_load_current_a": 0.7,
+   "no_load_test_v": 10,
+   "resistance_ohm": 0.19,
+   "continuous_current_a": 9,
+   "burst_current_a": 11,
+   "burst_duration_s": 15,
+   "note": "Manual: maximum burst duration 15 s; adequate cooling required at maximum current.",
+   "dimensions_text_mm": "28 dia x 25",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://assets.horizonhobby.com/on/demandware.static/-/Sites-horizon-master/default/dw780f4ace/Manuals/EFLM1210HS-Manual-MULTI.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "motor-eflite-park370-1360",
+  "category": "motor",
+  "manufacturer": "E-flite",
+  "name": "Park 370 Brushless Outrunner 1360Kv (EFLM1205)",
+  "mass_g": 45,
+  "specs": {
+   "kv_rpm_per_v": 1360,
+   "no_load_current_a": 1.0,
+   "no_load_test_v": 10,
+   "resistance_ohm": 0.1,
+   "continuous_current_a": 12,
+   "burst_current_a": 15,
+   "burst_duration_s": 15,
+   "note": "Manual: maximum burst duration 15 s; adequate cooling required at maximum current.",
+   "dimensions_text_mm": "28 dia x 25",
+   "shaft_mm": 3.17
+  },
+  "price_usd": null,
+  "source_url": "https://assets.horizonhobby.com/on/demandware.static/-/Sites-horizon-master/default/dw780f4ace/Manuals/EFLM1210HS-Manual-MULTI.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "motor-eflite-park480-910",
+  "category": "motor",
+  "manufacturer": "E-flite",
+  "name": "Park 480 Brushless Outrunner 910Kv",
+  "mass_g": 87,
+  "specs": {
+   "kv_rpm_per_v": 910,
+   "no_load_current_a": 0.85,
+   "no_load_test_v": 8,
+   "resistance_ohm": 0.08,
+   "continuous_current_a": 20,
+   "burst_current_a": 25,
+   "burst_duration_s": 15,
+   "cells_text": "6-10 Ni-MH/Ni-Cd or 2-3S Li-Po",
+   "note": "Manual: maximum burst duration 15 s; adequate cooling required at maximum current.",
+   "shaft_mm": 4
+  },
+  "price_usd": null,
+  "source_url": "https://assets.horizonhobby.com/on/demandware.static/-/Sites-horizon-master/default/dw76e9bdef/Manuals/EFLPark480910KvOutrunnerInstructions.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "esc-hobbywing-skywalker-15a-v2",
+  "category": "esc",
+  "manufacturer": "Hobbywing",
+  "name": "SkyWalker 15A V2",
+  "mass_g": 10,
+  "specs": {
+   "continuous_current_a": 15,
+   "peak_current_a": 30,
+   "peak_duration_s": null,
+   "peak_note": "Leaflet gives no duration for peak current; treat peak as not usable for M8.",
+   "cells_text": "2-3S LiPo",
+   "bec": "Linear 5V 2A",
+   "dimensions_text_mm": "38 x 17 x 5"
+  },
+  "price_usd": null,
+  "source_url": "https://cdn.shopify.com/s/files/1/0109/9702/files/SKYWALKER_V2_mini_Leaflet_EN.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "esc-hobbywing-skywalker-20a-v2-mini",
+  "category": "esc",
+  "manufacturer": "Hobbywing",
+  "name": "SkyWalker 20A V2 Mini",
+  "mass_g": 15,
+  "specs": {
+   "continuous_current_a": 20,
+   "peak_current_a": 40,
+   "peak_duration_s": null,
+   "peak_note": "Leaflet gives no duration for peak current; treat peak as not usable for M8.",
+   "cells_text": "2-4S LiPo",
+   "bec": "Switch 5V 2A",
+   "dimensions_text_mm": "34 x 15 x 10"
+  },
+  "price_usd": null,
+  "source_url": "https://cdn.shopify.com/s/files/1/0109/9702/files/SKYWALKER_V2_mini_Leaflet_EN.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "esc-hobbywing-skywalker-30a-v2-mini",
+  "category": "esc",
+  "manufacturer": "Hobbywing",
+  "name": "SkyWalker 30A V2 Mini",
+  "mass_g": 23,
+  "specs": {
+   "continuous_current_a": 30,
+   "peak_current_a": 50,
+   "peak_duration_s": null,
+   "peak_note": "Leaflet gives no duration for peak current; treat peak as not usable for M8.",
+   "cells_text": "2-4S LiPo",
+   "bec": "Switch 5V 3A",
+   "dimensions_text_mm": "44 x 18 x 10"
+  },
+  "price_usd": null,
+  "source_url": "https://cdn.shopify.com/s/files/1/0109/9702/files/SKYWALKER_V2_mini_Leaflet_EN.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "esc-hobbywing-skywalker-20a-v2",
+  "category": "esc",
+  "manufacturer": "Hobbywing",
+  "name": "SkyWalker 20A V2",
+  "mass_g": 19,
+  "specs": {
+   "continuous_current_a": 20,
+   "peak_current_a": 40,
+   "peak_duration_s": null,
+   "peak_note": "Leaflet gives no duration for peak current; treat peak as not usable for M8.",
+   "cells_text": "2-3S LiPo",
+   "bec": "Linear 5V 3A",
+   "dimensions_text_mm": "45 x 23 x 8"
+  },
+  "price_usd": null,
+  "source_url": "https://cdn.shopify.com/s/files/1/0109/9702/files/SKYWALKER_V2_mini_Leaflet_EN.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "esc-hobbywing-skywalker-30a-v2",
+  "category": "esc",
+  "manufacturer": "Hobbywing",
+  "name": "SkyWalker 30A V2",
+  "mass_g": 33,
+  "specs": {
+   "continuous_current_a": 30,
+   "peak_current_a": 50,
+   "peak_duration_s": null,
+   "peak_note": "Leaflet gives no duration for peak current; treat peak as not usable for M8.",
+   "cells_text": "3-4S LiPo",
+   "bec": "Switch 5V 5A",
+   "dimensions_text_mm": "60 x 25 x 8"
+  },
+  "price_usd": null,
+  "source_url": "https://cdn.shopify.com/s/files/1/0109/9702/files/SKYWALKER_V2_mini_Leaflet_EN.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "esc-hobbywing-skywalker-40a-v2",
+  "category": "esc",
+  "manufacturer": "Hobbywing",
+  "name": "SkyWalker 40A V2",
+  "mass_g": 36,
+  "specs": {
+   "continuous_current_a": 40,
+   "peak_current_a": 60,
+   "peak_duration_s": null,
+   "peak_note": "Leaflet gives no duration for peak current; treat peak as not usable for M8.",
+   "cells_text": "3-4S LiPo",
+   "bec": "Switch 5V 5A",
+   "dimensions_text_mm": "60 x 25 x 8"
+  },
+  "price_usd": null,
+  "source_url": "https://cdn.shopify.com/s/files/1/0109/9702/files/SKYWALKER_V2_mini_Leaflet_EN.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "batt-gensace-450-3s-45c",
+  "category": "battery",
+  "manufacturer": "Gens Ace",
+  "name": "Gens Ace 450mAh 3S 45C LiPo (GEA4503S45JS)",
+  "mass_g": 45,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 450,
+   "cells_series": 3,
+   "nominal_voltage_v": 11.1,
+   "energy_wh_nominal_computed": 5.0,
+   "c_rating_continuous_claimed": 45,
+   "c_rating_burst_claimed": 50,
+   "c_rating_note": "Retailer-stated hobby C ratings; not independent discharge tests.",
+   "mass_note": "Page says 'approximately 45g'",
+   "dimensions_text_mm": "56 x 31 x 15"
+  },
+  "price_usd": null,
+  "source_url": "https://ozrc.com.au/products/gens-ace-450mah-3s-45c-11-1v-lipo-battery-jst-syp-gea4503s45js",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "batt-gensace-1000-3s-25c",
+  "category": "battery",
+  "manufacturer": "Gens Ace",
+  "name": "Gens Ace 1000mAh 3S 25C LiPo",
+  "mass_g": 96,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 1000,
+   "cells_series": 3,
+   "nominal_voltage_v": 11.1,
+   "energy_wh_nominal_computed": 11.1,
+   "c_rating_continuous_claimed": 25,
+   "c_rating_burst_claimed": 50,
+   "c_rating_note": "Retailer-stated hobby C ratings; not independent discharge tests.",
+   "dimensions_text_mm": "72 x 36 x 19",
+   "source_conflict": "Page title says 7.4V; its spec block says 11.1V (3S). Spec block used."
+  },
+  "price_usd": null,
+  "source_url": "https://ozrc.com.au/products/gens-ace-1000mah-25c-7-4v-soft-case-battery-jst",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "batt-gensace-2200-3s-25c-gtech",
+  "category": "battery",
+  "manufacturer": "Gens Ace",
+  "name": "Gens Ace G-Tech 2200mAh 3S 25C LiPo (GEA223S25T3GT)",
+  "mass_g": 169,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 2200,
+   "cells_series": 3,
+   "nominal_voltage_v": 11.1,
+   "energy_wh_nominal_computed": 24.42,
+   "c_rating_continuous_claimed": 25,
+   "c_rating_burst_claimed": 50,
+   "c_rating_note": "Retailer-stated hobby C ratings; not independent discharge tests.",
+   "dimensions_text_mm": "107 x 33 x 22"
+  },
+  "price_usd": null,
+  "source_url": "https://ozrc.com.au/products/gens-ace-g-tech-3s-2200mah-25c-11-1v-lipo-battery-1to3-gea223s25t3gt",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "batt-gensace-300-3s-45c",
+  "category": "battery",
+  "manufacturer": "Gens Ace",
+  "name": "Gens Ace 300mAh 3S 45C LiPo (GEA3003S45JST)",
+  "mass_g": 26,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 300,
+   "cells_series": 3,
+   "nominal_voltage_v": 11.1,
+   "energy_wh_nominal_computed": 3.33,
+   "c_rating_continuous_claimed": 45,
+   "c_rating_burst_claimed": null,
+   "c_rating_note": "Retailer-stated hobby C ratings; not independent discharge tests.",
+   "dimensions_text_mm": "40 x 21 x 17",
+   "mass_note": "Page: net weight (+/-10g) 26"
+  },
+  "price_usd": null,
+  "source_url": "https://ozrc.com.au/products/gens-ace-3s-300mah-11-1-v-45c-soft-case-lipo-battery-pack-w-jst-plug-gea3003s45jst",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "batt-gensace-800-3s-45c",
+  "category": "battery",
+  "manufacturer": "Gens Ace",
+  "name": "Gens Ace 800mAh 3S 45C LiPo (GEA8003S45JS)",
+  "mass_g": 72,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 800,
+   "cells_series": 3,
+   "nominal_voltage_v": 11.1,
+   "energy_wh_nominal_computed": 8.88,
+   "c_rating_continuous_claimed": 45,
+   "c_rating_burst_claimed": 80,
+   "c_rating_note": "Retailer-stated hobby C ratings; not independent discharge tests.",
+   "dimensions_text_mm": "52 x 30 x 23",
+   "mass_note": "Page says 'approximately 72g'"
+  },
+  "price_usd": null,
+  "source_url": "https://ozrc.com.au/products/gens-ace-3s-800mah-11-1v-45c-soft-case-lipo-battery-jst-gea8003s45js",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "batt-gensace-2200-3s-35c",
+  "category": "battery",
+  "manufacturer": "Gens Ace",
+  "name": "Gens Ace 2200mAh 3S 35C LiPo (GEA22003S35D)",
+  "mass_g": 143,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 2200,
+   "cells_series": 3,
+   "nominal_voltage_v": 11.1,
+   "energy_wh_nominal_computed": 24.42,
+   "c_rating_continuous_claimed": 35,
+   "c_rating_burst_claimed": null,
+   "c_rating_note": "Retailer-stated hobby C ratings; not independent discharge tests.",
+   "mass_note": "Page: product weight 143g. Light for this capacity against the sibling 169 g and 185.6 g packs; verify before relying on it."
+  },
+  "price_usd": null,
+  "source_url": "https://ozrc.com.au/products/gens-ace-11-1v-2200mah-3s-35c-lipo-battery-w-deans-connector-gea22003s35d",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "batt-gensace-2200-3s-60c",
+  "category": "battery",
+  "manufacturer": "Gens Ace",
+  "name": "Gens Ace 2200mAh 3S 60C LiPo (GEA22003S60E3)",
+  "mass_g": 185.6,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 2200,
+   "cells_series": 3,
+   "nominal_voltage_v": 11.1,
+   "energy_wh_nominal_computed": 24.42,
+   "c_rating_continuous_claimed": 60,
+   "c_rating_burst_claimed": null,
+   "c_rating_note": "Retailer-stated hobby C ratings; not independent discharge tests.",
+   "dimensions_text_mm": "107.8 x 34.7 x 23.7"
+  },
+  "price_usd": null,
+  "source_url": "https://ozrc.com.au/products/gens-ace-2200mah-3s-11-1v-60c-soft-case-lipo-battery-w-ec3-plug-gea22003s60e3",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "batt-flywoo-explorer-3s1p-p45b",
+  "category": "battery",
+  "manufacturer": "Flywoo",
+  "name": "Flywoo Explorer Molicel P45B 21700 3S1P 4500mAh Li-ion",
+  "mass_g": 224.3,
+  "specs": {
+   "chemistry": "Li-ion",
+   "capacity_mah": 4500,
+   "cells_series": 3,
+   "nominal_voltage_v": 11.1,
+   "energy_wh_nominal_computed": 48.6,
+   "c_rating_continuous_claimed": 10,
+   "c_rating_burst_claimed": null,
+   "c_rating_note": "Retailer states 45A continuous; c_rating_continuous_claimed is 45A/4.5Ah computed.",
+   "continuous_discharge_a_claimed": 45,
+   "cell": "Molicel INR-21700-P45B"
+  },
+  "price_usd": null,
+  "source_url": "https://www.unmannedtechshop.co.uk/products/flywoo-explorer-molicell-p45b-21700-3s1p-4500mah-lionpack-battery",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "batt-flywoo-explorer-4s1p-p45d",
+  "category": "battery",
+  "manufacturer": "Flywoo",
+  "name": "Flywoo Explorer BAK P45D 21700 4S1P 4500mAh Li-ion (FW19003591)",
+  "mass_g": 294,
+  "specs": {
+   "chemistry": "Li-ion",
+   "capacity_mah": 4500,
+   "cells_series": 4,
+   "nominal_voltage_v": 14.8,
+   "energy_wh_nominal_computed": 64.8,
+   "c_rating_continuous_claimed": null,
+   "c_rating_burst_claimed": null,
+   "c_rating_note": "Retailer-stated hobby C ratings; not independent discharge tests.",
+   "continuous_discharge_a_claimed": null,
+   "continuous_rating_note": "Continuous discharge not listed on the page.",
+   "cell": "BAK INR-21700-P45D",
+   "stock_note": "Page shows inconsistent stock status."
+  },
+  "price_usd": null,
+  "source_url": "https://www.unmannedtechshop.co.uk/products/flywoo-explorer-molicell-p45b-21700-4s1p-4500mah-lionpack-battery",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "cell-molicel-inr18650-p28a",
+  "category": "battery_cell",
+  "manufacturer": "Molicel",
+  "name": "INR-18650-P28A Li-ion cell (single cell, not a pack)",
+  "mass_g": 46,
+  "specs": {
+   "chemistry": "Li-ion",
+   "capacity_mah_typical": 2800,
+   "capacity_mah_minimum": 2700,
+   "energy_wh_typical": 10.3,
+   "nominal_voltage_v": 3.6,
+   "charge_voltage_v": 4.2,
+   "discharge_cutoff_v": 2.5,
+   "max_discharge_current_a": 35,
+   "max_discharge_note": "Datasheet labels this 'Maximum'; continuous thermal limit not separately stated in the part read.",
+   "diameter_mm_max": 18.6,
+   "height_mm_max": 65.2
+  },
+  "price_usd": null,
+  "source_url": "https://www.rosebatteries.com/hubfs/INR18650P28A-V2-80093.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "servo-kst-x06-v6",
+  "category": "servo",
+  "manufacturer": "KST",
+  "name": "X06 V6.0 HV micro",
+  "mass_g": 6,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 3.8,
+     "torque_kgf_cm": 0.8,
+     "torque_nm": 0.0785,
+     "speed_s_per_60deg": 0.12
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 1.5,
+     "torque_nm": 0.1471,
+     "speed_s_per_60deg": 0.08
+    },
+    {
+     "voltage_v": 8.4,
+     "torque_kgf_cm": 1.8,
+     "torque_nm": 0.1765,
+     "speed_s_per_60deg": 0.07
+    }
+   ],
+   "torque_note": "Manufacturer/retailer stall-style torque rating at stated voltage; not a continuous rating.",
+   "stall_current": [
+    {
+     "voltage_v": 6.0,
+     "current_a": 0.58
+    }
+   ],
+   "rated_current_a_at_6v": 0.22,
+   "rated_torque_ncm_at_6v": 4,
+   "rated_speed_s_per_60deg_at_6v": 0.2,
+   "dimensions_text_mm": "20 x 7 x 16.6",
+   "gears": "Steel",
+   "mass_tolerance": "+/-10%",
+   "travel_deg": 120
+  },
+  "price_usd": null,
+  "source_url": "https://kstservos.com/products/x06-v6-0-hv-micro-digital-metal-gear-glider-1-8kg-torque-servo-motor",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-kst-x08-v6",
+  "category": "servo",
+  "manufacturer": "KST",
+  "name": "X08 V6.0 micro",
+  "mass_g": 8,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 3.8,
+     "torque_kgf_cm": 1.4,
+     "torque_nm": 0.1373,
+     "speed_s_per_60deg": 0.18
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 2.2,
+     "torque_nm": 0.2157,
+     "speed_s_per_60deg": 0.15
+    },
+    {
+     "voltage_v": 8.4,
+     "torque_kgf_cm": 2.8,
+     "torque_nm": 0.2746,
+     "speed_s_per_60deg": 0.09
+    }
+   ],
+   "torque_note": "Manufacturer/retailer stall-style torque rating at stated voltage; not a continuous rating.",
+   "stall_current": null,
+   "current_note": "Stall current not published on the page read.",
+   "dimensions_text_mm": "23.5 x 8 x 16.8",
+   "gears": "Hardened steel",
+   "mass_tolerance": "+/-10%",
+   "travel_deg": 120
+  },
+  "price_usd": null,
+  "source_url": "https://kstservos.com/products/x08-v6-0-servo-metal-gear-digital-0-09sec-micro-glider-2-8kg-servo-motor",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-kst-x08-plus-v6",
+  "category": "servo",
+  "manufacturer": "KST",
+  "name": "X08 Plus V6.0 micro",
+  "mass_g": 9,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 3.8,
+     "torque_kgf_cm": 2.4,
+     "torque_nm": 0.2354,
+     "speed_s_per_60deg": 0.18
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 3.85,
+     "torque_nm": 0.3776,
+     "speed_s_per_60deg": 0.15
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 4.85,
+     "torque_nm": 0.4756,
+     "speed_s_per_60deg": 0.12
+    },
+    {
+     "voltage_v": 8.4,
+     "torque_kgf_cm": 5.3,
+     "torque_nm": 0.5198,
+     "speed_s_per_60deg": 0.09
+    }
+   ],
+   "torque_note": "Manufacturer/retailer stall-style torque rating at stated voltage; not a continuous rating.",
+   "stall_current": null,
+   "current_note": "Stall current not published on the page read.",
+   "dimensions_text_mm": "23.5 x 8 x 16.8",
+   "gears": "Hardened steel",
+   "mass_tolerance": "+/-10%",
+   "travel_deg": 120
+  },
+  "price_usd": null,
+  "source_url": "https://kstservos.com/products/x08-plus-v6-0-micro-servo-5-3kgf-cm-0-09sec-9-0g-8mm-for-rc-gliders",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-hitec-hs5065mg",
+  "category": "servo",
+  "manufacturer": "Hitec",
+  "name": "HS-5065MG digital micro",
+  "mass_g": 11.9,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 4.8,
+     "torque_kgf_cm": 1.8,
+     "torque_nm": 0.1765,
+     "speed_s_per_60deg": 0.14
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 2.2,
+     "torque_nm": 0.2157,
+     "speed_s_per_60deg": 0.11
+    }
+   ],
+   "torque_note": "Manufacturer/retailer stall-style torque rating at stated voltage; not a continuous rating.",
+   "stall_current": null,
+   "current_note": "Stall current not published on the page read.",
+   "dimensions_text_mm": "23.6 x 11.6 x 30.0",
+   "gears": "1 resin, 4 metal"
+  },
+  "price_usd": 44.99,
+  "source_url": "https://hitecrcd.com/hs-5065mg-high-torque-metal-gear-feather-servo/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-hitec-hs5070mh",
+  "category": "servo",
+  "manufacturer": "Hitec",
+  "name": "HS-5070MH digital micro",
+  "mass_g": 12.7,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 3.1,
+     "torque_nm": 0.304,
+     "speed_s_per_60deg": 0.15
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 3.8,
+     "torque_nm": 0.3727,
+     "speed_s_per_60deg": 0.12
+    }
+   ],
+   "torque_note": "Manufacturer/retailer stall-style torque rating at stated voltage; not a continuous rating.",
+   "stall_current": null,
+   "current_note": "Stall current not published on the page read.",
+   "dimensions_text_mm": "23.6 x 11.6 x 30.0",
+   "gears": "1 resin, 4 metal"
+  },
+  "price_usd": 44.99,
+  "source_url": "https://hitecrcd.com/hs-5070mh-ultra-torque-metal-gear-feather-servo/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-savox-sh0257mg",
+  "category": "servo",
+  "manufacturer": "Savox",
+  "name": "SH-0257MG digital micro",
+  "mass_g": 14,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 4.8,
+     "torque_kgf_cm": 1.8,
+     "torque_nm": 0.1765,
+     "speed_s_per_60deg": 0.13
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 2.2,
+     "torque_nm": 0.2157,
+     "speed_s_per_60deg": 0.09
+    }
+   ],
+   "torque_note": "Manufacturer/retailer stall-style torque rating at stated voltage; not a continuous rating.",
+   "stall_current": [
+    {
+     "voltage_v": 4.8,
+     "current_a": 1.0
+    },
+    {
+     "voltage_v": 6.0,
+     "current_a": 1.2
+    }
+   ],
+   "dimensions_text_mm": "22.8 x 12.0 x 25.4",
+   "source_conflict": "Same page's technical table lists height 40.8 mm; 25.4 mm used."
+  },
+  "price_usd": null,
+  "source_url": "https://lindinger.at/en/RC-ELECTRONICS/Servos-Accessories/Servos-Digital-Low-Voltage/SAVOEX-SH-0257MG-6V-2.2KG-0.09s-DIGITAL-SERVO/9795338",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "servo-savox-sh0255mg",
+  "category": "servo",
+  "manufacturer": "Savox",
+  "name": "SH-0255MG+ digital micro",
+  "mass_g": 15.8,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 4.8,
+     "torque_kgf_cm": 3.1,
+     "torque_nm": 0.304,
+     "speed_s_per_60deg": 0.16
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 3.9,
+     "torque_nm": 0.3825,
+     "speed_s_per_60deg": 0.13
+    }
+   ],
+   "torque_note": "Manufacturer/retailer stall-style torque rating at stated voltage; not a continuous rating.",
+   "stall_current": [
+    {
+     "voltage_v": 4.8,
+     "current_a": 1.2
+    },
+    {
+     "voltage_v": 6.0,
+     "current_a": 1.4
+    }
+   ],
+   "dimensions_text_mm": "22.8 x 12.0 x 29.4",
+   "source_conflict": "Same page's technical table lists height 23 mm; 29.4 mm used."
+  },
+  "price_usd": null,
+  "source_url": "https://www.lindinger.at/en/RC-ELECTRONICS/Servos-Accessories/Servos-Digital-Low-Voltage/SAVOEX-SH-0255MG-6V-3-9KG-0-13s-Digital-Micro-Servo/9795255",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "servo-mks-ds65k",
+  "category": "servo",
+  "manufacturer": "MKS",
+  "name": "DS65K digital micro",
+  "mass_g": 6.5,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 4.8,
+     "torque_kgf_cm": 1.85,
+     "torque_nm": 0.1814,
+     "speed_s_per_60deg": 0.203
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 2.2,
+     "torque_nm": 0.2157,
+     "speed_s_per_60deg": 0.154
+    }
+   ],
+   "torque_note": "Manufacturer/retailer stall-style torque rating at stated voltage; not a continuous rating.",
+   "stall_current": null,
+   "current_note": "Stall current not published on the page read.",
+   "dimensions_text_mm": "22 x 8.5 x 15",
+   "gears": "7075 chrome-titanium alloy, 24T output",
+   "voltage_conflict": "Page gives 4.8-6.0 V and 4.8-7.0 V in different places.",
+   "third_party_current": "servodatabase.com/servo/mks/ds65k lists stall 0.30-0.38 A and idle 0.022 A, not confirmed at a manufacturer or retailer page."
+  },
+  "price_usd": null,
+  "source_url": "https://lindinger.at/en/RC-ELECTRONICS/Servos-Accessories/Servos-Digital-Low-Voltage/MKS-DS65K-DIGITAL-SERVO/96672",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "fc-holybro-pixhawk-6c-mini",
+  "category": "flight_controller",
+  "manufacturer": "Holybro",
+  "name": "Pixhawk 6C Mini (Model A, current)",
+  "mass_g": 42.4,
+  "specs": {
+   "imu_onboard": [
+    "ICM-42688-P",
+    "BMI088"
+   ],
+   "magnetometer_onboard": "IST8310",
+   "baro_onboard": "MS5611",
+   "dimensions_text_mm": "54.3 x 39 x 17.5",
+   "mass_variants_g": {
+    "Model A legacy (sold out)": 39.2,
+    "Model A current": 42.4,
+    "Model B": 46.8
+   },
+   "imu_baro_mass_note": "Included in board mass.",
+   "price_note": "$179.00 without power module to $199.99 with PM06, per page."
+  },
+  "price_usd": 179.0,
+  "source_url": "https://holybro.com/products/pixhawk-6c-mini",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "fc-ark-v6x",
+  "category": "flight_controller",
+  "manufacturer": "ARK Electronics",
+  "name": "ARKV6X flight controller module (Pixhawk Autopilot Bus)",
+  "mass_g": 5,
+  "specs": {
+   "imu_onboard": [
+    "ICM-42688-P x2",
+    "IIM-42652"
+   ],
+   "baro_onboard": "BMP390",
+   "dimensions_text_mm": "36 x 29 x 5",
+   "voltage_v": 5,
+   "continuous_current_a": 0.5,
+   "current_note": "500 mA: 300 mA system, 200 mA heater",
+   "mass_warning": "5 g is the module only. Page says it requires a Pixhawk Autopilot Bus compliant carrier, whose mass is not included. Do not use 5 g as a complete FC mass."
+  },
+  "price_usd": null,
+  "source_url": "https://arkelectron.com/product/arkv6x/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "fc-holybro-kakute-h743-wing",
+  "category": "flight_controller",
+  "manufacturer": "Holybro",
+  "name": "Kakute H743-Wing",
+  "mass_g": 28,
+  "specs": {
+   "imu_onboard": "ICM-42688-P",
+   "baro_onboard": "BMP280 or SPA06",
+   "dimensions_text_mm": "45 x 30 x 13.5",
+   "mass_note": "Page: 28g with USB extender",
+   "imu_baro_mass_note": "Included in board mass.",
+   "price_note": "$105.00 without GPS, per page."
+  },
+  "price_usd": 105.0,
+  "source_url": "https://holybro.com/products/kakute-h743-wing",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "fc-speedybee-f405-wing-mini",
+  "category": "flight_controller",
+  "manufacturer": "SpeedyBee",
+  "name": "F405 WING APP Mini",
+  "mass_g": 5.6,
+  "specs": {
+   "imu_onboard": "ICM-42688-P",
+   "baro_onboard": "SPL006-001",
+   "input_v": "7-26 (2-6S LiPo)",
+   "battery_current_sensor": "80A continuous, 150A peak",
+   "bec_fc": "5.2 V, 2 A continuous, 3 A peak",
+   "pwm_outputs": 12,
+   "stock_note": "Page read shows Sold Out flags. Confirm availability before choosing it.",
+   "mass_warning": "5.6 g as listed; confirm whether wireless and PDB boards are included."
+  },
+  "price_usd": 43.49,
+  "source_url": "https://www.racedayquads.com/products/speedybee-f405-wing-mini-2-6s-fixed-wing-flight-controller",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "gps-3dr-mini-m10136",
+  "category": "gps",
+  "manufacturer": "3DR",
+  "name": "Mini GPS M10136",
+  "mass_g": 8.3,
+  "specs": {
+   "gnss": "u-blox SAM M10S (page also says M10S)",
+   "compass_conflict": "Page gives QMC5883L in the header and IST8310 in the overview.",
+   "dimensions_text_mm": "22.98 x 22.98 x 9.28",
+   "availability_note": "Usually ships in 3 to 5 weeks, per page."
+  },
+  "price_usd": 80.9,
+  "source_url": "https://store.3dr.com/mini-gps-ublox-max-m10s/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gps-foxeer-m10q-180",
+  "category": "gps",
+  "manufacturer": "Foxeer",
+  "name": "M10Q 180 GPS 5883 Compass",
+  "mass_g": 7.5,
+  "specs": {
+   "gnss": "M10 (10th generation chip)",
+   "compass": "QMC5883",
+   "dimensions_text_mm": "18 x 18 x 8",
+   "input_v": 5,
+   "stock_note": "Out of stock on the page read, though still listed."
+  },
+  "price_usd": 24.99,
+  "source_url": "https://www.myfpvstore.com/17nr",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "gps-holybro-m10",
+  "category": "gps",
+  "manufacturer": "Holybro",
+  "name": "M10 GPS",
+  "mass_g": 32,
+  "specs": {
+   "gnss": "u-blox M10",
+   "compass": "IST8310 or IST8308",
+   "dimensions_text_mm": "50 dia x 14.4",
+   "current_a_max": 0.2,
+   "input_v": "4.7-5.2"
+  },
+  "price_usd": 43.99,
+  "source_url": "https://holybro.com/products/m10-gps",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "baro-adafruit-bmp388",
+  "category": "barometer",
+  "manufacturer": "Adafruit",
+  "name": "BMP388 barometric breakout (ADA3966)",
+  "mass_g": 1.2,
+  "specs": {
+   "relative_accuracy_pa": 8,
+   "dimensions_text_mm": "21.6 x 16.6 x 3.0",
+   "logic": "3 V or 5 V",
+   "note": "Onboard barometers on listed flight controllers need no separate part."
+  },
+  "price_usd": null,
+  "source_url": "https://core-electronics.com.au/adafruit-bmp388-precision-barometric-pressure-and-altimeter.html",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "aspd-matek-dlvr",
+  "category": "airspeed",
+  "manufacturer": "MatekSys",
+  "name": "ASPD-DLVR digital airspeed sensor",
+  "mass_g": 4,
+  "specs": {
+   "sensor": "DLVR (per product name)",
+   "input_v": "4.5-5.5",
+   "interface_note": "CAN node on L431 since Mar 2022 per page"
+  },
+  "price_usd": null,
+  "source_url": "http://www.mateksys.com/?portfolio=aspd-dlvr",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "aspd-matek-4525",
+  "category": "airspeed",
+  "manufacturer": "MatekSys",
+  "name": "ASPD-4525 digital airspeed sensor",
+  "mass_g": 3.5,
+  "specs": {
+   "sensor": "4525 (per product name)",
+   "mass_note": "Page: 3.5g (sensor board), pitot tube excluded",
+   "supply_v": "4-5.5",
+   "current_a": 0.005,
+   "max_pressure_kpa": 137.9
+  },
+  "price_usd": null,
+  "source_url": "http://www.mateksys.com/?portfolio=aspd-4525",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "rx-matek-elrs-r24-p6",
+  "category": "receiver",
+  "manufacturer": "MatekSys",
+  "name": "ELRS-R24-P6 ExpressLRS 2.4 GHz PWM receiver",
+  "mass_g": 2,
+  "specs": {
+   "mass_note": "Page: 2g with antenna",
+   "input_v": "4-9",
+   "pcb_mm": "20 x 18",
+   "pwm_outputs": 6
+  },
+  "price_usd": null,
+  "source_url": "http://www.mateksys.com/?portfolio=elrs-r24-p6",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "rx-tbs-crossfire-nano",
+  "category": "receiver",
+  "manufacturer": "Team BlackSheep",
+  "name": "Crossfire Nano Rx",
+  "mass_g": 0.5,
+  "specs": {
+   "outputs": "PPM/SBUS/CRSF/PWM",
+   "height_mm": 11,
+   "width_mm": 18,
+   "mass_note": "Page: 0.5 g; antenna mass not stated."
+  },
+  "price_usd": null,
+  "source_url": "https://www.team-blacksheep.com/products/prod:crossfire_nano_rx",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "tube-ec-rollwrap-10x8",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "10 mm x 8 mm roll wrapped carbon tube",
+  "mass_g": 45.0,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 10,
+   "id_mm": 8,
+   "wall_mm": 1.0,
+   "length_mm_listed": 1000,
+   "construction": "Roll wrapped, unidirectional prepreg 0 deg with 90 deg reinforcement",
+   "tensile_strength_mpa": null,
+   "tensile_modulus_gpa": null,
+   "strength_note": "Page lists no strength or modulus for this roll-wrapped tube; supplier FAQ says torsional strength figures are not available. Max service temp 80 C per page FAQ.",
+   "implied_density_kg_m3_computed": 1592
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/10mm-roll-wrapped-carbon-fibre-tube-metric",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-ec-rollwrap-12x10",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "12 mm x 10 mm roll wrapped carbon tube",
+  "mass_g": 55,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 12,
+   "id_mm": 10,
+   "wall_mm": 1.0,
+   "length_mm_listed": 1000,
+   "construction": "Roll wrapped, unidirectional prepreg 0 deg with 90 deg reinforcement",
+   "tensile_strength_mpa": null,
+   "tensile_modulus_gpa": null,
+   "strength_note": "Page lists no strength or modulus for this roll-wrapped tube; supplier FAQ says torsional strength figures are not available. Max service temp 80 C per page FAQ.",
+   "implied_density_kg_m3_computed": 1592
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/12mm-roll-wrapped-carbon-fibre-tube-metric",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-ec-rollwrap-15x12",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "15 mm x 12 mm roll wrapped carbon tube",
+  "mass_g": 101,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 15,
+   "id_mm": 12,
+   "wall_mm": 1.5,
+   "length_mm_listed": 1000,
+   "construction": "Roll wrapped, unidirectional prepreg 0 deg with 90 deg reinforcement",
+   "tensile_strength_mpa": null,
+   "tensile_modulus_gpa": null,
+   "strength_note": "Page lists no strength or modulus for this roll-wrapped tube; supplier FAQ says torsional strength figures are not available. Max service temp 80 C per page FAQ.",
+   "source_conflict": "Page gives weight per metre 101 g and gross weight 0.045 kg. 101 g used (consistent with geometry); gross weight looks stale.",
+   "implied_density_kg_m3_computed": 1588
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/15mm-roll-wrapped-carbon-fibre-tube-metric",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-ec-rollwrap-18x15",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "18 mm x 15 mm roll wrapped carbon tube",
+  "mass_g": 124,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 18,
+   "id_mm": 15,
+   "wall_mm": 1.5,
+   "length_mm_listed": 1000,
+   "construction": "Roll wrapped, unidirectional prepreg 0 deg with 90 deg reinforcement",
+   "tensile_strength_mpa": null,
+   "tensile_modulus_gpa": null,
+   "strength_note": "Page lists no strength or modulus for this roll-wrapped tube; supplier FAQ says torsional strength figures are not available. Max service temp 80 C per page FAQ.",
+   "implied_density_kg_m3_computed": 1595
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/18mm-roll-wrapped-carbon-fibre-tube-metric",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-ec-rollwrap-20x17",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "20 mm x 17 mm roll wrapped carbon tube",
+  "mass_g": 139,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 20,
+   "id_mm": 17,
+   "wall_mm": 1.5,
+   "length_mm_listed": 1000,
+   "construction": "Roll wrapped, unidirectional prepreg 0 deg with 90 deg reinforcement",
+   "tensile_strength_mpa": null,
+   "tensile_modulus_gpa": null,
+   "strength_note": "Page lists no strength or modulus for this roll-wrapped tube; supplier FAQ says torsional strength figures are not available. Max service temp 80 C per page FAQ.",
+   "implied_density_kg_m3_computed": 1594
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/20mm-roll-wrapped-carbon-fibre-tube-metric",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-ec-rollwrap-25x22",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "25 mm x 22 mm roll wrapped carbon tube",
+  "mass_g": 178,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 25,
+   "id_mm": 22,
+   "wall_mm": 1.5,
+   "length_mm_listed": 1000,
+   "construction": "Roll wrapped, unidirectional prepreg 0 deg with 90 deg reinforcement",
+   "tensile_strength_mpa": null,
+   "tensile_modulus_gpa": null,
+   "strength_note": "Page lists no strength or modulus for this roll-wrapped tube; supplier FAQ says torsional strength figures are not available. Max service temp 80 C per page FAQ.",
+   "implied_density_kg_m3_computed": 1607
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/25mm-roll-wrapped-carbon-fibre-tube-metric",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-ec-woven-8x6",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "8 mm x 6 mm woven finish carbon tube",
+  "mass_g": 32.9,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 8,
+   "id_mm": 6,
+   "wall_mm": 1.0,
+   "tensile_strength_lengthways_mpa": 650,
+   "tensile_modulus_lengthways_gpa": 64,
+   "construction": "Woven finish; values as listed on page. They do not transfer to the roll-wrapped tubes.",
+   "implied_density_kg_m3_computed": 1496
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-ec-woven-16x14",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "16 mm x 14 mm woven finish carbon tube",
+  "mass_g": 74.2,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 16,
+   "id_mm": 14,
+   "wall_mm": 1.0,
+   "tensile_strength_lengthways_mpa": 650,
+   "tensile_modulus_lengthways_gpa": 64,
+   "construction": "Woven finish; values as listed on page. They do not transfer to the roll-wrapped tubes.",
+   "implied_density_kg_m3_computed": 1575
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/16mm-woven-finish-carbon-fibre-tube",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "rod-ec-1mm",
+  "category": "carbon_rod",
+  "manufacturer": "Easy Composites",
+  "name": "1 mm pultruded carbon rod",
+  "mass_g": 1.2,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 1,
+   "length_mm_listed": 1000,
+   "mass_source_row": "Gross Weight at 1000 mm",
+   "tensile_strength_lengthways_mpa_range": [
+    400,
+    500
+   ],
+   "tensile_modulus_lengthways_gpa_range": [
+    28,
+    40
+   ],
+   "compressive_strength_lengthways_mpa_range": [
+    200,
+    320
+   ],
+   "density_g_cm3_range": [
+    1.3,
+    1.5
+   ],
+   "max_service_temp_c": 80,
+   "mechanical_source": "https://media.easycomposites.co.uk/datasheets/EC-TDS-Carbon-Fibre-Pultrusions.pdf",
+   "note": "Supplier's published pultrusion datasheet values, repeated on the rod page. The datasheet says they apply to its listed sizes of round and hexagonal pultrusion. Use these as cited; they are lower than a designer might assume for pultruded carbon.",
+   "implied_density_kg_m3_computed": 1528
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/1mm-carbon-fibre-rod",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "rod-ec-1-5mm",
+  "category": "carbon_rod",
+  "manufacturer": "Easy Composites",
+  "name": "1.5 mm pultruded carbon rod",
+  "mass_g": 2.7,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 1.5,
+   "length_mm_listed": 1000,
+   "mass_source_row": "Gross Weight at 1000 mm",
+   "tensile_strength_lengthways_mpa_range": [
+    400,
+    500
+   ],
+   "tensile_modulus_lengthways_gpa_range": [
+    28,
+    40
+   ],
+   "compressive_strength_lengthways_mpa_range": [
+    200,
+    320
+   ],
+   "density_g_cm3_range": [
+    1.3,
+    1.5
+   ],
+   "max_service_temp_c": 80,
+   "mechanical_source": "https://media.easycomposites.co.uk/datasheets/EC-TDS-Carbon-Fibre-Pultrusions.pdf",
+   "note": "Supplier's published pultrusion datasheet values, repeated on the rod page. The datasheet says they apply to its listed sizes of round and hexagonal pultrusion. Use these as cited; they are lower than a designer might assume for pultruded carbon.",
+   "implied_density_kg_m3_computed": 1528
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/1-5mm-carbon-fibre-rod",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "rod-ec-2mm",
+  "category": "carbon_rod",
+  "manufacturer": "Easy Composites",
+  "name": "2 mm pultruded carbon rod",
+  "mass_g": 4.5,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 2,
+   "length_mm_listed": 1000,
+   "mass_source_row": "Gross Weight at 1000 mm",
+   "tensile_strength_lengthways_mpa_range": [
+    400,
+    500
+   ],
+   "tensile_modulus_lengthways_gpa_range": [
+    28,
+    40
+   ],
+   "compressive_strength_lengthways_mpa_range": [
+    200,
+    320
+   ],
+   "density_g_cm3_range": [
+    1.3,
+    1.5
+   ],
+   "max_service_temp_c": 80,
+   "mechanical_source": "https://media.easycomposites.co.uk/datasheets/EC-TDS-Carbon-Fibre-Pultrusions.pdf",
+   "note": "Supplier's published pultrusion datasheet values, repeated on the rod page. The datasheet says they apply to its listed sizes of round and hexagonal pultrusion. Use these as cited; they are lower than a designer might assume for pultruded carbon.",
+   "implied_density_kg_m3_computed": 1432
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/2mm-carbon-fibre-rod",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "rod-ec-3mm",
+  "category": "carbon_rod",
+  "manufacturer": "Easy Composites",
+  "name": "3 mm pultruded carbon rod",
+  "mass_g": 11.0,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 3,
+   "length_mm_listed": 1000,
+   "mass_source_row": "Gross Weight at 1000 mm",
+   "tensile_strength_lengthways_mpa_range": [
+    400,
+    500
+   ],
+   "tensile_modulus_lengthways_gpa_range": [
+    28,
+    40
+   ],
+   "compressive_strength_lengthways_mpa_range": [
+    200,
+    320
+   ],
+   "density_g_cm3_range": [
+    1.3,
+    1.5
+   ],
+   "max_service_temp_c": 80,
+   "mechanical_source": "https://media.easycomposites.co.uk/datasheets/EC-TDS-Carbon-Fibre-Pultrusions.pdf",
+   "note": "Supplier's published pultrusion datasheet values, repeated on the rod page. The datasheet says they apply to its listed sizes of round and hexagonal pultrusion. Use these as cited; they are lower than a designer might assume for pultruded carbon.",
+   "implied_density_kg_m3_computed": 1556
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/3mm-carbon-fibre-rod",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "rod-ec-4mm",
+  "category": "carbon_rod",
+  "manufacturer": "Easy Composites",
+  "name": "4 mm pultruded carbon rod",
+  "mass_g": 18.9,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 4,
+   "length_mm_listed": 1000,
+   "mass_source_row": "Gross Weight at 1000 mm",
+   "tensile_strength_lengthways_mpa_range": [
+    400,
+    500
+   ],
+   "tensile_modulus_lengthways_gpa_range": [
+    28,
+    40
+   ],
+   "compressive_strength_lengthways_mpa_range": [
+    200,
+    320
+   ],
+   "density_g_cm3_range": [
+    1.3,
+    1.5
+   ],
+   "max_service_temp_c": 80,
+   "mechanical_source": "https://media.easycomposites.co.uk/datasheets/EC-TDS-Carbon-Fibre-Pultrusions.pdf",
+   "note": "Supplier's published pultrusion datasheet values, repeated on the rod page. The datasheet says they apply to its listed sizes of round and hexagonal pultrusion. Use these as cited; they are lower than a designer might assume for pultruded carbon.",
+   "implied_density_kg_m3_computed": 1504
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/4mm-carbon-fibre-rod",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "rod-ec-5mm",
+  "category": "carbon_rod",
+  "manufacturer": "Easy Composites",
+  "name": "5 mm pultruded carbon rod",
+  "mass_g": 28.7,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 5,
+   "length_mm_listed": 1000,
+   "mass_source_row": "Gross Weight at 1000 mm",
+   "tensile_strength_lengthways_mpa_range": [
+    400,
+    500
+   ],
+   "tensile_modulus_lengthways_gpa_range": [
+    28,
+    40
+   ],
+   "compressive_strength_lengthways_mpa_range": [
+    200,
+    320
+   ],
+   "density_g_cm3_range": [
+    1.3,
+    1.5
+   ],
+   "max_service_temp_c": 80,
+   "mechanical_source": "https://media.easycomposites.co.uk/datasheets/EC-TDS-Carbon-Fibre-Pultrusions.pdf",
+   "note": "Supplier's published pultrusion datasheet values, repeated on the rod page. The datasheet says they apply to its listed sizes of round and hexagonal pultrusion. Use these as cited; they are lower than a designer might assume for pultruded carbon.",
+   "implied_density_kg_m3_computed": 1462
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/5mm-carbon-fibre-rod",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "rod-ec-6mm",
+  "category": "carbon_rod",
+  "manufacturer": "Easy Composites",
+  "name": "6 mm pultruded carbon rod",
+  "mass_g": 42.1,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 6,
+   "length_mm_listed": 1000,
+   "mass_source_row": "Gross Weight at 1000 mm",
+   "tensile_strength_lengthways_mpa_range": [
+    400,
+    500
+   ],
+   "tensile_modulus_lengthways_gpa_range": [
+    28,
+    40
+   ],
+   "compressive_strength_lengthways_mpa_range": [
+    200,
+    320
+   ],
+   "density_g_cm3_range": [
+    1.3,
+    1.5
+   ],
+   "max_service_temp_c": 80,
+   "mechanical_source": "https://media.easycomposites.co.uk/datasheets/EC-TDS-Carbon-Fibre-Pultrusions.pdf",
+   "note": "Supplier's published pultrusion datasheet values, repeated on the rod page. The datasheet says they apply to its listed sizes of round and hexagonal pultrusion. Use these as cited; they are lower than a designer might assume for pultruded carbon.",
+   "implied_density_kg_m3_computed": 1489
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/6mm-carbon-fibre-rod",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "plate-ec-1mm",
+  "category": "rib_material",
+  "manufacturer": "Easy Composites",
+  "name": "High strength carbon fibre sheet 1 mm",
+  "mass_g": 1240,
+  "specs": {
+   "mass_basis": "per_m2",
+   "thickness_mm_nominal": 1,
+   "areal_density_kg_m2": 1.24,
+   "density_g_cm3": 1.33,
+   "tensile_strength_0_90_mpa": 503,
+   "tensile_modulus_0_90_gpa": 37.2,
+   "datasheet_version": "2.3",
+   "source_conflict": "Search-indexed copy of an older datasheet and the product page list different weights; datasheet version read here used."
+  },
+  "price_usd": null,
+  "source_url": "https://media.easycomposites.co.uk/datasheets/EC-TDS-High-Strength-Carbon-Sheet.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "plate-ec-2mm",
+  "category": "rib_material",
+  "manufacturer": "Easy Composites",
+  "name": "High strength carbon fibre sheet 2 mm",
+  "mass_g": 2710,
+  "specs": {
+   "mass_basis": "per_m2",
+   "thickness_mm_nominal": 2,
+   "areal_density_kg_m2": 2.71,
+   "density_g_cm3": 1.41,
+   "tensile_strength_0_90_mpa": 558,
+   "tensile_modulus_0_90_gpa": 43.9,
+   "datasheet_version": "2.3",
+   "source_conflict": "Search-indexed copy of an older datasheet and the product page list different weights; datasheet version read here used."
+  },
+  "price_usd": null,
+  "source_url": "https://media.easycomposites.co.uk/datasheets/EC-TDS-High-Strength-Carbon-Sheet.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "plate-ec-3mm",
+  "category": "rib_material",
+  "manufacturer": "Easy Composites",
+  "name": "High strength carbon fibre sheet 3 mm",
+  "mass_g": 4060,
+  "specs": {
+   "mass_basis": "per_m2",
+   "thickness_mm_nominal": 3,
+   "areal_density_kg_m2": 4.06,
+   "density_g_cm3": 1.47,
+   "tensile_strength_0_90_mpa": 644,
+   "tensile_modulus_0_90_gpa": 47.4,
+   "datasheet_version": "2.3",
+   "source_conflict": "Search-indexed copy of an older datasheet and the product page list different weights; datasheet version read here used."
+  },
+  "price_usd": null,
+  "source_url": "https://media.easycomposites.co.uk/datasheets/EC-TDS-High-Strength-Carbon-Sheet.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "plate-ec-4mm",
+  "category": "rib_material",
+  "manufacturer": "Easy Composites",
+  "name": "High strength carbon fibre sheet 4 mm",
+  "mass_g": 5680,
+  "specs": {
+   "mass_basis": "per_m2",
+   "thickness_mm_nominal": 4,
+   "areal_density_kg_m2": 5.68,
+   "density_g_cm3": 1.47,
+   "tensile_strength_0_90_mpa": null,
+   "tensile_modulus_0_90_gpa": null,
+   "datasheet_version": "2.3",
+   "source_conflict": "Search-indexed copy of an older datasheet and the product page list different weights; datasheet version read here used."
+  },
+  "price_usd": null,
+  "source_url": "https://media.easycomposites.co.uk/datasheets/EC-TDS-High-Strength-Carbon-Sheet.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "balsa-wood-database",
+  "category": "rib_material",
+  "manufacturer": "Generic (Ochroma pyramidale)",
+  "name": "Balsa, average dried",
+  "mass_g": 150,
+  "specs": {
+   "mass_basis": "per_litre",
+   "density_kg_m3": 150,
+   "specific_gravity_text": ".12, .15 (basic, 12% MC)",
+   "modulus_of_rupture_mpa": 19.6,
+   "elastic_modulus_gpa": 3.71,
+   "crushing_strength_mpa": 11.6,
+   "note": "Species average, not a catalogue grade. Real sheets vary widely. The page lists only one elastic modulus."
+  },
+  "price_usd": null,
+  "source_url": "https://www.wood-database.com/balsa/",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "film-oracover-air-light",
+  "category": "wing_film",
+  "manufacturer": "Lanitz-Prena (Oracover)",
+  "name": "Oracover Air Indoor / Air Light",
+  "mass_g": 17,
+  "specs": {
+   "mass_basis": "per_m2",
+   "areal_density_g_m2": 17,
+   "thickness_um": 12,
+   "note": "approx. value per page"
+  },
+  "price_usd": null,
+  "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "film-oralight",
+  "category": "wing_film",
+  "manufacturer": "Lanitz-Prena (Oracover)",
+  "name": "Oralight",
+  "mass_g": 36,
+  "specs": {
+   "mass_basis": "per_m2",
+   "areal_density_g_m2": 36,
+   "thickness_um": 12,
+   "note": ""
+  },
+  "price_usd": null,
+  "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "film-oracover-air-outdoor",
+  "category": "wing_film",
+  "manufacturer": "Lanitz-Prena (Oracover)",
+  "name": "Oracover Air Outdoor",
+  "mass_g": 33,
+  "specs": {
+   "mass_basis": "per_m2",
+   "areal_density_g_m2": 33,
+   "thickness_um": 23,
+   "note": ""
+  },
+  "price_usd": null,
+  "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "film-oracover-air-medium",
+  "category": "wing_film",
+  "manufacturer": "Lanitz-Prena (Oracover)",
+  "name": "Oracover Air Medium",
+  "mass_g": 33,
+  "specs": {
+   "mass_basis": "per_m2",
+   "areal_density_g_m2": 33,
+   "thickness_um": 23,
+   "note": "approx. value per page"
+  },
+  "price_usd": null,
+  "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "film-oracover",
+  "category": "wing_film",
+  "manufacturer": "Lanitz-Prena (Oracover)",
+  "name": "Oracover standard",
+  "mass_g": 64,
+  "specs": {
+   "mass_basis": "per_m2",
+   "areal_density_g_m2": 64,
+   "thickness_um": 23,
+   "note": "Page gives 64-109 g/m2 depending on colour; the low end is stored, so select by colour."
+  },
+  "price_usd": null,
+  "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "film-mylar-a-48ga",
+  "category": "wing_film",
+  "manufacturer": "Mylar (DuPont Teijin Films)",
+  "name": "Mylar A, 48 gauge film (about 12 um)",
+  "mass_g": 17.0,
+  "specs": {
+   "mass_basis": "per_m2",
+   "areal_density_g_m2_computed": 17.0,
+   "yield_in2_per_lb": 41300,
+   "computation": "453.592 g per lb / (41300 in2 x 6.4516e-4 m2/in2) = 17.0 g/m2",
+   "density_g_cm3": 1.39,
+   "density_source": "https://people.physics.carleton.ca/~msd/tpc_archival_reports/results_2004/docs/mylar.pdf",
+   "tensile_strength_md_kpsi": 26,
+   "note": "Computed from published yield. Adhesive not included."
+  },
+  "price_usd": null,
+  "source_url": "https://mylar.com/wp-content/uploads/2025/08/mylar_a-1.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.5-12",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.5-12 injection molded spur gear",
+  "mass_g": 0.17,
+  "specs": {
+   "module_mm": 0.5,
+   "teeth": 12,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 6,
+   "outside_dia_mm": 7,
+   "face_width_mm": 3,
+   "allowable_torque_bending_nm": 0.063,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.5-20",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.5-20 injection molded spur gear",
+  "mass_g": 0.47,
+  "specs": {
+   "module_mm": 0.5,
+   "teeth": 20,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 10,
+   "outside_dia_mm": 11,
+   "face_width_mm": 3,
+   "allowable_torque_bending_nm": 0.14,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.5-30",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.5-30 injection molded spur gear",
+  "mass_g": 0.9,
+  "specs": {
+   "module_mm": 0.5,
+   "teeth": 30,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 15,
+   "outside_dia_mm": 16,
+   "face_width_mm": 3,
+   "allowable_torque_bending_nm": 0.23,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.5-40",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.5-40 injection molded spur gear",
+  "mass_g": 1.53,
+  "specs": {
+   "module_mm": 0.5,
+   "teeth": 40,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 20,
+   "outside_dia_mm": 21,
+   "face_width_mm": 3,
+   "allowable_torque_bending_nm": 0.33,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.5-50",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.5-50 injection molded spur gear",
+  "mass_g": 2.02,
+  "specs": {
+   "module_mm": 0.5,
+   "teeth": 50,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 25,
+   "outside_dia_mm": 26,
+   "face_width_mm": 3,
+   "allowable_torque_bending_nm": 0.44,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.5-60",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.5-60 injection molded spur gear",
+  "mass_g": 3.02,
+  "specs": {
+   "module_mm": 0.5,
+   "teeth": 60,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 30,
+   "outside_dia_mm": 31,
+   "face_width_mm": 3,
+   "allowable_torque_bending_nm": 0.54,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.5-80",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.5-80 injection molded spur gear",
+  "mass_g": 4.51,
+  "specs": {
+   "module_mm": 0.5,
+   "teeth": 80,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 40,
+   "outside_dia_mm": 41,
+   "face_width_mm": 3,
+   "allowable_torque_bending_nm": 0.75,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.8-12",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.8-12 injection molded spur gear",
+  "mass_g": 0.48,
+  "specs": {
+   "module_mm": 0.8,
+   "teeth": 12,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 9.6,
+   "outside_dia_mm": 11.2,
+   "face_width_mm": 4,
+   "allowable_torque_bending_nm": 0.22,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.8-20",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.8-20 injection molded spur gear",
+  "mass_g": 1.26,
+  "specs": {
+   "module_mm": 0.8,
+   "teeth": 20,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 16,
+   "outside_dia_mm": 17.6,
+   "face_width_mm": 4,
+   "allowable_torque_bending_nm": 0.47,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.8-30",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.8-30 injection molded spur gear",
+  "mass_g": 2.37,
+  "specs": {
+   "module_mm": 0.8,
+   "teeth": 30,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 24,
+   "outside_dia_mm": 25.6,
+   "face_width_mm": 4,
+   "allowable_torque_bending_nm": 0.79,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.8-40",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.8-40 injection molded spur gear",
+  "mass_g": 3.47,
+  "specs": {
+   "module_mm": 0.8,
+   "teeth": 40,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 32,
+   "outside_dia_mm": 33.6,
+   "face_width_mm": 4,
+   "allowable_torque_bending_nm": 1.13,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.8-60",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.8-60 injection molded spur gear",
+  "mass_g": 7.3,
+  "specs": {
+   "module_mm": 0.8,
+   "teeth": 60,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 48,
+   "outside_dia_mm": 49.6,
+   "face_width_mm": 4,
+   "allowable_torque_bending_nm": 1.85,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ds0.8-80",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DS0.8-80 injection molded spur gear",
+  "mass_g": 11.8,
+  "specs": {
+   "module_mm": 0.8,
+   "teeth": 80,
+   "material": "Duracon acetal (M90-44)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N12",
+   "pitch_dia_mm": 64,
+   "outside_dia_mm": 65.6,
+   "face_width_mm": 4,
+   "allowable_torque_bending_nm": 2.55,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ps1-15",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "PS1-15 plastic spur gear",
+  "mass_g": 2.7,
+  "specs": {
+   "module_mm": 1,
+   "teeth": 15,
+   "material": "MC901 nylon",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N9",
+   "pitch_dia_mm": 15,
+   "outside_dia_mm": 17,
+   "face_width_mm": 10,
+   "allowable_torque_bending_nm": 0.41,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0142.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ps1-20",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "PS1-20 plastic spur gear",
+  "mass_g": 5.3,
+  "specs": {
+   "module_mm": 1,
+   "teeth": 20,
+   "material": "MC901 nylon",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N9",
+   "pitch_dia_mm": 20,
+   "outside_dia_mm": 22,
+   "face_width_mm": 10,
+   "allowable_torque_bending_nm": 0.61,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0142.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ps1-30",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "PS1-30 plastic spur gear",
+  "mass_g": 13,
+  "specs": {
+   "module_mm": 1,
+   "teeth": 30,
+   "material": "MC901 nylon",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N9",
+   "pitch_dia_mm": 30,
+   "outside_dia_mm": 32,
+   "face_width_mm": 10,
+   "allowable_torque_bending_nm": 1.03,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0142.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ps1-40",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "PS1-40 plastic spur gear",
+  "mass_g": 24,
+  "specs": {
+   "module_mm": 1,
+   "teeth": 40,
+   "material": "MC901 nylon",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N9",
+   "pitch_dia_mm": 40,
+   "outside_dia_mm": 42,
+   "face_width_mm": 10,
+   "allowable_torque_bending_nm": 1.48,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0142.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-ps1-60",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "PS1-60 plastic spur gear",
+  "mass_g": 42,
+  "specs": {
+   "module_mm": 1,
+   "teeth": 60,
+   "material": "MC901 nylon",
+   "pressure_angle_deg": 20,
+   "precision": "JIS N9",
+   "pitch_dia_mm": 60,
+   "outside_dia_mm": 62,
+   "face_width_mm": 10,
+   "allowable_torque_bending_nm": 2.41,
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0142.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-sus1-15",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SUS1-15 stainless steel spur gear",
+  "mass_g": 37,
+  "specs": {
+   "module_mm": 1,
+   "teeth": 15,
+   "material": "SUS303",
+   "pressure_angle_deg": 20,
+   "pitch_dia_mm": 15,
+   "outside_dia_mm": 17,
+   "face_width_mm": 10,
+   "allowable_torque_bending_nm": 2.04,
+   "allowable_torque_surface_durability_nm": 0.12,
+   "design_note": "Surface durability is the limiting figure. Check both.",
+   "note": "KHK catalogue values."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0116.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-sus1-20",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SUS1-20 stainless steel spur gear",
+  "mass_g": 32,
+  "specs": {
+   "module_mm": 1,
+   "teeth": 20,
+   "material": "SUS303",
+   "pressure_angle_deg": 20,
+   "pitch_dia_mm": 20,
+   "outside_dia_mm": 22,
+   "face_width_mm": 10,
+   "allowable_torque_bending_nm": 3.18,
+   "allowable_torque_surface_durability_nm": 0.23,
+   "design_note": "Surface durability is the limiting figure. Check both.",
+   "note": "KHK catalogue values."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0116.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-sus1-30",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SUS1-30 stainless steel spur gear",
+  "mass_g": 86,
+  "specs": {
+   "module_mm": 1,
+   "teeth": 30,
+   "material": "SUS303",
+   "pressure_angle_deg": 20,
+   "pitch_dia_mm": 30,
+   "outside_dia_mm": 32,
+   "face_width_mm": 10,
+   "allowable_torque_bending_nm": 5.6,
+   "allowable_torque_surface_durability_nm": 0.56,
+   "design_note": "Surface durability is the limiting figure. Check both.",
+   "note": "KHK catalogue values."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0116.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-sus1-40",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SUS1-40 stainless steel spur gear",
+  "mass_g": 160,
+  "specs": {
+   "module_mm": 1,
+   "teeth": 40,
+   "material": "SUS303",
+   "pressure_angle_deg": 20,
+   "pitch_dia_mm": 40,
+   "outside_dia_mm": 42,
+   "face_width_mm": 10,
+   "allowable_torque_bending_nm": 8.15,
+   "allowable_torque_surface_durability_nm": 1.03,
+   "design_note": "Surface durability is the limiting figure. Check both.",
+   "note": "KHK catalogue values."
+  },
+  "price_usd": null,
+  "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0116.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "bearing-skf-623-2z",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "623-2Z deep groove ball bearing",
+  "mass_g": 1.6,
+  "specs": {
+   "dimensions_mm_d_D_B": "3x10x4",
+   "dynamic_load_rating_kn": 0.54,
+   "static_load_rating_kn": 0.18,
+   "seal": "2Z shields"
+  },
+  "price_usd": null,
+  "source_url": "https://www.electrokit.com/en/kullager-skf-3mm-dim-3x10x4",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "bearing-skf-624-2z",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "624-2Z deep groove ball bearing",
+  "mass_g": 3,
+  "specs": {
+   "dimensions_mm_d_D_B": "4x13x5",
+   "dynamic_load_rating_kn": 0.936,
+   "static_load_rating_kn": 0.29,
+   "seal": "2Z shields"
+  },
+  "price_usd": null,
+  "source_url": "https://www.electrokit.com/en/kullager-skf-4mm-dim-4x13x5",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "bearing-skf-625-2z",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "625-2Z deep groove ball bearing",
+  "mass_g": 5,
+  "specs": {
+   "dimensions_mm_d_D_B": "5x16x5",
+   "dynamic_load_rating_kn": 1.14,
+   "static_load_rating_kn": 0.38,
+   "seal": "2Z shields"
+  },
+  "price_usd": null,
+  "source_url": "https://www.electrokit.com/en/kullager-skf-5mm-dim-5x16x5",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "bearing-skf-626-2z",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "626-2Z deep groove ball bearing",
+  "mass_g": 8.5,
+  "specs": {
+   "dimensions_mm_d_D_B": "6x19x6",
+   "dynamic_load_rating_kn": 2.34,
+   "static_load_rating_kn": 0.95,
+   "seal": "2Z shields"
+  },
+  "price_usd": null,
+  "source_url": "https://www.electrokit.com/en/kullager-skf-6mm-dim-6x19x6",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ }
+]

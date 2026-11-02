@@ -1,0 +1,367 @@
+{
+  "retrieved": "2026-11-02",
+  "conventions": "Each value carries source_url and a supporting quote or stated locator. 'read_from_figure' means taken off a plotted graph by eye, with lower precision. 'computed' means arithmetic done here from cited values, never a published figure. Values not actually read at a source are listed in not_read, without a number.",
+  "smartbird": {
+    "subject": "Festo SmartBird, herring gull inspired flapping-wing model with active torsion",
+    "primary_source": {
+      "citation": "Send W, Fischer M, Jebens K, Mugrauer R, Nagarathinam A, Scharstein F. Artificial Hinged-Wing Bird with Active Torsion and Partially Linear Kinematics. 28th Congress of the International Council of the Aeronautical Sciences (ICAS 2012), paper 053.",
+      "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF",
+      "note": "M. Fischer is listed as Festo GmbH & Co. KG and R. Mugrauer as Effekt-Technik GmbH. The task named 'Send et al. 2012'; this is that paper, read in full."
+    },
+    "v4_power_targets": {
+      "design_point": {
+        "electrical_power_w": 23,
+        "speed_m_s": 5,
+        "flap_frequency_hz": 2,
+        "quote": "Operational data at design point: Speed 5 m/s, flapping frequency 2 Hz, average energy consumption 23 W.",
+        "locator": "Fig. 1 caption",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "measured_free_flight": {
+        "electrical_power_w": 18,
+        "speed_m_s": 4.7,
+        "quote": "The average velocity was determined to be u0 = 4.7 m/s ... The net power is obtained from the total power of Pel = 18 W by subtracting the bias power of the servo motors, which is measured during passive flight and amounts to P0,sv = 5 W.",
+        "locator": "Section 3.4; Fig. 8 caption gives 'a typical horizontal flight (18 W)'",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "servo_bias_power_w": {
+        "value": 5,
+        "quote": "amounts to P0,sv = 5 W",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "net_flapping_power_w": {
+        "value": 13,
+        "quote": "The net power of Pel - P0,sv = 13 W",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "climb_power_peak_w": {
+        "value": 42,
+        "read_from_figure": true,
+        "locator": "Fig. 8, climbing trace, about 42 W peak settling to about 25-32 W",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "flag_for_orchestrator": "SPEC V4 says 'the published figure', but the primary paper publishes two: 23 W at the 5 m/s design point and 18 W measured in horizontal free flight at 4.7 m/s. Each must be compared at its own speed. The +/-30% band differs: 16.1-29.9 W on 23 W, 12.6-23.4 W on 18 W. This should be declared before V4 runs. Secondary sources repeat only 23 W."
+    },
+    "geometry_and_mass": {
+      "span_m": {
+        "values": [
+          {
+            "value": 2.0,
+            "quote": "Span 2 m",
+            "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+          },
+          {
+            "value": 1.98,
+            "computed_from": "'has a wingspan of 6.5 ft'",
+            "source_url": "https://www.machinedesign.com/news/hannover-fair-robotic-bird-demonstrates-efficient-flight"
+          }
+        ],
+        "disagreement": "2 m in the primary paper, 6.5 ft (1.98 m) in Machine Design, 6 ft in ZME Science. A Festo figure of 1.96 m is widely reported but Festo's pages could not be read directly; see not_read."
+      },
+      "mass_kg": {
+        "values": [
+          {
+            "value": 0.48,
+            "quote": "weight 0.48 kg including battery",
+            "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+          },
+          {
+            "value": 0.454,
+            "computed_from": "'weighs about 1 lb'",
+            "source_url": "https://www.machinedesign.com/news/hannover-fair-robotic-bird-demonstrates-efficient-flight"
+          },
+          {
+            "value": 0.5,
+            "computed_from": "'weighs about half a kilo'",
+            "source_url": "https://zmescience.com/other/flying-bionic-smartbird-3425324"
+          }
+        ],
+        "disagreement": "Use 0.48 kg with the battery from the primary paper. A Festo figure of 450 g is widely reported but Festo's pages could not be read directly; see not_read."
+      },
+      "wing_area_m2": {
+        "value": 0.5,
+        "quote": "planform area 0.5 m2",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "mean_chord_m": {
+        "value": 0.25,
+        "quote": "mean chord length 0.25 m",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "aspect_ratio_computed": 8.0,
+      "wing_section": {
+        "text": "Fig. 12 compares SmartBird's wing section with NACA7412 'applied during the design process'. Coordinates of the actual section are not given.",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "structure": {
+        "text": "Two-part inner wing spar, trapezoidal hinge, outer wing spar. Inner wing generates lift, outer wing generates thrust; both spars torsionally stiff. Lagging degree of freedom not implemented.",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      }
+    },
+    "kinematics": {
+      "flap_frequency_hz": {
+        "values": [
+          {
+            "value": 2,
+            "quote": "flapping frequency 2 Hz",
+            "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+          },
+          {
+            "value": 1.96,
+            "read_from_figure": true,
+            "locator": "Fig. 2B screenshot label '1.96 Hz', on the wing position trace during flight",
+            "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+          }
+        ]
+      },
+      "reduced_frequency": {
+        "range": [
+          0.3,
+          0.45
+        ],
+        "definition": "omega* = omega c / 2 / u0, with c the mean chord 0.25 m",
+        "quote": "ranges from 0.3 to 0.45",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "transmission": {
+        "gear_reduction": "1:45",
+        "quote": "a two-stage spur gearing with a 1:45 reduction of speed",
+        "hinge_ratio_quote": "Via the trapezoidal hinge, a 1:3 transmission ratio is achieved.",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF",
+        "disagreement": "Machine Design calls the same 1:45 drive 'a two-stage helical transmission'."
+      },
+      "stroke_2d_section": {
+        "plunge_amplitude_m": 0.3,
+        "read_from_figure": true,
+        "locator": "Fig. 2A, z(t) = -h(t) on the right axis, peak near +/-0.3 m, described as 'typical amplitudes'",
+        "limitation": "This is a typical 2D section plunge, not a stated full-wing stroke. The paper gives no flap stroke angle in degrees and says wing torsion and bending in free flight 'remain still unknown'.",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "torsion": {
+        "pitch_amplitude_deg_typical": 9,
+        "read_from_figure": true,
+        "locator": "Fig. 2A, alpha(t) plateau near +/-9 deg, with the turn inside the 60-120 deg and 240-300 deg phase windows",
+        "shape": "Partially linear: the outer wing holds a constant angle, then turns within a short part of the period around the plunge extremes.",
+        "quote": "When the wings flap upwards, the servomotor for the active torsion turns the outer wing from a positive angle of incidence within a short fraction of the flapping period into a negative angle of incidence. Between the turning points the angle of torsion remains constant.",
+        "twist_applied_at": "A servomotor at the outer wing tip twists the wing against the spar through the outermost rib.",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "phase_shift_deg": {
+        "nominal": 90,
+        "design_point_kappa": 100,
+        "quote_nominal": "in flapping flight the phase shift of plunge is defined to be 90 deg ahead of pitch",
+        "quote_design": "The design point (eta_aero = 0.8, kappa = 100 deg)",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "cfd_case_parameters": {
+        "airfoil": "NACA7412",
+        "alpha0_deg": 5,
+        "omega_c_star": 0.9,
+        "pitch_axis_xi_p": 0.4,
+        "lambda_c_design_harmonic": 2.0,
+        "lambda_c_design_partially_linear": 2.5,
+        "definitions": "lambda_c = h0 / (alpha0 c); omega_c* = omega c / u0",
+        "locator": "Fig. 11 captions. Lambda values read from the marked square on each plot. Data 'refer to the earlier model' of Fig. 3.",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      }
+    },
+    "aerodynamics_and_efficiency": {
+      "thrust_n": {
+        "value": 0.7,
+        "quote": "thrust force FT = eta_tot (Pel - P0,sv)/u0 = 0.7 N",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "cT": {
+        "value": 0.1,
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "cL": {
+        "value": 0.7,
+        "basis": "weight 0.48 kg, rho 1.2 kg/m3, A 0.5 m2, u0 4.7 m/s",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "cL_over_cD": {
+        "value": 7,
+        "quote": "cL / cD = 7 in free sustained horizontal flight",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "reynolds": {
+        "value": 80000,
+        "quote": "about Re = 80,000",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "air_density_used_kg_m3": {
+        "value": 1.2,
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "eta_total": {
+        "value": 0.25,
+        "quote": "measured total efficiency eta_tot = 0.25 (Fig. 5) in tethered flight",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "eta_aero": {
+        "range": [
+          0.6,
+          0.8
+        ],
+        "quote": "high values achieved for eta_aero above 0.6 and up to 0.8",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "eta_electromechanical": {
+        "values": [
+          {
+            "value": 0.4,
+            "read_from_figure": true,
+            "locator": "Fig. 5, eta_em trace near 0.4 on the right axis",
+            "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+          },
+          {
+            "value": 0.45,
+            "quote": "Electromechanical efficiency is around 45%",
+            "source_url": "https://www.machinedesign.com/news/hannover-fair-robotic-bird-demonstrates-efficient-flight"
+          }
+        ]
+      },
+      "tethered_vs_free": {
+        "quote": "Measurements in free flight show even lower values for the required electric power than the data during tethered flight.",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      },
+      "sensitivity": {
+        "quote": "Flight tests show a very sensitive dependence of thrust generation on the torsion shape function.",
+        "source_url": "https://icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/053.PDF"
+      }
+    },
+    "internal_consistency_checks_computed": {
+      "cL_at_4_7_m_s": "0.48 x 9.81 / (0.5 x 1.2 x 4.7^2 x 0.5) = 0.71, matches the paper's 0.7",
+      "thrust": "0.25 x 13 / 4.7 = 0.69 N, matches 0.7 N",
+      "reduced_frequency_at_2_hz": "2 pi x 2 x 0.125 / 4.7 = 0.33, inside the 0.3-0.45 range",
+      "reynolds": "4.7 x 0.25 / 1.5e-5 = 78,000, with an assumed sea-level kinematic viscosity of 1.5e-5 m2/s; matches about 80,000"
+    },
+    "not_read": [
+      "Festo's SmartBird pages and brochure could not be opened: festo.com, media.festo.com/media/113631_documentation.pdf and the 2011 brochure PDF all returned HTTP 403, and web.archive.org was refused or rate limited. Search-engine excerpts attribute a span of 1.96 m, 2.00 m, a torso length of 1.07 m and a mass of about 450 g to Festo pages. These are not used as values here. A human opening media.festo.com/media/113631_documentation.pdf would close this gap.",
+      "The Engineer, Control Engineering, Time and RoboAid articles returned HTTP 403."
+    ]
+  },
+  "morphology": {
+    "method_note": "Alerstam et al. give mean equivalent airspeed Ue in continuous flapping flight tracked by radar, plus biometry. Their wing span is maximum wingtip to wingtip on a bird in the hand. Their wing area is the projected area of both wings fully stretched, including the body between the wings. Aspect ratio is computed here as b^2/S.",
+    "source": {
+      "citation": "Alerstam T, Rosen M, Backman J, Ericson PGP, Hellgren O. Flight speeds among bird species: allometric and phylogenetic effects. PLoS Biology 5(8): e197 (2007), Protocol S1.",
+      "source_url": "https://journals.plos.org/plosbiology/article/file?type=supplementary&id=10.1371/journal.pbio.0050197.sd001",
+      "licence": "PLOS Biology articles are published open access under CC BY; check the article page before redistributing the table."
+    },
+    "herring_gull_larus_argentatus": {
+      "mass_kg": 1.142,
+      "span_m": 1.34,
+      "wing_area_m2": 0.1968,
+      "aspect_ratio_computed": 9.12,
+      "wing_loading_n_m2_computed": 56.9,
+      "cruise_speed_ue_m_s": 12.8,
+      "cruise_speed_sd_m_s": 1.8,
+      "n_tracks": 18,
+      "row_verbatim": "Larus argentatus 12.8 1.8 0.0 18 7210 374 1.142 11 1.34 11 0.1968",
+      "flap_frequency_hz": null,
+      "flap_frequency_note": "No value read at a source. Pointer: Condor vol. 50 no. 4 pp. 148-151 (1948) on wing-flapping rates, whose host now redirects. Pennycuick 1996 and 2001 at J. Exp. Biol. returned HTTP 403."
+    },
+    "peregrine_falcon_falco_peregrinus": {
+      "mass_kg": 0.789,
+      "span_m": 1.02,
+      "wing_area_m2": 0.1257,
+      "aspect_ratio_computed": 8.28,
+      "wing_loading_n_m2_computed": 61.6,
+      "cruise_speed_ue_m_s": 12.1,
+      "n_tracks": 13,
+      "speed_source_note": "Row marked with a bullet: speed from Bruderer and Boldt (2001), per Protocol S1.",
+      "row_verbatim": "Falco peregrinus 12.1 13 51 0.789 20 1.02 19 0.1257",
+      "flap_frequency_hz": null,
+      "flap_frequency_note": "No peregrine value read. Nearest read: Eleonora's falcon, mean 4.68 Hz in powered climbs (different species and flight mode). Hedenstrom, Rosen, Akesson and Spina, J. Exp. Biol. 1999, https://www.lu.se/lup/publication/69606943-d914-4977-b9c2-35b99d97c400"
+    },
+    "rock_pigeon_columba_livia": {
+      "mass_kg": 0.293,
+      "single_wing_length_shoulder_to_tip_m": 0.323,
+      "wing_area_cm2_as_tabulated": 314,
+      "wing_area_note": "The table header says only 'Wing area [cm2]' beside other single-wing quantities. It is not stated whether this is one wing or both. Do not compute aspect ratio from it without checking Van Den Berg and Rayner (1995).",
+      "single_wing_mass_g": 22.47,
+      "wing_cg_distance_from_shoulder_m": 0.071,
+      "flap_frequency_hz": 6.7,
+      "row_verbatim": "Columba livia Rock pigeon 293 B95 27.63 T08 22.47 B95 323 B95 71 B95 172.7 B95 314 B95 6.7 B95",
+      "source_url": "https://cdn.elifesciences.org/articles/89968/elife-89968-supp3-v1.pdf",
+      "source_note": "eLife article 89968, Supplementary File 3a, values attributed to B95 = C. Van Den Berg and J. M. V. Rayner. The primary 1995 paper was not read.",
+      "cruise_speed_m_s": null,
+      "cruise_speed_note": "Alerstam Protocol S1 has no Columba livia row. Tobalske and Dial (1996) flew pigeons at 6-20 m/s in a wind tunnel and report that wingbeat frequency 'did not change appreciably with increasing flight speed' during steady flight, which is a test range rather than a cruise value. https://umimpact.umt.edu/en/publications/flight-kinematics-of-black-billed-magpies-and-pigeons-over-a-wide/",
+      "close_relatives_from_alerstam_s1": {
+        "columba_palumbus": {
+          "mass_kg": 0.49,
+          "span_m": 0.75,
+          "wing_area_m2": 0.0842,
+          "aspect_ratio_computed": 6.68,
+          "cruise_speed_ue_m_s": 16.3,
+          "row_verbatim": "Columba palumbus 16.3 2.3 0.3 87 45920 522 0.490 3 0.75 3 0.0842"
+        },
+        "columba_oenas": {
+          "mass_kg": 0.295,
+          "span_m": 0.75,
+          "wing_area_m2": 0.0532,
+          "aspect_ratio_computed": 10.57,
+          "cruise_speed_ue_m_s": 15.8,
+          "row_verbatim": "Columba oenas 15.8 2.0 0.1 8 1830 20 0.295 1 0.75 1 0.0532",
+          "caution": "Only one span and one area measurement. Its aspect ratio looks anomalously high for the genus; use with care."
+        }
+      },
+      "single_wing_moment_of_inertia_as_printed": 172.7,
+      "moment_of_inertia_note": "Header extracts as '[106 kg m2]', with the exponent's sign lost in the PDF text; it is probably 1e-6 kg m2. Check the PDF before use."
+    },
+    "pennycuick": {
+      "status": "Not read. C. J. Pennycuick, J. Exp. Biol. 199, 1613-1618 (1996) and 204, 3283 (2001) returned HTTP 403 at the publisher. Alerstam Protocol S1 lists Pennycuick (1999) among its biometry sources."
+    }
+  },
+  "other_ornithopters": [
+    {
+      "name": "WindRider (feathered wing, derived from SmartBird layout)",
+      "span_m": 1.95,
+      "mass_kg": 0.6672,
+      "takeoff_flap_frequency_hz": 4,
+      "battery": "3-cell Li-po, 350 mAh as printed (rated voltage 11.7 V as printed)",
+      "gear_reduction": "1:48",
+      "quote": "It has a wingspan of 195 cm ... an overall weight of 667.2 g ... and a takeoff flapping frequency of ~ 4 Hz",
+      "citation": "Zhang Z, Wei A, Cai Y. A flapping feathered wing-powered aerial vehicle. arXiv:2102.12687",
+      "source_url": "https://export.arxiv.org/pdf/2102.12687"
+    },
+    {
+      "name": "Robo Raven (University of Maryland)",
+      "mass_kg": 0.2903,
+      "mass_note": "Weight breakdown table total 290.3 g",
+      "requirement_flap": "Flap wings of at least 0.20 m2 surface area at 3.5 Hz (a design requirement, not a measurement)",
+      "actuators": "2 Futaba S9352HV drive servos, 136.0 g together, directly driving each wing",
+      "reference_raven_parameters": "Common raven: total mass 0.69-2.00 kg, wingspan 1.00-1.50 m, average chord 0.21 m, aspect ratio 2.77, flight speed 9.80-12.50 m/s, as tabulated in the report",
+      "citation": "Gerdes J et al. Design, Manufacturing, and Testing of Robo Raven. Univ. of Maryland technical report, April 2014.",
+      "source_url": "https://drum.lib.umd.edu/bitstreams/0bf7f869-be85-4c88-89a4-624c00c4f097/download"
+    },
+    {
+      "name": "Beihang University flapper (Guinness record flight)",
+      "span_m": 2.0,
+      "mass_kg": 1.6,
+      "speed_m_s": 10,
+      "endurance_s": 5404.98,
+      "quote": "flew continuously for 1 hour 30 minutes and 4.98 seconds ... weighs 1.6 kg, has a wingspan of 2 meters and is capable of flying at a speed of 10 meters per second",
+      "note": "Press report (Xinhua via People's Daily); no paper read. Battery: lithium-ion. No power figure.",
+      "source_url": "https://en.people.cn/n3/2022/1022/c90000-10161902.html"
+    },
+    {
+      "name": "Songgolmae robot ornithopter",
+      "span_m": 0.88,
+      "mass_kg": 0.277,
+      "endurance_note": "Flight times have exceeded 23 minutes",
+      "gear_reduction": "about 75 to 95 to 1",
+      "citation": "Chang JW, Journal of the Korean Society for Aviation and Aeronautics 11(1), 2003",
+      "source_url": "https://www.koreascience.or.kr/article/JAKO200328835894289.page"
+    },
+    {
+      "name": "Robird peregrine model (University of Twente)",
+      "speed_m_s": 16,
+      "quote": "The peregrine falcon model is capable of flying up to 60 kilometre per hour (16 metre per second).",
+      "note": "No mass, span or endurance on the page read.",
+      "source_url": "https://www.ram.eemcs.utwente.nl/research/projects/robird"
+    }
+  ],
+  "not_read_ornithopters": "Bat Bot, HIT-Hawk and HIT-Phoenix (biomimetic intelligence and robotics paper; an MDPI page summarising them returned 403), Festo BionicSwift, BionicFlyingFox and eMotionButterflies (Festo pages 403). Their numbers are not recorded here because no source was opened. Pointers: doi 10.1016/j.birob.2021.100002 for HIT-Hawk and HIT-Phoenix."
+}
