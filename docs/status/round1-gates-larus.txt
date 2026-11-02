@@ -1,0 +1,17 @@
+design: larus-gl-2
+V1  pass      {"max_amp_error_pct":3.785,"max_phase_error_deg":2.444,"k":[0.1,0.2,0.3,0.4,0.5],"amp_error_pct":[-0.07,0.87,1
+V2  FAIL      {"reference":"prandtl-lifting-line","max_error_pct":9.382,"worst_AR":4,"table":[[4,3.6505,4.0284,-9.38,1.96],[
+V3  pass      {"max_ct_error_pct":1.293,"trend_monotonic":true,"k":[0.1,0.2,0.3,0.4,0.5],"ct_uvlm":[0.000036068,0.00011353,0
+V4  FAIL      {"method":"frozen-body trim at 2 Hz (no free-flight trim table could be built; free flight not run)","predicte
+V5  FAIL     larus-gl-2 {"protocol":"multipliers fitted on cruise and cruise x1.3 stroke; judged on four other points","earlier_protoc
+V6  FAIL      {"gpu_vs_cpu":[{"case":"thin-bouzidi","max_population_diff":3.3527612686157227e-8,"mean_population_diff":2.868
+V7  MISSING   
+M1  FAIL     larus-gl-2 {"release_speed_m_s":8,"release_pitch_deg":5,"climb_rate_2_to_3s_m_s":-0.4408617782197713,"first_1s_window_cli
+M2  FAIL     larus-gl-2 {"cruise_power_w":51.05623469493752,"cruise_batt_A":4.55858693473339,"endurance_min":3.1588736172346765,"usabl
+M3  FAIL     larus-gl-2 {"heading_change_deg":360.08752447019,"altitude_dev_m":6.590790813422813,"mean_bank_deg":27.42341221024561,"ma
+M4  FAIL     larus-gl-2 {"seeds_passed":4,"seeds_run":100,"worst_H_m":20,"by_H":{"5":{"runs":23,"pass":2,"worstAlt":98.71926980383894,
+M5  pass     larus-gl-2 {"touchdown_sink_m_s":0.4590770544779482,"touchdown_speed_m_s":6.7798419380888495,"pitch_deg":-1.5479868185075
+M6  pass     larus-gl-2 {"total_g":327.17497733821955,"parts_g":160.44000000000003,"structure_g":124.059980294104,"margin_g":42.674997
+M7  FAIL     larus-gl-2 {"spar_inner":{"id":0.006,"moment_Nm":31.176877880520575,"stress_MPa":907.3287725453205,"allowable_MPa":650,"f
+M8  FAIL     larus-gl-2 {"motor_rms_2s_max_A":13.40042824475985,"motor_continuous_A":6.5,"motor_rule":"no continuous rating: lower of 
+NOT ALL GATES PASS

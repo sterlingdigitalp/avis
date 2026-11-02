@@ -1,0 +1,1412 @@
+{
+ "name": "columba-rp-2",
+ "label": "Columba RP-2",
+ "candidate": "columba",
+ "reference": "Pigeon, short broad wing",
+ "claim": "simulated flight, real parts",
+ "params": {
+  "candidate": "columba",
+  "span_m": 0.9,
+  "AR": 5.5,
+  "taper": 0.75,
+  "elbowFrac": 0.5,
+  "elbowGain": 0.5,
+  "amp_deg": 20,
+  "ampMax_deg": 30,
+  "phiMean_deg": 5,
+  "gearRatio": 16,
+  "crankRating": 1.88,
+  "staticMargin": 0.1,
+  "sparFrac": 0.35,
+  "crank_mm": 8,
+  "coupler_mm": 70,
+  "parts": {
+   "motor": "motor-eflite-park370-1360",
+   "esc": "esc-hobbywing-skywalker-15a-v2",
+   "battery": "batt-gensace-300-3s-45c",
+   "twistServo": "servo-kst-x06-v6",
+   "tailServo": "servo-kst-x06-v6",
+   "strokeServo": "servo-kst-x06-v6",
+   "fc": "fc-ark-v6x",
+   "gps": "gps-3dr-mini-m10136",
+   "airspeed": "aspd-matek-4525",
+   "receiver": "rx-tbs-crossfire-nano",
+   "sparInner": "tube-ec-woven-8x6",
+   "sparOuter": "tube-ec-woven-8x6",
+   "leRod": "rod-ec-2mm",
+   "teRod": "rod-ec-1-5mm",
+   "ribMaterial": "balsa-wood-database",
+   "film": "film-oracover-air-light",
+   "keel": "tube-ec-woven-8x6",
+   "gears": [
+    "gear-khk-ds0.5-20",
+    "gear-khk-ds0.5-80",
+    "gear-khk-ds0.8-20",
+    "gear-khk-ds0.8-80"
+   ],
+   "bearing": "bearing-skf-623-2z"
+  }
+ },
+ "atmosphere": {
+  "altitude_m": 1800,
+  "temperature_C": 10,
+  "rho_kg_m3": 1.002586030045798,
+  "mu_Pa_s": 0.000017650718776900008
+ },
+ "wing": {
+  "hinge": [
+   0,
+   0.02,
+   0.025
+  ],
+  "spar_x": 0,
+  "incidence": 0.05235987755982989,
+  "washout": -0.03490658503988659,
+  "camber": 0.038,
+  "camber_pos": 0.4,
+  "phi_ref": 0,
+  "airfoil": "e387-film",
+  "twist_stiffness_Nm_rad": 0.05,
+  "segments": [
+   {
+    "length": 0.2125,
+    "chord_in": 0.19184723275909926,
+    "chord_out": 0.1822548711211443,
+    "xle_in": 0.06714653146568474,
+    "xle_out": 0.06714653146568474,
+    "gain": 0,
+    "twist_in": 0,
+    "twist_out": 0.3
+   },
+   {
+    "length": 0.2125,
+    "chord_in": 0.1822548711211443,
+    "chord_out": 0.13669115334085824,
+    "xle_in": 0.06714653146568474,
+    "xle_out": 0.037638599950832796,
+    "gain": 0.5,
+    "twist_in": 0.3,
+    "twist_out": 1
+   }
+  ]
+ },
+ "geometry": {
+  "span_m": 0.9,
+  "area_m2": 0.14727272727272728,
+  "AR": 5.5,
+  "mac_m": 0.17488081226105556,
+  "chord_root_m": 0.19184723275909926,
+  "chord_elbow_m": 0.1822548711211443,
+  "chord_tip_m": 0.13669115334085824,
+  "tail_arm_m": 0.4604333586218382,
+  "wing_loading_N_m2": 18.68242793558183,
+  "x_np_m": -0.010104538082690634,
+  "x_cg_m": 0.007383543143414923,
+  "static_margin": 0.1
+ },
+ "drive": {
+  "kind": "crank-rocker",
+  "a": 0.008,
+  "b": 0.07,
+  "d": 0.07,
+  "ampMin": 0.20943951023931953,
+  "ampMax": 0.5235987755982988,
+  "ampNominal": 0.3490658503988659,
+  "phiMean": 0.08726646259971647,
+  "gearRatio": 16,
+  "gearEfficiency": 0.85,
+  "crankFriction_Nm": 0.01,
+  "gears": [
+   "gear-khk-ds0.5-20",
+   "gear-khk-ds0.5-80",
+   "gear-khk-ds0.8-20",
+   "gear-khk-ds0.8-80"
+  ]
+ },
+ "tail": {
+  "x_m": -0.4604333586218382,
+  "y_m": 0.02,
+  "z_m": 0.005,
+  "span_each_m": 0.2700774734535137,
+  "chord_root_m": 0.09078234401798778,
+  "taper": 0.7,
+  "dihedral_rad": 0.6108652381980153,
+  "incidence_rad": 0,
+  "polar": "thin-plate",
+  "AR_each": 3.5,
+  "lift_factor": 0.6681818181818182,
+  "kEps": 1,
+  "area_total_m2": 0.04168105238116193,
+  "deflection_max_rad": 0.5235987755982988
+ },
+ "body": {
+  "CdA_front_m2": 0.0008246680715673207,
+  "CdA_top_m2": 0.01585040060692412,
+  "CdA_side_m2": 0.018492134041411475,
+  "volume_m3": 0.0007261844056712001,
+  "kMunk": 0.8,
+  "cp": [
+   0.05,
+   0,
+   0
+  ],
+  "length_m": 0.33021667931091914,
+  "width_m": 0.06,
+  "height_m": 0.07,
+  "bottom_y_m": -0.035
+ },
+ "mass": {
+  "total_kg": 0.28056595413819446,
+  "total_g": 280.56595413819446,
+  "parts_g": 159.14000000000001,
+  "structure_g": 84.83039490277785,
+  "margin_g": 36.59555923541668,
+  "margin_frac": 0.15,
+  "lumps": [
+   {
+    "name": "flap motor",
+    "mass_kg": 0.05175,
+    "pos": [
+     0.04,
+     0,
+     0
+    ],
+    "gyration_m": 0
+   },
+   {
+    "name": "gears and bearings",
+    "mass_kg": 0.035466,
+    "pos": [
+     0.015,
+     0,
+     0
+    ],
+    "gyration_m": 0
+   },
+   {
+    "name": "crank, rockers, plates",
+    "mass_kg": 0.017302899999999996,
+    "pos": [
+     0.01,
+     0.01,
+     0
+    ],
+    "gyration_m": 0
+   },
+   {
+    "name": "couplers",
+    "mass_kg": 0.001771,
+    "pos": [
+     0,
+     0,
+     0
+    ],
+    "gyration_m": 0
+   },
+   {
+    "name": "ESC",
+    "mass_kg": 0.0115,
+    "pos": [
+     0.07,
+     -0.01,
+     0
+    ],
+    "gyration_m": 0
+   },
+   {
+    "name": "flight controller",
+    "mass_kg": 0.00575,
+    "pos": [
+     0,
+     -0.01,
+     0
+    ],
+    "gyration_m": 0
+   },
+   {
+    "name": "receiver and airspeed",
+    "mass_kg": 0.0046,
+    "pos": [
+     0.11,
+     0,
+     0
+    ],
+    "gyration_m": 0
+   },
+   {
+    "name": "GPS",
+    "mass_kg": 0.009545,
+    "pos": [
+     -0.03,
+     0.03,
+     0
+    ],
+    "gyration_m": 0
+   },
+   {
+    "name": "tail servos",
+    "mass_kg": 0.0138,
+    "pos": [
+     -0.08,
+     0,
+     0
+    ],
+    "gyration_m": 0
+   },
+   {
+    "name": "stroke servo",
+    "mass_kg": 0.0069,
+    "pos": [
+     -0.03,
+     0,
+     0
+    ],
+    "gyration_m": 0
+   },
+   {
+    "name": "keel and boom",
+    "mass_kg": 0.020231589437346188,
+    "pos": [
+     -0.1930673028884407,
+     0,
+     0
+    ],
+    "gyration_m": 0.15507231232537053
+   },
+   {
+    "name": "fuselage shell and formers",
+    "mass_kg": 0.0046771272382933465,
+    "pos": [
+     -0.05,
+     0,
+     0
+    ],
+    "gyration_m": 0.09906500379327574
+   },
+   {
+    "name": "tail surfaces",
+    "mass_kg": 0.005647134903431203,
+    "pos": [
+     -0.4604333586218382,
+     0.02,
+     0
+    ],
+    "gyration_m": 0
+   },
+   {
+    "name": "battery",
+    "mass_kg": 0.029899999999999996,
+    "pos": [
+     0.21259964669383,
+     -0.005,
+     0
+    ],
+    "gyration_m": 0.02
+   }
+  ],
+  "wing": {
+   "spar_kg_per_m": 0.04611499999999999,
+   "skin_kg_per_m2": 0.05926048033972947,
+   "point": [
+    {
+     "name": "twist servo",
+     "s_m": 0.35062499999999996,
+     "mass_kg": 0.0069,
+     "d_m": 0
+    }
+   ],
+   "one_wing_kg": 0.03086260127956189
+  },
+  "x_battery_m": 0.21259964669383
+ },
+ "motor": {
+  "id": "motor-eflite-park370-1360",
+  "kv_rad_per_v_s": 142.4188669627373,
+  "R": 0.1,
+  "I0": 1,
+  "I_cont": 12,
+  "I_cont_rule": "published continuous rating",
+  "I_burst": 15,
+  "burst_s": 15,
+  "J_kg_m2": 0.00000285768,
+  "mass_kg": 0.045,
+  "J_estimated": true
+ },
+ "esc": {
+  "id": "esc-hobbywing-skywalker-15a-v2",
+  "I_cont": 15,
+  "bec_A": 2,
+  "bec_V": 5,
+  "eta": 0.95,
+  "eta_assumed": true
+ },
+ "battery": {
+  "id": "batt-gensace-300-3s-45c",
+  "cells": 3,
+  "V_nom": 11.1,
+  "capacity_Ah": 0.3,
+  "I_cont": 13.5,
+  "R_int": 0.08222222222222225,
+  "R_estimated": true,
+  "mass_kg": 0.026
+ },
+ "servos": {
+  "twist": {
+   "id": "servo-kst-x06-v6",
+   "stall_Nm": 0.11591818181818184,
+   "speed_rad_s": 10.665900984409792,
+   "stall_A": 0.58,
+   "tau_s": 0.02,
+   "idle_A": 0,
+   "volts": 5,
+   "mass_kg": 0.006
+  },
+  "tail": {
+   "id": "servo-kst-x06-v6",
+   "stall_Nm": 0.11591818181818184,
+   "speed_rad_s": 10.665900984409792,
+   "stall_A": 0.58,
+   "tau_s": 0.02,
+   "idle_A": 0,
+   "volts": 5,
+   "mass_kg": 0.006
+  },
+  "stroke": {
+   "id": "servo-kst-x06-v6",
+   "stall_Nm": 0.11591818181818184,
+   "speed_rad_s": 10.665900984409792,
+   "stall_A": 0.58,
+   "tau_s": 0.02,
+   "idle_A": 0,
+   "volts": 5,
+   "mass_kg": 0.006,
+   "amp_rate_rad_s": 0.5
+  }
+ },
+ "structure": {
+  "items": [
+   {
+    "name": "inner spar, 2 off",
+    "material_id": "tube-ec-woven-8x6",
+    "material": "8 mm x 6 mm woven finish carbon tube",
+    "mass_g": 13.982499999999998,
+    "basis": "32.9 g/m x 0.212 m x 2",
+    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+   },
+   {
+    "name": "outer spar, 2 off",
+    "material_id": "tube-ec-woven-8x6",
+    "material": "8 mm x 6 mm woven finish carbon tube",
+    "mass_g": 13.982499999999998,
+    "basis": "32.9 g/m x 0.212 m x 2",
+    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+   },
+   {
+    "name": "leading edge rod, 2 off",
+    "material_id": "rod-ec-2mm",
+    "material": "2 mm pultruded carbon rod",
+    "mass_g": 3.8249999999999997,
+    "basis": "4.5 g/m x 0.425 m x 2",
+    "source_url": "https://www.easycomposites.co.uk/2mm-carbon-fibre-rod"
+   },
+   {
+    "name": "trailing edge rod, 2 off",
+    "material_id": "rod-ec-1-5mm",
+    "material": "1.5 mm pultruded carbon rod",
+    "mass_g": 2.295,
+    "basis": "2.7 g/m x 0.425 m x 2",
+    "source_url": "https://www.easycomposites.co.uk/1-5mm-carbon-fibre-rod"
+   },
+   {
+    "name": "wing film, both faces",
+    "material_id": "film-oracover-air-light",
+    "material": "Oracover Air Indoor / Air Light",
+    "mass_g": 5.157490909090909,
+    "basis": "17 g/m2 x 0.303 m2",
+    "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
+   },
+   {
+    "name": "ribs, 10 off",
+    "material_id": "balsa-wood-database",
+    "material": "Balsa, average dried",
+    "mass_g": 2.43159827275587,
+    "basis": "area 8.11e-4 m2 x 0.002 m x 150 kg/m3 each",
+    "source_url": "https://www.wood-database.com/balsa/"
+   },
+   {
+    "name": "tail surfaces, film, spar and ribs",
+    "material_id": "film-oracover-air-light",
+    "material": "Oracover Air Indoor / Air Light",
+    "mass_g": 4.910552089940177,
+    "basis": "film 1.5 g + rods 2.9 g + ribs 0.5 g",
+    "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
+   },
+   {
+    "name": "keel and tail boom",
+    "material_id": "tube-ec-woven-8x6",
+    "material": "8 mm x 6 mm woven finish carbon tube",
+    "mass_g": 17.592686467257554,
+    "basis": "32.9 g/m x 0.535 m",
+    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+   },
+   {
+    "name": "fuselage film shell",
+    "material_id": "film-oracover-air-light",
+    "material": "Oracover Air Indoor / Air Light",
+    "mass_g": 0.9170671637333443,
+    "basis": "0.054 m2",
+    "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
+   },
+   {
+    "name": "fuselage formers",
+    "material_id": "balsa-wood-database",
+    "material": "Balsa, average dried",
+    "mass_g": 3.1500000000000004,
+    "basis": "5 off, 50% lightened, 2 mm",
+    "source_url": "https://www.wood-database.com/balsa/"
+   },
+   {
+    "name": "crank, rockers and gearbox plates",
+    "material_id": "plate-ec-2mm",
+    "material": "High strength carbon fibre sheet 2 mm",
+    "mass_g": 15.046,
+    "basis": "2.71 kg/m2 x 2.60e-3 m2, plus gearbox cheek allowance",
+    "source_url": "https://media.easycomposites.co.uk/datasheets/EC-TDS-High-Strength-Carbon-Sheet.pdf"
+   },
+   {
+    "name": "couplers, 2 off",
+    "material_id": "rod-ec-3mm",
+    "material": "3 mm pultruded carbon rod",
+    "mass_g": 1.54,
+    "basis": "11 g/m x 70 mm x 2",
+    "source_url": "https://www.easycomposites.co.uk/3mm-carbon-fibre-rod"
+   }
+  ],
+  "spar_inner": {
+   "id": 0.006,
+   "od": 0.008,
+   "I": 1.3744467859455348e-10,
+   "c": 0.004,
+   "kgPerM": 0.0329,
+   "allowable_MPa": 650,
+   "allowable_basis": "published tensile strength",
+   "mass_g_per_m": 32.9
+  },
+  "spar_outer": {
+   "id": 0.006,
+   "od": 0.008,
+   "I": 1.3744467859455348e-10,
+   "c": 0.004,
+   "kgPerM": 0.0329,
+   "allowable_MPa": 650,
+   "allowable_basis": "published tensile strength",
+   "mass_g_per_m": 32.9
+  },
+  "gear_stages": [
+   {
+    "pinion": "gear-khk-ds0.5-20",
+    "gear": "gear-khk-ds0.5-80",
+    "ratio": 4,
+    "pinion_allowable_Nm": 0.14,
+    "gear_allowable_Nm": 0.75
+   },
+   {
+    "pinion": "gear-khk-ds0.8-20",
+    "gear": "gear-khk-ds0.8-80",
+    "ratio": 4,
+    "pinion_allowable_Nm": 0.47,
+    "gear_allowable_Nm": 2.55
+   }
+  ],
+  "coupler": {
+   "id": "rod-ec-3mm",
+   "od_m": 0.003,
+   "length_m": 0.07,
+   "E_GPa": 28,
+   "compressive_MPa": 200
+  }
+ },
+ "bom": {
+  "parts": [
+   {
+    "id": "motor-eflite-park370-1360",
+    "name": "Park 370 Brushless Outrunner 1360Kv (EFLM1205)",
+    "role": "flap motor",
+    "count": 1,
+    "unit_mass_g": 45,
+    "mass_g": 45,
+    "source_url": "https://assets.horizonhobby.com/on/demandware.static/-/Sites-horizon-master/default/dw780f4ace/Manuals/EFLM1210HS-Manual-MULTI.pdf",
+    "verified": "datasheet",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "esc-hobbywing-skywalker-15a-v2",
+    "name": "SkyWalker 15A V2",
+    "role": "flap ESC",
+    "count": 1,
+    "unit_mass_g": 10,
+    "mass_g": 10,
+    "source_url": "https://cdn.shopify.com/s/files/1/0109/9702/files/SKYWALKER_V2_mini_Leaflet_EN.pdf",
+    "verified": "datasheet",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "batt-gensace-300-3s-45c",
+    "name": "Gens Ace 300mAh 3S 45C LiPo (GEA3003S45JST)",
+    "role": "battery",
+    "count": 1,
+    "unit_mass_g": 26,
+    "mass_g": 26,
+    "source_url": "https://ozrc.com.au/products/gens-ace-3s-300mah-11-1-v-45c-soft-case-lipo-battery-pack-w-jst-plug-gea3003s45jst",
+    "verified": "retailer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "servo-kst-x06-v6",
+    "name": "X06 V6.0 HV micro",
+    "role": "wing twist servo",
+    "count": 2,
+    "unit_mass_g": 6,
+    "mass_g": 12,
+    "source_url": "https://kstservos.com/products/x06-v6-0-hv-micro-digital-metal-gear-glider-1-8kg-torque-servo-motor",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "servo-kst-x06-v6",
+    "name": "X06 V6.0 HV micro",
+    "role": "tail servo",
+    "count": 2,
+    "unit_mass_g": 6,
+    "mass_g": 12,
+    "source_url": "https://kstservos.com/products/x06-v6-0-hv-micro-digital-metal-gear-glider-1-8kg-torque-servo-motor",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "servo-kst-x06-v6",
+    "name": "X06 V6.0 HV micro",
+    "role": "stroke amplitude servo",
+    "count": 1,
+    "unit_mass_g": 6,
+    "mass_g": 6,
+    "source_url": "https://kstservos.com/products/x06-v6-0-hv-micro-digital-metal-gear-glider-1-8kg-torque-servo-motor",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "fc-ark-v6x",
+    "name": "ARKV6X flight controller module (Pixhawk Autopilot Bus)",
+    "role": "flight controller with IMU and baro",
+    "count": 1,
+    "unit_mass_g": 5,
+    "mass_g": 5,
+    "source_url": "https://arkelectron.com/product/arkv6x/",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "gps-3dr-mini-m10136",
+    "name": "Mini GPS M10136",
+    "role": "GPS",
+    "count": 1,
+    "unit_mass_g": 8.3,
+    "mass_g": 8.3,
+    "source_url": "https://store.3dr.com/mini-gps-ublox-max-m10s/",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "aspd-matek-4525",
+    "name": "ASPD-4525 digital airspeed sensor",
+    "role": "airspeed sensor",
+    "count": 1,
+    "unit_mass_g": 3.5,
+    "mass_g": 3.5,
+    "source_url": "http://www.mateksys.com/?portfolio=aspd-4525",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "rx-tbs-crossfire-nano",
+    "name": "Crossfire Nano Rx",
+    "role": "receiver",
+    "count": 1,
+    "unit_mass_g": 0.5,
+    "mass_g": 0.5,
+    "source_url": "https://www.team-blacksheep.com/products/prod:crossfire_nano_rx",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "gear-khk-ds0.5-20",
+    "name": "DS0.5-20 injection molded spur gear",
+    "role": "gear",
+    "count": 1,
+    "unit_mass_g": 0.47,
+    "mass_g": 0.47,
+    "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+    "verified": "datasheet",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "gear-khk-ds0.5-80",
+    "name": "DS0.5-80 injection molded spur gear",
+    "role": "gear",
+    "count": 1,
+    "unit_mass_g": 4.51,
+    "mass_g": 4.51,
+    "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+    "verified": "datasheet",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "gear-khk-ds0.8-20",
+    "name": "DS0.8-20 injection molded spur gear",
+    "role": "gear",
+    "count": 1,
+    "unit_mass_g": 1.26,
+    "mass_g": 1.26,
+    "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+    "verified": "datasheet",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "gear-khk-ds0.8-80",
+    "name": "DS0.8-80 injection molded spur gear",
+    "role": "gear",
+    "count": 1,
+    "unit_mass_g": 11.8,
+    "mass_g": 11.8,
+    "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
+    "verified": "datasheet",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "bearing-skf-623-2z",
+    "name": "623-2Z deep groove ball bearing",
+    "role": "bearing",
+    "count": 8,
+    "unit_mass_g": 1.6,
+    "mass_g": 12.8,
+    "source_url": "https://www.electrokit.com/en/kullager-skf-3mm-dim-3x10x4",
+    "verified": "retailer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   }
+  ],
+  "structure": [
+   {
+    "name": "inner spar, 2 off",
+    "material_id": "tube-ec-woven-8x6",
+    "material": "8 mm x 6 mm woven finish carbon tube",
+    "mass_g": 13.982499999999998,
+    "basis": "32.9 g/m x 0.212 m x 2",
+    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+   },
+   {
+    "name": "outer spar, 2 off",
+    "material_id": "tube-ec-woven-8x6",
+    "material": "8 mm x 6 mm woven finish carbon tube",
+    "mass_g": 13.982499999999998,
+    "basis": "32.9 g/m x 0.212 m x 2",
+    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+   },
+   {
+    "name": "leading edge rod, 2 off",
+    "material_id": "rod-ec-2mm",
+    "material": "2 mm pultruded carbon rod",
+    "mass_g": 3.8249999999999997,
+    "basis": "4.5 g/m x 0.425 m x 2",
+    "source_url": "https://www.easycomposites.co.uk/2mm-carbon-fibre-rod"
+   },
+   {
+    "name": "trailing edge rod, 2 off",
+    "material_id": "rod-ec-1-5mm",
+    "material": "1.5 mm pultruded carbon rod",
+    "mass_g": 2.295,
+    "basis": "2.7 g/m x 0.425 m x 2",
+    "source_url": "https://www.easycomposites.co.uk/1-5mm-carbon-fibre-rod"
+   },
+   {
+    "name": "wing film, both faces",
+    "material_id": "film-oracover-air-light",
+    "material": "Oracover Air Indoor / Air Light",
+    "mass_g": 5.157490909090909,
+    "basis": "17 g/m2 x 0.303 m2",
+    "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
+   },
+   {
+    "name": "ribs, 10 off",
+    "material_id": "balsa-wood-database",
+    "material": "Balsa, average dried",
+    "mass_g": 2.43159827275587,
+    "basis": "area 8.11e-4 m2 x 0.002 m x 150 kg/m3 each",
+    "source_url": "https://www.wood-database.com/balsa/"
+   },
+   {
+    "name": "tail surfaces, film, spar and ribs",
+    "material_id": "film-oracover-air-light",
+    "material": "Oracover Air Indoor / Air Light",
+    "mass_g": 4.910552089940177,
+    "basis": "film 1.5 g + rods 2.9 g + ribs 0.5 g",
+    "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
+   },
+   {
+    "name": "keel and tail boom",
+    "material_id": "tube-ec-woven-8x6",
+    "material": "8 mm x 6 mm woven finish carbon tube",
+    "mass_g": 17.592686467257554,
+    "basis": "32.9 g/m x 0.535 m",
+    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+   },
+   {
+    "name": "fuselage film shell",
+    "material_id": "film-oracover-air-light",
+    "material": "Oracover Air Indoor / Air Light",
+    "mass_g": 0.9170671637333443,
+    "basis": "0.054 m2",
+    "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
+   },
+   {
+    "name": "fuselage formers",
+    "material_id": "balsa-wood-database",
+    "material": "Balsa, average dried",
+    "mass_g": 3.1500000000000004,
+    "basis": "5 off, 50% lightened, 2 mm",
+    "source_url": "https://www.wood-database.com/balsa/"
+   },
+   {
+    "name": "crank, rockers and gearbox plates",
+    "material_id": "plate-ec-2mm",
+    "material": "High strength carbon fibre sheet 2 mm",
+    "mass_g": 15.046,
+    "basis": "2.71 kg/m2 x 2.60e-3 m2, plus gearbox cheek allowance",
+    "source_url": "https://media.easycomposites.co.uk/datasheets/EC-TDS-High-Strength-Carbon-Sheet.pdf"
+   },
+   {
+    "name": "couplers, 2 off",
+    "material_id": "rod-ec-3mm",
+    "material": "3 mm pultruded carbon rod",
+    "mass_g": 1.54,
+    "basis": "11 g/m x 70 mm x 2",
+    "source_url": "https://www.easycomposites.co.uk/3mm-carbon-fibre-rod"
+   }
+  ],
+  "parts_g": 159.14000000000001,
+  "structure_g": 84.83039490277785,
+  "margin_g": 36.59555923541668,
+  "total_g": 280.5659541381945
+ },
+ "electrical": {
+  "avionics_A_5V": 0.35,
+  "avionics_note": "FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw"
+ },
+ "cruise": {
+  "V": 10.5,
+  "amp": 0.3490658503988659,
+  "dyn": 0.13962634015954636,
+  "sym": 0,
+  "lead": 0
+ },
+ "assumptions": [
+  "Section polar e387-film: cd factor 1.2 for film over ribs: an assumption with no published source",
+  "Motor rotor inertia estimated from mass and diameter; not published.",
+  "Battery internal resistance estimated from claimed C rate; not published.",
+  "ESC efficiency 0.95 assumed.",
+  "Servo current is the SPEC M8 estimate: stall current x (torque / stall torque), idle if published.",
+  "Tail polar is an assumed thin plate."
+ ],
+ "control": {
+  "glide": [
+   {
+    "V": 9,
+    "theta": -0.07984257051428478,
+    "gamma": -0.15043642581482983,
+    "tail": 0.023272031880150746,
+    "sink": 1.3488267910654452,
+    "LD": 6.597104939624033,
+    "stalled": 0.0038792254362035924
+   },
+   {
+    "V": 9.5,
+    "theta": -0.09131489227105645,
+    "gamma": -0.14524358872695908,
+    "tail": 0.015531854673805802,
+    "sink": 1.374967850100443,
+    "LD": 6.836502727908888,
+    "stalled": 0.002944603686768439
+   },
+   {
+    "V": 10,
+    "theta": -0.10988421904810057,
+    "gamma": -0.1497393771287526,
+    "tail": 0.008761288000647427,
+    "sink": 1.4918043104393963,
+    "LD": 6.628282170995566,
+    "stalled": 0.002333551594904013
+   },
+   {
+    "V": 10.5,
+    "theta": -0.12630538910229355,
+    "gamma": -0.15415863446062447,
+    "tail": 0.003160167320787835,
+    "sink": 1.6122620418680884,
+    "LD": 6.435356646522918,
+    "stalled": 0.0019144210774638267
+   },
+   {
+    "V": 11,
+    "theta": -0.14186987101736032,
+    "gamma": -0.15936293126587442,
+    "tail": -0.001602298286338154,
+    "sink": 1.7455816695999526,
+    "LD": 6.2217738451481495,
+    "stalled": 0.001614167736522652
+   },
+   {
+    "V": 11.5,
+    "theta": -0.1566114495940056,
+    "gamma": -0.16508902578632828,
+    "tail": -0.005689178851605245,
+    "sink": 1.8899116906057996,
+    "LD": 6.002207900478817,
+    "stalled": 0.0013918447175788403
+   },
+   {
+    "V": 12,
+    "theta": -0.1706919956631015,
+    "gamma": -0.17129903426952753,
+    "tail": -0.009205670984117464,
+    "sink": 2.0455501721748885,
+    "LD": 5.78053283731886,
+    "stalled": 0.0012230599403172835
+   },
+   {
+    "V": 12.5,
+    "theta": -0.18421728657743722,
+    "gamma": -0.1778840871033967,
+    "tail": -0.012274912849317381,
+    "sink": 2.2118430831998093,
+    "LD": 5.562218159756559,
+    "stalled": 0.0010915061733550988
+   },
+   {
+    "V": 13,
+    "theta": -0.19728293195700006,
+    "gamma": -0.18481407180756715,
+    "tail": -0.014958277708788345,
+    "sink": 2.388929072260731,
+    "LD": 5.349097968921985,
+    "stalled": 0.0009871448342153933
+   }
+  ],
+  "dThetaPerG": 0.06684593429066812,
+  "trim": [
+   {
+    "V": 9,
+    "theta": 0.014369939074653,
+    "freq": 8.78925290505808,
+    "tail": 0.1722681025062377,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636
+   },
+   {
+    "V": 9.5,
+    "theta": 0.01763235679337834,
+    "freq": 9.03376145052288,
+    "tail": 0.1592329866985281,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636
+   },
+   {
+    "V": 10,
+    "theta": 0.07353502820739548,
+    "freq": 7.184151489730554,
+    "tail": 0.06256784880162498,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636
+   },
+   {
+    "V": 10.5,
+    "theta": 0.05704736811378313,
+    "freq": 7.073779535657157,
+    "tail": 0.04055242915988058,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636
+   },
+   {
+    "V": 11,
+    "theta": 0.042171583382576504,
+    "freq": 7.191056257135342,
+    "tail": 0.029973786576069857,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636
+   },
+   {
+    "V": 11.5,
+    "theta": 0.03158918524029058,
+    "freq": 7.420414265658046,
+    "tail": 0.023783833275991224,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636
+   },
+   {
+    "V": 12,
+    "theta": 0.02286028366035662,
+    "freq": 7.669818644885925,
+    "tail": 0.01868712034468317,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636
+   },
+   {
+    "V": 12.5,
+    "theta": 0.02412352623754478,
+    "freq": 8.011210087464356,
+    "tail": 0.017104042990510306,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636
+   },
+   {
+    "V": 13,
+    "theta": 0.009912327611177657,
+    "freq": 8.310809229299855,
+    "tail": 0.01186531164108958,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636
+   }
+  ],
+  "trimDetail": [
+   {
+    "V": 9,
+    "power_w": 7.992517491599017,
+    "Irms_A": 2.9796295660653116,
+    "stalled": 0.042698740327879715,
+    "crankPeak_Nm": 0.44133815038237695,
+    "freq": 4.858128071573456,
+    "theta_deg": 5.123979901654065,
+    "tail_deg": 2.4438289527789103
+   },
+   {
+    "V": 9.5,
+    "power_w": 9.752419147300984,
+    "Irms_A": 3.410239879488091,
+    "stalled": 0.036642070567557986,
+    "crankPeak_Nm": 0.5125912370790108,
+    "freq": 5.341924661889623,
+    "theta_deg": 4.053282935642753,
+    "tail_deg": 2.122909423203802
+   },
+   {
+    "V": 10,
+    "power_w": 10.640405409817024,
+    "Irms_A": 3.605647411693987,
+    "stalled": 0.023323347121442062,
+    "crankPeak_Nm": 0.5405282564032848,
+    "freq": 5.480085857089919,
+    "theta_deg": 3.004858516886695,
+    "tail_deg": 1.469673130407253
+   },
+   {
+    "V": 10.5,
+    "power_w": 11.488966513005241,
+    "Irms_A": 3.7927982201841437,
+    "stalled": 0.0171154761426368,
+    "crankPeak_Nm": 0.5698815086289628,
+    "freq": 5.605541956813421,
+    "theta_deg": 2.337671406452341,
+    "tail_deg": 1.3298594595111726
+   },
+   {
+    "V": 11,
+    "power_w": 12.463851895015212,
+    "Irms_A": 4.002547884845282,
+    "stalled": 0.013028345025095875,
+    "crankPeak_Nm": 0.6011003946917113,
+    "freq": 5.77730747414575,
+    "theta_deg": 1.6000203500325527,
+    "tail_deg": 0.6459128390941773
+   },
+   {
+    "V": 11.5,
+    "power_w": 13.9980128202185,
+    "Irms_A": 4.2985694607868865,
+    "stalled": 0.01126512143806431,
+    "crankPeak_Nm": 0.6439349490826585,
+    "freq": 5.983566741086482,
+    "theta_deg": 1.1065120334567204,
+    "tail_deg": 0.38275052028535766
+   },
+   {
+    "V": 12,
+    "power_w": 15.32429199717917,
+    "Irms_A": 4.591571027391747,
+    "stalled": 0.010009772926837312,
+    "crankPeak_Nm": 0.6955634633858021,
+    "freq": 6.232671245736433,
+    "theta_deg": 0.6928245051712508,
+    "tail_deg": 0.38275052028535766
+   },
+   {
+    "V": 12.5,
+    "power_w": 17.371422820368878,
+    "Irms_A": 4.958469667834367,
+    "stalled": 0.009135041703951128,
+    "crankPeak_Nm": 0.7442212752719267,
+    "freq": 6.477778825617961,
+    "theta_deg": 0.28345173899946413,
+    "tail_deg": -0.05056190903278063
+   },
+   {
+    "V": 13,
+    "power_w": 20.15600981958269,
+    "Irms_A": 5.486941417832834,
+    "stalled": 0.008921887114166858,
+    "crankPeak_Nm": 0.8252251093971382,
+    "freq": 6.886294409157473,
+    "theta_deg": -0.16589983993239169,
+    "tail_deg": -0.23530276941604122
+   }
+  ],
+  "Vcruise": 10.5,
+  "Vmin": 9,
+  "Md": 2.9602790940345063,
+  "Ld": -2.4836009289683845,
+  "Nd": -2.152363923180115,
+  "Tf": 0.1665652026995002,
+  "Mq": 0.10373319534733555,
+  "Lp": 0.15079432371436927,
+  "Nr": 0.05551986575367516,
+  "inertia": {
+   "Ix": 0.005816021958310975,
+   "Iy": 0.009410005969410464,
+   "Iz": 0.004168466610929236,
+   "xCg": 0.006943354120080695,
+   "m": 0.2805659541381945
+  },
+  "kTheta": 0.1177982799807946,
+  "kQ": 0,
+  "kPhi": 0.16642607179932667,
+  "kP": 0,
+  "kR": 0.012897415988938486,
+  "kFv": 0.4211052932892033,
+  "kFc": 0.5053263519470439,
+  "kFcFf": 0.7508422226244664,
+  "kH": 0.5,
+  "kGamma": 1,
+  "kIGamma": 0.15,
+  "kStallPitch": 0.08,
+  "kIF": 0.08,
+  "kChi": 1,
+  "maxBank": 0.6108652381980153,
+  "diffMax": 0.3141592653589793,
+  "climbMax": 2,
+  "sinkMax": 2.5,
+  "freqMin": 2.429064035786728,
+  "freqMax": 13.36625,
+  "ampNominal": 0.3490658503988659,
+  "currentLimit_A": 12,
+  "ampMax": 0.5235987755982988,
+  "ampFlightMax": 0.47123889803846897,
+  "lead": 0,
+  "parkPhase": 1.5707963267948966,
+  "attGain": 0.15,
+  "notchQ": 1.2,
+  "trimFlight": [
+   {
+    "V": 9,
+    "theta": 0.014369939074653,
+    "freq": 8.78925290505808,
+    "tail": 0.1722681025062377,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636,
+    "flight_power_w": 52.501021709643055,
+    "flight_V": 9.142479777011207
+   },
+   {
+    "V": 9.5,
+    "theta": 0.01763235679337834,
+    "freq": 9.03376145052288,
+    "tail": 0.1592329866985281,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636,
+    "flight_power_w": 56.19559049628899,
+    "flight_V": 9.486231633540418
+   },
+   {
+    "V": 10,
+    "theta": 0.07353502820739548,
+    "freq": 7.184151489730554,
+    "tail": 0.06256784880162498,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636,
+    "flight_power_w": 27.37743456235172,
+    "flight_V": 9.659298697227975
+   },
+   {
+    "V": 10.5,
+    "theta": 0.05704736811378313,
+    "freq": 7.073779535657157,
+    "tail": 0.04055242915988058,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636,
+    "flight_power_w": 26.3644466487546,
+    "flight_V": 10.057030620002513
+   },
+   {
+    "V": 11,
+    "theta": 0.042171583382576504,
+    "freq": 7.191056257135342,
+    "tail": 0.029973786576069857,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636,
+    "flight_power_w": 27.781187791808268,
+    "flight_V": 10.57127624453966
+   },
+   {
+    "V": 11.5,
+    "theta": 0.03158918524029058,
+    "freq": 7.420414265658046,
+    "tail": 0.023783833275991224,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636,
+    "flight_power_w": 29.93983493216685,
+    "flight_V": 11.025024502706
+   },
+   {
+    "V": 12,
+    "theta": 0.02286028366035662,
+    "freq": 7.669818644885925,
+    "tail": 0.01868712034468317,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636,
+    "flight_power_w": 32.539019827270536,
+    "flight_V": 11.503817045572484
+   },
+   {
+    "V": 12.5,
+    "theta": 0.02412352623754478,
+    "freq": 8.011210087464356,
+    "tail": 0.017104042990510306,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636,
+    "flight_power_w": 36.563918376750465,
+    "flight_V": 11.889761128586853
+   },
+   {
+    "V": 13,
+    "theta": 0.009912327611177657,
+    "freq": 8.310809229299855,
+    "tail": 0.01186531164108958,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.13962634015954636,
+    "flight_power_w": 39.39734424607086,
+    "flight_V": 12.430714417701612
+   }
+  ],
+  "Vrough": 13
+ },
+ "selection": {
+  "pipeline": "src/design/pipeline.mjs",
+  "screened": 21168,
+  "refined": 6,
+  "rank": [
+   {
+    "k": 5,
+    "passCount": 2,
+    "m4": 0.75,
+    "mass_g": 280.56595413819446
+   },
+   {
+    "k": 3,
+    "passCount": 2,
+    "m4": 0.75,
+    "mass_g": 344.3735403430954
+   },
+   {
+    "k": 2,
+    "passCount": 2,
+    "m4": 0.625,
+    "mass_g": 375.42354034309534
+   },
+   {
+    "k": 1,
+    "passCount": 2,
+    "m4": 0.625,
+    "mass_g": 393.09904034309534
+   },
+   {
+    "k": 0,
+    "passCount": 3,
+    "m4": 0.5,
+    "mass_g": 362.0490403430954
+   },
+   {
+    "k": 4,
+    "passCount": 3,
+    "m4": 0.375,
+    "mass_g": 403.02354034309536
+   }
+  ],
+  "quick": {
+   "M1": {
+    "passed": false,
+    "measured": {
+     "release_speed_m_s": 8,
+     "release_pitch_deg": 5,
+     "climb_rate_2_to_3s_m_s": 1.4417209742587838,
+     "first_1s_window_climbing_s": 2.3625,
+     "height_lost_m": 2.6650246039726198,
+     "height_at_6s_m": 2.2954750015125196,
+     "peak_motor_A": 18.39865656711531,
+     "peak_batt_A": 10.030318860185231
+    },
+    "peaks": {
+     "servoEach": 0.37316010587585347,
+     "rootBend": 4.6303667062985046,
+     "elbowBend": 1.6204678804516357,
+     "crankTorque": 1.615004918041097,
+     "motorI": 18.39865656711531,
+     "battI": 10.030318860185231,
+     "servoI": 1.0978916682534297,
+     "twistTorque": 0.07457938103484339,
+     "tailTorque": 0.010747457707825252,
+     "couplerForce": 334.93118169751614,
+     "loadFactor": 11.219554063234524,
+     "shoulderTorque": 5.439748770850684
+    }
+   },
+   "M2": {
+    "passed": false,
+    "measured": {
+     "cruise_power_w": 20.283053224082746,
+     "cruise_batt_A": 1.673036865189662,
+     "endurance_min": 8.607102628529084,
+     "usable_fraction": 0.8,
+     "continuous_limit_A": 12,
+     "power_available_w": 131.54927029301288,
+     "power_ratio": 6.4856739682968465,
+     "altitude_dev_m": 0.5829787242284942,
+     "simulated_s": 60,
+     "motor_rating_rule": "published continuous rating",
+     "extrapolated_from_s": 40
+    },
+    "peaks": {
+     "servoEach": 0.17952514729159394,
+     "rootBend": 2.084778963131825,
+     "elbowBend": 0.7691643279549527,
+     "crankTorque": 0.8270679651482119,
+     "motorI": 9.242859830864312,
+     "battI": 4.2616908385369685,
+     "servoI": 0.7104569412149762,
+     "twistTorque": 0.0358797045942808,
+     "tailTorque": 0.004691888052514159,
+     "couplerForce": 124.84568012455647,
+     "loadFactor": 4.796054711964042,
+     "shoulderTorque": 2.468689983296364
+    }
+   },
+   "M3": {
+    "passed": true,
+    "measured": {
+     "heading_change_deg": 360.20421384056607,
+     "altitude_dev_m": 1.190325000265364,
+     "mean_bank_deg": 27.875736803046564,
+     "max_bank_deg": 38.29996760884138,
+     "max_sideslip_deg": 3.044644321654573,
+     "turn_time_s": 11.216666666666667
+    },
+    "peaks": {
+     "servoEach": 0.20720535388261463,
+     "rootBend": 2.3811786057930404,
+     "elbowBend": 0.8827900709834424,
+     "crankTorque": 0.9777657939856522,
+     "motorI": 10.604548507051641,
+     "battI": 5.0882665609847635,
+     "servoI": 0.7629266618068463,
+     "twistTorque": 0.04141184118114764,
+     "tailTorque": 0.006033326759146149,
+     "couplerForce": 148.198267020951,
+     "loadFactor": 5.387455232318217,
+     "shoulderTorque": 2.8041457734368262
+    }
+   },
+   "M5": {
+    "passed": true,
+    "measured": {
+     "touchdown_sink_m_s": 0.7248067066722782,
+     "touchdown_speed_m_s": 7.214853023712654,
+     "pitch_deg": 2.170882749747561,
+     "roll_deg": -0.2728199005193323,
+     "time_s": 23.162499999999007,
+     "from_height_m": 20
+    },
+    "peaks": {
+     "servoEach": 0.1976104379511375,
+     "rootBend": 2.147513392730362,
+     "elbowBend": 0.784060708963495,
+     "crankTorque": 0.852834202655175,
+     "motorI": 9.284155631346644,
+     "battI": 4.486853940616343,
+     "servoI": 0.7431230170120171,
+     "twistTorque": 0.03949421150963879,
+     "tailTorque": 0.00530840893564904,
+     "couplerForce": 125.69123889100067,
+     "loadFactor": 5.0876663315665835,
+     "shoulderTorque": 2.538451028907878
+    }
+   },
+   "M4": {
+    "passed": 6,
+    "of": 8,
+    "worstAlt": 18.799716054078566,
+    "worstRoll": 20.43870073576839,
+    "worstPitch": 29.498409374938845
+   }
+  }
+ },
+ "calibration": {
+  "file": "data/calibration/columba-rp-2.json",
+  "source": "uvlm",
+  "multipliers": {
+   "lift": 0.855017967681091,
+   "suction": 1.0042208167123594,
+   "induced": 1.0589691691614562,
+   "lag": 1.001804415877359,
+   "apparentMass": 1.0183644650548593,
+   "drag": 1
+  }
+ }
+}

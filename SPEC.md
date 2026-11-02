@@ -70,6 +70,15 @@ The research pass found places where the gates above were underspecified. These 
 - **M7 materials.** Only published strength counts. Woven tube 650 MPa, 64 GPa; rods at the lower of their listed ranges, 400 MPa, 28 GPa. Roll-wrapped tubes carry no primary load, because no strength is published.
 - **Parts.** `specs.mass_basis` states whether `mass_g` is per part, metre, m² or litre. Parts flagged sold out or end-of-life are ineligible for the winning BOM.
 
+### Rulings after round 1 (2026-11-02)
+
+Round 1 results stay on record as they are. These rulings fix how a gate is evaluated where the original wording was wrong or not followed; no limit changes.
+
+- **V2 reference.** Prandtl's lifting-line theory is itself inaccurate at low aspect ratio, so it cannot serve as the reference at AR 4. V2 is judged against Helmbold's low-aspect-ratio formula, `a = 2*pi*AR / (2 + sqrt(AR^2 + 4))`, at AR 4 and 6, and against Prandtl at AR 8-12, all within 3%. Weissinger is not used as the reference, because it was computed by our own code. The round-1 Prandtl failure remains in the record.
+- **V4 method.** The gate says "published kinematics", and round 1 trimmed instead. V4 imposes the published kinematics (2 Hz, about 0.3 m plunge, about 9 deg pitch, from Send et al. 2012) at 4.7 m/s on the published geometry and mass. It reports the cycle-mean net streamwise force, which should be near zero in steady flight, and electrical power including motor, gearbox, ESC and avionics. Pass needs power in 12.6-23.4 W. Every unpublished quantity is listed as an assumption.
+- **Control envelope.** Limits on stroke frequency and amplitude come from component ratings (gear, servo, motor), not from fixed multipliers.
+- **Gear ratings.** A gear without a published torque rating may be rated by the Lewis bending equation with the published yield strength of its material and a factor of safety of 1.5. The evidence shows the calculation.
+
 ### Public repository
 
 `github.com/sterlingdigitalp/avis` is public. UIUC-derived tables and airfoil coordinate files stay local and gitignored (`data/references/airfoil-e387.json`, `data/references/airfoils/`), because their licence terms are unclear or reserved. Our own CFD polars are ours to publish. Copernicus terrain, if used, requires the notice in `data/references/credits.md` in the film credits and README.

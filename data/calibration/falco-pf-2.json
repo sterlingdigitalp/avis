@@ -1,0 +1,45 @@
+{
+ "design": "falco-pf-2",
+ "source": "uvlm",
+ "fitted_on": [
+  "cruise",
+  "cruise, stroke x1.3"
+ ],
+ "multipliers": {
+  "lift": 0.9030733775290699,
+  "suction": 0.9921802718259811,
+  "induced": 1.057239923518852,
+  "lag": 1.0036980621098033,
+  "apparentMass": 1.0142347487494896,
+  "drag": 1
+ },
+ "bounds": {
+  "lift": [
+   0.8,
+   1.2
+  ],
+  "suction": [
+   0.6,
+   1.2
+  ],
+  "induced": [
+   0.5,
+   1.5
+  ],
+  "lag": [
+   0.5,
+   2
+  ],
+  "apparentMass": [
+   0.5,
+   1.5
+  ],
+  "drag": [
+   0.7,
+   1.6
+  ]
+ },
+ "at_bounds": [],
+ "note": "Multipliers of the inviscid strip terms fitted to UVLM on the cruise point. The drag multiplier is not touched here: UVLM has no viscous drag. LBM and OpenFOAM results are to refit these.",
+ "ran_at": "2026-11-02T07:55:14.382Z"
+}

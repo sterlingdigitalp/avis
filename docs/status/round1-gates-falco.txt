@@ -1,0 +1,17 @@
+design: falco-pf-2
+V1  pass      {"max_amp_error_pct":3.785,"max_phase_error_deg":2.444,"k":[0.1,0.2,0.3,0.4,0.5],"amp_error_pct":[-0.07,0.87,1
+V2  FAIL      {"reference":"prandtl-lifting-line","max_error_pct":9.382,"worst_AR":4,"table":[[4,3.6505,4.0284,-9.38,1.96],[
+V3  pass      {"max_ct_error_pct":1.293,"trend_monotonic":true,"k":[0.1,0.2,0.3,0.4,0.5],"ct_uvlm":[0.000036068,0.00011353,0
+V4  FAIL      {"method":"frozen-body trim at 2 Hz (no free-flight trim table could be built; free flight not run)","predicte
+V5  FAIL     falco-pf-2 {"protocol":"multipliers fitted on cruise and cruise x1.3 stroke; judged on four other points","earlier_protoc
+V6  FAIL      {"gpu_vs_cpu":[{"case":"thin-bouzidi","max_population_diff":3.3527612686157227e-8,"mean_population_diff":2.868
+V7  MISSING   
+M1  FAIL     falco-pf-2 {"release_speed_m_s":8,"release_pitch_deg":5,"climb_rate_2_to_3s_m_s":0.32658217056348926,"first_1s_window_cli
+M2  FAIL     falco-pf-2 {"cruise_power_w":23.361803384457136,"cruise_batt_A":1.8992213499711994,"endurance_min":20.218812304622794,"us
+M3  FAIL     falco-pf-2 {"heading_change_deg":360.34440376882014,"altitude_dev_m":2.531037004984779,"mean_bank_deg":28.6866192792012,"
+M4  FAIL     falco-pf-2 {"seeds_passed":56,"seeds_run":100,"worst_H_m":20,"by_H":{"5":{"runs":23,"pass":14,"worstAlt":25.2451647299574
+M5  FAIL     falco-pf-2 {"touchdown_sink_m_s":0.49571633543835336,"touchdown_speed_m_s":8.454593250028857,"pitch_deg":0.03053330474030
+M6  pass     falco-pf-2 {"total_g":412.0345213509492,"parts_g":250.01000000000002,"structure_g":108.28088813126017,"margin_g":53.74363
+M7  FAIL     falco-pf-2 {"spar_inner":{"id":0.006,"moment_Nm":41.13021942028491,"stress_MPa":1196.9970708466492,"allowable_MPa":650,"f
+M8  FAIL     falco-pf-2 {"motor_rms_2s_max_A":26.675979702733656,"motor_continuous_A":20,"motor_rule":"published continuous rating","m
+NOT ALL GATES PASS

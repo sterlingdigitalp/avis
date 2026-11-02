@@ -1,0 +1,45 @@
+{
+ "design": "larus-gl-2",
+ "source": "uvlm",
+ "fitted_on": [
+  "cruise",
+  "cruise, stroke x1.3"
+ ],
+ "multipliers": {
+  "lift": 0.9079018215431213,
+  "suction": 1.0278196600899234,
+  "induced": 1.0348301141348255,
+  "lag": 1.011842740381975,
+  "apparentMass": 1.006585031659737,
+  "drag": 1
+ },
+ "bounds": {
+  "lift": [
+   0.8,
+   1.2
+  ],
+  "suction": [
+   0.6,
+   1.2
+  ],
+  "induced": [
+   0.5,
+   1.5
+  ],
+  "lag": [
+   0.5,
+   2
+  ],
+  "apparentMass": [
+   0.5,
+   1.5
+  ],
+  "drag": [
+   0.7,
+   1.6
+  ]
+ },
+ "at_bounds": [],
+ "note": "Multipliers of the inviscid strip terms fitted to UVLM on the cruise point. The drag multiplier is not touched here: UVLM has no viscous drag. LBM and OpenFOAM results are to refit these.",
+ "ran_at": "2026-11-02T09:55:52.018Z"
+}

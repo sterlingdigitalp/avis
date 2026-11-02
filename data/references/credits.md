@@ -53,3 +53,5 @@ The Copernicus licence (free, open, attribution required) is accepted under SPEC
 - **Poly Haven** textures and HDRI: CC0, credit given voluntarily.
 
 The film's end card and the README carry all four.
+
+**Fitted polar parameters** (`src/physics/polar-fit.js`): 18 fitted coefficients per airfoil derived from measured UIUC data. No measured table is reproduced; the source is credited here and in the file.

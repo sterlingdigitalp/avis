@@ -1,0 +1,17 @@
+design: columba-rp-2
+V1  pass      {"max_amp_error_pct":3.785,"max_phase_error_deg":2.444,"k":[0.1,0.2,0.3,0.4,0.5],"amp_error_pct":[-0.07,0.87,1
+V2  FAIL      {"reference":"prandtl-lifting-line","max_error_pct":9.382,"worst_AR":4,"table":[[4,3.6505,4.0284,-9.38,1.96],[
+V3  pass      {"max_ct_error_pct":1.293,"trend_monotonic":true,"k":[0.1,0.2,0.3,0.4,0.5],"ct_uvlm":[0.000036068,0.00011353,0
+V4  FAIL      {"method":"frozen-body trim at 2 Hz (no free-flight trim table could be built; free flight not run)","predicte
+V5  FAIL     columba-rp-2 {"protocol":"multipliers fitted on cruise and cruise x1.3 stroke; judged on four other points","earlier_protoc
+V6  FAIL      {"gpu_vs_cpu":[{"case":"thin-bouzidi","max_population_diff":3.3527612686157227e-8,"mean_population_diff":2.868
+V7  MISSING   
+M1  FAIL     columba-rp-2 {"release_speed_m_s":8,"release_pitch_deg":5,"climb_rate_2_to_3s_m_s":-0.06285190551700381,"first_1s_window_cl
+M2  FAIL     columba-rp-2 {"cruise_power_w":26.882836362655933,"cruise_batt_A":2.2822483065259855,"endurance_min":6.309567613140014,"usa
+M3  pass     columba-rp-2 {"heading_change_deg":360.16855049469876,"altitude_dev_m":1.0057429198458883,"mean_bank_deg":28.2350577963236,
+M4  FAIL     columba-rp-2 {"seeds_passed":37,"seeds_run":100,"worst_H_m":40,"by_H":{"5":{"runs":23,"pass":14,"worstAlt":56.3819610880675
+M5  FAIL     columba-rp-2 {"touchdown_sink_m_s":0.954271766560685,"touchdown_speed_m_s":9.784726651843988,"pitch_deg":-2.433364178214453
+M6  pass     columba-rp-2 {"total_g":280.56595413819446,"parts_g":159.14000000000001,"structure_g":84.83039490277785,"margin_g":36.59555
+M7  FAIL     columba-rp-2 {"spar_inner":{"id":0.006,"moment_Nm":18.530403900944208,"stress_MPa":539.2832691793573,"allowable_MPa":650,"f
+M8  FAIL     columba-rp-2 {"motor_rms_2s_max_A":16.099630548203272,"motor_continuous_A":12,"motor_rule":"published continuous rating","m
+NOT ALL GATES PASS
