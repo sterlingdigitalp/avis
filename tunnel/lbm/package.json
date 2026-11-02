@@ -1,0 +1,14 @@
+{
+  "name": "avis-tunnel-lbm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "D3Q19 LBM-LES WebGPU tunnel with moving bodies, derived from ~/tdf2/src/cfd (see ATTRIBUTION.md)",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "v6": "node v6.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.49.1"
+  }
+}
