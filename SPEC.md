@@ -106,6 +106,18 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
 - **Every loaded part is linkage.** M7 checks each shaft, pin, plate bearing seat, end fitting and bore adapter in its load path, using published material strength at FoS 1.5. M6 requires each of those parts to be in the BOM with a cited or stated mass.
 - **Motor bearings carrying a pinion.** Rate them by the bearing size the motor maker publishes, for example a spare-part listing, using that bearing maker's C0. If no size is published, an outboard support bearing must carry the side load.
 
+### Rulings after physics round 6 (2026-11-02)
+
+- **Metal strength values.**
+  - Specified minimum properties from a published material standard (ASTM, EN or AMS) count in full. They must match the product form, temper and section size. Cite the standard, or a maker's or stockist's sheet that quotes its minimums.
+  - Values labelled "typical" or "not for design" count at half, as ruled in round 2.
+  - Pin-in-hole bearing strength must come from a published source, at the edge distance that source states, under the same full-or-half rule. Cite it in the part's catalogue entry.
+- **The half-step rule stands.** A peak load that moves by 10% or more when the step is halved fails M7. A diagnosis may explain the failure but cannot waive it.
+  - **Step-dependent input.** Any random draw, filter or controller tick whose realisation changes with the step is a simulation bug. Fix it so every input is the same function of time at both steps, then rerun the check as written.
+  - **Chaotic flight, only after the inputs are fixed.** The inputs must be shown identical at both steps first. Then, at a fixed step, perturb each M4 seed's initial state by 1e-9 m. If the median per-seed peak change is at least half the median half-step change, the per-seed comparison is measuring chaos, not step error.
+  - **What applies then.** For the M4 seed population only, the mean and the 90th percentile of the per-seed peaks must each change by less than 10%. M7 then uses the larger of the two steps' population maxima.
+  - **Disclosure.** This ruling was written after round 6 failed the check, and any gate table that uses it must say so.
+
 ### Public repository
 
 `github.com/sterlingdigitalp/avis` is public. UIUC-derived tables and airfoil coordinate files stay local and gitignored (`data/references/airfoil-e387.json`, `data/references/airfoils/`), because their licence terms are unclear or reserved. Our own CFD polars are ours to publish. Copernicus terrain, if used, requires the notice in `data/references/credits.md` in the film credits and README.
