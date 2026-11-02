@@ -13,6 +13,7 @@ SUN_DATE = (2022, 9, 21)
 SUN_MDT_HOURS = 8.70
 LAT_LON = (51.123, -115.43)
 SHORE_RANGE = 32.0  # metres: shore_l0.png stores distance on land to the lidar waterline / SHORE_RANGE
+WD_RANGE = 16.0  # metres: wdepth_l0.png stores distance inside the lidar water from its edge / WD_RANGE
 
 
 def utm_to_blender(e, n):

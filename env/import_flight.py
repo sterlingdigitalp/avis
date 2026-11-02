@@ -22,9 +22,13 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import bpy
 import numpy as np
-from mathutils import Euler, Matrix, Quaternion, Vector
+
+try:  # the log reader and axis conversions are pure numpy; only posing needs Blender (tests import without it)
+    import bpy
+    from mathutils import Euler, Matrix, Quaternion, Vector
+except ImportError:
+    bpy = None
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

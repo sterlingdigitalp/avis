@@ -34,7 +34,7 @@ def parse():
     a = sys.argv[sys.argv.index("--") + 1:]
     kw = dict(scenario="larus-gl-2-corridor", shot="track_side", glb="", bake="", frames="0:1", out="", fps="30", slow="1",
               res="1920x1080", samples="64", sun="22", world="0.40", haze="1.6e-5", look="AgX - Medium High Contrast",
-              exposure="0", lens="", blur="0", denoise="1")
+              exposure="0", lens="", blur="0", denoise="1", span="")
     for p in a:
         k, v = p.split("=", 1)
         kw[k] = v
@@ -64,12 +64,13 @@ def main():
     flight = IF.load_flight(os.path.join(ROOT, "out/flight/%s.json" % kw["scenario"]), fps=fps)
     rig = BB.load_bird(kw["glb"])
     bake = BB.load_bake(kw["bake"])
+    BB.check_same_design(rig, bake)
     s.render.use_persistent_data = True
     surface = S.Surface()
     forest = scene.Forest()
-    # the shot's camera over our frame window: env's functions pick their window with S.window, so hand them ours
-    S.window = lambda fl, t0, t1: (i0, max(i1, i0 + 2))
-    sh = S.SHOTS[kw["shot"]](flight, surface)
+    # the camera is solved over the whole shot (span), not this hold's frames, so it cannot jump between holds
+    span = tuple(int(v) for v in kw["span"].split(":")) if kw["span"] else (i0, max(i1, i0 + 2))
+    sh = S.SHOTS[kw["shot"]](flight, surface, span=span)
     lens = float(kw["lens"]) if kw["lens"] else sh["lens"]
     cam_ob = blib.camera(kw["shot"], sh["cam"][i0], sh["target"][i0], lens=lens)
     if float(kw["blur"]) > 0:

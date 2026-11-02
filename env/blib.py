@@ -26,6 +26,12 @@ def clear_scene():
 
 def setup_cycles(samples=64, res=(1920, 1080), denoise=True, adaptive=0.02, bounces=(5, 3, 3, 6), film_exposure=1.0):
     """Metal GPU Cycles. Only touches this session; preferences are never saved in --background."""
+    # Blender 5.2.x aborts about one hold in ten while Metal loads kernels (SIGABRT/SIGTRAP, heap corruption inside
+    # ccl::MetalKernelPipeline::compile). Its 17 compile threads race on a lazily set global (path_cache_get, fixed on
+    # upstream main, not in 5.2) when they first open Cycles' binary kernel archives. Without the archives that code
+    # never runs; Apple's own Metal shader cache still makes warm kernel loads fast. Set =0 to turn archives back on.
+    # Mitigation from reading the source; not yet confirmed by a crash count. See env/DATA_SOURCES.md.
+    os.environ.setdefault("CYCLES_METAL_DISABLE_BINARY_ARCHIVES", "1")
     cpu = os.environ.get("AVIS_CPU") == "1"  # CPU previews do not need the machine-wide GPU lock
     prefs = bpy.context.preferences.addons["cycles"].preferences
     prefs.compute_device_type = "NONE" if cpu else "METAL"
@@ -89,7 +95,7 @@ def make_mesh(name, verts, faces, mats=(), mat_index=None, attrs=None, flat_mask
     me.loops.add(faces.size)
     me.polygons.add(len(faces))
     me.loops.foreach_set("vertex_index", faces.ravel())
-    me.polygons.foreach_set("loop_start", np.arange(len(faces), dtype=np.int32) * 3)
+    me.polygons.foreach_set("loop_start", np.arange(len(faces), dtype=np.int32) * faces.shape[1])  # triangles or quads
     me.update(calc_edges=True)
     for m in mats:
         me.materials.append(m)
@@ -233,12 +239,15 @@ NEEDLE = {
 }
 BARK = {
     # texture, target mean linear albedo, saturation kept from the scan, tiles per 0.9 m of trunk, scan mean luminance.
-    # Engelmann spruce: thin loose grey-brown scales. Subalpine fir: smooth ash-grey with resin blisters. Lodgepole
-    # pine: thin, finely scaly grey-brown. Targets are field-guide colours; the scans only supply structure.
-    "engelmann": ("bark_willow_02", (0.042, 0.039, 0.039), 0.25, 1.7, 0.198),
-    "subalpine": ("chinese_hackberry_bark", (0.060, 0.060, 0.059), 0.15, 1.0, 0.0674),
-    "lodgepole": ("pine_bark", (0.050, 0.045, 0.040), 0.30, 2.2, 0.096),
-    "douglas": ("knotted_pine_bark", (0.085, 0.066, 0.052), 0.60, 1.0, 0.059),
+    # Engelmann spruce: thin loose grey-brown to russet scales. Subalpine fir: grey with resin blisters, grey-brown and
+    # scaly on old stems. Lodgepole pine: thin, finely scaly grey-brown. Douglas fir: thick, furrowed dark brown.
+    # Targets are field-guide colours (art direction); the scans only supply structure. Pass 3 darkened them and kept
+    # more of the scans' brown: under the film's low morning sun (11 deg) a vertical trunk takes five times the
+    # irradiance of flat ground, and the earlier neutral greys read as pale cream poles.
+    "engelmann": ("bark_willow_02", (0.028, 0.022, 0.018), 0.50, 1.7, 0.198),
+    "subalpine": ("chinese_hackberry_bark", (0.034, 0.030, 0.026), 0.35, 1.0, 0.0674),
+    "lodgepole": ("pine_bark", (0.033, 0.026, 0.020), 0.40, 2.2, 0.096),
+    "douglas": ("knotted_pine_bark", (0.055, 0.040, 0.030), 0.60, 1.0, 0.059),
     "larch": ("pine_bark", (0.120, 0.082, 0.062), 0.60, 1.6, 0.096),
     "snag": ("tree_bark_03", (0.16, 0.16, 0.16), 0.2, 1.0, 0.25),
     "aspen": ("tree_bark_03", (0.45, 0.44, 0.38), 0.5, 1.0, 0.25),
@@ -390,8 +399,9 @@ def cobble_material():
     pick = attr(nt, "age").outputs["Fac"]
     ramp = nt.nodes.new("ShaderNodeValToRGB")
     ramp.color_ramp.interpolation = "CONSTANT"
-    cols = [(0.0, (0.20, 0.20, 0.195)), (0.30, (0.14, 0.14, 0.138)), (0.55, (0.085, 0.085, 0.085)), (0.68, (0.19, 0.165, 0.13)),
-            (0.80, (0.17, 0.12, 0.105)), (0.88, (0.10, 0.065, 0.06)), (0.94, (0.055, 0.058, 0.055)), (0.97, (0.30, 0.295, 0.285))]
+    cols = [(0.0, (0.17, 0.17, 0.166)), (0.30, (0.125, 0.125, 0.123)), (0.55, (0.078, 0.078, 0.078)), (0.68, (0.165, 0.143, 0.113)),
+            (0.80, (0.15, 0.105, 0.092)), (0.88, (0.09, 0.059, 0.054)), (0.94, (0.05, 0.053, 0.05)), (0.97, (0.25, 0.245, 0.236))]
+    # pass 3: about 12% darker than pass 2 (white quartz most): in low sun the lightest stones read as salt on the bars
     els = ramp.color_ramp.elements
     els[0].position, els[0].color = cols[0][0], (*cols[0][1], 1)
     els[1].position, els[1].color = cols[1][0], (*cols[1][1], 1)

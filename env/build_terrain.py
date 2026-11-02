@@ -122,6 +122,16 @@ def shore_map(wmask, valid, res):
     Image.fromarray(la, "LA").save(f"{OUT}/shore_l0.png")
 
 
+def water_depth_map():
+    """Distance inside the lidar water from its edge (pass 3), for the clear shallows in the water shader. The lidar
+    water surface is flat and carries no depth, so this distance only stands in for depth (art direction)."""
+    im = np.asarray(Image.open(f"{OUT}/water_l0.png"))
+    wet = im[..., 0] > 127
+    d = np.maximum(ndi.distance_transform_edt(wet) * 2.0 - 1.0, 0.0)
+    d = ndi.gaussian_filter(d, 1.0)
+    Image.fromarray((np.clip(d / C.WD_RANGE, 0, 1) * 255 + 0.5).astype(np.uint8), "L").save(f"{OUT}/wdepth_l0.png")
+
+
 def fall_line_flutes(z, res, mask, amp, length, seed):
     """Ribs and couloirs down steep rock: white noise smeared along the local fall line (line-integral
     convolution), so relief at 10-40 m runs downslope the way a weathered limestone face is fluted."""
@@ -357,6 +367,7 @@ def build_levels(z30, hr8, valid8, l0_center, l0_half, masks):
     la = np.dstack([(wsoft * 255).astype(np.uint8), np.full(wsoft.shape, 255, np.uint8)])
     Image.fromarray(la, "LA").save(f"{OUT}/water_l0.png")
     shore_map(wmask, vl, 2.0)
+    water_depth_map()
     print("L0 lidar water fraction %.4f" % wmask.mean(), flush=True)
     z0 = flatten_water(xx, yy, z0, 2.0, wsoft)
     levels.append(("l0", ext0, 2.0, z0 - origin_z))
@@ -481,6 +492,9 @@ def build_maps(z30):
 def main():
     if "--cover" in sys.argv:
         cover_map()
+        return
+    if "--wdepth" in sys.argv:
+        water_depth_map()
         return
     l0c = tuple(float(v) for v in sys.argv[1:3]) if len(sys.argv) > 2 else (-500.0, -300.0)
     l0h = tuple(float(v) for v in sys.argv[3:5]) if len(sys.argv) > 4 else (1500.0, 1500.0)

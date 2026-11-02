@@ -265,6 +265,15 @@ def load_bake(stem):
     return h
 
 
+def check_same_design(rig, bake):
+    """A bake drawn on a GLB from another design version mangles the bird, so refuse it loudly."""
+    glb_sha, bake_sha = rig["meta"].get("design_sha256"), bake.get("design_sha256")
+    if glb_sha != bake_sha:
+        raise SystemExit("design mismatch: GLB is v%s (%s), bake is v%s (%s); re-run film/export_glb.mjs and the bake"
+                         % (rig["meta"].get("design_version"), str(glb_sha)[:12],
+                            bake.get("design_version"), str(bake_sha)[:12]))
+
+
 def pose_frame(rig, bake, k):
     """Set every posed node's local matrix and every deforming mesh's vertices from baked frame k."""
     row = bake["data"][k]

@@ -62,7 +62,7 @@
    "id": "track",
    "kind": "bl",
    "scenario": "larus-gl-2-corridor",
-   "shot": "track_side",
+   "shot": "track_side_long",
    "start_s": 50,
    "dur": 4.0,
    "caption": "Cruise",
@@ -109,13 +109,12 @@
    "id": "under",
    "kind": "bl",
    "scenario": "larus-gl-2-corridor",
-   "shot": "under_wing",
+   "shot": "under_wing_full",
    "start_s": 98,
    "dur": 4.0,
    "slow": 2,
    "caption": "Under the wing",
-   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
-   "lens": 14
+   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor"
   },
   {
    "id": "treetop",
@@ -152,7 +151,7 @@
    "kind": "bl",
    "scenario": "larus-gl-2-corridor",
    "shot": "river_low",
-   "start_s": 6,
+   "start_s": 14,
    "dur": 4.0,
    "caption": "Bow River",
    "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",

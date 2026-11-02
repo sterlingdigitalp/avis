@@ -229,7 +229,7 @@ function renderPlates(s) {
     if (!todo.length) break;
     const lo = todo[0], hi = todo[Math.min(todo.length, chunk) - 1] + 1;
     log(`${s.id}: frames ${lo}..${hi - 1} (${hi - lo}) at ${key}`);
-    const args = [`scenario=${s.scenario}`, `shot=${s.shot}`, `glb=${glb}`, `bake=${bake}`, `frames=${lo}:${hi}`, `out=${dir}`, `fps=${fps}`, `slow=${p.slow}`,
+    const args = [`scenario=${s.scenario}`, `shot=${s.shot}`, `glb=${glb}`, `bake=${bake}`, `frames=${lo}:${hi}`, `span=${p.i0}:${p.i0 + p.n}`, `out=${dir}`, `fps=${fps}`, `slow=${p.slow}`,
       `res=${bl.res ?? res}`, `samples=${bl.samples}`, `sun=${bl.sun ?? 22}`, `world=${bl.world ?? 0.4}`, `haze=${bl.haze ?? 1.6e-5}`, `look=${bl.look ?? 'AgX - Medium High Contrast'}`, `exposure=${bl.exposure ?? 0}`];
     if (s.lens) args.push(`lens=${s.lens}`);
     try {

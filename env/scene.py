@@ -16,7 +16,6 @@ import numpy as np
 import blib
 import config as C
 from blib import L, N, attr, img, log, mix_float, mix_rgb, maprange, math_node, new_mat, rgba, tex
-from solar import solar_az_el
 import ground as G
 import trees as T
 
@@ -24,38 +23,12 @@ TER = os.path.join(blib.OUT, "terrain")
 EARTH_R = 6371000.0 * 1.15  # refraction-corrected curvature
 
 
-def sun_vector(mdt=C.SUN_MDT_HOURS):
-    y, m, d = C.SUN_DATE
-    az, el = solar_az_el(C.LAT_LON[0], C.LAT_LON[1], y, m, d, mdt + 6.0)
-    a, e = math.radians(az), math.radians(el)
-    return np.array([math.cos(e) * math.sin(a), math.cos(e) * math.cos(a), math.sin(e)]), az, el
+from geo import Ground, sun_vector  # noqa: E402,F401  (pure numpy; re-exported for still.py and shots.py)
 
 
-class Ground:
-    """Bilinear height query on the finest level that covers a point."""
-
-    def __init__(self):
-        self.levels = []
-        for lev in ("l0", "l1", "l2", "l3"):
-            z = np.load(f"{TER}/level_{lev}.npz")
-            self.levels.append((z["ext"], float(z["res"]), z["z"]))
-
-    def __call__(self, x, y):
-        x, y = np.asarray(x, float), np.asarray(y, float)
-        out = np.full(x.shape, np.nan)
-        for ext, res, z in self.levels:
-            ins = np.isnan(out) & (x > ext[0]) & (x < ext[2] - res) & (y > ext[1] + res) & (y < ext[3])
-            if not ins.any():
-                continue
-            c = (x[ins] - ext[0]) / res
-            r = (ext[3] - y[ins]) / res
-            c0, r0 = c.astype(int), r.astype(int)
-            fc, fr = c - c0, r - r0
-            out[ins] = z[r0, c0] * (1 - fc) * (1 - fr) + z[r0, c0 + 1] * fc * (1 - fr) + z[r0 + 1, c0] * (1 - fc) * fr + z[r0 + 1, c0 + 1] * fc * fr
-        return out
-
-
-def grid_mesh(name, ext, res, z, hole_ext=None, mats=()):
+def grid_mesh(name, ext, res, z, hole_ext=None, mats=(), cells=None, quads=False, point_w=None):
+    """Height grid to mesh. cells: optional (h-1, w-1) mask of cells to keep; quads: one quad per cell instead of two
+    triangles (patches for adaptive subdivision), with unused points dropped; point_w: (h, w) weight stored as `dmask`."""
     h, w = z.shape
     xs = ext[0] + np.arange(w) * res
     ys = ext[3] - np.arange(h) * res
@@ -64,13 +37,18 @@ def grid_mesh(name, ext, res, z, hole_ext=None, mats=()):
     verts = np.dstack([xx, yy, zc]).reshape(-1, 3).astype(np.float32)
     idx = np.arange(h * w, dtype=np.int64).reshape(h, w)
     a, b, c, d = idx[:-1, :-1], idx[:-1, 1:], idx[1:, 1:], idx[1:, :-1]
-    keep = np.ones(a.shape, bool)
+    keep = np.ones(a.shape, bool) if cells is None else cells.copy()
     if hole_ext is not None:
         cx = 0.5 * (xx[:-1, :-1] + xx[1:, 1:])
         cy = 0.5 * (yy[:-1, :-1] + yy[1:, 1:])
-        keep = ~((cx > hole_ext[0]) & (cx < hole_ext[2]) & (cy > hole_ext[1]) & (cy < hole_ext[3]))
-    faces = np.concatenate([np.stack([a[keep], d[keep], c[keep]], -1), np.stack([a[keep], c[keep], b[keep]], -1)])
-    return blib.make_mesh(name, verts, faces, list(mats))
+        keep &= ~((cx > hole_ext[0]) & (cx < hole_ext[2]) & (cy > hole_ext[1]) & (cy < hole_ext[3]))
+    if not quads:
+        faces = np.concatenate([np.stack([a[keep], d[keep], c[keep]], -1), np.stack([a[keep], c[keep], b[keep]], -1)])
+        return blib.make_mesh(name, verts, faces, list(mats))
+    faces = np.stack([a[keep], d[keep], c[keep], b[keep]], -1)
+    used, faces = np.unique(faces, return_inverse=True)
+    attrs = {"dmask": ("FLOAT", "POINT", point_w.reshape(-1)[used].astype(np.float32))} if point_w is not None else None
+    return blib.make_mesh(name, verts[used], faces.reshape(-1, 4), list(mats), attrs=attrs)
 
 
 def inset(ext, m):
@@ -149,9 +127,10 @@ def _rock(nt, pos, nz, D):
     u2 = _noise(nt, None, 18.0, 4.0, 0.55, w=bed)
     u3 = _noise(nt, None, 2.4, 3.0, 0.5, w=bed)
     massive = maprange(nt, u1, 0.40, 0.60)
-    col = mix_rgb(nt, massive, rgba(0.068, 0.070, 0.073), rgba(0.150, 0.150, 0.146))
-    buff = math_node(nt, "MULTIPLY", maprange(nt, _noise(nt, None, 38.0, 2.0, 0.5, w=math_node(nt, "ADD", bed, 17.0)), 0.56, 0.68), 0.7)
-    col = mix_rgb(nt, buff, col, rgba(0.170, 0.145, 0.110))
+    # pass 3: a touch cooler and with more spread between units; the warm morning sun had turned neutral greys cream
+    col = mix_rgb(nt, massive, rgba(0.050, 0.054, 0.060), rgba(0.128, 0.134, 0.142))
+    buff = math_node(nt, "MULTIPLY", maprange(nt, _noise(nt, None, 38.0, 2.0, 0.5, w=math_node(nt, "ADD", bed, 17.0)), 0.58, 0.68), 0.45)
+    col = mix_rgb(nt, buff, col, rgba(0.155, 0.140, 0.118))
     # bands pinch and swell along strike and vanish under debris in patches, so they never read as contour lines
     swell = maprange(nt, _noise(nt, pos, 260.0, 2.0), 0.3, 0.7, 0.15, 0.6)
     swell = math_node(nt, "MULTIPLY", swell, maprange(nt, _noise(nt, pos, 120.0, 3.0), 0.38, 0.62, 0.0, 1.0))
@@ -195,18 +174,67 @@ def _rock(nt, pos, nz, D):
     sbw = N(nt, "ShaderNodeRGBToBW")
     L(nt, scree_tex, sbw.inputs[0])
     scree_det = mix_float(nt, maprange(nt, D, 120.0, 700.0, 1.0, 0.0), 1.0, math_node(nt, "DIVIDE", sbw.outputs[0], 0.14))
-    scree = _scale(nt, rgba(0.122, 0.113, 0.098), math_node(nt, "MULTIPLY", scree_n, scree_det))
+    # rock streams and fresh gullies run down the fall line of a talus apron: noise stretched along world Z
+    fl_m = N(nt, "ShaderNodeMapping")
+    L(nt, pos, fl_m.inputs["Vector"])
+    fl_m.inputs["Scale"].default_value = (1 / 2.5, 1 / 2.5, 1 / 16.0)
+    fl_n = N(nt, "ShaderNodeTexNoise", Scale=1.0, Detail=4.0, Roughness=0.55)
+    L(nt, fl_m.outputs[0], fl_n.inputs["Vector"])
+    scree_n = math_node(nt, "MULTIPLY", scree_n, maprange(nt, fl_n.outputs[0], 0.35, 0.65, 0.84, 1.14))
+    # and at the scale a far camera sees: tongues of coarser, darker debris tens of metres wide
+    fl2 = N(nt, "ShaderNodeMapping")
+    L(nt, pos, fl2.inputs["Vector"])
+    fl2.inputs["Scale"].default_value = (1 / 14.0, 1 / 14.0, 1 / 70.0)
+    fl2_n = N(nt, "ShaderNodeTexNoise", Scale=1.0, Detail=3.0, Roughness=0.5)
+    L(nt, fl2.outputs[0], fl2_n.inputs["Vector"])
+    scree_n = math_node(nt, "MULTIPLY", scree_n, maprange(nt, fl2_n.outputs[0], 0.38, 0.62, 0.78, 1.1))
+    scree = _scale(nt, rgba(0.118, 0.121, 0.122), math_node(nt, "MULTIPLY", scree_n, scree_det))
     ledge = math_node(nt, "MULTIPLY", maprange(nt, nz, 0.52, 0.72), 0.45)
     rock = mix_rgb(nt, ledge, rock, scree)
     talus = math_node(nt, "MULTIPLY", maprange(nt, nz, 0.76, 0.81), maprange(nt, nz, 0.93, 0.89))
     talus = math_node(nt, "MULTIPLY", talus, maprange(nt, _noise(nt, pos, 90.0, 2.0), 0.35, 0.5))
     rock = mix_rgb(nt, talus, rock, scree)
     h_near = _detail(nt, pos, f"{blib.PH}/marble_cliff_05/disp.jpg", 12.0, colorspace="Non-Color")
-    return rock, (math_node(nt, "ADD", u2, math_node(nt, "MULTIPLY", u1, 0.6)), jv.outputs["Distance"], h_near), steep, f_near, talus
+    return rock, (math_node(nt, "ADD", u2, math_node(nt, "MULTIPLY", u1, 0.6)), jv.outputs["Distance"], h_near), steep, f_near, talus, bed
 
 
-def terrain_material():
-    m, nt = new_mat("terrain")
+# Stratified relief (pass 3). A heightfield cut across dipping limestone weathers into a staircase: massive units stand
+# as near-vertical risers, thin-bedded units recede into ledges that follow the bedding. Remapping each column's bed
+# coordinate b = n_bed . p through a smoothed staircase S(b) and moving the point vertically by (S(b) - b) / n_bed.z does
+# exactly that, and only that: where the real slope is gentle or runs along the beds (the south-west dip slopes) the
+# staircase changes little; on the north-east escarpment, which cuts across the beds, it carves ledges and cliffs.
+# The 8 m form stays the DEM's; the steps are synthetic relief below its resolution (env/DATA_SOURCES.md).
+# Differential erosion: a massive unit also stands proud of the thin-bedded rock below it, so each riser is pushed out
+# along the surface normal by up to LIP of its period, with a sharp lip at its foot that shades the recess beneath.
+# Strengths summing past 1 let the two scales fold where both are strong: a short overhang under a massive bed, which
+# the review stills showed is what makes the bands read as limestone at 3-5 km (sum 1.0 renders as smooth slopes).
+STRATA = ((26.0, 0.55, 0.62), (7.5, 0.5, 0.45))  # period along the bed normal (m), tread fraction, strength
+LIP = 0.16
+ROCK_DISP = os.environ.get("AVIS_ROCK_DISP", "1") == "1"
+DISP_EDGE = float(os.environ.get("AVIS_DISP_EDGE", "3.0"))  # m: micro-edge of the diced rock, the same from every camera
+
+
+def _strata(nt, bed):
+    """Vertical shift (m) and outward shift along the normal (m) that turn smooth rock into strata."""
+    dz = dn = None
+    for i, (P, tread, amp) in enumerate(STRATA):
+        # irregular spacing: warp b by a slow 1D noise (its slope stays well under 1)
+        b = math_node(nt, "ADD", bed, _centred(nt, _noise(nt, None, 2.6 * P, 2.0, 0.5, w=math_node(nt, "ADD", bed, 31.0 * i)), 0.8 * P))
+        f = math_node(nt, "FRACT", math_node(nt, "DIVIDE", b, P))
+        s = maprange(nt, f, tread, 1.0)
+        # some units are cliff-formers, some barely show: strength varies from bed to bed
+        k = maprange(nt, _noise(nt, None, 1.7 * P, 2.0, 0.5, w=math_node(nt, "ADD", bed, 7.0 + 13.0 * i)), 0.3, 0.6, 0.25, 1.0)
+        d = math_node(nt, "MULTIPLY", math_node(nt, "SUBTRACT", s, f), math_node(nt, "MULTIPLY", k, amp * P))
+        lip = math_node(nt, "MULTIPLY", maprange(nt, f, tread - 0.04, tread + 0.02), maprange(nt, f, 1.0, 0.9))
+        o = math_node(nt, "MULTIPLY", lip, math_node(nt, "MULTIPLY", k, amp * LIP * P))
+        dz = d if dz is None else math_node(nt, "ADD", dz, d)
+        dn = o if dn is None else math_node(nt, "ADD", dn, o)
+    return math_node(nt, "DIVIDE", dz, BED_N[2]), dn
+
+
+def terrain_material(name="terrain", disp=False):
+    """disp: also displace bare rock into strata (_strata_dz), scaled by the mesh's `dmask` point attribute."""
+    m, nt = new_mat(name)
     geo = nt.nodes.new("ShaderNodeNewGeometry")
     cam = nt.nodes.new("ShaderNodeCameraData")
     pos = geo.outputs["Position"]
@@ -244,7 +272,7 @@ def terrain_material():
     nz = nzs.outputs[2]
     no2 = _noise(nt, pos, 3.0, 5.0, 0.55)
 
-    rock, (h_bed, h_joint, h_near), steep, f_near, talus = _rock(nt, pos, nz, D)
+    rock, (h_bed, h_joint, h_near), steep, f_near, talus, bed = _rock(nt, pos, nz, D)
 
     # --- forest floor and meadow, near range only ---
     floor = _detail(nt, pos, f"{blib.PH}/forest_ground_04/diff.jpg", 3.2)
@@ -256,6 +284,8 @@ def terrain_material():
     thatch = _scale(nt, _desat(nt, _detail(nt, pos, f"{blib.PH}/aerial_grass_rock/diff.jpg", 2.5), 0.55), 0.55)
     mcol = mix_rgb(nt, maprange(nt, D, 30.0, 140.0, 0.75, 0.0), mcol, mix_rgb(nt, 0.55, thatch, rgba(0.095, 0.075, 0.038)))
     meadow = _scale(nt, mcol, maprange(nt, no2, 0.3, 0.7, 0.62, 1.32))
+    # steep open ground on the walls is avalanche-path shrub and krummholz, not lawn: darker and browner (art direction)
+    meadow = mix_rgb(nt, maprange(nt, nz, 0.9, 0.72, 0.0, 0.55), meadow, rgba(0.062, 0.054, 0.032))
     # shade forest floor by its canopy: darker where canopy is dense
     floor_s = _scale(nt, mix_rgb(nt, 1.0, floor, rgba(0.26, 0.24, 0.17), "MULTIPLY"), maprange(nt, veg, 0.25, 0.8, 1.0, 0.45))
     # canopy-covered ground far from any instanced tree stays map coloured (dark forest).
@@ -288,6 +318,8 @@ def terrain_material():
     rocky = math_node(nt, "MAXIMUM", maprange(nt, nz, 0.82, 0.62),
                       math_node(nt, "MULTIPLY", maprange(nt, pz.outputs[2], 110.0, 280.0), maprange(nt, nz, 0.97, 0.90)))
     vm_r = math_node(nt, "MAXIMUM", vm, math_node(nt, "SUBTRACT", 1.0, rocky))
+    # small outcrops inside forest (the 10 m map still sees canopy around them) are lichen-dark, not fresh grey
+    rock = _scale(nt, rock, maprange(nt, veg, 0.15, 0.45, 1.0, 0.62))
     base = mix_rgb(nt, vm_r, rock, veg_col)
     # bare flat valley floor (gravel bars, dry channels): rounded mixed river cobble beside the water, finer gravel
     # further back, the measured satellite colour beyond texture range. Not the limestone wall model.
@@ -297,7 +329,7 @@ def terrain_material():
     cob = _desat(nt, _detail(nt, pos, f"{blib.PH}/ganges_river_pebbles/diff.jpg", 1.6), 0.55)
     fine = _desat(nt, _detail(nt, pos, f"{blib.PH}/pebble_ground_01/diff.jpg", 1.1), 0.5)
     gsort = math_node(nt, "MAXIMUM", maprange(nt, shore, 26.0, 12.0), maprange(nt, _noise(nt, pos, 6.0, 3.0), 0.45, 0.6))
-    gravel_col = _scale(nt, mix_rgb(nt, gsort, fine, cob), 0.5)
+    gravel_col = _scale(nt, mix_rgb(nt, gsort, fine, cob), 0.6)  # pass 3: close to the cobbles' tone, so clusters do not read as islands
     far_bare = _scale(nt, _desat(nt, alb.outputs[0], 0.7), 0.72)
     base = mix_rgb(nt, gb, base, mix_rgb(nt, maprange(nt, D, 150.0, 600.0, 0.0, 1.0), gravel_col, far_bare))
     wob = _centred(nt, _noise(nt, pos, 1.5, 3.0), 0.9)
@@ -344,6 +376,39 @@ def terrain_material():
     L(nt, b4.outputs[0], b5.inputs["Normal"])
     L(nt, b5.outputs[0], p.inputs["Normal"])
 
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    # the stepped rock mesh holds only steep bare cells, never water; leaving the water branch out of its material
+    # also keeps the displacement working (with it, Cycles 5.2 on Metal silently rendered the rock undisplaced)
+    L(nt, p.outputs[0] if disp else _water(nt, pos, D, alb, water, m0, p), out.inputs["Surface"])
+    if disp:
+        # only bare, snow-free rock steeper than about 32 degrees on the real (undisplaced) surface steps; `dmask` falls
+        # to 0 on the edge of the stepped mesh, so it meets the rest of the terrain without a crack
+        amt = math_node(nt, "MULTIPLY", math_node(nt, "SUBTRACT", 1.0, vm_r), math_node(nt, "SUBTRACT", 1.0, sn))
+        amt = math_node(nt, "MULTIPLY", amt, maprange(nt, nz, 0.85, 0.66))
+        amt = math_node(nt, "MULTIPLY", amt, attr(nt, "dmask").outputs["Fac"])
+        dz, dn = _strata(nt, bed)
+        vec = nt.nodes.new("ShaderNodeCombineXYZ")
+        L(nt, math_node(nt, "MULTIPLY", dz, amt), vec.inputs[2])
+        # the lip moves along the horizontal part of the real surface normal: out of the face, never up or down
+        hn = N(nt, "ShaderNodeVectorMath", p_operation="MULTIPLY")
+        L(nt, geo.outputs["Normal"], hn.inputs[0])
+        hn.inputs[1].default_value = (1.0, 1.0, 0.0)
+        out_v = N(nt, "ShaderNodeVectorMath", p_operation="SCALE")
+        L(nt, hn.outputs[0], out_v.inputs[0])
+        L(nt, math_node(nt, "MULTIPLY", dn, amt), out_v.inputs["Scale"])
+        tot = N(nt, "ShaderNodeVectorMath", p_operation="ADD")
+        L(nt, vec.outputs[0], tot.inputs[0])
+        L(nt, out_v.outputs[0], tot.inputs[1])
+        vd = N(nt, "ShaderNodeVectorDisplacement", p_space="WORLD", Midlevel=0.0, Scale=1.0)
+        L(nt, tot.outputs[0], vd.inputs["Vector"])
+        L(nt, vd.outputs[0], out.inputs["Displacement"])
+        m.displacement_method = "BOTH"
+        m.max_vertex_displacement = 40.0  # bounds for culling and the BVH: strata move rock by up to ~30 m
+    return m
+
+
+def _water(nt, pos, D, alb, water, m0, p):
+    """The lidar water surface mixed over the land shader `p`."""
     # water: glacial flour scatters turquoise under a dielectric surface
     w_sel = maprange(nt, water, 0.42, 0.58)
     wn1 = N(nt, "ShaderNodeTexNoise", Scale=0.9, Detail=4.0, Roughness=0.55)
@@ -353,14 +418,31 @@ def terrain_material():
     mw.inputs["Scale"].default_value = (1.0, 1.0, 0.0)
     L(nt, mw.outputs[0], wn1.inputs["Vector"])
     L(nt, mw.outputs[0], wn2.inputs["Vector"])
+    # riffles: the current over a cobble bed raises short crests across the flow (the Bow runs roughly east here)
+    mr = N(nt, "ShaderNodeMapping")
+    L(nt, pos, mr.inputs["Vector"])
+    mr.inputs["Scale"].default_value = (1 / 0.35, 1 / 1.4, 0.0)
+    wn3 = N(nt, "ShaderNodeTexNoise", Scale=1.0, Detail=3.0, Roughness=0.5)
+    L(nt, mr.outputs[0], wn3.inputs["Vector"])
     wb = N(nt, "ShaderNodeBump", Strength=0.35, Distance=0.05)
     wave = math_node(nt, "ADD", wn1.outputs[0], math_node(nt, "MULTIPLY", wn2.outputs[0], 0.35))
+    wave = math_node(nt, "ADD", wave, math_node(nt, "MULTIPLY", wn3.outputs[0], maprange(nt, D, 15.0, 120.0, 0.45, 0.0)))
     L(nt, wave, wb.inputs["Height"])
     # a real surface up close, an unresolved rough glint from far away
     wrough = maprange(nt, D, 80.0, 3000.0, 0.035, 0.13)
     wp = N(nt, "ShaderNodeBsdfPrincipled", IOR=1.333)
     # measured on the Bow beside the corridor (Sentinel-2 BOA): blue 0.034 green 0.051 red 0.035, i.e. green glacial water
     wcol = mix_rgb(nt, 0.5, alb.outputs[0], rgba(0.026, 0.062, 0.050))
+    if os.path.exists(f"{TER}/wdepth_l0.png"):
+        # Clear shallows (pass 3): within a few metres of the lidar waterline the wet cobble bed shows through, dimmed
+        # and greened by the water, and fades to the opaque glacial green with distance from the bank. The flat lidar
+        # water surface carries no depth, so distance from the waterline stands in for it (art direction).
+        # (A generated in-memory image here silently disabled the rock displacement in Cycles 5.2: keep it a file.)
+        wdn = tex(nt, f"{TER}/wdepth_l0.png", m0.outputs[0], "Non-Color", ext="CLIP", interp="Cubic")
+        wd_m = math_node(nt, "MULTIPLY", wdn.outputs[0], C.WD_RANGE)
+        bed = _desat(nt, _detail(nt, pos, f"{blib.PH}/ganges_river_pebbles/diff.jpg", 1.6), 0.5)
+        bed = mix_rgb(nt, 1.0, bed, rgba(0.24, 0.36, 0.31), "MULTIPLY")
+        wcol = mix_rgb(nt, maprange(nt, wd_m, 0.5, 9.0), bed, wcol)
     L(nt, wcol, wp.inputs["Base Color"])
     L(nt, wrough, wp.inputs["Roughness"])
     wp.inputs["Specular IOR Level"].default_value = 0.5
@@ -369,8 +451,75 @@ def terrain_material():
     L(nt, w_sel, sw.inputs[0])
     L(nt, p.outputs[0], sw.inputs[1])
     L(nt, wp.outputs[0], sw.inputs[2])
-    L(nt, sw.outputs[0], nt.nodes.new("ShaderNodeOutputMaterial").inputs["Surface"])
-    return m
+    return sw.outputs[0]
+
+
+def _adaptive(ob):
+    """Cycles adaptive subdivision for the stepped rock: linear (the DEM's form is kept, not smoothed), diced to about
+    DISP_EDGE metres in object space. Not camera-relative: a moving camera would re-dice every frame and the strata
+    would shimmer; a fixed edge also keeps holds of one shot identical."""
+    mod = ob.modifiers.new("strata", "SUBSURF")
+    mod.subdivision_type = "SIMPLE"
+    mod.use_adaptive_subdivision = True
+    mod.adaptive_space = "OBJECT"
+    mod.adaptive_object_edge_length = DISP_EDGE
+    sc = bpy.context.scene.cycles
+    sc.max_subdivisions = 3
+    sc.offscreen_dicing_scale = 8.0
+
+
+def _erode(m):
+    """4-neighbour binary erosion with the outside counted as empty (numpy only: Blender's Python has no scipy)."""
+    p = np.pad(m, 1)
+    return m & p[:-2, 1:-1] & p[2:, 1:-1] & p[1:-1, :-2] & p[1:-1, 2:]
+
+
+def _dilate(m):
+    p = np.pad(m, 1)
+    return m | p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:]
+
+
+def rock_cells(ext, res, z, hole):
+    """Cells of an 8 m grid that may step: steeper than about 30 degrees and bare on the 5 m cover map (cover_l1.png,
+    the same edge the shader and the stem scatter use), grown by two cells, outside the finer level's hole.
+    Returns the cell mask (h-1, w-1) and a 0..1 point weight (h, w) that is 0 on the mask's border."""
+    dzx = (z[:-1, 1:] + z[1:, 1:] - z[:-1, :-1] - z[1:, :-1]) / (2 * res)
+    dzy = (z[:-1, :-1] + z[:-1, 1:] - z[1:, :-1] - z[1:, 1:]) / (2 * res)
+    steep = 1.0 / np.sqrt(1 + dzx * dzx + dzy * dzy) < 0.87
+    h, w = z.shape
+    cx = ext[0] + (np.arange(w - 1) + 0.5) * res
+    cy = ext[3] - (np.arange(h - 1) + 0.5) * res
+    bare = np.ones_like(steep)
+    if os.path.exists(f"{TER}/cover_l1.png"):
+        ce = json.load(open(f"{TER}/cover_l1.json"))
+        cov = _image_gray(f"{TER}/cover_l1.png")
+        r = ((ce["ext"][3] - cy) / ce["res"]).astype(int).clip(0, cov.shape[0] - 1)
+        c = ((cx - ce["ext"][0]) / ce["res"]).astype(int).clip(0, cov.shape[1] - 1)
+        bare = cov[np.ix_(r, c)] < 0.6
+    cell = _dilate(_dilate(steep & bare))
+    if hole is not None:
+        xx, yy = np.meshgrid(cx, cy)
+        cell &= ~((xx > hole[0] - 3 * res) & (xx < hole[2] + 3 * res) & (yy > hole[1] - 3 * res) & (yy < hole[3] + 3 * res))
+    cell[[0, -1], :] = False
+    cell[:, [0, -1]] = False
+    layers, e = [], cell
+    for _ in range(3):
+        e = _erode(e)
+        layers.append(e)
+    wc = sum(lr.astype(np.float32) for lr in layers) / len(layers)
+    p = np.pad(wc, 1)
+    wv = np.minimum(np.minimum(p[:-1, :-1], p[1:, 1:]), np.minimum(p[:-1, 1:], p[1:, :-1]))
+    return cell, wv
+
+
+def _image_gray(path):
+    """First channel of a data image as 0..1 floats, read through Blender (PIL is not in Blender's Python). The image
+    stays loaded: the terrain material samples the same datablock."""
+    im = img(path, "Non-Color")
+    w, h = im.size
+    px = np.empty(w * h * im.channels, np.float32)
+    im.pixels.foreach_get(px)
+    return px.reshape(h, w, im.channels)[::-1, :, 0]
 
 
 def build_terrain():
@@ -389,11 +538,21 @@ def build_terrain():
         if i > 0:
             finer = levels[order[i - 1]]
             hole = inset(finer[0], max(finer[1] * 3, res * 2.5))
-        me = grid_mesh(f"terrain_{lev}", ext, res, z, hole, [mat])
+        cells = None
+        if ROCK_DISP and lev == "l1":
+            # the bare steep walls become their own adaptively diced, displaced mesh; the rest stays plain
+            cells, wv = rock_cells(ext, res, z, hole)
+            me = grid_mesh("terrain_l1_rock", ext, res, z, hole, [terrain_material("terrain_rock", disp=True)], cells, True, wv)
+            ob = bpy.data.objects.new("terrain_l1_rock", me)
+            col.objects.link(ob)
+            ob.cycles.is_caustics_receiver = False
+            _adaptive(ob)
+            cells = ~cells
+        me = grid_mesh(f"terrain_{lev}", ext, res, z, hole, [mat], cells)
         ob = bpy.data.objects.new(f"terrain_{lev}", me)
         col.objects.link(ob)
         ob.cycles.is_caustics_receiver = False
-    log("terrain built %.1fs, %d tris" % (time.time() - t0, sum(len(o.data.polygons) for o in col.objects)))
+    log("terrain built %.1fs, %d faces" % (time.time() - t0, sum(len(o.data.polygons) for o in col.objects)))
 
 
 def setup_world(sky="evening_road_01_puresky", world_gain=0.7, sun_gain=11.0, sun_rgb=(1.0, 0.73, 0.50), mdt=C.SUN_MDT_HOURS, sky_sat=1.0):
@@ -521,7 +680,7 @@ class Forest:
         return counts
 
 
-UNDER_RANGE = {"meadow": (95.0, 300.0), "cobbles": (55.0, 230.0), "drift": (400.0, 700.0), "grass": (120.0, 500.0)}
+UNDER_RANGE = {"meadow": (95.0, 300.0), "cobbles": (120.0, 330.0), "drift": (400.0, 700.0), "grass": (120.0, 500.0)}
 
 
 def _under_scatter(self, cams, full=170.0, tail=650.0, margin_deg=18.0):

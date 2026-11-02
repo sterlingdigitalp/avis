@@ -95,9 +95,11 @@ VARIANTS = [
 
 LOD = {
     # quad: LOD 0 needles are tapered blades (two triangles) that keep a needle's outline from 2 m; LOD 1 needles are
-    # single enlarged triangles carrying the same foliage area at a sixth of the count.
+    # single enlarged triangles at a fifth of the count on every shoot. Pass 3: LOD 1 used to keep 60% of shoots with
+    # smaller blades (about 40% of LOD 0's foliage area), so mid-distance crowns were see-through and showed the trunk
+    # top to bottom; side by side under the film sun at 120 m it now matches LOD 0's opacity (1.65x the triangles).
     0: dict(trunk_k=14, prim_k=6, sec_k=3, twig_k=2, needle_mult=1.0, needle_w=1.0, needle_l=1.0, twig_keep=1.0, quad=True),
-    1: dict(trunk_k=9, prim_k=4, sec_k=2, twig_k=0, needle_mult=0.16, needle_w=4.0, needle_l=1.35, twig_keep=0.6, quad=False),
+    1: dict(trunk_k=9, prim_k=4, sec_k=2, twig_k=0, needle_mult=0.20, needle_w=5.0, needle_l=1.35, twig_keep=1.0, quad=False),
 }
 
 
@@ -591,12 +593,13 @@ def info(arr):
 
 
 def cache_key(species, lod):
-    """Content key for a cached mesh: this file's code (without the species table) plus the one species entry and
-    LOD entry it uses, so tuning one species does not throw away every other species' multi-GB hero meshes."""
+    """Content key for a cached mesh: this file's code (without the species and LOD tables) plus the one species entry
+    and LOD entry it uses, so tuning one species or one LOD does not throw away every other multi-GB hero mesh."""
     import hashlib
     import re
     with open(__file__) as fh:
         src = re.sub(r"\nSPECIES = \{.*?\n\}\n", "\n", fh.read(), flags=re.S)
+        src = re.sub(r"\nLOD = \{.*?\n\}\n", "\n", src, flags=re.S)
     h = hashlib.sha1(src.encode())
     used = [species] if species in SPECIES else list(SPECIES)  # snags and the ground layer borrow other species
     for nm in used:
