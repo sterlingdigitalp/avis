@@ -6748,7 +6748,7 @@
     "shear_yield_MPa": 138.6,
     "bearing_yield_MPa": 193,
     "bearing_e_over_d_min": 2.0,
-    "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0"
+    "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed."
    },
    "standard_minimums": {
     "EN 754-2 drawn bar T6 (D <= 80 mm)": {
@@ -6993,8 +6993,22 @@
    "mass_basis": "per_litre (not used for mass)",
    "tensile_strength_mpa": 690,
    "design_values": {
-    "yield_MPa": 690,
-    "basis": "KHK Table 9.1 tensile strength 690 N/mm2 (JIS S45C, heat treatment not stated); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (less conservative than a yield; disclosed)"
+    "yield_MPa": 172.5,
+    "basis": "Round 8 (crushing ruling after round 7). JIS G4051:2016 specifies no mechanical properties (\"\u6a5f\u68b0\u7684\u6027\u8cea\u306e\u5024\u306f\u898f\u5b9a\u3057\u3066\u3044\u306a\u3044\", kikakurui.com G4051); the old JIS-style table survives as reference values only (Furuike stockist sheet: N 345/570, H 490/690 N/mm2 yield/tensile, A none). KHK states only \"Gear teeth induction hardened\" for the SSAG1-40 and not the treatment of its core, where the keyway is, so the lowest condition with a value, N (normalized) yield 345, is used, and as a reference value (no stated basis) it counts at half: 172.5 MPa. Not used: KHK Table 9.1 tensile 690 (the H row; a general table, not the SSAG's stated treatment), which would give 245 (490 / 2).",
+    "sources": [
+     "https://kikakurui.com/g4/G4051-2018-01.html",
+     "https://furuike.co.jp/wordpress/wp-content/uploads/2020/02/23c25cb3298e6f5863461440b5b79270.pdf",
+     "https://catalog.khkgears.us/item/spur-gears/ground-hubless-spur-gears-ssag/ssag1-40"
+    ]
+   },
+   "jis_reference_table": {
+    "N_yield_min_MPa": 345,
+    "N_tensile_min_MPa": 570,
+    "H_yield_min_MPa": 490,
+    "H_tensile_min_MPa": 690,
+    "A": "no strength values (HB 137-170)",
+    "test_piece": "25 mm diameter standard test piece",
+    "status": "reference (\u53c2\u8003): JIS G4051:2016 specifies no mechanical properties"
    }
   },
   "price_usd": null,
@@ -7012,8 +7026,18 @@
    "mass_basis": "per_litre (not used for mass)",
    "tensile_strength_mpa": 830,
    "design_values": {
-    "yield_MPa": 830,
-    "basis": "KHK Table 9.1 tensile strength 830 N/mm2 (JIS SCM415); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (disclosed)"
+    "yield_MPa": 207.5,
+    "basis": "Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415.",
+    "sources": [
+     "https://kikakurui.com/g4/G4053-2016-01.html",
+     "https://furuike.co.jp/wordpress/wp-content/uploads/2020/02/23c25cb3298e6f5863461440b5b79270.pdf",
+     "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-18"
+    ]
+   },
+   "jis_reference_table": {
+    "carburizing_yield": null,
+    "carburizing_tensile_min_MPa": 830,
+    "status": "reference (\u53c2\u8003): JIS G4053:2016 specifies no mechanical properties"
    }
   },
   "price_usd": null,
@@ -7032,8 +7056,11 @@
    "transverse_compressive_yield_psi": 38600,
    "design_values": {
     "yield_MPa": 133.1,
-    "basis": "38,600 psi (266 MPa) transverse compressive yield, a classical-lamination-theory estimate on the product page (typical): counted at half, 133 MPa"
-   }
+    "basis": "38,600 psi (266 MPa) transverse compressive yield, a classical-lamination-theory estimate on the product page (typical): counted at half, 133 MPa",
+    "xy_shear_MPa": 48.2,
+    "xy_shear_basis": "XY shear strength 13,992 psi (96.5 MPa), classical-lamination-theory estimate on the product page (reference only): counted at half, 48.2 MPa (round 8, the tail boom in torsion)"
+   },
+   "xy_shear_psi": 13992
   },
   "price_usd": null,
   "source_url": "https://www.rockwestcomposites.com/t-rnd-393.html",
@@ -7058,5 +7085,275 @@
   "source_url": "https://www.freemansupply.com/datasheets/Araldite/2011.pdf",
   "retrieved": "2026-11-02",
   "verified": "retailer-page"
+ },
+ {
+  "id": "gear-khk-msga1-20",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "MSGA1-20 ground carburized SCM415 spur gear",
+  "mass_g": 27,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 20,
+   "material": "SCM415",
+   "heat_treatment": "Carburized (KHK); teeth ground; tooth hardness 55-60 HRC",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N5 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 20,
+   "outside_dia_mm": 22,
+   "face_width_mm": 10,
+   "bore_mm": 8,
+   "shape": "S1",
+   "fastening": "keyway 3 x 1.4 mm",
+   "backlash_mm": "0.08-0.16 mm",
+   "allowable_torque_bending_nm": 14.2,
+   "allowable_torque_surface_durability_nm": 8.04,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 600 rpm; sigma_Flim 47 kgf/mm2, sigma_Hlim 166 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "SCM415 (KHK lists it as AISI 4115 alloy steel)",
+    "condition": "carburized, ground (case 55-60 HRC)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 830,
+    "allowable_bending_stress_mpa": 460.9,
+    "allowable_bending_stress_kgf_mm2": 47,
+    "allowable_hertz_stress_kgf_mm2": 166,
+    "hardness": "HRc 55-60 (teeth); KHK Table 9.1 material hardness HB 235-321",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "sigma_Flim 47 kgf/mm2 and sigma_Hlim 166 kgf/mm2 from KHK (column MSGA/MSGB); MPa computed x 9.80665. Tensile more than 830 N/mm2 from KHK Table 9.1. No published yield strength was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "KHK: \"No secondary operations can be performed on these finished gears due to the applied carburizing process.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 17,
+   "hub_width_mm": 5,
+   "total_length_mm": 15,
+   "page_quote": "Bore 8 mm; Keyway 3 x 1.4 mm; Hub diameter 17 mm; Face width 10 mm; Total length 15 mm; Weight 0.027 kg; Bending strength 14.2 N\u00b7m; Surface durability 8.04 N\u00b7m; SCM415 (AISI 4115) Alloy Steel; Carburized; JIS grade N5; Backlash 0.08-0.16 mm; Shape S1"
+  },
+  "price_usd": null,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-20",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "screw-iso4762-m3x12-10.9",
+  "category": "fastener",
+  "manufacturer": "any ISO 4762 maker (property class 10.9, ISO 898-1)",
+  "name": "ISO 4762 M3 x 12 socket head cap screw, class 10.9",
+  "mass_g": 1.23,
+  "specs": {
+   "mass_basis": "per part, computed: ISO 4762 M3 maximum head 5.5 mm x 3.0 mm (fasteners.eu ISO 4762 table) plus a 3 mm x 12 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c)",
+   "thread": "M3 coarse",
+   "length_mm": 12,
+   "stress_area_mm2": 5.03,
+   "property_class": "10.9",
+   "proof_load_N": 4180,
+   "min_ultimate_tensile_load_N": 5230,
+   "design_values": {
+    "tension_N": 4180,
+    "shear_N": 2413.3,
+    "basis": "ISO 898-1 minimum proof load Fp for M3 class 10.9, 4180 N (As 5.03 mm2), in full (a specified minimum, as tabulated by Optimas from EN ISO 898-1); tension against the proof load, not the 5230 N ultimate. ISO 898-1 tabulates no shear load: shear against the proof load / sqrt 3 (von Mises on the minimum proof stress over the stress area), the same rule the catalogue applies to metals without a published shear minimum. Linear tension-shear interaction in members.js boltGroupCheck."
+   },
+   "quotes": {
+    "proof_load": "M3 | 5,03 | 1130 | 1560 | 1410 | 1910 | 2210 | 2920 | 3270 | 4180 | 4880 (Proof Load, Fp (As,nom x Sp,nom), N; According to EN ISO 898-1)",
+    "ultimate": "M3 | 5,03 | 2010 | 2110 | 2510 | 2620 | 3020 | 4020 | 4530 | 5230 | 6140 (minimum ultimate tensile loads)",
+    "head": "M3 (ISO 4762): dk max 5.50 mm; k max 3.00 mm"
+   },
+   "extra_source_urls": [
+    "https://optimas.com/technical-resources/iso-metric-thread-minimum-ultimate-tensile-loads/",
+    "https://www.fasteners.eu/standards/ISO/4762/"
+   ]
+  },
+  "price_usd": null,
+  "source_url": "https://optimas.com/technical-resources/iso-metric-thread-proof-loads/",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "nut-iso4032-m3-10",
+  "category": "fastener",
+  "manufacturer": "any ISO 4032 maker (property class 10, ISO 898-2)",
+  "name": "ISO 4032 M3 hexagon nut, class 10",
+  "mass_g": 0.4,
+  "specs": {
+   "mass_basis": "per part, computed: ISO 4032 M3 maximum 5.5 mm across flats x 2.4 mm high (fasteners.eu ISO 4032 table) less a 2.5 mm minor-diameter bore, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c)",
+   "property_class": "10",
+   "note": "A class 10 nut matches a class 10.9 bolt (ISO 898-2), so the bolt governs; no separate nut rating is credited.",
+   "quotes": {
+    "nut": "For M3 (preferred thread): Width across flats, s (max): 5.50 mm; Height, m (max): 2.40 mm"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://www.fasteners.eu/standards/ISO/4032/",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tie-hellermanntyton-t18r",
+  "category": "fastener",
+  "manufacturer": "HellermannTyton",
+  "name": "HellermannTyton T18R (111-01919) cable tie, PA66, 100 x 2.5 mm",
+  "mass_g": 0.28,
+  "specs": {
+   "mass_basis": "per part (maker: Weight/Unit)",
+   "dimensions": "100 x 2.5 x 1.0 mm, bundle 1.5-22 mm",
+   "min_loop_tensile_N": 80,
+   "standard": "ANSI/UL 62275, CSA C22.2 no. 62275",
+   "design_values": {
+    "loop_N": 80,
+    "basis": "maker's minimum tensile strength 80 N (rated to ANSI/UL 62275), in full; FoS 1.5 in M7"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://www.hellermanntyton.co.uk/products/cable-ties/t18r-pa66-na/111-01919",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "tie-hellermanntyton-t40r",
+  "category": "fastener",
+  "manufacturer": "HellermannTyton",
+  "name": "HellermannTyton T40R (111-03819) cable tie, PA66, 180 x 4.0 mm",
+  "mass_g": 0.9,
+  "specs": {
+   "mass_basis": "per part (maker: Weight/Unit)",
+   "dimensions": "180 (page also says 175) x 4.0 x 1.15 mm, bundle 1.5-40 mm",
+   "min_loop_tensile_N": 180,
+   "standard": "ANSI/UL 62275, CSA C22.2 no. 62275",
+   "design_values": {
+    "loop_N": 180,
+    "basis": "maker's minimum tensile strength 180 N (rated to ANSI/UL 62275), in full; FoS 1.5 in M7"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://www.hellermanntyton.co.uk/products/cable-ties/t40r-n66-na-c1/111-03819",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "adhesive-araldite-2011-aluminium",
+  "category": "adhesive",
+  "manufacturer": "Huntsman",
+  "name": "Araldite 2011 epoxy, lap shear on aluminium (ISO 4587)",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not counted (in the 15% margin with glue)",
+   "lap_shear_aluminium_psi": 3771,
+   "design_values": {
+    "shear_MPa": 13.0,
+    "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
+   },
+   "quote": "Average lap shear strength, metal-metal joints, sand blasting pre-treatment, psi Aluminum 3,771"
+  },
+  "price_usd": null,
+  "source_url": "https://www.chemical-concepts.com/wp-content/uploads/2023/10/Araldite-2011-TDS.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "screw-iso4762-m3x8-10.9",
+  "category": "fastener",
+  "manufacturer": "any ISO 4762 maker (property class 10.9, ISO 898-1)",
+  "name": "ISO 4762 M3 x 8 socket head cap screw, class 10.9",
+  "mass_g": 1.0,
+  "specs": {
+   "mass_basis": "per part, computed: ISO 4762 M3 maximum head 5.5 mm x 3.0 mm (fasteners.eu ISO 4762 table) plus a 3 mm x 8 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c)",
+   "thread": "M3 coarse",
+   "length_mm": 8,
+   "stress_area_mm2": 5.03,
+   "property_class": "10.9",
+   "proof_load_N": 4180,
+   "min_ultimate_tensile_load_N": 5230,
+   "design_values": {
+    "tension_N": 4180,
+    "shear_N": 2413.3,
+    "basis": "ISO 898-1 minimum proof load Fp for M3 class 10.9, 4180 N (As 5.03 mm2), in full (a specified minimum, as tabulated by Optimas from EN ISO 898-1); tension against the proof load, not the 5230 N ultimate. ISO 898-1 tabulates no shear load: shear against the proof load / sqrt 3 (von Mises on the minimum proof stress over the stress area), the same rule the catalogue applies to metals without a published shear minimum. Linear tension-shear interaction in members.js boltGroupCheck."
+   },
+   "quotes": {
+    "proof_load": "M3 | 5,03 | 1130 | 1560 | 1410 | 1910 | 2210 | 2920 | 3270 | 4180 | 4880 (Proof Load, Fp (As,nom x Sp,nom), N; According to EN ISO 898-1)",
+    "ultimate": "M3 | 5,03 | 2010 | 2110 | 2510 | 2620 | 3020 | 4020 | 4530 | 5230 | 6140 (minimum ultimate tensile loads)",
+    "head": "M3 (ISO 4762): dk max 5.50 mm; k max 3.00 mm"
+   },
+   "extra_source_urls": [
+    "https://optimas.com/technical-resources/iso-metric-thread-minimum-ultimate-tensile-loads/",
+    "https://www.fasteners.eu/standards/ISO/4762/"
+   ]
+  },
+  "price_usd": null,
+  "source_url": "https://optimas.com/technical-resources/iso-metric-thread-proof-loads/",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "composite-rockwest-t-rnd-314-transverse",
+  "category": "material_property",
+  "manufacturer": "Rock West Composites",
+  "name": "T-RND-314 pultruded tube, transverse (Y) compressive yield and XY shear, CLT estimates",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not a part (property record)",
+   "transverse_compressive_yield_psi": 38600,
+   "xy_shear_psi": 13988,
+   "quote": "Y Compressive Yield Strength: 38600.0; XY Shear Strength: 13988.0 (\"All laminate properties and mechanical calculations are based on Classical Lamination Theory ... should be used as a reference only\")",
+   "design_values": {
+    "yield_MPa": 133.1,
+    "basis": "38,600 psi (266 MPa) transverse compressive yield, a classical-lamination-theory estimate on the product page (reference only): counted at half, 133 MPa",
+    "xy_shear_MPa": 48.2,
+    "xy_shear_basis": "XY shear strength 13,988 psi (96.4 MPa), CLT estimate (reference only): counted at half"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://www.rockwestcomposites.com/t-rnd-314.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-msgb1-45",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "MSGB1-45 ground carburized SCM415 spur gear",
+  "mass_g": 130,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 45,
+   "material": "SCM415",
+   "heat_treatment": "Carburized (KHK); teeth ground; tooth hardness 55-60 HRC",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N5 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 45,
+   "outside_dia_mm": 47,
+   "face_width_mm": 10,
+   "bore_mm": 15,
+   "shape": "S1",
+   "fastening": "keyway 5 x 2.3 mm",
+   "backlash_mm": "0.08-0.16 mm",
+   "allowable_torque_bending_nm": 42.3,
+   "allowable_torque_surface_durability_nm": 44.3,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 600 rpm; sigma_Flim 47 kgf/mm2, sigma_Hlim 166 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "SCM415 (KHK lists it as AISI 4115 alloy steel)",
+    "condition": "carburized, ground (case 55-60 HRC)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 830,
+    "allowable_bending_stress_mpa": 460.9,
+    "allowable_bending_stress_kgf_mm2": 47,
+    "allowable_hertz_stress_kgf_mm2": 166,
+    "hardness": "HRc 55-60 (teeth); KHK Table 9.1 material hardness HB 235-321",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "sigma_Flim 47 kgf/mm2 and sigma_Hlim 166 kgf/mm2 from KHK (column MSGA/MSGB); MPa computed x 9.80665. Tensile more than 830 N/mm2 from KHK Table 9.1. No published yield strength was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "KHK: \"No secondary operations can be performed on these finished gears due to the applied carburizing process.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 30,
+   "hub_width_mm": 5,
+   "total_length_mm": 15,
+   "page_quote": "No. of Teeth 45; Bore 15 mm (Ground); Keyway 5 x 2.3 mm; Hub Diameter 30 mm; Face Width 10 mm; Total Length 15 mm; Weight 0.13 kg; Bending Strength 42.3 N\u00b7m; Surface Durability 44.3 N\u00b7m; SCM415 (AISI 4115) Alloy Steel; Carburized; JIS grade N5; Shape S1"
+  },
+  "price_usd": null,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msgb1-45",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
  }
 ]

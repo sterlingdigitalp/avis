@@ -1,0 +1,65 @@
+{
+ "note": "Round 8 (Larus GL-2) exploration and diagnosis. Not gate files. Probes in out/sweep/round8 and the physics agent's scratch probes; every number below was measured by the file or log named with it.",
+ "rows": [
+  {
+   "tag": "keyway gear side (item 1; SPEC crushing ruling after round 7)",
+   "found": "JIS G4051:2016 and G4053:2016 specify no mechanical properties (kikakurui.com text: values not specified); the old JIS-style tables survive as reference values (Furuike stockist sheet). KHK states only 'gear teeth induction hardened' for the SSAG1-40 (core treatment not stated) and 'carburized' for MSGA/MSGB.",
+   "design_values_MPa": { "metal-khk-s45c": 172.5, "metal-khk-scm415": 207.5 },
+   "basis": "S45C: lowest condition with a value (N, yield 345, reference) at half. SCM415: tensile 830 only (reference): half for tensile-only and half again for a reference value. Alternatives disclosed in the catalogue: 245 (S45C H row / 2) and 415 (SCM415 830 / 2).",
+   "6061_T6_2mm_sheet": "EN 485-2 T6 row confirmed (Rm >= 290, Rp0.2 >= 240 MPa, 1.5-3 mm; Metallservice and Alumeco tables): 240 MPa kept",
+   "effect": "every gear-side keyway still rated with FoS >= 1.5 on v18 (out/sweep/round8 members probe)"
+  },
+  {
+   "tag": "DS gear fixings (item 2)",
+   "peak_torque_Nm_v17_with_round8_airframe_grafted": { "DS1-64 on shaft 2": 2.53, "DS1-32 and DS1-20 on shaft 3": 0.79, "DS1-18 on the motor shaft": 0.45 },
+   "options": [
+    "KHK DSF F-Loc (reference slipping torque 2.22 N m at 8 mm bore, 0.62 at 5 mm; KHK calls its values reference only): at half, 1.11 / 0.31 N m; the shaft-3 fixing would reach FoS 1.11 / 0.79 = 1.41 < 1.5, the 5 mm bores far less; no DSF1-18 or DSF1-64 in the 2025 catalogue",
+    "KHK keyed J-series: smallest J bore 8 mm (SSA1-xxJ8, 20-48 teeth, 3 x 1.4 keyway); SUS1 J8 and PS J6/J8 are set-screw only; SS module 1 has no J series; no 5 mm keyed bore for the motor pinion",
+    "steel keyed replacements for the two DS stages (MSGA1-18 + MSGA1-40 class): about +100 g; SSA1-48J8 140 g with 2.13 N m surface (below 2.8)",
+    "other makers: HPC keyless hubs (SUP-005 10.1 N m) need a 14 mm gear bore an 18-20 tooth pinion cannot take; Ruland MCLC-8-8-F 50 N m 'for guidance only', 102 g; no 5 mm Ruland figure read; SDP/SI Fairloc publishes no torque"
+   ],
+   "verdict": "no eligible light rated fixing: the four DS fixings stay unrated (M7 FAIL)",
+   "research": "physics agent scratch research/round8-materials-gears.json"
+  },
+  {
+   "tag": "airframe load path (item 3)",
+   "design": "src/design/airframe.js; d.structure.airframe (positions, plate areas, clearances_mm, fastener and tie counts)",
+   "parts": "7075-T6 shoulder rails 12/10 mm on both plates with 6061-T6 brackets (bonded sleeves, Araldite 2011 Al) and screwed torsion locks; plates 1.6 mm aft / 1.2 mm forward (solid outlines); three 6061-T6 box panels bonded; Rock West T-RND-393 keel / boom in two bonded clamps on the plates; forward tray (bent channel) and aft tray screwed to the plates with doublers; motor on two M3 in its threads; cable ties for battery, ESC, receiver, pitot, servos, FC, GPS, encoder, pod formers and tail",
+   "ratings": "ISO 4762 M3 class 10.9: ISO 898-1 proof load 4180 N (Optimas), shear proof / sqrt 3; HellermannTyton T18R 80 N minimum loop; Araldite 2011 13.0 MPa on aluminium and 9.55 MPa on CFRP (typical, half); Rock West CLT transverse 133 and XY shear 48.2 MPa (half)",
+   "new_load_channels": "sf_origin, wdot, w2 (inertial bound m (|f_o| + r |wdot| + r |w|^2)), tail_F",
+   "mass_added_g_before_margin": 150,
+   "packing": "the frame is not in the film's packing check; computed clearances to every gear tip circle and rocker hub are >= 0 but as small as 0.1-0.7 mm (side panels to the DS1-64, rails to the rocker hubs); the boom over the gearbox is 7 mm above the current pod outline; the spar sockets' sweep past the rails is not checked",
+   "result_v18": "every airframe member FoS >= 1.50 on the M7 population probe (out/sweep/round8 members probe on v18)"
+  },
+  {
+   "tag": "M4 control (item 4)",
+   "baseline_v17_eta0.6": "97/100 nominal; corners 97-99 (seeds 15, 27 on altitude, 79 on pitch)",
+   "found": "at Vrough 15 m/s the stroke sits at its envelope (2.72 Hz) for most of the run, and the balanced TECS pitch split the energy shortfall between height and speed",
+   "change": "TECS speed weight 0.5 above the floor band (control.js tecsWeights, as ArduPlane's TECS_SPDWEIGHT): pitch holds height and lets speed fall to the band before height",
+   "v17_eta0.6": { "spdWeight 1 (base)": "97 / 97-99", "spdWeight 0.75": "100 / 99 / 99", "spdWeight 0.5": "100 / 99 / 100", "spdWeight 0.25": "99 / 98 / 99", "Vrough 14": "93 / 95 / 94", "Vrough 13": "94 / 94 / 95" },
+   "v17_eta0.45_spdWeight0.5": "98 / 98 / 98 (nominal, aero0.9 mass1.05 cg+5, aero1.1 mass1.05 cg+5)",
+   "drive_headroom": "MSGA1-20 + MSGB1-45 crank stage (KHK pages read; train rating 14.16 -> 15.36 N m, limited then by DS1-20): +35 g; on the AR 6 airframe it keeps the crank torque within its rating but M4 drops to 96/100 at aero0.9 mass1.05 (v18g); not adopted"
+  },
+  {
+   "tag": "M1 (item 5)",
+   "launch_climb": "the hand-launch climb command from 1 to 3 m/s (control.launchClimb_m_s): v17 worst corner 1.537 -> 1.095 m over 0-10 deg releases at 8 m/s",
+   "airframe_effect": "AR 7 with the airframe: 2.28 m (v18a), 2.20 m (v18b); AR 6.5: 1.61 m; AR 6: 0.93-1.19 m",
+   "v18": "8 m/s: worst corner 1.03 m at 5 deg (the gate's case), 1.07 at 0 deg, 1.13 at 10 deg (margin 0.37-0.47 m); 7 m/s release (outside the gate's case, information): 2.52 m, fails",
+   "file": "out/sweep/round8/v18-m1-corners.json"
+  },
+  {
+   "tag": "AR 6 wing and V5",
+   "what": "aspect ratio 7 -> 6 at 2.0 m span (S 0.571 -> 0.667 m2); the calibration was refitted on the new wing by V5",
+   "v5": "PASS, worst held-out lift 1.4%, thrust 2.6% (out/sweep/round8/v5-v18h.log; data/calibration/larus-gl-2.json)",
+   "cost": "crank torque peak about 14.9 N m on the M7 population against the 14.16 N m train rating (MSGA1-18 surface durability at stage 4)"
+  },
+  {
+   "tag": "eta_s bisection on v18 (item 4)",
+   "rule": ">= 98 of 100 seeds at nominal and at each of the 8 robustness corners; eta_s constant on every strip; design flown as built at 0.6",
+   "points": { "0.6": "pass, worst 98", "0.55": "pass, worst 98", "0.5375": "pass, worst 98", "0.525": "fail, worst 97", "0.5": "fail, worst 96", "0.4": "fail, worst 93" },
+   "lowest_passing_eta_s": 0.5375,
+   "target": "0.45 not reached; the hard seeds (15, 27) are energy-limited with the stroke at its motor-speed envelope",
+   "file": "out/sweep/round8/v18-m4-eta-bisection.json"
+  }
+ ]
+}

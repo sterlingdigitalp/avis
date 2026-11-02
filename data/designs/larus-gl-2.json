@@ -7,7 +7,7 @@
  "params": {
   "candidate": "larus",
   "span_m": 2,
-  "AR": 7,
+  "AR": 6,
   "taper": 0.6,
   "elbowFrac": 0.5,
   "elbowGain": 0,
@@ -38,7 +38,7 @@
    "teRod": "rod-ec-1-5mm",
    "ribMaterial": "balsa-wood-database",
    "film": "film-oracover-air-light",
-   "keel": "tube-ec-woven-8x6",
+   "keel": "tube-rockwest-pultruded-10x8",
    "gears": [
     "gear-khk-ds1-18",
     "gear-khk-ds1-32",
@@ -68,14 +68,14 @@
    "quote": "AM32 'Complementary PWM: Applies PWM to the complementary output during the PWM off time. This acts as a brake slowing the motor when going from a higher duty cycle to lower duty cycle'; default on (EEPROM byte 20 = 1)",
    "source": "https://github.com/AlkaMotors/AM32-MultiRotor-ESC-firmware/wiki/ESC-Settings-Explained"
   },
-  "bodyWidth_m": 0.07,
-  "bodyHeight_m": 0.14,
-  "bodyY_m": -0.01,
+  "bodyWidth_m": 0.08,
+  "bodyHeight_m": 0.13,
+  "bodyY_m": -0.02,
   "lumpPos": {
    "flap motor": [
     0.093,
-    0.0128,
-    0
+    0.0006,
+    -0.0001
    ],
    "ESC": [
     0.074,
@@ -89,17 +89,17 @@
    ],
    "GPS": [
     -0.03,
-    0.024,
+    0.021,
     0
    ],
    "receiver and airspeed": [
     0.1135,
-    -0.014,
+    -0.026,
     0
    ],
    "tail servos": [
     -0.08,
-    -0.003,
+    -0.006,
     0
    ],
    "stroke servo": [
@@ -109,8 +109,8 @@
    ],
    "gears and bearings": [
     0.0236,
-    -0.0333,
-    0.0051
+    -0.037,
+    0.007
    ],
    "crank, rockers, plates": [
     0.0015,
@@ -250,7 +250,7 @@
    },
    "plates": {
     "material": "metal-al-6061-t6",
-    "t_mm": 2,
+    "t_mm": 1.6,
     "area_m2": 0.00295,
     "boss_wall_mm": 2,
     "edge_mm": 5,
@@ -258,8 +258,10 @@
      "crank shaft/aft",
      "crank shaft/forward",
      "gear shaft 1/aft"
-    ]
-   }
+    ],
+    "t_fwd_mm": 1.2
+   },
+   "airframe": {}
   }
  },
  "atmosphere": {
@@ -285,20 +287,20 @@
   "segments": [
    {
     "length": 0.4875,
-    "chord_in": 0.3377986086919804,
-    "chord_out": 0.3209086782573814,
-    "xle_in": 0.11822951304219313,
-    "xle_out": 0.11822951304219313,
+    "chord_in": 0.3940983768073105,
+    "chord_out": 0.37439345796694495,
+    "xle_in": 0.13793443188255866,
+    "xle_out": 0.13793443188255866,
     "gain": 0,
     "twist_in": 0,
     "twist_out": 0
    },
    {
     "length": 0.4875,
-    "chord_in": 0.3209086782573814,
-    "chord_out": 0.19254520695442884,
-    "xle_in": 0.11822951304219313,
-    "xle_out": -0.0009651388819771067,
+    "chord_in": 0.37439345796694495,
+    "chord_out": 0.22463607478016698,
+    "xle_in": 0.13793443188255866,
+    "xle_out": -0.00112599536230662,
     "gain": 0,
     "twist_in": 0,
     "twist_out": 1
@@ -307,16 +309,16 @@
  },
  "geometry": {
   "span_m": 2,
-  "area_m2": 0.5714285714285714,
-  "AR": 7,
-  "mac_m": 0.29992362924286614,
-  "chord_root_m": 0.3377986086919804,
-  "chord_elbow_m": 0.3209086782573814,
-  "chord_tip_m": 0.19254520695442884,
-  "tail_arm_m": 0.810716660860753,
-  "wing_loading_N_m2": 19.701919328609865,
-  "x_np_m": -0.019462698564759025,
-  "x_cg_m": 0.01052966435952759,
+  "area_m2": 0.6666666666666666,
+  "AR": 6,
+  "mac_m": 0.34991090078334386,
+  "chord_root_m": 0.3940983768073105,
+  "chord_elbow_m": 0.37439345796694495,
+  "chord_tip_m": 0.22463607478016698,
+  "tail_arm_m": 0.9458361043375452,
+  "wing_loading_N_m2": 20.072223828204432,
+  "x_np_m": -0.018995305438456157,
+  "x_cg_m": 0.015995784639878233,
   "static_margin": 0.1
  },
  "drive": {
@@ -399,11 +401,11 @@
   }
  },
  "tail": {
-  "x_m": -0.810716660860753,
+  "x_m": -0.9458361043375452,
   "y_m": 0.02,
   "z_m": 0.005,
-  "span_each_m": 0.5250386504752053,
-  "chord_root_m": 0.17648357999166567,
+  "span_each_m": 0.5671065583953004,
+  "chord_root_m": 0.1906240532421178,
   "taper": 0.7,
   "dihedral_rad": 0.6108652381980153,
   "incidence_rad": 0,
@@ -411,7 +413,7 @@
   "AR_each": 3.5,
   "lift_factor": 0.6681818181818182,
   "kEps": 1,
-  "area_total_m2": 0.15752319113875704,
+  "area_total_m2": 0.1837770563285499,
   "deflection_max_rad": 0.5235987755982988
  },
  "body": {
@@ -419,126 +421,126 @@
    "kind": "elliptic-loft",
    "sections": [
     {
-     "x_m": 0.2274112486936694,
-     "y_m": -0.01,
+     "x_m": 0.3936245511614785,
+     "y_m": -0.02,
      "width_m": 0,
      "height_m": 0
     },
     {
-     "x_m": 0.19131422509149967,
-     "y_m": -0.01,
-     "width_m": 0.039921798556678295,
-     "height_m": 0.07984359711335659
+     "x_m": 0.3527018331494233,
+     "y_m": -0.02,
+     "width_m": 0.04562491263620376,
+     "height_m": 0.07414048303383111
     },
     {
-     "x_m": 0.15521720148932994,
-     "y_m": -0.01,
-     "width_m": 0.05361902647381804,
-     "height_m": 0.10723805294763608
+     "x_m": 0.3117791151373681,
+     "y_m": -0.02,
+     "width_m": 0.06127888739864918,
+     "height_m": 0.09957819202280492
     },
     {
-     "x_m": 0.11912017788716017,
-     "y_m": -0.01,
-     "width_m": 0.06199798383818623,
-     "height_m": 0.12399596767637246
+     "x_m": 0.27085639712531295,
+     "y_m": -0.02,
+     "width_m": 0.07085483867221283,
+     "height_m": 0.11513911284234585
     },
     {
-     "x_m": 0.08302315428499044,
-     "y_m": -0.01,
-     "width_m": 0.0670820393249937,
-     "height_m": 0.1341640786499874
+     "x_m": 0.22993367911325777,
+     "y_m": -0.02,
+     "width_m": 0.07666518779999279,
+     "height_m": 0.12458093017498828
     },
     {
-     "x_m": 0.04692613068282067,
-     "y_m": -0.01,
-     "width_m": 0.06959705453537528,
-     "height_m": 0.13919410907075055
+     "x_m": 0.18901096110120258,
+     "y_m": -0.02,
+     "width_m": 0.07953949089757174,
+     "height_m": 0.1292516727085541
     },
     {
-     "x_m": 0.010829107080650935,
-     "y_m": -0.01,
-     "width_m": 0.07,
-     "height_m": 0.14
+     "x_m": 0.1480882430891474,
+     "y_m": -0.02,
+     "width_m": 0.08,
+     "height_m": 0.13
     },
     {
-     "x_m": -0.02526791652151883,
-     "y_m": -0.01,
-     "width_m": 0.07,
-     "height_m": 0.14
+     "x_m": 0.1071655250770922,
+     "y_m": -0.02,
+     "width_m": 0.08,
+     "height_m": 0.13
     },
     {
-     "x_m": -0.06136494012368854,
-     "y_m": -0.01,
-     "width_m": 0.07,
-     "height_m": 0.14
+     "x_m": 0.06624280706503705,
+     "y_m": -0.02,
+     "width_m": 0.08,
+     "height_m": 0.13
     },
     {
-     "x_m": -0.09746196372585836,
-     "y_m": -0.01,
-     "width_m": 0.07,
-     "height_m": 0.14
+     "x_m": 0.02532008905298183,
+     "y_m": -0.02,
+     "width_m": 0.08,
+     "height_m": 0.13
     },
     {
-     "x_m": -0.13355898732802807,
-     "y_m": -0.00816326530612245,
-     "width_m": 0.05714285714285715,
-     "height_m": 0.1142857142857143
+     "x_m": -0.015602628959073328,
+     "y_m": -0.0163265306122449,
+     "width_m": 0.0653061224489796,
+     "height_m": 0.10612244897959185
     },
     {
-     "x_m": -0.16965601093019783,
-     "y_m": -0.006122448979591837,
-     "width_m": 0.042857142857142864,
-     "height_m": 0.08571428571428573
+     "x_m": -0.05652534697112854,
+     "y_m": -0.012244897959183675,
+     "width_m": 0.0489795918367347,
+     "height_m": 0.07959183673469389
     },
     {
-     "x_m": -0.20575303453236754,
-     "y_m": -0.004081632653061226,
-     "width_m": 0.02857142857142858,
-     "height_m": 0.05714285714285716
+     "x_m": -0.0974480649831837,
+     "y_m": -0.008163265306122451,
+     "width_m": 0.032653061224489806,
+     "height_m": 0.05306122448979594
     },
     {
-     "x_m": -0.24185005813453736,
-     "y_m": -0.0020408163265306107,
-     "width_m": 0.01428571428571428,
-     "height_m": 0.02857142857142856
+     "x_m": -0.13837078299523892,
+     "y_m": -0.004081632653061221,
+     "width_m": 0.01632653061224489,
+     "height_m": 0.026530612244897948
     },
     {
-     "x_m": -0.27794708173670707,
+     "x_m": -0.17929350100729408,
      "y_m": 0,
-     "width_m": 0.008,
-     "height_m": 0.008
+     "width_m": 0.009982,
+     "height_m": 0.009982
     },
     {
-     "x_m": -0.9430793458545023,
+     "x_m": -1.0888041442691336,
      "y_m": 0,
-     "width_m": 0.008,
-     "height_m": 0.008
+     "width_m": 0.009982,
+     "height_m": 0.009982
     }
    ]
   },
-  "loft_wetted_area_m2": 0.1450373712365781,
-  "CdA_front_m2": 0.0019242255003237487,
-  "CdA_top_m2": 0.028300066504101086,
-  "CdA_side_m2": 0.05660013300820217,
-  "volume_m3": 0.0024681969191083434,
+  "loft_wetted_area_m2": 0.17150816341463992,
+  "CdA_front_m2": 0.0020420352248333657,
+  "CdA_top_m2": 0.03666675533880145,
+  "CdA_side_m2": 0.059583477425552346,
+  "volume_m3": 0.003001113192951275,
   "kMunk": 0.8,
   "cp": [
    0.05,
    0,
    0
   ],
-  "length_m": 0.5053583304303765,
-  "width_m": 0.07,
-  "height_m": 0.14,
-  "bottom_y_m": -0.08,
-  "centre_y_m": -0.01
+  "length_m": 0.5729180521687726,
+  "width_m": 0.08,
+  "height_m": 0.13,
+  "bottom_y_m": -0.085,
+  "centre_y_m": -0.02
  },
  "mass": {
-  "total_kg": 1.148020946638097,
-  "total_g": 1148.020946638097,
+  "total_kg": 1.3645314712094638,
+  "total_g": 1364.531471209464,
   "parts_g": 681.6474000000001,
-  "structure_g": 316.63168403312795,
-  "margin_g": 149.74186260496919,
+  "structure_g": 504.90170539953357,
+  "margin_g": 177.98236580993003,
   "margin_frac": 0.15,
   "lumps": [
    {
@@ -546,8 +548,8 @@
     "mass_kg": 0.161,
     "pos": [
      0.093,
-     0.0128,
-     0
+     0.0006,
+     -0.0001
     ],
     "gyration_m": 0
    },
@@ -556,14 +558,14 @@
     "mass_kg": 0.31848951,
     "pos": [
      0.0236,
-     -0.0333,
-     0.0051
+     -0.037,
+     0.007
     ],
     "gyration_m": 0
    },
    {
     "name": "crank, rockers, plates",
-    "mass_kg": 0.12594770193087865,
+    "mass_kg": 0.31184242172032,
     "pos": [
      0.0015,
      -0.056,
@@ -606,7 +608,7 @@
     "mass_kg": 0.0046,
     "pos": [
      0.1135,
-     -0.014,
+     -0.026,
      0
     ],
     "gyration_m": 0
@@ -616,7 +618,7 @@
     "mass_kg": 0.009545,
     "pos": [
      -0.03,
-     0.024,
+     0.021,
      0
     ],
     "gyration_m": 0
@@ -626,7 +628,7 @@
     "mass_kg": 0.07060999999999999,
     "pos": [
      -0.08,
-     -0.003,
+     -0.006,
      0
     ],
     "gyration_m": 0
@@ -645,7 +647,7 @@
     "name": "pitot-static probe",
     "mass_kg": 0.0051865,
     "pos": [
-     0.2674112486936694,
+     0.2978131234759476,
      0,
      0
     ],
@@ -653,29 +655,29 @@
    },
    {
     "name": "keel and boom",
-    "mass_kg": 0.03497551716082908,
+    "mass_kg": 0.053146024837434414,
     "pos": [
-     -0.34850551825695913,
+     -0.40846477129978565,
      0,
      0
     ],
-    "gyration_m": 0.2680824627102004
+    "gyration_m": 0.3116753731619005
    },
    {
     "name": "fuselage shell and formers",
-    "mass_kg": 0.01105970601606946,
+    "mass_kg": 0.011925754961152285,
     "pos": [
      -0.05,
      0,
      0
     ],
-    "gyration_m": 0.15160749912911295
+    "gyration_m": 0.17187541565063177
    },
    {
     "name": "tail surfaces",
-    "mass_kg": 0.015185945268210608,
+    "mass_kg": 0.017152589556129614,
     "pos": [
-     -0.810716660860753,
+     -0.9458361043375452,
      0.02,
      0
     ],
@@ -685,7 +687,7 @@
     "name": "battery",
     "mass_kg": 0.11959999999999998,
     "pos": [
-     0.15265587810781986,
+     0.3436245511614785,
      -0.005,
      0
     ],
@@ -694,7 +696,7 @@
   ],
   "wing": {
    "spar_kg_per_m": 0.0430675,
-   "skin_kg_per_m2": 0.06826961876584953,
+   "skin_kg_per_m2": 0.07293572189349112,
    "point": [
     {
      "name": "twist servo",
@@ -715,9 +717,9 @@
      "d_m": 0
     }
    ],
-   "one_wing_kg": 0.11586266786167129
+   "one_wing_kg": 0.12066896979783037
   },
-  "x_battery_m": 0.15265587810781986
+  "x_battery_m": 0.3436245511614785
  },
  "motor": {
   "id": "motor-cobra-c-2820-14",
@@ -828,47 +830,47 @@
     "name": "wing film, both faces",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 20.01142857142857,
-    "basis": "17 g/m2 x 1.177 m2",
+    "mass_g": 23.346666666666668,
+    "basis": "17 g/m2 x 1.373 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "ribs, 20 off",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 13.911363361912816,
-    "basis": "area 2.32e-3 m2 x 0.002 m x 150 kg/m3 each",
+    "mass_g": 18.93491124260355,
+    "basis": "area 3.16e-3 m2 x 0.002 m x 150 kg/m3 each",
     "source_url": "https://www.wood-database.com/balsa/"
    },
    {
     "name": "tail surfaces, film, spar and ribs",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 13.205169798444008,
-    "basis": "film 5.5 g + rods 5.7 g + ribs 2.0 g",
+    "mass_g": 14.915295266199667,
+    "basis": "film 6.4 g + rods 6.1 g + ribs 2.4 g",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "keel and tail boom",
-    "material_id": "tube-ec-woven-8x6",
-    "material": "8 mm x 6 mm woven finish carbon tube",
-    "mass_g": 30.413493183329635,
-    "basis": "32.9 g/m x 0.924 m",
-    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+    "material_id": "tube-rockwest-pultruded-10x8",
+    "material": "Tube - Pultruded Unidirectional - 0.314 x 0.393 x 78 Inch (T-RND-393)",
+    "mass_g": 46.21393464124732,
+    "basis": "43 g/m x 1.075 m",
+    "source_url": "https://www.rockwestcomposites.com/t-rnd-393.html"
    },
    {
     "name": "fuselage film shell",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 2.267135666147357,
-    "basis": "0.133 m2",
+    "mass_g": 2.570221705349813,
+    "basis": "0.151 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "fuselage formers",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 7.350000000000001,
+    "mass_g": 7.800000000000001,
     "basis": "5 off, 50% lightened, 2 mm",
     "source_url": "https://www.wood-database.com/balsa/"
    },
@@ -1012,17 +1014,137 @@
     "name": "gearbox plates, 2 off",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 15.930000000000001,
-    "basis": "2.95e-3 m2 (round 5's carbon cheek allowance) x 2 mm; 2.7 g/cm3",
+    "mass_g": 58.294906946201145,
+    "basis": "solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft 79.8 cm2 x 1.6 mm, forward 73.5 cm2 x 1.2 mm; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "gearbox plate bosses",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 4.614371289592689,
+    "mass_g": 4.980806656707402,
     "basis": "bosses 2 mm wall round the seats crank shaft/aft, crank shaft/forward, gear shaft 1/aft, as long as the bushing, beyond the plate; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "shoulder rail right aft seat boss",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 3.0599897844127986,
+    "basis": "ring 25/12 x 3 mm on the aft plate",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "shoulder rail right",
+    "material_id": "metal-al-7075-t6",
+    "material": "Aluminium 7075-T6 / T651",
+    "mass_g": 9.918117963125855,
+    "basis": "12/10 mm tube x 90.5 mm plus a 2 mm lock flange; 2.81 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
+   },
+   {
+    "name": "shoulder bracket right",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 7.745028268233252,
+    "basis": "two sleeves 16/12 x 8 mm and two arms 10 x 6 x 12.2 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "shoulder rail left aft seat boss",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 3.0599897844127986,
+    "basis": "ring 25/12 x 3 mm on the aft plate",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "shoulder rail left",
+    "material_id": "metal-al-7075-t6",
+    "material": "Aluminium 7075-T6 / T651",
+    "mass_g": 9.918117963125855,
+    "basis": "12/10 mm tube x 90.5 mm plus a 2 mm lock flange; 2.81 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
+   },
+   {
+    "name": "shoulder bracket left",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 7.745028268233252,
+    "basis": "two sleeves 16/12 x 8 mm and two arms 10 x 6 x 12.2 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "tail boom clamp blocks, 2 off",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 5.448610687574375,
+    "basis": "13 x 19 mm blocks x 6 mm, bored 9.982 mm (a 6 mm screw flange); 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "forward tray flange doubler",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 2.8511999999999995,
+    "basis": "22 mm x 2 mm 6061-T6 under the flange screws",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "forward tray",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 21.609769893167055,
+    "basis": "channel 22 x 7 x 0.8 mm sheet (28.8 mm2) x 278 mm (to 268 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "aft tray",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 7.972019999999999,
+    "basis": "channel 26 x 6 x 0.6 mm sheet (22.8 mm2) x 130 mm (to 120 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "motor doubler",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 2.4192,
+    "basis": "28 mm x 2 mm 6061-T6 under the flange screws",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "gearbox panels, 3 off",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 13.0491675,
+    "basis": "side panel right 21.5 x 0.85 mm, side panel left 11.7 x 1.5 mm, top panel 20 x 0.7 mm, each 65.0 mm plus two 16 mm flanges; 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "M3 screws, 14 off",
+    "material_id": "screw-iso4762-m3x8-10.9",
+    "material": "ISO 4762 M3 x 8 socket head cap screw, class 10.9",
+    "mass_g": 14,
+    "basis": "14 x 1 g (per part, computed: ISO 4762 M3 maximum head 5.5 mm x 3.0 mm (fasteners.eu ISO 4762 table) plus a 3 mm x 8 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
+    "source_url": "https://optimas.com/technical-resources/iso-metric-thread-proof-loads/"
+   },
+   {
+    "name": "M3 nuts, 12 off",
+    "material_id": "nut-iso4032-m3-10",
+    "material": "ISO 4032 M3 hexagon nut, class 10",
+    "mass_g": 4.800000000000001,
+    "basis": "12 x 0.4 g (per part, computed: ISO 4032 M3 maximum 5.5 mm across flats x 2.4 mm high (fasteners.eu ISO 4032 table) less a 2.5 mm minor-diameter bore, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
+    "source_url": "https://www.fasteners.eu/standards/ISO/4032/"
+   },
+   {
+    "name": "cable ties tie-hellermanntyton-t18r, 19 off",
+    "material_id": "tie-hellermanntyton-t18r",
+    "material": "HellermannTyton T18R (111-01919) cable tie, PA66, 100 x 2.5 mm",
+    "mass_g": 5.32,
+    "basis": "19 x 0.28 g (maker's weight per unit)",
+    "source_url": "https://www.hellermanntyton.co.uk/products/cable-ties/t18r-pa66-na/111-01919"
    },
    {
     "name": "pitot-static probe",
@@ -1128,7 +1250,7 @@
    "length_m": 0.08,
    "E_GPa": 68.9,
    "allowable_MPa": 240,
-   "allowable_basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+   "allowable_basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
    "kind": "metal link"
   },
   "twist_rod": {
@@ -2222,12 +2344,12 @@
     "side_material": {
      "id": "metal-khk-scm415",
      "name": "SCM415 alloy steel as KHK states it (gear material)",
-     "yield_MPa": 830,
+     "yield_MPa": 207.5,
      "shear_MPa": null,
      "shear_yield_MPa": null,
      "bearing_yield_MPa": null,
      "bearing_e_over_d_min": null,
-     "basis": "KHK Table 9.1 tensile strength 830 N/mm2 (JIS SCM415); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (disclosed)",
+     "basis": "Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415.",
      "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/",
      "E_GPa": null
     },
@@ -2252,7 +2374,7 @@
     "uses": {
      "T": "T"
     },
-    "note": "bearing on the gear-khk-msgb1-40 keyway (2.3 mm deep), KHK Table 9.1 tensile strength 830 N/mm2 (JIS SCM415); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (disclosed)"
+    "note": "bearing on the gear-khk-msgb1-40 keyway (2.3 mm deep), Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415."
    },
    {
     "name": "gear shaft 1",
@@ -2473,12 +2595,12 @@
     "side_material": {
      "id": "metal-khk-s45c",
      "name": "S45C carbon steel as KHK states it (gear material)",
-     "yield_MPa": 690,
+     "yield_MPa": 172.5,
      "shear_MPa": null,
      "shear_yield_MPa": null,
      "bearing_yield_MPa": null,
      "bearing_e_over_d_min": null,
-     "basis": "KHK Table 9.1 tensile strength 690 N/mm2 (JIS S45C, heat treatment not stated); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (less conservative than a yield; disclosed)",
+     "basis": "Round 8 (crushing ruling after round 7). JIS G4051:2016 specifies no mechanical properties (\"機械的性質の値は規定していない\", kikakurui.com G4051); the old JIS-style table survives as reference values only (Furuike stockist sheet: N 345/570, H 490/690 N/mm2 yield/tensile, A none). KHK states only \"Gear teeth induction hardened\" for the SSAG1-40 and not the treatment of its core, where the keyway is, so the lowest condition with a value, N (normalized) yield 345, is used, and as a reference value (no stated basis) it counts at half: 172.5 MPa. Not used: KHK Table 9.1 tensile 690 (the H row; a general table, not the SSAG's stated treatment), which would give 245 (490 / 2).",
      "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/",
      "E_GPa": null
     },
@@ -2503,7 +2625,7 @@
     "uses": {
      "T": "T"
     },
-    "note": "bearing on the gear-khk-ssag1-40j10 keyway (1.8 mm deep), KHK Table 9.1 tensile strength 690 N/mm2 (JIS S45C, heat treatment not stated); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (less conservative than a yield; disclosed)"
+    "note": "bearing on the gear-khk-ssag1-40j10 keyway (1.8 mm deep), Round 8 (crushing ruling after round 7). JIS G4051:2016 specifies no mechanical properties (\"機械的性質の値は規定していない\", kikakurui.com G4051); the old JIS-style table survives as reference values only (Furuike stockist sheet: N 345/570, H 490/690 N/mm2 yield/tensile, A none). KHK states only \"Gear teeth induction hardened\" for the SSAG1-40 and not the treatment of its core, where the keyway is, so the lowest condition with a value, N (normalized) yield 345, is used, and as a reference value (no stated basis) it counts at half: 172.5 MPa. Not used: KHK Table 9.1 tensile 690 (the H row; a general table, not the SSAG's stated treatment), which would give 245 (490 / 2)."
    },
    {
     "name": "key, pinion gear-khk-msga1-18 on gear shaft 1, gear side",
@@ -2525,12 +2647,12 @@
     "side_material": {
      "id": "metal-khk-scm415",
      "name": "SCM415 alloy steel as KHK states it (gear material)",
-     "yield_MPa": 830,
+     "yield_MPa": 207.5,
      "shear_MPa": null,
      "shear_yield_MPa": null,
      "bearing_yield_MPa": null,
      "bearing_e_over_d_min": null,
-     "basis": "KHK Table 9.1 tensile strength 830 N/mm2 (JIS SCM415); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (disclosed)",
+     "basis": "Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415.",
      "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/",
      "E_GPa": null
     },
@@ -2555,7 +2677,7 @@
     "uses": {
      "T": "T"
     },
-    "note": "bearing on the gear-khk-msga1-18 keyway (1.4 mm deep), KHK Table 9.1 tensile strength 830 N/mm2 (JIS SCM415); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (disclosed)"
+    "note": "bearing on the gear-khk-msga1-18 keyway (1.4 mm deep), Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415."
    },
    {
     "name": "gear shaft 2",
@@ -2723,12 +2845,12 @@
     "side_material": {
      "id": "metal-khk-scm415",
      "name": "SCM415 alloy steel as KHK states it (gear material)",
-     "yield_MPa": 830,
+     "yield_MPa": 207.5,
      "shear_MPa": null,
      "shear_yield_MPa": null,
      "bearing_yield_MPa": null,
      "bearing_e_over_d_min": null,
-     "basis": "KHK Table 9.1 tensile strength 830 N/mm2 (JIS SCM415); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (disclosed)",
+     "basis": "Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415.",
      "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/",
      "E_GPa": null
     },
@@ -2753,7 +2875,7 @@
     "uses": {
      "T": "T"
     },
-    "note": "bearing on the gear-khk-msga1-18 keyway (1.4 mm deep), KHK Table 9.1 tensile strength 830 N/mm2 (JIS SCM415); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (disclosed)"
+    "note": "bearing on the gear-khk-msga1-18 keyway (1.4 mm deep), Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415."
    },
    {
     "name": "gear-khk-ds1-64 on gear shaft 2, fixing",
@@ -3327,7 +3449,7 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
@@ -3366,7 +3488,7 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
@@ -3412,7 +3534,7 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
@@ -3832,7 +3954,7 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
@@ -3871,7 +3993,7 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
@@ -3917,7 +4039,7 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
@@ -3963,7 +4085,7 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
@@ -4010,7 +4132,7 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
@@ -4057,7 +4179,7 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
@@ -4100,14 +4222,14 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
     "dims": {
      "d_mm": 10,
      "D_mm": 20,
-     "t_mm": 2
+     "t_mm": 1.2
     },
     "sections": [
      {
@@ -4143,14 +4265,14 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
     "dims": {
      "d_mm": 10,
      "D_mm": 20,
-     "t_mm": 2
+     "t_mm": 1.6
     },
     "sections": [
      {
@@ -4186,14 +4308,14 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
     "dims": {
      "d_mm": 10,
      "D_mm": 20,
-     "t_mm": 2
+     "t_mm": 1.2
     },
     "sections": [
      {
@@ -4229,14 +4351,14 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
     "dims": {
      "d_mm": 13,
      "D_mm": 23,
-     "t_mm": 2
+     "t_mm": 1.6
     },
     "sections": [
      {
@@ -4272,14 +4394,14 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
     "dims": {
      "d_mm": 13,
      "D_mm": 23,
-     "t_mm": 2
+     "t_mm": 1.2
     },
     "sections": [
      {
@@ -4315,14 +4437,14 @@
      "shear_yield_MPa": 138.6,
      "bearing_yield_MPa": 193,
      "bearing_e_over_d_min": 2,
-     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0",
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
     "dims": {
      "d_mm": 13,
      "D_mm": 23,
-     "t_mm": 2
+     "t_mm": 1.2
     },
     "sections": [
      {
@@ -4342,18 +4464,260 @@
     "note": "the plate alone, judged as a 5 mm ring round the bearing-skf-619-5-2z"
    },
    {
-    "name": "gearbox plates between seats",
-    "kind": "plate",
-    "check": "unrated",
-    "why": "the drive layout (model.js) gives the two plates no mounts to the airframe, so the path from the seats to the keel cannot be sized or rated",
-    "material": null,
-    "dims": {},
+    "name": "shoulder rail right",
+    "kind": "shaft",
+    "check": "round",
+    "material": {
+     "id": "metal-al-7075-t6",
+     "name": "Aluminium 7075-T6 / T651",
+     "density_g_cm3": 2.81,
+     "yield_MPa": 485,
+     "shear_MPa": null,
+     "shear_yield_MPa": 280,
+     "bearing_yield_MPa": null,
+     "bearing_e_over_d_min": null,
+     "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
+     "E_GPa": 71.7
+    },
+    "dims": {
+     "d_mm": 12,
+     "di_mm": 10
+    },
+    "sections": [
+     {
+      "name": "M at x 5.5 mm",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.00875
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.01203125
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 0.72916667
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M at x 12.0 mm",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.0108
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.01265625
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 0.90000001
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.0121758
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.0121758
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 1.01464965
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "V aft",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 1.08461538
+       },
+       {
+        "ch": "coupler_R",
+        "k": 1.15384615
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 90.38461611
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "V fwd",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.18461538
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.21634615
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 15.38461551
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "M": [
+      "M at x 5.5 mm",
+      "M at x 12.0 mm"
+     ],
+     "T": "T",
+     "V": [
+      "V aft",
+      "V fwd"
+     ]
+    },
+    "note": "a 12/10 mm tube on the two plates (x 5.5 and 70.5 mm), the shoulder housings at x -12.0 (overhung) and 12.0 mm, 4 mm outboard and 11.5 mm above the hinge (the bracket arm, 12.2 mm, gives the torsion)"
+   },
+   {
+    "name": "plate seat shoulder rail right aft",
+    "kind": "seat",
+    "check": "lug",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "d_mm": 12,
+     "D_mm": 25,
+     "t_mm": 4.6
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 1.08461538
+       },
+       {
+        "ch": "coupler_R",
+        "k": 1.15384615
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 90.38461611
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    }
+   },
+   {
+    "name": "plate seat shoulder rail right forward",
+    "kind": "seat",
+    "check": "lug",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "d_mm": 12,
+     "D_mm": 25,
+     "t_mm": 1.2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.18461538
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.21634615
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 15.38461551
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    }
+   },
+   {
+    "name": "shoulder bracket right aft, sleeve bond",
+    "kind": "bond",
+    "check": "bond",
+    "material": {
+     "id": "adhesive-araldite-2011-aluminium",
+     "shear_MPa": 13,
+     "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
+    },
+    "dims": {
+     "d_mm": 12,
+     "L_mm": 8
+    },
     "sections": [
      {
       "name": "T",
       "radial": [
        {
-        "ch": "crank_torque",
+        "ch": "root_yz_R",
+        "k": 0.0060879
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.00837086
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 0.50732482
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_x_R",
         "k": 1
        }
       ],
@@ -4361,11 +4725,3479 @@
      }
     ],
     "uses": {
-     "T": "T"
+     "T": "T",
+     "F": "F"
+    },
+    "note": "Araldite 2011 aluminium to aluminium: the housing force times the arm as torque, the wing root axial force along the rail"
+   },
+   {
+    "name": "shoulder bracket right aft, arm",
+    "kind": "web",
+    "check": "web",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 10,
+     "h_mm": 6,
+     "lever_mm": 12.176
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.5
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.6875
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 41.666667
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "the housing boss to the rail sleeve, the bushing force at the arm length"
+   },
+   {
+    "name": "shoulder bracket right forward, sleeve bond",
+    "kind": "bond",
+    "check": "bond",
+    "material": {
+     "id": "adhesive-araldite-2011-aluminium",
+     "shear_MPa": 13,
+     "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
+    },
+    "dims": {
+     "d_mm": 12,
+     "L_mm": 8
+    },
+    "sections": [
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.0060879
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.00380494
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 0.50732482
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_x_R",
+        "k": 1
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "T": "T",
+     "F": "F"
+    },
+    "note": "Araldite 2011 aluminium to aluminium: the housing force times the arm as torque, the wing root axial force along the rail"
+   },
+   {
+    "name": "shoulder bracket right forward, arm",
+    "kind": "web",
+    "check": "web",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 10,
+     "h_mm": 6,
+     "lever_mm": 12.176
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.5
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.3125
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 41.666667
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "the housing boss to the rail sleeve, the bushing force at the arm length"
+   },
+   {
+    "name": "shoulder rail right, torsion lock screws",
+    "kind": "fasteners",
+    "check": "bolts",
+    "fastener": {
+     "id": "screw-iso4762-m3x8-10.9",
+     "tension_N": 4180,
+     "shear_N": 2413.3
+    },
+    "dims": {
+     "n": 2,
+     "r_max_mm": 14,
+     "sum_r2_mm2": 392
+    },
+    "sections": [
+     {
+      "name": "V",
+      "radial": [],
+      "axial": []
+     },
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.0121758
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.0121758
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 1.01464965
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_x_R",
+        "k": 1
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "V": "V",
+     "T": "T",
+     "M": "M",
+     "F": "F"
+    },
+    "note": "a flange on the rail at the aft plate's front face, screwed to it: the rail torque on 2 M3 screws at 14 mm, the root axial force as tension"
+   },
+   {
+    "name": "shoulder rail right, torsion lock screws in the plate",
+    "kind": "seat",
+    "check": "seat",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "d_mm": 3,
+     "t_mm": 1.6,
+     "e_over_d": 2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.43485
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.43485
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 36.2374875
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "an M3 screw bearing in the plate, edge distance at least 2 d"
+   },
+   {
+    "name": "shoulder rail left",
+    "kind": "shaft",
+    "check": "round",
+    "material": {
+     "id": "metal-al-7075-t6",
+     "name": "Aluminium 7075-T6 / T651",
+     "density_g_cm3": 2.81,
+     "yield_MPa": 485,
+     "shear_MPa": null,
+     "shear_yield_MPa": 280,
+     "bearing_yield_MPa": null,
+     "bearing_e_over_d_min": null,
+     "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
+     "E_GPa": 71.7
+    },
+    "dims": {
+     "d_mm": 12,
+     "di_mm": 10
+    },
+    "sections": [
+     {
+      "name": "M at x 5.5 mm",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.00875
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.01567708
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 0.72916667
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M at x 12.0 mm",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.0108
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.01471875
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 0.90000001
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.0121758
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.0121758
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 1.01464965
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "V aft",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 1.08461538
+       },
+       {
+        "ch": "coupler_L",
+        "k": 1.23076911
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 90.38461611
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "V fwd",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.18461538
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.25160251
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 15.38461551
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "M": [
+      "M at x 5.5 mm",
+      "M at x 12.0 mm"
+     ],
+     "T": "T",
+     "V": [
+      "V aft",
+      "V fwd"
+     ]
+    },
+    "note": "a 12/10 mm tube on the two plates (x 5.5 and 70.5 mm), the shoulder housings at x -12.0 (overhung) and 12.0 mm, 4 mm outboard and 11.5 mm above the hinge (the bracket arm, 12.2 mm, gives the torsion)"
+   },
+   {
+    "name": "plate seat shoulder rail left aft",
+    "kind": "seat",
+    "check": "lug",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "d_mm": 12,
+     "D_mm": 25,
+     "t_mm": 4.6
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 1.08461538
+       },
+       {
+        "ch": "coupler_L",
+        "k": 1.23076911
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 90.38461611
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
     }
+   },
+   {
+    "name": "plate seat shoulder rail left forward",
+    "kind": "seat",
+    "check": "lug",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "d_mm": 12,
+     "D_mm": 25,
+     "t_mm": 1.2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.18461538
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.25160251
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 15.38461551
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    }
+   },
+   {
+    "name": "shoulder bracket left aft, sleeve bond",
+    "kind": "bond",
+    "check": "bond",
+    "material": {
+     "id": "adhesive-araldite-2011-aluminium",
+     "shear_MPa": 13,
+     "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
+    },
+    "dims": {
+     "d_mm": 12,
+     "L_mm": 8
+    },
+    "sections": [
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.0060879
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.01090748
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 0.50732482
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_x_L",
+        "k": 1
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "T": "T",
+     "F": "F"
+    },
+    "note": "Araldite 2011 aluminium to aluminium: the housing force times the arm as torque, the wing root axial force along the rail"
+   },
+   {
+    "name": "shoulder bracket left aft, arm",
+    "kind": "web",
+    "check": "web",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 10,
+     "h_mm": 6,
+     "lever_mm": 12.176
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.5
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.895833
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 41.666667
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "the housing boss to the rail sleeve, the bushing force at the arm length"
+   },
+   {
+    "name": "shoulder bracket left forward, sleeve bond",
+    "kind": "bond",
+    "check": "bond",
+    "material": {
+     "id": "adhesive-araldite-2011-aluminium",
+     "shear_MPa": 13,
+     "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
+    },
+    "dims": {
+     "d_mm": 12,
+     "L_mm": 8
+    },
+    "sections": [
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.0060879
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.00126832
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 0.50732482
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_x_L",
+        "k": 1
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "T": "T",
+     "F": "F"
+    },
+    "note": "Araldite 2011 aluminium to aluminium: the housing force times the arm as torque, the wing root axial force along the rail"
+   },
+   {
+    "name": "shoulder bracket left forward, arm",
+    "kind": "web",
+    "check": "web",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 10,
+     "h_mm": 6,
+     "lever_mm": 12.176
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.5
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.104167
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 41.666667
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "the housing boss to the rail sleeve, the bushing force at the arm length"
+   },
+   {
+    "name": "shoulder rail left, torsion lock screws",
+    "kind": "fasteners",
+    "check": "bolts",
+    "fastener": {
+     "id": "screw-iso4762-m3x8-10.9",
+     "tension_N": 4180,
+     "shear_N": 2413.3
+    },
+    "dims": {
+     "n": 2,
+     "r_max_mm": 14,
+     "sum_r2_mm2": 392
+    },
+    "sections": [
+     {
+      "name": "V",
+      "radial": [],
+      "axial": []
+     },
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.0121758
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.0121758
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 1.01464965
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_x_L",
+        "k": 1
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "V": "V",
+     "T": "T",
+     "M": "M",
+     "F": "F"
+    },
+    "note": "a flange on the rail at the aft plate's front face, screwed to it: the rail torque on 2 M3 screws at 14 mm, the root axial force as tension"
+   },
+   {
+    "name": "shoulder rail left, torsion lock screws in the plate",
+    "kind": "seat",
+    "check": "seat",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "d_mm": 3,
+     "t_mm": 1.6,
+     "e_over_d": 2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_L",
+        "k": 0.43485
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.43485
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 36.2374875
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "an M3 screw bearing in the plate, edge distance at least 2 d"
+   },
+   {
+    "name": "tail boom at the aft clamp",
+    "kind": "tube",
+    "check": "cfrp tube",
+    "material": {
+     "id": "tube-rockwest-pultruded-10x8",
+     "axial_MPa": 841,
+     "shear_MPa": 48.2
+    },
+    "dims": {
+     "d_mm": 9.982,
+     "di_mm": 7.976
+    },
+    "sections": [
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 0.9473361
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.04142284
+       },
+       {
+        "ch": "wdot",
+        "k": 0.02736077
+       },
+       {
+        "ch": "w2",
+        "k": 0.02736077
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 0.32555328
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "V",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 1
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.07029861
+       },
+       {
+        "ch": "wdot",
+        "k": 0.04153644
+       },
+       {
+        "ch": "w2",
+        "k": 0.04153644
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "M": "M",
+     "T": "T",
+     "V": "V"
+    },
+    "note": "the tail force and the tail and boom inertia at 947 mm (boom at half that); torsion from the tail force at 326 mm (half the V-tail span plus its height off the boom)"
+   },
+   {
+    "name": "tail boom in the aft clamp, bearing",
+    "kind": "seat",
+    "check": "seat",
+    "material": {
+     "id": "composite-rockwest-t-rnd-393-transverse",
+     "yield_MPa": 133.1
+    },
+    "dims": {
+     "d_mm": 9.982,
+     "t_mm": 6
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 13.97720685
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.63773477
+       },
+       {
+        "ch": "wdot",
+        "k": 0.41634151
+       },
+       {
+        "ch": "w2",
+        "k": 0.41634151
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "the boom moment as a couple between clamps 73 mm apart, on Rock West's transverse compressive estimate (half)"
+   },
+   {
+    "name": "tail boom aft clamp screws",
+    "kind": "fasteners",
+    "check": "bolts",
+    "fastener": {
+     "id": "screw-iso4762-m3x8-10.9",
+     "tension_N": 4180,
+     "shear_N": 2413.3
+    },
+    "dims": {
+     "n": 2,
+     "r_max_mm": 7,
+     "sum_r2_mm2": 98,
+     "lever_mm": 14,
+     "n_far": 1
+    },
+    "sections": [
+     {
+      "name": "V",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 13.97720685
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.63773477
+       },
+       {
+        "ch": "wdot",
+        "k": 0.41634151
+       },
+       {
+        "ch": "w2",
+        "k": 0.41634151
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 0.43737093
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.00510188
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00333073
+       },
+       {
+        "ch": "w2",
+        "k": 0.00333073
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 0.05590883
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.00255094
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00166537
+       },
+       {
+        "ch": "w2",
+        "k": 0.00166537
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 1
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.07029861
+       },
+       {
+        "ch": "wdot",
+        "k": 0.04153644
+       },
+       {
+        "ch": "w2",
+        "k": 0.04153644
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "V": "V",
+     "T": "T",
+     "M": "M",
+     "F": "F"
+    },
+    "note": "2 M3 through the plate: the clamp force in shear, the boom torque and the force at the screws' 8 mm offset as in-plane torsion, the force at half the clamp length as prying, the boom's axial load as tension"
+   },
+   {
+    "name": "tail boom aft clamp screws in the plate",
+    "kind": "seat",
+    "check": "seat",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "d_mm": 3,
+     "t_mm": 1.6,
+     "e_over_d": 2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 38.22938413
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.68328739
+       },
+       {
+        "ch": "wdot",
+        "k": 0.44608005
+       },
+       {
+        "ch": "w2",
+        "k": 0.44608005
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "an M3 screw bearing in the plate, edge distance at least 2 d"
+   },
+   {
+    "name": "aft plate under the aft boom clamp",
+    "kind": "plate",
+    "check": "plate",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 20,
+     "t_mm": 1.6
+    },
+    "sections": [
+     {
+      "name": "Mo",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 0.05590883
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.00255094
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00166537
+       },
+       {
+        "ch": "w2",
+        "k": 0.00166537
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "Mo": "Mo"
+    },
+    "note": "the flange's prying moment as out-of-plane bending of the plate over the flange width"
+   },
+   {
+    "name": "tail boom in the forward clamp, bearing",
+    "kind": "seat",
+    "check": "seat",
+    "material": {
+     "id": "composite-rockwest-t-rnd-393-transverse",
+     "yield_MPa": 133.1
+    },
+    "dims": {
+     "d_mm": 9.982,
+     "t_mm": 6
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 12.97720685
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.56743616
+       },
+       {
+        "ch": "wdot",
+        "k": 0.37480507
+       },
+       {
+        "ch": "w2",
+        "k": 0.37480507
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "the boom moment as a couple between clamps 73 mm apart, on Rock West's transverse compressive estimate (half)"
+   },
+   {
+    "name": "tail boom forward clamp screws",
+    "kind": "fasteners",
+    "check": "bolts",
+    "fastener": {
+     "id": "screw-iso4762-m3x8-10.9",
+     "tension_N": 4180,
+     "shear_N": 2413.3
+    },
+    "dims": {
+     "n": 2,
+     "r_max_mm": 7,
+     "sum_r2_mm2": 98,
+     "lever_mm": 14,
+     "n_far": 1
+    },
+    "sections": [
+     {
+      "name": "V",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 12.97720685
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.56743616
+       },
+       {
+        "ch": "wdot",
+        "k": 0.37480507
+       },
+       {
+        "ch": "w2",
+        "k": 0.37480507
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 0.42937093
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.00453949
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00299844
+       },
+       {
+        "ch": "w2",
+        "k": 0.00299844
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 0.05190883
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.00226974
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00149922
+       },
+       {
+        "ch": "w2",
+        "k": 0.00149922
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 1
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.07029861
+       },
+       {
+        "ch": "wdot",
+        "k": 0.04153644
+       },
+       {
+        "ch": "w2",
+        "k": 0.04153644
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "V": "V",
+     "T": "T",
+     "M": "M",
+     "F": "F"
+    },
+    "note": "2 M3 through the plate: the clamp force in shear, the boom torque and the force at the screws' 8 mm offset as in-plane torsion, the force at half the clamp length as prying, the boom's axial load as tension"
+   },
+   {
+    "name": "tail boom forward clamp screws in the plate",
+    "kind": "seat",
+    "check": "seat",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "d_mm": 3,
+     "t_mm": 1.2,
+     "e_over_d": 2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 37.15795556
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.60796737
+       },
+       {
+        "ch": "wdot",
+        "k": 0.40157683
+       },
+       {
+        "ch": "w2",
+        "k": 0.40157683
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "an M3 screw bearing in the plate, edge distance at least 2 d"
+   },
+   {
+    "name": "forward plate under the forward boom clamp",
+    "kind": "plate",
+    "check": "plate",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 20,
+     "t_mm": 1.2
+    },
+    "sections": [
+     {
+      "name": "Mo",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 0.05190883
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.00226974
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00149922
+       },
+       {
+        "ch": "w2",
+        "k": 0.00149922
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "Mo": "Mo"
+    },
+    "note": "the flange's prying moment as out-of-plane bending of the plate over the flange width"
+   },
+   {
+    "name": "tail boom clamp bonds",
+    "kind": "bond",
+    "check": "bond",
+    "material": {
+     "id": "adhesive-araldite-2011",
+     "shear_MPa": 9.55,
+     "basis": "2770 psi (19.1 MPa) on CFRP, ISO 4587, typical: counted at half, 9.55 MPa"
+    },
+    "dims": {
+     "d_mm": 9.982,
+     "L_mm": 12
+    },
+    "sections": [
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 0.32555328
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 1
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.07029861
+       },
+       {
+        "ch": "wdot",
+        "k": 0.04153644
+       },
+       {
+        "ch": "w2",
+        "k": 0.04153644
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "T": "T",
+     "F": "F"
+    },
+    "note": "Araldite 2011 on CFRP (typical, half) in both clamp bores: the boom torque and its axial load (bounded by the whole tail force and inertia)"
+   },
+   {
+    "name": "forward tray at the root",
+    "kind": "beam",
+    "check": "beam",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "A_mm2": 28.8,
+     "Zi_mm3": 181.199,
+     "Zo_mm3": 23.146,
+     "section": "channel 22 x 7 x 0.8 mm"
+    },
+    "sections": [
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.03291451
+       },
+       {
+        "ch": "wdot",
+        "k": 0.01125757
+       },
+       {
+        "ch": "w2",
+        "k": 0.01125757
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "Mo",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.03291451
+       },
+       {
+        "ch": "wdot",
+        "k": 0.01125757
+       },
+       {
+        "ch": "w2",
+        "k": 0.01125757
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "M": "M",
+     "Mo": "Mo"
+    },
+    "note": "a bent-sheet channel: the carried parts' inertia moment about the root, taken both vertically and laterally at full value"
+   },
+   {
+    "name": "forward tray screws",
+    "kind": "fasteners",
+    "check": "bolts",
+    "fastener": {
+     "id": "screw-iso4762-m3x8-10.9",
+     "tension_N": 4180,
+     "shear_N": 2413.3
+    },
+    "dims": {
+     "n": 2,
+     "r_max_mm": 9,
+     "sum_r2_mm2": 162,
+     "lever_mm": 8,
+     "n_far": 1
+    },
+    "sections": [
+     {
+      "name": "V",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.13087
+       },
+       {
+        "ch": "wdot",
+        "k": 0.04218347
+       },
+       {
+        "ch": "w2",
+        "k": 0.04218347
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.00287914
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00092804
+       },
+       {
+        "ch": "w2",
+        "k": 0.00092804
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.03291451
+       },
+       {
+        "ch": "wdot",
+        "k": 0.01125757
+       },
+       {
+        "ch": "w2",
+        "k": 0.01125757
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.13087
+       },
+       {
+        "ch": "wdot",
+        "k": 0.04218347
+       },
+       {
+        "ch": "w2",
+        "k": 0.04218347
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "V": "V",
+     "T": "T",
+     "M": "M",
+     "F": "F"
+    },
+    "note": "2 M3 through the tray flange and the plate: the root moment as prying about the flange edge (8 mm, one screw), the parts' force in shear and as tension, its offset of 22 mm above the tray as in-plane torsion"
+   },
+   {
+    "name": "forward tray screws in the plate",
+    "kind": "seat",
+    "check": "seat",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "d_mm": 3,
+     "t_mm": 1.2,
+     "e_over_d": 2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.22538722
+       },
+       {
+        "ch": "wdot",
+        "k": 0.07264952
+       },
+       {
+        "ch": "w2",
+        "k": 0.07264952
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "an M3 screw bearing in the plate, edge distance at least 2 d"
+   },
+   {
+    "name": "forward plate under the forward tray flange",
+    "kind": "plate",
+    "check": "plate",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 22,
+     "t_mm": 2.2054
+    },
+    "sections": [
+     {
+      "name": "Mo",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.03291451
+       },
+       {
+        "ch": "wdot",
+        "k": 0.01125757
+       },
+       {
+        "ch": "w2",
+        "k": 0.01125757
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "Mo": "Mo"
+    },
+    "note": "the flange's prying moment as out-of-plane bending of the plate over the flange width, with a 2 mm 6061-T6 doubler under the same screws (unbonded: t_eff 2.21 mm)"
+   },
+   {
+    "name": "forward tray: battery ties",
+    "kind": "tie",
+    "check": "tie",
+    "tie": {
+     "id": "tie-hellermanntyton-t18r",
+     "loop_N": 80
+    },
+    "dims": {
+     "n": 2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.1196
+       },
+       {
+        "ch": "wdot",
+        "k": 0.04110185
+       },
+       {
+        "ch": "w2",
+        "k": 0.04110185
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "2 x tie-hellermanntyton-t18r round the part and the tray"
+   },
+   {
+    "name": "forward tray: ESC ties",
+    "kind": "tie",
+    "check": "tie",
+    "tie": {
+     "id": "tie-hellermanntyton-t18r",
+     "loop_N": 80
+    },
+    "dims": {
+     "n": 1
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.00667
+       },
+       {
+        "ch": "wdot",
+        "k": 0.000546
+       },
+       {
+        "ch": "w2",
+        "k": 0.000546
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "1 x tie-hellermanntyton-t18r round the part and the tray"
+   },
+   {
+    "name": "forward tray: receiver and airspeed ties",
+    "kind": "tie",
+    "check": "tie",
+    "tie": {
+     "id": "tie-hellermanntyton-t18r",
+     "loop_N": 80
+    },
+    "dims": {
+     "n": 1
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.0046
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00053562
+       },
+       {
+        "ch": "w2",
+        "k": 0.00053562
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "1 x tie-hellermanntyton-t18r round the part and the tray"
+   },
+   {
+    "name": "aft tray at the root",
+    "kind": "beam",
+    "check": "beam",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "A_mm2": 22.8,
+     "Zi_mm3": 157.58,
+     "Zo_mm3": 13.143,
+     "section": "channel 26 x 6 x 0.6 mm"
+    },
+    "sections": [
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.00945923
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00067385
+       },
+       {
+        "ch": "w2",
+        "k": 0.00067385
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "Mo",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.00945923
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00067385
+       },
+       {
+        "ch": "w2",
+        "k": 0.00067385
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "M": "M",
+     "Mo": "Mo"
+    },
+    "note": "a bent-sheet channel: the carried parts' inertia moment about the root, taken both vertically and laterally at full value"
+   },
+   {
+    "name": "aft tray screws",
+    "kind": "fasteners",
+    "check": "bolts",
+    "fastener": {
+     "id": "screw-iso4762-m3x8-10.9",
+     "tension_N": 4180,
+     "shear_N": 2413.3
+    },
+    "dims": {
+     "n": 2,
+     "r_max_mm": 8,
+     "sum_r2_mm2": 128,
+     "lever_mm": 8,
+     "n_far": 1
+    },
+    "sections": [
+     {
+      "name": "V",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.090505
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00624562
+       },
+       {
+        "ch": "w2",
+        "k": 0.00624562
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.00271515
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00018737
+       },
+       {
+        "ch": "w2",
+        "k": 0.00018737
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.00945923
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00067385
+       },
+       {
+        "ch": "w2",
+        "k": 0.00067385
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.090505
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00624562
+       },
+       {
+        "ch": "w2",
+        "k": 0.00624562
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "V": "V",
+     "T": "T",
+     "M": "M",
+     "F": "F"
+    },
+    "note": "2 M3 through the tray flange and the plate: the root moment as prying about the flange edge (8 mm, one screw), the parts' force in shear and as tension, its offset of 30 mm above the tray as in-plane torsion"
+   },
+   {
+    "name": "aft tray screws in the plate",
+    "kind": "seat",
+    "check": "seat",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "d_mm": 3,
+     "t_mm": 1.6,
+     "e_over_d": 2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.21494938
+       },
+       {
+        "ch": "wdot",
+        "k": 0.01483344
+       },
+       {
+        "ch": "w2",
+        "k": 0.01483344
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "an M3 screw bearing in the plate, edge distance at least 2 d"
+   },
+   {
+    "name": "aft plate under the aft tray flange",
+    "kind": "plate",
+    "check": "plate",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 26,
+     "t_mm": 1.6
+    },
+    "sections": [
+     {
+      "name": "Mo",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.00945923
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00067385
+       },
+       {
+        "ch": "w2",
+        "k": 0.00067385
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "Mo": "Mo"
+    },
+    "note": "the flange's prying moment as out-of-plane bending of the plate over the flange width"
+   },
+   {
+    "name": "aft tray: tail servos ties",
+    "kind": "tie",
+    "check": "tie",
+    "tie": {
+     "id": "tie-hellermanntyton-t18r",
+     "loop_N": 80
+    },
+    "dims": {
+     "n": 2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.07061
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00566466
+       },
+       {
+        "ch": "w2",
+        "k": 0.00566466
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "2 x tie-hellermanntyton-t18r round the part and the tray"
+   },
+   {
+    "name": "aft tray: flight controller ties",
+    "kind": "tie",
+    "check": "tie",
+    "tie": {
+     "id": "tie-hellermanntyton-t18r",
+     "loop_N": 80
+    },
+    "dims": {
+     "n": 1
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.01035
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00023143
+       },
+       {
+        "ch": "w2",
+        "k": 0.00023143
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "1 x tie-hellermanntyton-t18r round the part and the tray"
+   },
+   {
+    "name": "aft tray: GPS ties",
+    "kind": "tie",
+    "check": "tie",
+    "tie": {
+     "id": "tie-hellermanntyton-t18r",
+     "loop_N": 80
+    },
+    "dims": {
+     "n": 1
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.009545
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00034953
+       },
+       {
+        "ch": "w2",
+        "k": 0.00034953
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "1 x tie-hellermanntyton-t18r round the part and the tray"
+   },
+   {
+    "name": "motor mount screws",
+    "kind": "fasteners",
+    "check": "bolts",
+    "fastener": {
+     "id": "screw-iso4762-m3x8-10.9",
+     "tension_N": 4180,
+     "shear_N": 2413.3
+    },
+    "dims": {
+     "n": 2,
+     "r_max_mm": 8,
+     "sum_r2_mm2": 128,
+     "lever_mm": 11.313708498984761,
+     "n_far": 2
+    },
+    "sections": [
+     {
+      "name": "V",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.161
+       },
+       {
+        "ch": "wdot",
+        "k": 0.01497332
+       },
+       {
+        "ch": "w2",
+        "k": 0.01497332
+       },
+       {
+        "ch": "crank_torque",
+        "k": 4.20890623
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "crank_torque",
+        "k": 0.04187729779411765
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.003542
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00032941
+       },
+       {
+        "ch": "w2",
+        "k": 0.00032941
+       },
+       {
+        "ch": "crank_torque",
+        "k": 0.05261133
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.161
+       },
+       {
+        "ch": "wdot",
+        "k": 0.01497332
+       },
+       {
+        "ch": "w2",
+        "k": 0.01497332
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "V": "V",
+     "T": "T",
+     "M": "M",
+     "F": "F"
+    },
+    "note": "2 M3 in the motor's own threads on a 16 mm circle: the motor's inertia and the first mesh force (gear-khk-ds1-18) in shear, the motor torque (crank torque / G / efficiency) as torsion, both forces at their offsets as prying"
+   },
+   {
+    "name": "motor mount screws in the plate",
+    "kind": "seat",
+    "check": "seat",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "d_mm": 3,
+     "t_mm": 1.2,
+     "e_over_d": 2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.0805
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00748666
+       },
+       {
+        "ch": "w2",
+        "k": 0.00748666
+       },
+       {
+        "ch": "crank_torque",
+        "k": 4.72178423
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "an M3 screw bearing in the plate, edge distance at least 2 d"
+   },
+   {
+    "name": "forward plate under the motor",
+    "kind": "plate",
+    "check": "plate",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 28,
+     "t_mm": 2.2054
+    },
+    "sections": [
+     {
+      "name": "Mo",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.003542
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00032941
+       },
+       {
+        "ch": "w2",
+        "k": 0.00032941
+       },
+       {
+        "ch": "crank_torque",
+        "k": 0.05261133
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "Mo": "Mo"
+    },
+    "note": "the flange's prying moment as out-of-plane bending of the plate over the flange width, with a 2 mm 6061-T6 doubler under the same screws (unbonded: t_eff 2.21 mm)"
+   },
+   {
+    "name": "crank encoder ties",
+    "kind": "tie",
+    "check": "tie",
+    "tie": {
+     "id": "tie-hellermanntyton-t18r",
+     "loop_N": 80
+    },
+    "dims": {
+     "n": 2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.01242
+       },
+       {
+        "ch": "wdot",
+        "k": 0.000621
+       },
+       {
+        "ch": "w2",
+        "k": 0.000621
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "2 x tie-hellermanntyton-t18r: the readhead on its bracket to the aft plate's crank boss"
+   },
+   {
+    "name": "pod formers ties",
+    "kind": "tie",
+    "check": "tie",
+    "tie": {
+     "id": "tie-hellermanntyton-t18r",
+     "loop_N": 80
+    },
+    "dims": {
+     "n": 5,
+     "extra_N": 0.6398
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.01192575
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00059629
+       },
+       {
+        "ch": "w2",
+        "k": 0.00059629
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "5 x tie-hellermanntyton-t18r (balsa formers to the boom and trays: no published bond strength on balsa); the pod's inertia plus its drag at 25 m/s (0.64 N)"
+   },
+   {
+    "name": "pitot-static probe ties",
+    "kind": "tie",
+    "check": "tie",
+    "tie": {
+     "id": "tie-hellermanntyton-t18r",
+     "loop_N": 80
+    },
+    "dims": {
+     "n": 2,
+     "extra_N": 0.0119
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.0051865
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00154461
+       },
+       {
+        "ch": "w2",
+        "k": 0.00154461
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "2 x tie-hellermanntyton-t18r to the battery and the forward tray's nose: its inertia and the drag of its 6.35 mm tip at 25 m/s (Cd 1.2)"
+   },
+   {
+    "name": "tail surfaces ties",
+    "kind": "tie",
+    "check": "tie",
+    "tie": {
+     "id": "tie-hellermanntyton-t18r",
+     "loop_N": 80
+    },
+    "dims": {
+     "n": 2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 1
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.01715259
+       },
+       {
+        "ch": "wdot",
+        "k": 0.01622717
+       },
+       {
+        "ch": "w2",
+        "k": 0.01622717
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "2 x tie-hellermanntyton-t18r: the tail's aerodynamic force and inertia"
+   },
+   {
+    "name": "aft plate below the rail seats",
+    "kind": "plate",
+    "check": "plate",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 77,
+     "t_mm": 1.6
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 1.08461538
+       },
+       {
+        "ch": "coupler_R",
+        "k": 1.15384615
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 90.38461611
+       },
+       {
+        "ch": "root_yz_L",
+        "k": 1.08461538
+       },
+       {
+        "ch": "coupler_L",
+        "k": 1.23076911
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 90.38461611
+       },
+       {
+        "ch": "tail_F",
+        "k": 13.97720685
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.63773477
+       },
+       {
+        "ch": "wdot",
+        "k": 0.41634151
+       },
+       {
+        "ch": "w2",
+        "k": 0.41634151
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.03145385
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.03346154
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 2.62115387
+       },
+       {
+        "ch": "root_yz_L",
+        "k": 0.03145385
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.0356923
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 2.62115387
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F",
+     "M": "M"
+    },
+    "note": "the section 19.0 mm up, 77.0 mm wide: both rails' reactions and the boom clamp force, the rails' at their 29 mm offset as in-plane bending"
+   },
+   {
+    "name": "aft plate post to the boom clamp",
+    "kind": "plate",
+    "check": "plate",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 12,
+     "t_mm": 1.6
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 13.97720685
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.63773477
+       },
+       {
+        "ch": "wdot",
+        "k": 0.41634151
+       },
+       {
+        "ch": "w2",
+        "k": 0.41634151
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 0.04892022
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.00223207
+       },
+       {
+        "ch": "wdot",
+        "k": 0.0014572
+       },
+       {
+        "ch": "w2",
+        "k": 0.0014572
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F",
+     "M": "M"
+    },
+    "note": "a 12 mm post 3.5 mm from the plate's outline to the pad: the pad force axially and at the post length"
+   },
+   {
+    "name": "aft plate post to the aft tray",
+    "kind": "plate",
+    "check": "plate",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 12,
+     "t_mm": 1.6
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.090505
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00624562
+       },
+       {
+        "ch": "w2",
+        "k": 0.00624562
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.00081514
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00005625
+       },
+       {
+        "ch": "w2",
+        "k": 0.00005625
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F",
+     "M": "M"
+    },
+    "note": "a 12 mm post 9.0 mm from the plate's outline to the pad: the pad force axially and at the post length"
+   },
+   {
+    "name": "forward plate below the rail seats",
+    "kind": "plate",
+    "check": "plate",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 77,
+     "t_mm": 1.2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.18461538
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.21634615
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 15.38461551
+       },
+       {
+        "ch": "root_yz_L",
+        "k": 0.18461538
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.25160251
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 15.38461551
+       },
+       {
+        "ch": "tail_F",
+        "k": 12.97720685
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.56743616
+       },
+       {
+        "ch": "wdot",
+        "k": 0.37480507
+       },
+       {
+        "ch": "w2",
+        "k": 0.37480507
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "root_yz_R",
+        "k": 0.00535385
+       },
+       {
+        "ch": "coupler_R",
+        "k": 0.00627404
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 0.44615385
+       },
+       {
+        "ch": "root_yz_L",
+        "k": 0.00535385
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.00729647
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 0.44615385
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F",
+     "M": "M"
+    },
+    "note": "the section 19.0 mm up, 77.0 mm wide: both rails' reactions and the boom clamp force, the rails' at their 29 mm offset as in-plane bending"
+   },
+   {
+    "name": "forward plate post to the boom clamp",
+    "kind": "plate",
+    "check": "plate",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 12,
+     "t_mm": 1.2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 12.97720685
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.56743616
+       },
+       {
+        "ch": "wdot",
+        "k": 0.37480507
+       },
+       {
+        "ch": "w2",
+        "k": 0.37480507
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "tail_F",
+        "k": 0.04542022
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.00198603
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00131182
+       },
+       {
+        "ch": "w2",
+        "k": 0.00131182
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F",
+     "M": "M"
+    },
+    "note": "a 12 mm post 3.5 mm from the plate's outline to the pad: the pad force axially and at the post length"
+   },
+   {
+    "name": "gearbox side panel right",
+    "kind": "panel",
+    "check": "panel",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "h_mm": 21.5,
+     "b_mm": 65,
+     "t_mm": 0.85
+    },
+    "sections": [
+     {
+      "name": "V",
+      "radial": [
+       {
+        "ch": "coupler_R",
+        "k": 0.50673397
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.61523866
+       },
+       {
+        "ch": "crank_torque",
+        "k": 17.71601086
+       },
+       {
+        "ch": "root_yz_R",
+        "k": 0.36677204
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 30.56433872
+       },
+       {
+        "ch": "root_yz_L",
+        "k": 0.36677204
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 30.56433872
+       },
+       {
+        "ch": "tail_F",
+        "k": 31.18578132
+       },
+       {
+        "ch": "sf_origin",
+        "k": 1.71137953
+       },
+       {
+        "ch": "wdot",
+        "k": 0.9606327
+       },
+       {
+        "ch": "w2",
+        "k": 0.9606327
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "V": "V"
+    },
+    "note": "x-y plane at z 31 mm, y 3 to 24.5 mm: half the forward plate's net force (every force on it summed as a magnitude) plus its torsion about the crank axis over the sides' 62 mm spacing"
+   },
+   {
+    "name": "gearbox side panel right flange bond",
+    "kind": "bond",
+    "check": "lap",
+    "material": {
+     "id": "adhesive-araldite-2011-aluminium",
+     "shear_MPa": 13,
+     "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
+    },
+    "dims": {
+     "w_mm": 21.5,
+     "L_mm": 16
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "coupler_R",
+        "k": 0.50673397
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.61523866
+       },
+       {
+        "ch": "crank_torque",
+        "k": 17.71601086
+       },
+       {
+        "ch": "root_yz_R",
+        "k": 0.36677204
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 30.56433872
+       },
+       {
+        "ch": "root_yz_L",
+        "k": 0.36677204
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 30.56433872
+       },
+       {
+        "ch": "tail_F",
+        "k": 31.18578132
+       },
+       {
+        "ch": "sf_origin",
+        "k": 1.71137953
+       },
+       {
+        "ch": "wdot",
+        "k": 0.9606327
+       },
+       {
+        "ch": "w2",
+        "k": 0.9606327
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "Araldite 2011 aluminium to aluminium, one end flange (each end has one)"
+   },
+   {
+    "name": "gearbox side panel left",
+    "kind": "panel",
+    "check": "panel",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "h_mm": 11.7,
+     "b_mm": 65,
+     "t_mm": 1.5
+    },
+    "sections": [
+     {
+      "name": "V",
+      "radial": [
+       {
+        "ch": "coupler_R",
+        "k": 0.50673397
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.61523866
+       },
+       {
+        "ch": "crank_torque",
+        "k": 17.71601086
+       },
+       {
+        "ch": "root_yz_R",
+        "k": 0.36677204
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 30.56433872
+       },
+       {
+        "ch": "root_yz_L",
+        "k": 0.36677204
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 30.56433872
+       },
+       {
+        "ch": "tail_F",
+        "k": 31.18578132
+       },
+       {
+        "ch": "sf_origin",
+        "k": 1.71137953
+       },
+       {
+        "ch": "wdot",
+        "k": 0.9606327
+       },
+       {
+        "ch": "w2",
+        "k": 0.9606327
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "V": "V"
+    },
+    "note": "x-y plane at z -31 mm, y 12.8 to 24.5 mm: half the forward plate's net force (every force on it summed as a magnitude) plus its torsion about the crank axis over the sides' 62 mm spacing"
+   },
+   {
+    "name": "gearbox side panel left flange bond",
+    "kind": "bond",
+    "check": "lap",
+    "material": {
+     "id": "adhesive-araldite-2011-aluminium",
+     "shear_MPa": 13,
+     "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
+    },
+    "dims": {
+     "w_mm": 11.7,
+     "L_mm": 16
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "coupler_R",
+        "k": 0.50673397
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.61523866
+       },
+       {
+        "ch": "crank_torque",
+        "k": 17.71601086
+       },
+       {
+        "ch": "root_yz_R",
+        "k": 0.36677204
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 30.56433872
+       },
+       {
+        "ch": "root_yz_L",
+        "k": 0.36677204
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 30.56433872
+       },
+       {
+        "ch": "tail_F",
+        "k": 31.18578132
+       },
+       {
+        "ch": "sf_origin",
+        "k": 1.71137953
+       },
+       {
+        "ch": "wdot",
+        "k": 0.9606327
+       },
+       {
+        "ch": "w2",
+        "k": 0.9606327
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "Araldite 2011 aluminium to aluminium, one end flange (each end has one)"
+   },
+   {
+    "name": "gearbox top panel",
+    "kind": "panel",
+    "check": "panel",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "h_mm": 20,
+     "b_mm": 65,
+     "t_mm": 0.7
+    },
+    "sections": [
+     {
+      "name": "V",
+      "radial": [
+       {
+        "ch": "coupler_R",
+        "k": 0.37019215
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.48237151
+       },
+       {
+        "ch": "crank_torque",
+        "k": 4.20890623
+       },
+       {
+        "ch": "root_yz_R",
+        "k": 0.18461538
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 15.38461551
+       },
+       {
+        "ch": "root_yz_L",
+        "k": 0.18461538
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 15.38461551
+       },
+       {
+        "ch": "tail_F",
+        "k": 12.97720685
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.85930616
+       },
+       {
+        "ch": "wdot",
+        "k": 0.43196186
+       },
+       {
+        "ch": "w2",
+        "k": 0.43196186
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "V": "V"
+    },
+    "note": "x-z plane at y 56.5 mm, 20 mm wide: the forward plate's whole net force"
+   },
+   {
+    "name": "gearbox top panel flange bond",
+    "kind": "bond",
+    "check": "lap",
+    "material": {
+     "id": "adhesive-araldite-2011-aluminium",
+     "shear_MPa": 13,
+     "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
+    },
+    "dims": {
+     "w_mm": 20,
+     "L_mm": 16
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "coupler_R",
+        "k": 0.37019215
+       },
+       {
+        "ch": "coupler_L",
+        "k": 0.48237151
+       },
+       {
+        "ch": "crank_torque",
+        "k": 4.20890623
+       },
+       {
+        "ch": "root_yz_R",
+        "k": 0.18461538
+       },
+       {
+        "ch": "root_mperp_R",
+        "k": 15.38461551
+       },
+       {
+        "ch": "root_yz_L",
+        "k": 0.18461538
+       },
+       {
+        "ch": "root_mperp_L",
+        "k": 15.38461551
+       },
+       {
+        "ch": "tail_F",
+        "k": 12.97720685
+       },
+       {
+        "ch": "sf_origin",
+        "k": 0.85930616
+       },
+       {
+        "ch": "wdot",
+        "k": 0.43196186
+       },
+       {
+        "ch": "w2",
+        "k": 0.43196186
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F"
+    },
+    "note": "Araldite 2011 aluminium to aluminium, one end flange (each end has one)"
    }
   ],
-  "members_unchecked": []
+  "members_unchecked": [],
+  "airframe": {
+   "layout_note": "frame parts are not in the film packing check (model.js places none); positions stated here, clearances computed from the drive layout",
+   "parts": {
+    "rails": {
+     "right": [
+      0.029,
+      0.0315
+     ],
+     "left": [
+      -0.029,
+      0.0315
+     ]
+    },
+    "boom_y_m": 0.062,
+    "clamp_spacing_m": 0.07300000000000001,
+    "tail_lever_m": 0.9473361043375451,
+    "trays": {
+     "forward": {
+      "y_m": -0.03,
+      "length_m": 0.3071245511614785
+     },
+     "aft": {
+      "y_m": -0.076,
+      "length_m": 0.11950000000000001
+     }
+    },
+    "plates": {
+     "aft": {
+      "area_m2": 0.007980143220469181,
+      "hull_area_m2": 0.006910064269683422,
+      "posts": [
+       {
+        "to": "boom clamp",
+        "length_m": 0.003499999999999996,
+        "area_m2": 0.00044199999999999996
+       },
+       {
+        "to": "aft tray",
+        "length_m": 0.009006579232146678,
+        "area_m2": 0.00062807895078576
+       }
+      ],
+      "cut_y_m": 0.019,
+      "cut_width_m": 0.07700120557188103
+     },
+     "fwd": {
+      "area_m2": 0.007352064269683422,
+      "hull_area_m2": 0.006910064269683422,
+      "posts": [
+       {
+        "to": "boom clamp",
+        "length_m": 0.003499999999999996,
+        "area_m2": 0.00044199999999999996
+       }
+      ],
+      "cut_y_m": 0.019,
+      "cut_width_m": 0.07700120557188103
+     }
+    },
+    "counts": {
+     "screws": 14,
+     "nuts": 12,
+     "tieS": 19,
+     "tieL": 0
+    }
+   },
+   "clearances_mm": {
+    "right": {
+     "gear-khk-ds1-32 (stage 0)": 2.7,
+     "gear-khk-ds1-18 (stage 0)": 26.4,
+     "gear-khk-ds1-64 (stage 1)": 19.3,
+     "gear-khk-ds1-20 (stage 1)": 8.7,
+     "gear-khk-ssag1-40j10 (stage 2)": 38.6,
+     "gear-khk-msga1-18 (stage 2)": 42.3,
+     "gear-khk-msgb1-40 (stage 3)": 65.2,
+     "gear-khk-msga1-18 (stage 3)": 49.6,
+     "rocker hub": 0.7
+    },
+    "left": {
+     "gear-khk-ds1-32 (stage 0)": 10.7,
+     "gear-khk-ds1-18 (stage 0)": 26.3,
+     "gear-khk-ds1-64 (stage 1)": 13.8,
+     "gear-khk-ds1-20 (stage 1)": 16.7,
+     "gear-khk-ssag1-40j10 (stage 2)": 52.9,
+     "gear-khk-msga1-18 (stage 2)": 36.8,
+     "gear-khk-msgb1-40 (stage 3)": 65.2,
+     "gear-khk-msga1-18 (stage 3)": 63.9,
+     "rocker hub": 0.7
+    },
+    "panels": {
+     "side panel right": {
+      "clearance_mm": 1.3,
+      "nearest": "shoulder rail right"
+     },
+     "side panel left": {
+      "clearance_mm": 1.3,
+      "nearest": "shoulder rail left"
+     },
+     "top panel": {
+      "clearance_mm": 14.2,
+      "nearest": "gear-khk-ds1-32 (stage 0)"
+     }
+    }
+   }
+  }
  },
  "bom": {
   "parts": [
@@ -4684,47 +8516,47 @@
     "name": "wing film, both faces",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 20.01142857142857,
-    "basis": "17 g/m2 x 1.177 m2",
+    "mass_g": 23.346666666666668,
+    "basis": "17 g/m2 x 1.373 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "ribs, 20 off",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 13.911363361912816,
-    "basis": "area 2.32e-3 m2 x 0.002 m x 150 kg/m3 each",
+    "mass_g": 18.93491124260355,
+    "basis": "area 3.16e-3 m2 x 0.002 m x 150 kg/m3 each",
     "source_url": "https://www.wood-database.com/balsa/"
    },
    {
     "name": "tail surfaces, film, spar and ribs",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 13.205169798444008,
-    "basis": "film 5.5 g + rods 5.7 g + ribs 2.0 g",
+    "mass_g": 14.915295266199667,
+    "basis": "film 6.4 g + rods 6.1 g + ribs 2.4 g",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "keel and tail boom",
-    "material_id": "tube-ec-woven-8x6",
-    "material": "8 mm x 6 mm woven finish carbon tube",
-    "mass_g": 30.413493183329635,
-    "basis": "32.9 g/m x 0.924 m",
-    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+    "material_id": "tube-rockwest-pultruded-10x8",
+    "material": "Tube - Pultruded Unidirectional - 0.314 x 0.393 x 78 Inch (T-RND-393)",
+    "mass_g": 46.21393464124732,
+    "basis": "43 g/m x 1.075 m",
+    "source_url": "https://www.rockwestcomposites.com/t-rnd-393.html"
    },
    {
     "name": "fuselage film shell",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 2.267135666147357,
-    "basis": "0.133 m2",
+    "mass_g": 2.570221705349813,
+    "basis": "0.151 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "fuselage formers",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 7.350000000000001,
+    "mass_g": 7.800000000000001,
     "basis": "5 off, 50% lightened, 2 mm",
     "source_url": "https://www.wood-database.com/balsa/"
    },
@@ -4868,17 +8700,137 @@
     "name": "gearbox plates, 2 off",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 15.930000000000001,
-    "basis": "2.95e-3 m2 (round 5's carbon cheek allowance) x 2 mm; 2.7 g/cm3",
+    "mass_g": 58.294906946201145,
+    "basis": "solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft 79.8 cm2 x 1.6 mm, forward 73.5 cm2 x 1.2 mm; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "gearbox plate bosses",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 4.614371289592689,
+    "mass_g": 4.980806656707402,
     "basis": "bosses 2 mm wall round the seats crank shaft/aft, crank shaft/forward, gear shaft 1/aft, as long as the bushing, beyond the plate; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "shoulder rail right aft seat boss",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 3.0599897844127986,
+    "basis": "ring 25/12 x 3 mm on the aft plate",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "shoulder rail right",
+    "material_id": "metal-al-7075-t6",
+    "material": "Aluminium 7075-T6 / T651",
+    "mass_g": 9.918117963125855,
+    "basis": "12/10 mm tube x 90.5 mm plus a 2 mm lock flange; 2.81 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
+   },
+   {
+    "name": "shoulder bracket right",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 7.745028268233252,
+    "basis": "two sleeves 16/12 x 8 mm and two arms 10 x 6 x 12.2 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "shoulder rail left aft seat boss",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 3.0599897844127986,
+    "basis": "ring 25/12 x 3 mm on the aft plate",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "shoulder rail left",
+    "material_id": "metal-al-7075-t6",
+    "material": "Aluminium 7075-T6 / T651",
+    "mass_g": 9.918117963125855,
+    "basis": "12/10 mm tube x 90.5 mm plus a 2 mm lock flange; 2.81 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
+   },
+   {
+    "name": "shoulder bracket left",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 7.745028268233252,
+    "basis": "two sleeves 16/12 x 8 mm and two arms 10 x 6 x 12.2 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "tail boom clamp blocks, 2 off",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 5.448610687574375,
+    "basis": "13 x 19 mm blocks x 6 mm, bored 9.982 mm (a 6 mm screw flange); 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "forward tray flange doubler",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 2.8511999999999995,
+    "basis": "22 mm x 2 mm 6061-T6 under the flange screws",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "forward tray",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 21.609769893167055,
+    "basis": "channel 22 x 7 x 0.8 mm sheet (28.8 mm2) x 278 mm (to 268 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "aft tray",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 7.972019999999999,
+    "basis": "channel 26 x 6 x 0.6 mm sheet (22.8 mm2) x 130 mm (to 120 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "motor doubler",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 2.4192,
+    "basis": "28 mm x 2 mm 6061-T6 under the flange screws",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "gearbox panels, 3 off",
+    "material_id": "metal-al-6061-t6",
+    "material": "Aluminium 6061-T6 / T651",
+    "mass_g": 13.0491675,
+    "basis": "side panel right 21.5 x 0.85 mm, side panel left 11.7 x 1.5 mm, top panel 20 x 0.7 mm, each 65.0 mm plus two 16 mm flanges; 2.7 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
+   },
+   {
+    "name": "M3 screws, 14 off",
+    "material_id": "screw-iso4762-m3x8-10.9",
+    "material": "ISO 4762 M3 x 8 socket head cap screw, class 10.9",
+    "mass_g": 14,
+    "basis": "14 x 1 g (per part, computed: ISO 4762 M3 maximum head 5.5 mm x 3.0 mm (fasteners.eu ISO 4762 table) plus a 3 mm x 8 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
+    "source_url": "https://optimas.com/technical-resources/iso-metric-thread-proof-loads/"
+   },
+   {
+    "name": "M3 nuts, 12 off",
+    "material_id": "nut-iso4032-m3-10",
+    "material": "ISO 4032 M3 hexagon nut, class 10",
+    "mass_g": 4.800000000000001,
+    "basis": "12 x 0.4 g (per part, computed: ISO 4032 M3 maximum 5.5 mm across flats x 2.4 mm high (fasteners.eu ISO 4032 table) less a 2.5 mm minor-diameter bore, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
+    "source_url": "https://www.fasteners.eu/standards/ISO/4032/"
+   },
+   {
+    "name": "cable ties tie-hellermanntyton-t18r, 19 off",
+    "material_id": "tie-hellermanntyton-t18r",
+    "material": "HellermannTyton T18R (111-01919) cable tie, PA66, 100 x 2.5 mm",
+    "mass_g": 5.32,
+    "basis": "19 x 0.28 g (maker's weight per unit)",
+    "source_url": "https://www.hellermanntyton.co.uk/products/cable-ties/t18r-pa66-na/111-01919"
    },
    {
     "name": "pitot-static probe",
@@ -4898,9 +8850,9 @@
    }
   ],
   "parts_g": 681.6474000000001,
-  "structure_g": 316.63168403312795,
-  "margin_g": 149.74186260496919,
-  "total_g": 1148.0209466380973
+  "structure_g": 504.90170539953357,
+  "margin_g": 177.98236580993003,
+  "total_g": 1364.5314712094637
  },
  "electrical": {
   "avionics_A_5V": 0.415,
@@ -4965,23 +8917,28 @@
   "Round 6: every loaded part of the drive is sized from a catalogue metal with published strength (structure.members, src/design/linkage.js): forces summed as magnitudes (directions not credited); shaft moments bounded at supports and load planes; pins judged at their roots, bosses by the rigid-pin edge pressure; shoulder pins clamped by the rocker hub between their bushings; seats without a published bearing strength judged at the tensile yield; aluminium typical strengths (AA, NOT FOR DESIGN) at half value; stress concentrations at keyseats and shoulders not modelled (static, ductile).",
   "Round 6: an outboard bearing on the motor shaft in the forward plate carries the first pinion with the motor bearing nearest it as the second support no closer than 5.0 mm (motor bearing positions not published): rated at F (a + s) / s.",
   "Round 6: the F405-WMO is specified with a PDB whose shunt is not marked 3m0 (Matek notice, Dec.22, 2025); the battery current limit reads current through it at the specification's 40 A/V.",
-  "Round 7: the flight controller runs at 240 Hz and ticks at fixed instants; the M4 air is convected at the rough-air speed (Dryden filters, rotary terms and gust durations), so every input is the same function of time at both steps of the half-step check (out/verification/evidence/M7-inputs-<design>.json)."
+  "Round 7: the flight controller runs at 240 Hz and ticks at fixed instants; the M4 air is convected at the rough-air speed (Dryden filters, rotary terms and gust durations), so every input is the same function of time at both steps of the half-step check (out/verification/evidence/M7-inputs-<design>.json).",
+  "Round 8: every part reaches the airframe through a rated path (structure.airframe, src/design/airframe.js): ISO 898-1 M3 class 10.9 screws at their minimum proof load (shear by von Mises on it), Araldite 2011 at half its typical lap shear on the substrate, HellermannTyton ties at their minimum loop strength; the frame parts are positioned in the design file but not packed by the film checker, and their clearances are reported.",
+  "Round 8: inertial loads on carried parts are bounded by m (|f_origin| + r |wdot| + r |w|^2) from the flight model at every step (load channels sf_origin, wdot, w2); the tail by its aerodynamic force tail_F.",
+  "Round 8: TECS pitch weights height-first above the floor band (spdWeight 0.5); hand-launch climb command 3 m/s."
  ],
  "packing": {
   "checker": "sims/avis-shared/model.js prepare/layoutParts/fitReport (film workstream), used as is",
   "body_m": {
-   "width": 0.07,
-   "height": 0.14,
-   "centre_y": -0.01
+   "width": 0.08,
+   "height": 0.13,
+   "centre_y": -0.02
   },
   "protrusions": [],
-  "residual_cg_shift_m": 0,
-  "slides": [],
+  "residual_cg_shift_m": -0.0009908162827506242,
+  "slides": [
+   "battery moved -13 mm along x from its mass lump to fit"
+  ],
   "lump_positions": {
    "flap motor": [
     0.093,
-    0.0128,
-    0
+    0.0006,
+    -0.0001
    ],
    "ESC": [
     0.074,
@@ -4995,17 +8952,17 @@
    ],
    "GPS": [
     -0.03,
-    0.024,
+    0.021,
     0
    ],
    "receiver and airspeed": [
     0.1135,
-    -0.014,
+    -0.026,
     0
    ],
    "tail servos": [
     -0.08,
-    -0.003,
+    -0.006,
     0
    ],
    "stroke servo": [
@@ -5015,8 +8972,8 @@
    ],
    "gears and bearings": [
     0.0236,
-    -0.0333,
-    0.0051
+    -0.037,
+    0.007
    ],
    "crank, rockers, plates": [
     0.0015,
@@ -5031,22 +8988,23 @@
    "max": 6.63
   },
   "pin_layout": "shared",
-  "placeholder": "none: model.js (round 6) places no stroke servo without its lump, so the pod holds only real parts (src/design/fit.js packingView)"
+  "placeholder": "none: model.js (round 6) places no stroke servo without its lump, so the pod holds only real parts (src/design/fit.js packingView)",
+  "frame_parts": "not placed by model.js (round 8 airframe): positions and clearances in structure.airframe"
  },
  "calibration": {
   "file": "data/calibration/larus-gl-2.json",
   "source": "uvlm",
   "multipliers": {
-   "lift": 0.9822426765213027,
-   "suction": 0.9320580908316523,
-   "induced": 1.024449309098006,
-   "lag": 0.988555307513711,
-   "apparentMass": 0.9937003440427739,
+   "lift": 0.9914337833459366,
+   "suction": 0.9342137907568545,
+   "induced": 1.0220506470668682,
+   "lag": 0.9904727540710783,
+   "apparentMass": 0.993401470600652,
    "drag": 1
   },
   "fitted_wing": {
    "span_m": 2,
-   "area_m2": 0.5714285714285714,
+   "area_m2": 0.6666666666666666,
    "twist_weights": [
     [
      0,
@@ -5064,202 +9022,202 @@
   "envelope": [
    {
     "amp": 0.6632251157578453,
-    "freqMax": 2.7172407116405486,
+    "freqMax": 2.7388285454260295,
     "limitedBy": "motor_speed",
-    "atV": 13,
+    "atV": 9,
     "method": "flight test",
     "edge_peaks": {
-     "crankTorque": 9.1168,
-     "rootBend": 11.7929,
-     "elbowBend": 3.2401,
-     "couplerForce": 808.3901,
-     "twistTorque": 0.2162,
-     "loadFactor": 3.5571,
-     "motorRms": 20.105,
-     "battMean": 17.0996,
-     "crankFreqRatio": 0.9751,
-     "airspeed": 13.729,
-     "dutySat": 0.0576,
-     "bearingRatio": 0.567
+     "crankTorque": 9.6573,
+     "rootBend": 14.8678,
+     "elbowBend": 3.905,
+     "couplerForce": 1025.9448,
+     "twistTorque": 0.3485,
+     "loadFactor": 2.7359,
+     "motorRms": 20.6828,
+     "battMean": 17.2243,
+     "crankFreqRatio": 0.9617,
+     "airspeed": 10.1434,
+     "dutySat": 0.075,
+     "bearingRatio": 0.6006
     }
    }
   ],
   "envelopeBest": {
    "amp": 0.6632251157578453,
-   "freqMax": 2.7172407116405486,
+   "freqMax": 2.7388285454260295,
    "limitedBy": "motor_speed",
-   "atV": 13,
+   "atV": 9,
    "method": "flight test",
    "edge_peaks": {
-    "crankTorque": 9.1168,
-    "rootBend": 11.7929,
-    "elbowBend": 3.2401,
-    "couplerForce": 808.3901,
-    "twistTorque": 0.2162,
-    "loadFactor": 3.5571,
-    "motorRms": 20.105,
-    "battMean": 17.0996,
-    "crankFreqRatio": 0.9751,
-    "airspeed": 13.729,
-    "dutySat": 0.0576,
-    "bearingRatio": 0.567
+    "crankTorque": 9.6573,
+    "rootBend": 14.8678,
+    "elbowBend": 3.905,
+    "couplerForce": 1025.9448,
+    "twistTorque": 0.3485,
+    "loadFactor": 2.7359,
+    "motorRms": 20.6828,
+    "battMean": 17.2243,
+    "crankFreqRatio": 0.9617,
+    "airspeed": 10.1434,
+    "dutySat": 0.075,
+    "bearingRatio": 0.6006
    }
   },
-  "freqMax": 2.7172407116405486,
+  "freqMax": 2.7388285454260295,
   "dt": 0.0005208333333333333,
   "glide": [
    {
     "V": 6.5,
-    "theta": 0.0016789304682129722,
-    "gamma": -0.16101815158756932,
-    "tail": 0.07873953138615992,
-    "sink": 1.04210126077996,
-    "LD": 6.1567142196387445,
-    "stalled": 0.03395438803241282
+    "theta": 0.009418755091972139,
+    "gamma": -0.17113504701682494,
+    "tail": 0.08646148597279509,
+    "sink": 1.1069560118163042,
+    "LD": 5.786181741284162,
+    "stalled": 0.03546086026695389
    },
    {
     "V": 7,
-    "theta": -0.019131433628928454,
-    "gamma": -0.1431088974060269,
-    "tail": 0.05327158896125037,
-    "sink": 0.9983464068809654,
-    "LD": 6.939917504274942,
-    "stalled": 0.01601085104570514
+    "theta": -0.011344354089947122,
+    "gamma": -0.15052440360142927,
+    "tail": 0.05938526243239089,
+    "sink": 1.0496963891149016,
+    "LD": 6.593190282820623,
+    "stalled": 0.016497244049604266
    },
    {
     "V": 7.5,
-    "theta": -0.03803182955492497,
-    "gamma": -0.13204756369958964,
-    "tail": 0.03493466988482155,
-    "sink": 0.987481166954314,
-    "LD": 7.528961672937615,
-    "stalled": 0.009032930917742385
+    "theta": -0.029859496045644862,
+    "gamma": -0.13712892541883429,
+    "tail": 0.04009514979982406,
+    "sink": 1.025246695815603,
+    "LD": 7.246640422163649,
+    "stalled": 0.009257980017910691
    },
    {
     "V": 8,
-    "theta": -0.05116474798527785,
-    "gamma": -0.12224201352001611,
-    "tail": 0.022973873291739513,
-    "sink": 0.9755023594757488,
-    "LD": 8.139705535824653,
-    "stalled": 0.005846808466174068
+    "theta": -0.04256387093303139,
+    "gamma": -0.1253365579651674,
+    "tail": 0.027520411575626458,
+    "sink": 1.0000692667665427,
+    "LD": 7.9366954568631005,
+    "stalled": 0.005965768292978691
    },
    {
     "V": 8.5,
-    "theta": -0.06303392695377297,
-    "gamma": -0.11509364882051382,
-    "tail": 0.013224778910710496,
-    "sink": 0.9761376041918137,
-    "LD": 8.65017826718495,
-    "stalled": 0.0040850938871828755
+    "theta": -0.05389343915921851,
+    "gamma": -0.11636515979753653,
+    "tail": 0.017281983974806688,
+    "sink": 0.9868731512000769,
+    "LD": 8.554814045012462,
+    "stalled": 0.0041550147861789824
    },
    {
     "V": 9,
-    "theta": -0.0735865895924327,
-    "gamma": -0.10981085215078519,
-    "tail": 0.0053376216759153505,
-    "sink": 0.9863126479475035,
-    "LD": 9.069934993906411,
-    "stalled": 0.003034135236434099
+    "theta": -0.06385135961668775,
+    "gamma": -0.10937512259379664,
+    "tail": 0.008972561956283435,
+    "sink": 0.9824146086290474,
+    "LD": 9.106359411094669,
+    "stalled": 0.003076931282466508
    },
    {
     "V": 9.5,
-    "theta": -0.08311712768944308,
-    "gamma": -0.10596954342311998,
-    "tail": -0.0011717558227095307,
-    "sink": 1.0048275698419078,
-    "LD": 9.401324014038865,
-    "stalled": 0.002362697824023111
+    "theta": -0.07351483554443947,
+    "gamma": -0.1048434159690266,
+    "tail": 0.002187420728021263,
+    "sink": 0.9941887359588975,
+    "LD": 9.503059926444555,
+    "stalled": 0.0023953197126319803
    },
    {
     "V": 10,
-    "theta": -0.09179900101326169,
-    "gamma": -0.10324857491826954,
-    "tail": -0.006614704168382638,
-    "sink": 1.0306522975395143,
-    "LD": 9.650923028415741,
-    "stalled": 0.0019103557285997301
+    "theta": -0.08286851638732831,
+    "gamma": -0.10216434558766821,
+    "tail": -0.0034501995198517746,
+    "sink": 1.0198671401099855,
+    "LD": 9.754072092477081,
+    "stalled": 0.0019388028574632138
    },
    {
     "V": 11,
-    "theta": -0.10978661960566598,
-    "gamma": -0.10296029790049284,
-    "tail": -0.015263261516619425,
-    "sink": 1.1305633201306606,
-    "LD": 9.678137232223154,
-    "stalled": 0.0013609769046557135
+    "theta": -0.10228265555832353,
+    "gamma": -0.10227961700233326,
+    "tail": -0.01244658993950248,
+    "sink": 1.1231152206463464,
+    "LD": 9.743002123719133,
+    "stalled": 0.0013831572876806413
    },
    {
     "V": 12,
-    "theta": -0.12660063573944652,
-    "gamma": -0.1061240608460086,
-    "tail": -0.021412325127277053,
-    "sink": 1.2710996703877884,
-    "LD": 9.387532525043726,
-    "stalled": 0.0010575022046595522
+    "theta": -0.11896541292942728,
+    "gamma": -0.10439292023284284,
+    "tail": -0.018939173071091362,
+    "sink": 1.2504409588729326,
+    "LD": 9.54437071569974,
+    "stalled": 0.0010730831865074634
    },
    {
     "V": 13,
-    "theta": -0.1475930809785285,
-    "gamma": -0.11643814211869108,
-    "tail": -0.026387787030059034,
-    "sink": 1.5102777575398727,
-    "LD": 8.54940324117745,
-    "stalled": 0.0008686478718344344
+    "theta": -0.13868022885830902,
+    "gamma": -0.11271693196951495,
+    "tail": -0.02414724442091797,
+    "sink": 1.4622192446881914,
+    "LD": 8.834177399664037,
+    "stalled": 0.0008805356024198421
    }
   ],
-  "dThetaPerG": 0.06646547518125483,
+  "dThetaPerG": 0.070222669638994,
   "trim": [
    {
     "V": 9,
-    "theta": 0.052981942321998855,
-    "freq": 1.757616548615484,
-    "tail": 0.0269679764592458,
+    "theta": 0.0654632369672296,
+    "freq": 1.7997426199602933,
+    "tail": 0.03299911476335598,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 9.5,
-    "theta": 0.037112209071296774,
-    "freq": 1.7477960746511416,
-    "tail": 0.017011603459487656,
+    "theta": 0.048335033825027435,
+    "freq": 1.7870508196729664,
+    "tail": 0.022845137323690184,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 10,
-    "theta": 0.025334024494388596,
-    "freq": 1.7495081625911728,
-    "tail": 0.008720971527583755,
+    "theta": 0.03483135319700545,
+    "freq": 1.7898670402597576,
+    "tail": 0.014595197552275185,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 11,
-    "theta": 0.003207786549111896,
-    "freq": 1.8054105209564075,
-    "tail": -0.00348109761144601,
+    "theta": 0.014641994252956812,
+    "freq": 1.8368342599046161,
+    "tail": 0.0015120760029885922,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 12,
-    "theta": -0.011434957376828711,
-    "freq": 1.906417170039613,
-    "tail": -0.012497110747860042,
+    "theta": -0.004177696795212642,
+    "freq": 1.9216201792129572,
+    "tail": -0.008133872297828278,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 13,
-    "theta": -0.022423594719142154,
-    "freq": 2.03693593610536,
-    "tail": -0.019524164689692824,
+    "theta": -0.015963925438456802,
+    "freq": 2.0371901817881084,
+    "tail": -0.015607983534269534,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
@@ -5268,89 +9226,89 @@
   "trimDetail": [
    {
     "V": 9,
-    "power_w": 23.121907120766046,
-    "Irms_A": 7.021449922893944,
-    "stalled": 0.028620234365117007,
-    "crankPeak_Nm": 3.087655010053445,
-    "freq": 1.4574989346653169,
-    "theta_deg": 3.282051077834723,
-    "tail_deg": 1.7416935344459694
+    "power_w": 27.61754191177471,
+    "Irms_A": 8.208143742122912,
+    "stalled": 0.02304117968914899,
+    "crankPeak_Nm": 3.675323378385876,
+    "freq": 1.4930471454935852,
+    "theta_deg": 3.7934428237037343,
+    "tail_deg": 1.90093903273693
    },
    {
     "V": 9.5,
-    "power_w": 23.072229346742034,
-    "Irms_A": 7.0373813288436935,
-    "stalled": 0.014685291021279917,
-    "crankPeak_Nm": 3.077477878688433,
-    "freq": 1.437336198468852,
-    "theta_deg": 2.1811373738603437,
-    "tail_deg": 0.8908589116946785
+    "power_w": 27.498132092822342,
+    "Irms_A": 8.200226587665636,
+    "stalled": 0.012884932334486626,
+    "crankPeak_Nm": 3.6711752643714908,
+    "freq": 1.473330171540689,
+    "theta_deg": 2.720401805320286,
+    "tail_deg": 1.1316974769775634
    },
    {
     "V": 10,
-    "power_w": 23.655522342352974,
-    "Irms_A": 7.117366180519436,
-    "stalled": 0.009807737395390242,
-    "crankPeak_Nm": 3.1069484352873076,
-    "freq": 1.4485070277722438,
-    "theta_deg": 1.3825643210400584,
-    "tail_deg": 0.3970970766600744
+    "power_w": 28.157266647062034,
+    "Irms_A": 8.277739695019166,
+    "stalled": 0.008749109261989463,
+    "crankPeak_Nm": 3.698136971956897,
+    "freq": 1.4812807218634163,
+    "theta_deg": 1.8873006474181917,
+    "tail_deg": 0.6271615369374183
    },
    {
     "V": 11,
-    "power_w": 25.493255902996545,
-    "Irms_A": 7.347089655604159,
-    "stalled": 0.0054436110348374325,
-    "crankPeak_Nm": 3.226840202112161,
-    "freq": 1.4933444506711588,
-    "theta_deg": 0.12045165513831181,
-    "tail_deg": -0.3667541859835655
+    "power_w": 30.535604115564922,
+    "Irms_A": 8.572294121944577,
+    "stalled": 0.005055319354090564,
+    "crankPeak_Nm": 3.841872665616772,
+    "freq": 1.5301973671777824,
+    "theta_deg": 0.6034016567862137,
+    "tail_deg": -0.11508535697483653
    },
    {
     "V": 12,
-    "power_w": 29.098089267370902,
-    "Irms_A": 7.843568280972757,
-    "stalled": 0.003821428075850005,
-    "crankPeak_Nm": 3.4252363967078527,
-    "freq": 1.5843115678992057,
-    "theta_deg": -0.7921202820974484,
-    "tail_deg": -0.8656717950892836
+    "power_w": 33.908112730481974,
+    "Irms_A": 8.977729644615087,
+    "stalled": 0.0034049705764993576,
+    "crankPeak_Nm": 4.0177300187674545,
+    "freq": 1.603024694459106,
+    "theta_deg": -0.4113216739997478,
+    "tail_deg": -0.688934188435718
    },
    {
     "V": 13,
-    "power_w": 34.10322672602983,
-    "Irms_A": 8.547946618161312,
-    "stalled": 0.002981324230532772,
-    "crankPeak_Nm": 3.6987066715234027,
-    "freq": 1.6981135143582198,
-    "theta_deg": -1.5041996160190403,
-    "tail_deg": -1.2496429788183334
+    "power_w": 39.38562120982639,
+    "Irms_A": 9.690927991252844,
+    "stalled": 0.002639501345132411,
+    "crankPeak_Nm": 4.290749933611666,
+    "freq": 1.7083434945767886,
+    "theta_deg": -1.1780002573898944,
+    "tail_deg": -1.101898251920556
    }
   ],
   "Vcruise": 9,
   "Vmin": 9,
-  "Md": 20.624197711444612,
-  "Ld": -19.1082705808179,
-  "Nd": -14.625601162531815,
-  "Tf": 2.180969426315401,
-  "Mq": 1.2338995137555127,
-  "Lp": 3.3643257324719205,
-  "Nr": 0.7243677747991021,
+  "Md": 27.871621001834427,
+  "Ld": -20.712460857160785,
+  "Nd": -19.78286699551007,
+  "Tf": 2.488895216863313,
+  "Mq": 1.9460440445617493,
+  "Lp": 3.7232696699457506,
+  "Nr": 1.0949573364118068,
   "inertia": {
-   "Ix": 0.07722268726936478,
-   "Iy": 0.09585756003414751,
-   "Iz": 0.023112296378263262,
-   "xCg": 0.009192851466768653,
-   "m": 1.148020946638097
+   "Ix": 0.08347011542163159,
+   "Iy": 0.12270296218307081,
+   "Iz": 0.04774362523191039,
+   "xCg": 0.014388679143947156,
+   "m": 1.364531471209464
   },
-  "kTheta": 0.1895690326175143,
+  "kTheta": 0.22488196005391692,
   "kQ": 0,
-  "kPhi": 0.46542443959010854,
+  "kPhi": 0.47458689066640575,
   "kP": 0,
-  "kR": 0.02476369233473983,
-  "kFv": 0.13159525906073796,
-  "kFc": 0.15791431087288554,
-  "kFcFf": 0.2346379358669065,
+  "kR": 0.02767438452324223,
+  "kFv": 0.13706196447767155,
+  "kFc": 0.16447435737320584,
+  "kFcFf": 0.24438522071726504,
   "kH": 0.5,
   "kGamma": 1,
   "kIGamma": 0.15,
@@ -5359,12 +9317,12 @@
   "kChi": 1,
   "maxBank": 0.6108652381980153,
   "diffMax": 0.3141592653589793,
-  "diffRate_rad_s": 8.654825195938892,
+  "diffRate_rad_s": 8.173899475137652,
   "diffLimit": {
    "geometric_rad": 0.3141592653589793,
-   "servo_rad": 4.724575777666489,
-   "twist_torque_trim_Nm": 0.10667072211602036,
-   "twist_torque_per_rad": 0.17526134976989488,
+   "servo_rad": 3.1859997149704182,
+   "twist_torque_trim_Nm": 0.15268246401503605,
+   "twist_torque_per_rad": 0.245456326411575,
    "servo_stall_Nm": 0.93470625,
    "servo_speed_rad_s": 9.769773072388084,
    "supply_V": 6.42
@@ -5385,116 +9343,116 @@
   "trimFlight": [
    {
     "V": 9,
-    "theta": 0.052981942321998855,
-    "freq": 1.757616548615484,
-    "tail": 0.0269679764592458,
+    "theta": 0.0654632369672296,
+    "freq": 1.7997426199602933,
+    "tail": 0.03299911476335598,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 43.63524133777731,
-    "flight_power_regen_credit_w": 42.11776080355287,
-    "flight_V": 9.027509499557299,
+    "flight_power_w": 52.77645687817617,
+    "flight_power_regen_credit_w": 50.447534687972535,
+    "flight_V": 9.042790601736435,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.018003784390302265,
-     "speed_err_m_s": 0.027509499557298867,
-     "freq_drift_frac": 0.006427353200875865,
-     "tail_drift_rad": 0.0008539716618698318
+     "climb_m_s": 0.008908458142308636,
+     "speed_err_m_s": 0.04279060173643501,
+     "freq_drift_frac": 0.008619006459234633,
+     "tail_drift_rad": 0.0009269712751688655
     }
    },
    {
     "V": 9.5,
-    "theta": 0.037112209071296774,
-    "freq": 1.7477960746511416,
-    "tail": 0.017011603459487656,
+    "theta": 0.048335033825027435,
+    "freq": 1.7870508196729664,
+    "tail": 0.022845137323690184,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 44.03907986380858,
-    "flight_power_regen_credit_w": 42.61969702841886,
-    "flight_V": 9.522534679611399,
+    "flight_power_w": 52.99096052843761,
+    "flight_power_regen_credit_w": 50.79304687558618,
+    "flight_V": 9.530784205227578,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.012618811953356762,
-     "speed_err_m_s": 0.022534679611398545,
-     "freq_drift_frac": 0.0029845598430733285,
-     "tail_drift_rad": 0.000507252650569296
+     "climb_m_s": -0.0007905803192655748,
+     "speed_err_m_s": 0.030784205227577743,
+     "freq_drift_frac": 0.0036967307282886205,
+     "tail_drift_rad": 0.0004746670019682396
     }
    },
    {
     "V": 10,
-    "theta": 0.025334024494388596,
-    "freq": 1.7495081625911728,
-    "tail": 0.008720971527583755,
+    "theta": 0.03483135319700545,
+    "freq": 1.7898670402597576,
+    "tail": 0.014595197552275185,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 44.26551985891488,
-    "flight_power_regen_credit_w": 42.91759965849119,
-    "flight_V": 10.030083067073452,
+    "flight_power_w": 53.67387225629452,
+    "flight_power_regen_credit_w": 51.56875956537613,
+    "flight_V": 10.019845861404487,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.010983761767157846,
-     "speed_err_m_s": 0.030083067073451986,
-     "freq_drift_frac": 0.0022311110270377614,
-     "tail_drift_rad": 0.00030736353981479503
+     "climb_m_s": 0.0029437230730845255,
+     "speed_err_m_s": 0.019845861404487408,
+     "freq_drift_frac": 0.003247750034378919,
+     "tail_drift_rad": 0.00045458555837436104
     }
    },
    {
     "V": 11,
-    "theta": 0.003207786549111896,
-    "freq": 1.8054105209564075,
-    "tail": -0.00348109761144601,
+    "theta": 0.014641994252956812,
+    "freq": 1.8368342599046161,
+    "tail": 0.0015120760029885922,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 48.037875242166805,
-    "flight_power_regen_credit_w": 46.68792798952816,
-    "flight_V": 11.00737228385726,
+    "flight_power_w": 56.839496351183385,
+    "flight_power_regen_credit_w": 54.854609961205476,
+    "flight_V": 11.020841080261361,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.0008467691674765674,
-     "speed_err_m_s": 0.007372283857259632,
-     "freq_drift_frac": 0.0019554192812326785,
-     "tail_drift_rad": 0.00021522509538322247
+     "climb_m_s": 0.008832429548126464,
+     "speed_err_m_s": 0.020841080261361,
+     "freq_drift_frac": 0.0034471254595429377,
+     "tail_drift_rad": 0.00042842714991816913
     }
    },
    {
     "V": 12,
-    "theta": -0.011434957376828711,
-    "freq": 1.906417170039613,
-    "tail": -0.012497110747860042,
+    "theta": -0.004177696795212642,
+    "freq": 1.9216201792129572,
+    "tail": -0.008133872297828278,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 55.0514476963299,
-    "flight_power_regen_credit_w": 53.62004620881852,
-    "flight_V": 11.996568768892926,
+    "flight_power_w": 63.79617131857455,
+    "flight_power_regen_credit_w": 61.6537866947757,
+    "flight_V": 12.015867177484953,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.01658394831309705,
-     "speed_err_m_s": -0.0034312311070738843,
-     "freq_drift_frac": 0.0020620595971523525,
-     "tail_drift_rad": 0.0003407907763949003
+     "climb_m_s": -0.0012197003950306928,
+     "speed_err_m_s": 0.015867177484953032,
+     "freq_drift_frac": 0.0014537119970097253,
+     "tail_drift_rad": 0.00017775251050430353
     }
    },
    {
     "V": 13,
-    "theta": -0.022423594719142154,
-    "freq": 2.03693593610536,
-    "tail": -0.019524164689692824,
+    "theta": -0.015963925438456802,
+    "freq": 2.0371901817881084,
+    "tail": -0.015607983534269534,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 65.0498542705639,
-    "flight_power_regen_credit_w": 63.42738908902474,
-    "flight_V": 13.000476182633172,
+    "flight_power_w": 73.86133830978004,
+    "flight_power_regen_credit_w": 71.62295754930976,
+    "flight_V": 13.015341590438853,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.030398768200254507,
-     "speed_err_m_s": 0.0004761826331716179,
-     "freq_drift_frac": 0.0009734153384337141,
-     "tail_drift_rad": 0.0002172542922224685
+     "climb_m_s": 0.01634466212299015,
+     "speed_err_m_s": 0.015341590438852748,
+     "freq_drift_frac": 0.0017747817906458212,
+     "tail_drift_rad": 0.00025128414605526603
     }
    }
   ],
@@ -5510,13 +9468,14 @@
    "Vmax": 15,
    "kV": 0.4,
    "band": 1.5,
-   "kTE": 1.5
+   "kTE": 1.5,
+   "spdWeight": 0.5
   },
   "Vrough": 15,
   "envelopeFrozen": [
    {
     "amp": 0.6632251157578453,
-    "freqMax": 2.9227967707620275,
+    "freqMax": 2.8847813431734695,
     "limitedBy": "motor_voltage",
     "atV": 13
    }
@@ -5528,9 +9487,10 @@
    "servo": 0.9,
    "bearing": 0.9,
    "note": "fraction of each rating the calm-air envelope may use, leaving the rest for rough-air load increments; M7 judges the full rating against the loads of the flights themselves"
-  }
+  },
+  "launchClimb_m_s": 3
  },
- "round7_options": {
+ "round8_options": {
   "Vrough": 15,
   "dt": 0.0005208333333333333,
   "allowance": {
@@ -5543,11 +9503,13 @@
   "motorCurrentLimit": null,
   "gla": null,
   "kTE": 1.5,
-  "ctlRate_Hz": 240
+  "ctlRate_Hz": 240,
+  "spdWeight": 0.5,
+  "launchClimb": 3
  },
  "selection": {
-  "pipeline": "src/design/round7.mjs",
-  "basis": "explicit round-7 parameters (ROUND6 and ROUND7, ROUND7_OPT in the scripts and --set/--opt) on Larus v16; screen not rerun",
+  "pipeline": "src/design/round8.mjs",
+  "basis": "explicit round-8 parameters (ROUND6, ROUND7 and ROUND8, ROUND8_OPT in the scripts and --set/--opt) on Larus v17; screen not rerun",
   "set": {},
   "opt": {}
  },
@@ -5555,40 +9517,40 @@
   "sustained_climb": [
    {
     "V_target_m_s": 9,
-    "sustained_climb_m_s": 1.375,
-    "mean_airspeed_m_s": 9.69,
+    "sustained_climb_m_s": 1.161,
+    "mean_airspeed_m_s": 9.67,
     "climb_cmd_m_s": 1.5,
-    "mean_batt_A": 14.23,
-    "motor_rms_2s_max_A": 19.47,
+    "mean_batt_A": 16,
+    "motor_rms_2s_max_A": 21.74,
     "altitude_m": 1404.37
    },
    {
     "V_target_m_s": 10,
-    "sustained_climb_m_s": 1.413,
-    "mean_airspeed_m_s": 10.24,
+    "sustained_climb_m_s": 1.191,
+    "mean_airspeed_m_s": 10.07,
     "climb_cmd_m_s": 1.5,
-    "mean_batt_A": 14.55,
-    "motor_rms_2s_max_A": 19.83,
+    "mean_batt_A": 16.18,
+    "motor_rms_2s_max_A": 21.66,
     "altitude_m": 1404.37
    },
    {
     "V_target_m_s": 12,
-    "sustained_climb_m_s": 1.426,
-    "mean_airspeed_m_s": 10.49,
-    "climb_cmd_m_s": 3,
-    "mean_batt_A": 14.87,
-    "motor_rms_2s_max_A": 20.1,
+    "sustained_climb_m_s": 1.187,
+    "mean_airspeed_m_s": 10.52,
+    "climb_cmd_m_s": 2,
+    "mean_batt_A": 16.3,
+    "motor_rms_2s_max_A": 22.15,
     "altitude_m": 1404.37
    }
   ],
-  "best_sustained_climb_m_s": 1.426,
-  "best_climb_speed_m_s": 10.49,
+  "best_sustained_climb_m_s": 1.191,
+  "best_climb_speed_m_s": 10.07,
   "corridor_elevation_m": 1444.37,
   "method": "src/physics/scenarios.js runClimb: closed loop with the flight controller, its stroke envelope and current limit; climb from 15 s to 45 s of steady climb, no wind, battery full; best over commanded climb rates 0.5-3 m/s",
   "for_environment": "the corridor can be re-solved to this climb with a margin: a gradient at speed V is climb / V",
-  "ran_at": "2026-11-02T20:50:47.219Z"
+  "ran_at": "2026-11-02T22:26:15.408Z"
  },
- "version": 17,
- "version_written": "2026-11-02T20:50:47.220Z",
- "supersedes_sha256": "7417cae37e39681341257aa5487b1e2389e94554770421628866e74e8545acfb"
+ "version": 18,
+ "version_written": "2026-11-02T22:26:15.411Z",
+ "supersedes_sha256": "dffada1787c72b7c41d2be40b645bbac93e47137805f8589eb9d437c0afdb1aa"
 }

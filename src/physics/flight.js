@@ -84,7 +84,11 @@ export const SERVO_TAU_MECH_S = 0.01;
  * load torque; and per wing the root force normal to the hinge axis, the root force along it, and the root moment
  * normal to it (which a pivot's two bearings react as a couple).
  */
-export const LOAD_CHANNELS = ['coupler_R', 'coupler_L', 'slot_R', 'slot_L', 'crank_torque', 'root_yz_R', 'root_x_R', 'root_mperp_R', 'root_yz_L', 'root_x_L', 'root_mperp_L'];
+// Round 8 (airframe load path): sf_origin, the magnitude of the specific force at the body origin (m/s2, 9.81 at rest);
+// wdot and w2, the magnitudes of the body's angular acceleration (rad/s2) and of its angular rate squared (rad2/s2),
+// so a part of mass m at distance r from the origin carries at most m (sf_origin + r wdot + r w2); tail_F, the
+// magnitude of the tail surfaces' aerodynamic force (N).
+export const LOAD_CHANNELS = ['coupler_R', 'coupler_L', 'slot_R', 'slot_L', 'crank_torque', 'root_yz_R', 'root_x_R', 'root_mperp_R', 'root_yz_L', 'root_x_L', 'root_mperp_L', 'sf_origin', 'wdot', 'w2', 'tail_F'];
 
 /**
  * Supports of design.structure.joints as channel indices and coefficients: { key, rc, rk, ac, ak, X0, Y0 } per support.
@@ -406,6 +410,7 @@ export function createFlight(design, opts = {}) {
     const eps = ((tail.kEps ?? 1.0) * 2 * epsLag) / (Math.PI * AR);
     let tailPower = 0;
     let tailMR = 0, tailML = 0;
+    let tFx = 0, tFy = 0, tFz = 0; // round 8: the tail's aerodynamic force (load channel tail_F)
     for (let i = 0; i < tailStations.length; i++) {
       const ts = tailStations[i];
       const r = ts.r;
@@ -441,6 +446,7 @@ export function createFlight(design, opts = {}) {
       Mx += r[1] * fz - r[2] * fy;
       My += r[2] * fx - r[0] * fz;
       Mz += r[0] * fy - r[1] * fx;
+      tFx += fx; tFy += fy; tFz += fz;
       tailPower += 0;
       // Hinge moment about the surface's quarter chord; pivot assumed at 25% c: from the moment coefficient.
       const hm = Math.abs(qq * ts.c * pol[2]) + 0.02 * Math.abs(qq * ts.c * pol[0]);
@@ -817,6 +823,10 @@ export function createFlight(design, opts = {}) {
       chv[3] = chv[1] * Math.abs(Math.cos(saL.mu ?? Math.PI / 2));
       chv[4] = Math.abs(tel.crankTorque);
       for (let k = 0; k < 6; k++) chv[5 + k] = rootLoad[k];
+      chv[11] = fTot;
+      chv[12] = Math.hypot(wDot[0], wDot[1], wDot[2]);
+      chv[13] = wx * wx + wy * wy + wz * wz;
+      chv[14] = Math.hypot(tFx, tFy, tFz);
       for (let k = 0; k < sup.length; k++) {
         const s = sup[k];
         let Fr = 0, Fa = 0;

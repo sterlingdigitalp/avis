@@ -86,6 +86,19 @@ export function twistSchedule(cfg, tr, freq, amp, V) {
 }
 
 /**
+ * TECS pitch weights on height (wH) and speed (wV), summing to 2. Speed only (0, 2) at Vfloor and below; above
+ * Vfloor + band, (2 - spdWeight, spdWeight); linear in between. spdWeight 1 (the default, rounds 3-7) balances height
+ * and speed; below 1 the pitch loop favours height, as ArduPlane's TECS_SPDWEIGHT does, so a stroke at its envelope
+ * gives up speed down to the floor band before height. Round 8.
+ */
+export function tecsWeights(T, V) {
+  const sw = Math.max(0, Math.min(2, T.spdWeight ?? 1));
+  const x = Math.max(0, Math.min(1, (V - T.Vfloor) / T.band));
+  const wH = x * (2 - sw);
+  return { wH, wV: 2 - wH };
+}
+
+/**
  * ctl config (design.control): { trim: [{V, theta, freq, tail, amp, sym, dyn}], Iz, Ix, Iy, Md, Ld, Nd, Vcruise,
  *   Vmin, freqMax, freqMin, ampMax, climbMax, sinkMax, maxBank, lead }.
  * Round 3 options: dynSchedule (twistSchedule above) and tecs = { Vfloor, Vmax, kV, wV, kGammaE, kIE, band }: total
@@ -334,8 +347,7 @@ export function createController(design, opts = {}) {
       climbC = g.climb ?? Math.max(-cfg.sinkMax, Math.min(cfg.climbMax, cfg.kH * hErr));
       const Vc = Math.max(T.Vfloor, Math.min(T.Vmax, g.speed));
       const vdC = T.kV * (Vc - e.V);
-      const x = Math.max(0, Math.min(1, (e.V - T.Vfloor) / T.band));
-      const wH = x, wV = 2 - x;
+      const { wH, wV } = tecsWeights(T, e.V);
       const sebErr = wH * (climbC - e.vy) - wV * (e.V / G0) * (vdC - vdotF);
       thetaC = tr.theta + (cfg.kGamma * sebErr) / Math.max(e.V, 4) + iTheta;
       iTheta += (dt * cfg.kIGamma * sebErr) / Math.max(e.V, 4);

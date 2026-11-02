@@ -1,0 +1,31 @@
+design: larus-gl-2 v18 (data/designs/larus-gl-2.json), 1364.5 g, built by src/design/round8.mjs --no-suction (eta_s 0.6 default)
+NOT THE FINAL GATE SET. The cfd workstream's settled eta_s points had not landed when round 8 stopped, so the final set
+(with the eta_s table, without --no-suction) was not flown, as the brief requires. These are round 8's probe
+measurements at eta_s 0.6 (nominal and the 8 robustness corners), not gate files; out/verification/ still holds round 7's
+gate files except V5, which was rerun on v18's AR 6 wing.
+
+V1  pass      unchanged from round 7 (method gate; wing-independent)
+V2  FAIL      unchanged (ruling after round 4)
+V3  pass      unchanged
+V4  pass      unchanged (SmartBird geometry, not this wing)
+V5  pass      rerun on the AR 6 wing: worst held-out lift 1.4%, thrust 2.6% (out/sweep/round8/v5-v18h.log); calibration refit
+V6  pass      unchanged
+V7  FAIL      unchanged (ruling)
+M1  pass      8 m/s release: worst corner (aero 0.9, mass 1.05, CG +5 mm) loses 1.03 m at 5 deg, 1.13 m over 0-10 deg
+              (limit 1.5 m: 0.37 m margin); climb 2-3 s >= 0.64 m/s; all 9 cases pass (out/sweep/round8/v18-m1-corners.json).
+              Information: a 7 m/s release loses 2.52 m at that corner (fails), 1.40 m nominal.
+M2  pass      nominal 17.1 min, power ratio 4.13; worst corner 15.6 min, 3.77 (out/sweep/round8/v18-corners-m1235.json)
+M3  pass      altitude deviation 0.57-0.81 m at every corner
+M4  pass at eta_s 0.6: >= 98/100 at nominal and every one of the 8 corners (worst 98). Lowest eta_s passing at every
+              corner, by bisection: 0.5375 (0.525 fails at 97, 0.50 at 96, 0.40 at 93): out/sweep/round8/v18-m4-eta-bisection.json.
+              Target 0.45 NOT reached.
+M5  pass      touchdown sink 0.33-0.46 m/s, speed 7.7-9.0 m/s at every corner
+M6  1364.5 g  (v17 1148.0 g): the rated airframe adds about 150 g before the 15% margin; AR 6 wing
+M7  FAIL      (1) the four DS gear fixings stay unrated: no eligible light rated fixing exists (docs/status/round8-levers.json);
+              (2) crank torque on the M7 population 14.06 N m on 30 seeds, up to about 14.9 N m in the AR 6 probes, against the
+              14.16 N m train rating (MSGA1-18, stage 4) - unverified on 100 seeds; the rated fix (MSGA1-20 + MSGB1-45, 15.36 N m,
+              +35 g) costs M4 (96/100 at one corner);
+              (3) shoulder rail right FoS 1.47 < 1.5 on 30 M4 seeds (fix identified, not applied: 12/9.6 mm tube, about +4 g).
+              Every other airframe member, keyway, seat, bearing and the coupler FoS >= 1.5 (out/sweep/round8/v18-members-probe.txt).
+              Half-step check of the new load channels not run (needs the full missions run).
+M8  pass (provisional) motor RMS 2 s max 19.4-21.1 A (36 A continuous) at every corner in M1-M5; M4 not checked here.

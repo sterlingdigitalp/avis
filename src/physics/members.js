@@ -149,6 +149,120 @@ export function keyCheck({ d_mm, b_mm, h_mm, L_mm }, keyMat, sideMat, T) {
   return { force_N: F, tau_MPa: tau, bearing_MPa: p, fos_shear: fosShear, fos_bearing: fosBearing, fos, ok: fos >= FOS };
 }
 
+/**
+ * Round 8 (airframe load path). A group of n identical fasteners joining two parts, each with a rated tension Pt and a
+ * rated shear Ps (N; a fastener's own maker or ISO 898-1 / ISO 3506 minimum, as its catalogue entry states). Loads:
+ * in-plane shear V (any direction), in-plane torsion T about the group centroid, out-of-plane moment M (prying) and
+ * out-of-plane force F. Per fastener: shear V / n + T r_max / sum r^2; tension F / n + M / (n_far lever), the moment
+ * taken by the n_far fasteners of the far row about the near row (lever: the row spacing; a pivot on the near row,
+ * not the part's edge, is the conservative choice). Linear interaction s / Ps + t / Pt, so the load factor to failure
+ * is its inverse.
+ */
+export function boltGroupCheck({ n, r_max_mm = 0, sum_r2_mm2 = 0, lever_mm = Infinity, n_far = 1 }, fastener, { V = 0, T = 0, M = 0, F = 0 }) {
+  const shear = V / n + (sum_r2_mm2 > 0 ? (T * (r_max_mm / 1000)) / (sum_r2_mm2 * 1e-6) : 0);
+  const tension = F / n + (Number.isFinite(lever_mm) && lever_mm > 0 ? M / (n_far * (lever_mm / 1000)) : 0);
+  const u = shear / fastener.shear_N + tension / fastener.tension_N;
+  const fos = u > 0 ? 1 / u : Infinity;
+  return { shear_each_N: shear, tension_each_N: tension, shear_rated_N: fastener.shear_N, tension_rated_N: fastener.tension_N, interaction: u, fos, ok: fos >= FOS };
+}
+
+/**
+ * A strut (rectangular b x t, or round d / di) of length L with end-fixity factor K under axial force F and a bending
+ * moment M about its weak axis. Euler load Pcr = pi^2 E I / (K L)^2; the stress F / A + M / Z / (1 - F / Pcr) (the
+ * beam-column amplification) against the yield. fos is the load factor at which either is reached (bisection on the
+ * factored load, so the amplification is applied to the factored load, not the working one).
+ */
+export function strutCheck({ L_mm, K = 1, b_mm, t_mm, d_mm, di_mm = 0 }, material, { F = 0, M = 0 }) {
+  const rect = Number.isFinite(b_mm);
+  const A = rect ? (b_mm * t_mm) * 1e-6 : roundSection(d_mm / 1000, di_mm / 1000).A;
+  const I = rect ? (b_mm / 1000) * (t_mm / 1000) ** 3 / 12 : roundSection(d_mm / 1000, di_mm / 1000).I;
+  const c = rect ? t_mm / 2000 : d_mm / 2000;
+  const E = material.E_GPa * 1e9;
+  const Pcr = (Math.PI ** 2 * E * I) / ((K * L_mm) / 1000) ** 2;
+  const stress = (lam) => (lam * F / A + (lam * M * c / I) / Math.max(1e-12, 1 - (lam * F) / Pcr)) / 1e6;
+  const fy = material.yield_MPa;
+  let fos;
+  if (F <= 0 && M <= 0) fos = Infinity;
+  else {
+    let lo = 0, hi = F > 0 ? Pcr / F : 1e6;
+    if (stress(hi * (1 - 1e-9)) <= fy && F > 0) fos = hi; // buckling first
+    else {
+      for (let i = 0; i < 100; i++) { const mid = 0.5 * (lo + hi); if (stress(mid) > fy) hi = mid; else lo = mid; }
+      fos = lo;
+    }
+  }
+  return { stress_MPa: stress(1), euler_N: Pcr, fos_buckling: F > 0 ? Pcr / F : Infinity, yield_MPa: fy, fos, ok: fos >= FOS };
+}
+
+/** A flat shear panel h x b (h the loaded edge) of thickness t carrying shear V: tau = V / (h t) against the shear yield, and simply supported shear buckling tau_cr = k pi^2 E / (12 (1 - nu^2)) (t / b)^2 with k = 5.35 + 4 (b / a)^2, a >= b the panel's long side. */
+export function panelShearCheck({ h_mm, b_mm, t_mm, nu = 0.33 }, material, V) {
+  const a = Math.max(h_mm, b_mm), s = Math.min(h_mm, b_mm);
+  const k = 5.35 + 4 * (s / a) ** 2;
+  const tauCr = (k * Math.PI ** 2 * material.E_GPa * 1e3) / (12 * (1 - nu * nu)) * (t_mm / s) ** 2; // MPa
+  const tau = V / (h_mm * t_mm); // N/mm2 = MPa
+  const tauY = material.shear_yield_MPa ?? material.yield_MPa / Math.sqrt(3);
+  const fos = tau > 0 ? Math.min(tauY, tauCr) / tau : Infinity;
+  return { tau_MPa: tau, shear_yield_MPa: tauY, tau_buckling_MPa: tauCr, fos, ok: fos >= FOS };
+}
+
+/** n cable ties (or straps) each with a rated minimum loop tensile strength, holding a force F (plus a fixed extra_N, e.g. a drag bound) between them. */
+export function tieCheck({ n, extra_N = 0 }, tie, F) {
+  const Ft = F + extra_N;
+  const fos = Ft > 0 ? (n * tie.loop_N) / Ft : Infinity;
+  return { force_N: Ft, rated_each_N: tie.loop_N, fos, ok: fos >= FOS };
+}
+
+/**
+ * A rectangular plate section b x t (b in the plate's plane) under axial force F, in-plane bending M (about the
+ * thickness axis, section modulus t b^2 / 6) and out-of-plane bending Mo (b t^2 / 6): the corner stress, summed,
+ * against the yield. Linear in the loads, so yield / stress is the load factor.
+ */
+export function plateSectionCheck({ b_mm, t_mm }, material, { F = 0, M = 0, Mo = 0 }) {
+  const b = b_mm / 1000, t = t_mm / 1000;
+  const sigma = (F / (b * t) + (6 * M) / (t * b * b) + (6 * Mo) / (b * t * t)) / 1e6;
+  const fos = sigma > 0 ? material.yield_MPa / sigma : Infinity;
+  return { sigma_MPa: sigma, yield_MPa: material.yield_MPa, fos, ok: fos >= FOS };
+}
+
+/** A bent-sheet channel (web w, two flanges h, thickness t, mm): area and section moduli for bending that bends the web out of its plane (Zo, flange tips the extreme fibre) and in it (Zi). */
+export function channelSection(w, h, t) {
+  const Aw = w * t, Af = h * t;
+  const A = Aw + 2 * Af;
+  const yc = (2 * Af * (h / 2)) / A; // from the web's mid-plane, towards the flanges
+  const Io = (w * t ** 3) / 12 + Aw * yc ** 2 + 2 * ((t * h ** 3) / 12 + Af * (h / 2 - yc) ** 2);
+  const Ii = (t * w ** 3) / 12 + 2 * ((h * t ** 3) / 12 + Af * (w / 2) ** 2);
+  return { A_mm2: A, Zo_mm3: Io / Math.max(yc + t / 2, h - yc), Zi_mm3: Ii / (w / 2 + t / 2) };
+}
+
+/** A beam section given by its area and section moduli (mm^2, mm^3): F / A + M / Zi + Mo / Zo against the yield. */
+export function beamSectionCheck({ A_mm2, Zi_mm3, Zo_mm3 }, material, { F = 0, M = 0, Mo = 0 }) {
+  const sigma = F / A_mm2 + (M * 1000) / Zi_mm3 + (Mo * 1000) / Zo_mm3;
+  const fos = sigma > 0 ? material.yield_MPa / sigma : Infinity;
+  return { sigma_MPa: sigma, yield_MPa: material.yield_MPa, fos, ok: fos >= FOS };
+}
+
+/**
+ * A unidirectional carbon tube (d / di) in bending M, torsion T and transverse shear V: fibre stress M / Z against the
+ * axial allowable, shear T / Zp + 2 V / A against the in-plane shear allowable, linear interaction (the matrix carries
+ * the shear, so no von Mises credit). material: { axial_MPa, shear_MPa }.
+ */
+export function cfrpTubeCheck({ d_mm, di_mm }, material, { M = 0, T = 0, V = 0 }) {
+  const s = roundSection(d_mm / 1000, di_mm / 1000);
+  const sigma = M / s.Z / 1e6;
+  const tau = (T / s.Zp + (2 * V) / s.A) / 1e6;
+  const u = sigma / material.axial_MPa + tau / material.shear_MPa;
+  const fos = u > 0 ? 1 / u : Infinity;
+  return { sigma_MPa: sigma, tau_MPa: tau, axial_allowable_MPa: material.axial_MPa, shear_allowable_MPa: material.shear_MPa, fos, ok: fos >= FOS };
+}
+
+/** A flat bonded lap w x L carrying shear force F (and peel not credited): tau = F / (w L) against the adhesive's allowable. */
+export function lapCheck({ w_mm, L_mm }, adhesive, F) {
+  const tau = F / (w_mm * L_mm);
+  const allow = adhesive.shear_MPa;
+  const fos = tau > 0 ? allow / tau : Infinity;
+  return { tau_MPa: tau, shear_allowable_MPa: allow, fos, ok: fos >= FOS };
+}
+
 /** Peak value of every member section from the flight model's support peaks (the members follow the joints). */
 export function memberPeaks(members, supPeaks, offset) {
   const out = {};
@@ -156,6 +270,26 @@ export function memberPeaks(members, supPeaks, offset) {
   for (const m of members ?? []) for (const s of m.sections ?? []) out[`${m.name}/${s.name}`] = supPeaks[k++]?.Fr ?? 0;
   return out;
 }
+
+/** Each member check kind: (member, its section peaks, the peak of named sections, its uses) -> result. */
+const MEMBER_CHECKS = {
+  round: (m, l) => roundMemberCheck(m.dims, m.material, l),
+  'pin-shear': (m, l) => pinShearCheck(m.dims, m.material, l.F, m.dims.planes ?? 1),
+  seat: (m, l) => seatCheck(m.dims, m.material, l.F, l.M),
+  lug: (m, l) => lugCheck(m.dims, m.material, l.F),
+  web: (m, l) => webCheck(m.dims, m.material, { M: l.M, F: l.F }),
+  bond: (m, l) => bondCheck(m.dims, m.material, { T: l.T, F: l.F }),
+  key: (m, l) => keyCheck(m.dims, m.material, m.side_material, l.T),
+  bolts: (m, l) => boltGroupCheck(m.dims, m.fastener, { V: l.V, T: l.T, M: l.M, F: l.F }),
+  strut: (m, l) => strutCheck(m.dims, m.material, { F: l.F, M: l.M }),
+  panel: (m, l) => panelShearCheck(m.dims, m.material, l.V),
+  tie: (m, l) => tieCheck(m.dims, m.tie, l.F),
+  lap: (m, l) => lapCheck(m.dims, m.material, l.F),
+  plate: (m, l, val, u) => plateSectionCheck(m.dims, m.material, { F: l.F, M: l.M, Mo: val(u.Mo) }),
+  beam: (m, l, val, u) => beamSectionCheck(m.dims, m.material, { F: l.F, M: l.M, Mo: val(u.Mo) }),
+  'cfrp tube': (m, l) => cfrpTubeCheck(m.dims, m.material, { M: l.M, T: l.T, V: l.V }),
+  unrated: (m) => ({ fos: null, ok: false, why: m.why ?? 'no published rating' }),
+};
 
 /**
  * Every member against its check. member: { name, kind, check, dims, material, sections: [...], uses: { M, T, V, F }
@@ -167,17 +301,9 @@ export function checkMembers(members, peaks) {
     const val = (names) => Math.max(0, ...[].concat(names ?? []).map((n) => peaks[`${m.name}/${n}`] ?? 0));
     const u = m.uses ?? {};
     const load = { M: val(u.M), T: val(u.T), V: val(u.V), F: val(u.F) };
-    let r;
-    if (m.check === 'round') r = roundMemberCheck(m.dims, m.material, load);
-    else if (m.check === 'pin-shear') r = pinShearCheck(m.dims, m.material, load.F, m.dims.planes ?? 1);
-    else if (m.check === 'seat') r = seatCheck(m.dims, m.material, load.F, load.M);
-    else if (m.check === 'lug') r = lugCheck(m.dims, m.material, load.F);
-    else if (m.check === 'web') r = webCheck(m.dims, m.material, { M: load.M, F: load.F });
-    else if (m.check === 'bond') r = bondCheck(m.dims, m.material, { T: load.T, F: load.F });
-    else if (m.check === 'key') r = keyCheck(m.dims, m.material, m.side_material, load.T);
-    else if (m.check === 'unrated') r = { fos: null, ok: false, why: m.why ?? 'no published rating' };
-    else r = { fos: null, ok: false, why: `no check for ${m.check}` };
-    rows.push({ name: m.name, kind: m.kind, check: m.check, material: m.material?.id ?? null, dims: m.dims, load, ...r, ...(m.note ? { note: m.note } : {}) });
+    const f = MEMBER_CHECKS[m.check];
+    const r = f ? f(m, load, val, u) : { fos: null, ok: false, why: `no check for ${m.check}` };
+    rows.push({ name: m.name, kind: m.kind, check: m.check, material: m.material?.id ?? m.fastener?.id ?? m.tie?.id ?? null, dims: m.dims, load, ...r, ...(m.note ? { note: m.note } : {}) });
   }
   const rated = rows.filter((r) => Number.isFinite(r.fos));
   return { ok: rows.every((r) => r.ok), fos_min: rated.length ? Math.min(...rated.map((r) => r.fos)) : null, worst: rated.length ? rated.reduce((a, b) => (b.fos < a.fos ? b : a)).name : null, members: rows };

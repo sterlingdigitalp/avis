@@ -450,6 +450,7 @@ export function buildDesign(params, catalog) {
       d.structure.members = lm.members;
       d.structure.members_unchecked = lm.unchecked;
       d.structure.coupler = lm.coupler;
+      if (lm.airframe) d.structure.airframe = lm.airframe;
     }
   }
   return d;

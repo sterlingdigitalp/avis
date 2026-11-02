@@ -115,6 +115,11 @@ function attitude(sim) {
   return eulerFromQuat(sim.snapshot().quat);
 }
 
+/** Round 8: the hand-launch climb command (m/s), the flight controller's own setting (control.launchClimb_m_s); before round 8 design.launch.climb or 1. */
+export function launchClimbOf(design) {
+  return design.control?.launchClimb_m_s ?? design.launch?.climb ?? 1.0;
+}
+
 // ---- M1 hand launch: released at the speed and angle limits of the gate. ---------------------------------------
 export function runM1(design, { seed = 1, perturb = {}, speed = 8, pitchDeg = 5, sensorNoise = true, delay = 0.02, log = false, servoSpeedScale, dt = null } = {}) {
   dt = dt ?? design.control?.dt ?? 1 / 240;
@@ -129,7 +134,7 @@ export function runM1(design, { seed = 1, perturb = {}, speed = 8, pitchDeg = 5,
   ctl.guidance.mode = 'launch';
   ctl.guidance.altitude = 10;
   ctl.guidance.speed = design.control.Vcruise;
-  ctl.guidance.climb = design.launch?.climb ?? 1.0;
+  ctl.guidance.climb = launchClimbOf(design);
   const L = log ? makeLog(sim, design, 'M1') : null;
   let minY = 0;
   const ys = [];

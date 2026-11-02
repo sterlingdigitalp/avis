@@ -56,7 +56,7 @@ export function round3ControlOptions(d, opt = {}) {
   const semi = d.geometry.span_m / 2;
   return {
     dynSchedule: { rRef_m: 0.75 * semi, gain: opt.dynGain ?? 1, min: 10 * DEG, max: (opt.dynMax_deg ?? 38) * DEG },
-    tecs: { Vfloor: opt.Vfloor ?? 9.5, Vmax: opt.Vmax ?? 15, kV: opt.kV ?? 0.4, band: opt.band ?? 1.5, kTE: opt.kTE ?? 1 },
+    tecs: { Vfloor: opt.Vfloor ?? 9.5, Vmax: opt.Vmax ?? 15, kV: opt.kV ?? 0.4, band: opt.band ?? 1.5, kTE: opt.kTE ?? 1, ...(opt.spdWeight !== undefined ? { spdWeight: opt.spdWeight } : {}) },
   };
 }
 

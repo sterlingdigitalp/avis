@@ -13,6 +13,7 @@
 import { byId } from './catalog.js';
 import { shaftMomentSections } from '../physics/members.js';
 import { linkageAt } from '../../sims/avis-shared/model.js';
+import { airframeMembers } from './airframe.js';
 
 const PI4 = Math.PI / 4;
 const rodV = (d, L) => PI4 * d * d * L; // m^3
@@ -73,9 +74,21 @@ export function driveMembers(d, catalog, L, lay, joints) {
   for (const [side, w] of [['right', 'R'], ['left', 'L']]) wingSideMembers(cx, side, w);
   const coupler = couplerLinks(cx);
   plateSeats(cx);
-  // Round 7 (SPEC ruling after round 6: a load path that cannot be rated fails): the plates between their seats.
-  cx.members.push(unrated('gearbox plates between seats', 'plate', 'the drive layout (model.js) gives the two plates no mounts to the airframe, so the path from the seats to the keel cannot be sized or rated', [{ ch: 'crank_torque', k: 1 }]));
-  return { members: cx.members, items: cx.items, coupler, unchecked: cx.unchecked };
+  let airframe = null;
+  if (L.airframe) {
+    // Round 8 (SPEC ruling after round 7: every part reaches the airframe through a rated path): the frame, its
+    // fasteners, bonds and ties (airframe.js); the plates' mass from their solid outlines, not the area allowance.
+    airframe = airframeMembers(cx).report;
+    const pm = cx.mat(L.plates.material);
+    const it = cx.items.find((q) => q.name === 'gearbox plates, 2 off');
+    const { aft, fwd } = airframe.parts.plates;
+    const tF = L.plates.t_fwd_mm ?? L.plates.t_mm;
+    Object.assign(it, { mass_g: (aft.area_m2 * L.plates.t_mm + fwd.area_m2 * tF) / 1000 * pm.density_g_cm3 * 1e6, basis: `solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft ${(aft.area_m2 * 1e4).toFixed(1)} cm2 x ${L.plates.t_mm} mm, forward ${(fwd.area_m2 * 1e4).toFixed(1)} cm2 x ${tF} mm; ${pm.density_g_cm3} g/cm3` });
+  } else {
+    // Round 7 (SPEC ruling after round 6: a load path that cannot be rated fails): the plates between their seats.
+    cx.members.push(unrated('gearbox plates between seats', 'plate', 'the drive layout (model.js) gives the two plates no mounts to the airframe, so the path from the seats to the keel cannot be sized or rated', [{ ch: 'crank_torque', k: 1 }]));
+  }
+  return { members: cx.members, items: cx.items, coupler, unchecked: cx.unchecked, airframe };
 }
 
 /** The one-piece crank (shaft, web and pin) of L.crank.material, so torque and pin moment cross no joint. */
@@ -205,8 +218,10 @@ function plateSeats(cx) {
       const key = `${jt.name}/${sp.name}`;
       const boss = bossed.has(key);
       const D = pd.D * 1000 + 2 * (boss ? L.plates.boss_wall_mm : L.plates.edge_mm);
-      const t = boss ? Math.max(L.plates.t_mm, pd.B * 1000) : L.plates.t_mm;
-      if (boss) bossV += ringV(D / 1000, pd.D, Math.max(0, t / 1000 - L.plates.t_mm / 1000));
+      // Round 8: the forward plate may be thinner (L.plates.t_fwd_mm); the aft plate's seats are 'aft'.
+      const tp = sp.name === 'aft' ? L.plates.t_mm : (L.plates.t_fwd_mm ?? L.plates.t_mm);
+      const t = boss ? Math.max(tp, pd.B * 1000) : tp;
+      if (boss) bossV += ringV(D / 1000, pd.D, Math.max(0, t / 1000 - tp / 1000));
       members.push({ name: `plate seat ${jt.name} ${sp.name}`, kind: 'seat', check: 'lug', material: pm, dims: { d_mm: +(pd.D * 1000).toFixed(3), D_mm: +D.toFixed(3), t_mm: +t.toFixed(3) }, sections: [sect('F', sp.radial.map((q) => ({ ch: q.ch, k: q.k })))], uses: { F: 'F' }, note: boss ? `a boss ${D.toFixed(1)} mm round the ${prt.id}, as long as the part` : `the plate alone, judged as a ${L.plates.edge_mm} mm ring round the ${prt.id}` });
     }
   }
