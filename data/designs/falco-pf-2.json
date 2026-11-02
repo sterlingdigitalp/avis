@@ -7,32 +7,33 @@
  "params": {
   "candidate": "falco",
   "span_m": 1.2,
-  "AR": 6,
-  "taper": 0.6,
+  "AR": 5.5,
+  "taper": 0.5,
   "elbowFrac": 0.5,
   "elbowGain": 0.5,
-  "amp_deg": 14,
-  "ampMax_deg": 22.400000000000002,
+  "amp_deg": 20,
+  "ampMax_deg": 28,
   "phiMean_deg": 5,
-  "gearRatio": 10,
-  "crankRating": 1.88,
+  "gearRatio": 14.814814814814817,
+  "crankRating": 3.2592592592592595,
   "staticMargin": 0.1,
   "sparFrac": 0.35,
-  "crank_mm": 8,
-  "coupler_mm": 70,
+  "crank_mm": 12,
+  "coupler_mm": 80,
   "parts": {
-   "motor": "motor-eflite-park480-910",
-   "esc": "esc-hobbywing-skywalker-20a-v2-mini",
-   "battery": "batt-gensace-800-3s-45c",
-   "twistServo": "servo-kst-x06-v6",
-   "tailServo": "servo-kst-x06-v6",
-   "strokeServo": "servo-kst-x06-v6",
+   "coupler": "rod-ec-4mm",
+   "motor": "motor-scorpion-sii-3008-1090",
+   "esc": "esc-hobbywing-skywalker-30a-v2-mini",
+   "battery": "batt-nexus-3s1p-p30b",
+   "twistServo": "servo-hitec-md89mw",
+   "tailServo": "servo-hitec-md89mw",
+   "strokeServo": "servo-hitec-md89mw",
    "fc": "fc-ark-v6x",
    "gps": "gps-3dr-mini-m10136",
    "airspeed": "aspd-matek-4525",
    "receiver": "rx-tbs-crossfire-nano",
-   "sparInner": "tube-ec-woven-8x6",
-   "sparOuter": "tube-ec-woven-8x6",
+   "sparInner": "tube-cst-pultruded-8x7",
+   "sparOuter": "tube-cst-pultruded-8x7",
    "leRod": "rod-ec-2mm",
    "teRod": "rod-ec-1-5mm",
    "ribMaterial": "balsa-wood-database",
@@ -40,11 +41,11 @@
    "keel": "tube-ec-woven-8x6",
    "gears": [
     "gear-khk-ds0.8-12",
-    "gear-khk-ds0.8-30",
-    "gear-khk-ds0.8-20",
-    "gear-khk-ds0.8-80"
+    "gear-khk-ds0.8-80",
+    "gear-khk-msga1-18",
+    "gear-khk-msgb1-40"
    ],
-   "bearing": "bearing-skf-623-2z"
+   "bearing": "bearing-skf-618-4"
   }
  },
  "atmosphere": {
@@ -70,20 +71,20 @@
   "segments": [
    {
     "length": 0.2875,
-    "chord_in": 0.24057135697281046,
-    "chord_out": 0.22854278912416992,
-    "xle_in": 0.08419997494048366,
-    "xle_out": 0.08419997494048366,
+    "chord_in": 0.269828722002635,
+    "chord_out": 0.25633728590250326,
+    "xle_in": 0.09444005270092225,
+    "xle_out": 0.09444005270092225,
     "gain": 0,
     "twist_in": 0,
     "twist_out": 0.3
    },
    {
     "length": 0.2875,
-    "chord_in": 0.22854278912416992,
-    "chord_out": 0.13712567347450194,
-    "xle_in": 0.08419997494048366,
-    "xle_out": 0.034138221132332155,
+    "chord_in": 0.25633728590250326,
+    "chord_out": 0.12816864295125163,
+    "xle_in": 0.09444005270092225,
+    "xle_out": 0.0382899805508501,
     "gain": 0.5,
     "twist_in": 0.3,
     "twist_out": 1
@@ -92,43 +93,43 @@
  },
  "geometry": {
   "span_m": 1.2,
-  "area_m2": 0.24,
-  "AR": 6,
-  "mac_m": 0.2135977846520934,
-  "chord_root_m": 0.24057135697281046,
-  "chord_elbow_m": 0.22854278912416992,
-  "chord_tip_m": 0.13712567347450194,
-  "tail_arm_m": 0.5773712567347451,
-  "wing_loading_N_m2": 16.83615974502619,
-  "x_np_m": -0.011595395145909737,
-  "x_cg_m": 0.009764383319299602,
+  "area_m2": 0.2618181818181817,
+  "AR": 5.500000000000002,
+  "mac_m": 0.23621672440996114,
+  "chord_root_m": 0.269828722002635,
+  "chord_elbow_m": 0.25633728590250326,
+  "chord_tip_m": 0.12816864295125163,
+  "tail_arm_m": 0.647588932806324,
+  "wing_loading_N_m2": 27.258779947175146,
+  "x_np_m": -0.009905268949593642,
+  "x_cg_m": 0.013716403491402473,
   "static_margin": 0.1
  },
  "drive": {
   "kind": "crank-rocker",
-  "a": 0.008,
-  "b": 0.07,
-  "d": 0.07,
-  "ampMin": 0.1466076571675237,
-  "ampMax": 0.39095375244672986,
-  "ampNominal": 0.24434609527920614,
+  "a": 0.012,
+  "b": 0.08,
+  "d": 0.08,
+  "ampMin": 0.20943951023931953,
+  "ampMax": 0.4886921905584123,
+  "ampNominal": 0.3490658503988659,
   "phiMean": 0.08726646259971647,
-  "gearRatio": 10,
+  "gearRatio": 14.814814814814817,
   "gearEfficiency": 0.85,
   "crankFriction_Nm": 0.01,
   "gears": [
    "gear-khk-ds0.8-12",
-   "gear-khk-ds0.8-30",
-   "gear-khk-ds0.8-20",
-   "gear-khk-ds0.8-80"
+   "gear-khk-ds0.8-80",
+   "gear-khk-msga1-18",
+   "gear-khk-msgb1-40"
   ]
  },
  "tail": {
-  "x_m": -0.5773712567347451,
+  "x_m": -0.647588932806324,
   "y_m": 0.02,
   "z_m": 0.005,
-  "span_each_m": 0.3402639350371803,
-  "chord_root_m": 0.11437443194527068,
+  "span_each_m": 0.3528946064604965,
+  "chord_root_m": 0.11862003578504084,
   "taper": 0.7,
   "dihedral_rad": 0.6108652381980153,
   "incidence_rad": 0,
@@ -136,36 +137,138 @@
   "AR_each": 3.5,
   "lift_factor": 0.6681818181818182,
   "kEps": 1,
-  "area_total_m2": 0.06615974027827796,
+  "area_total_m2": 0.07116263043937639,
   "deflection_max_rad": 0.5235987755982988
  },
  "body": {
+  "loft": {
+   "kind": "elliptic-loft",
+   "sections": [
+    {
+     "x_m": 0.1907075098814229,
+     "y_m": 0,
+     "width_m": 0,
+     "height_m": 0
+    },
+    {
+     "x_m": 0.16043647656691135,
+     "y_m": 0,
+     "width_m": 0.034218684477152816,
+     "height_m": 0.039921798556678295
+    },
+    {
+     "x_m": 0.13016544325239976,
+     "y_m": 0,
+     "width_m": 0.04595916554898689,
+     "height_m": 0.05361902647381804
+    },
+    {
+     "x_m": 0.0998944099378882,
+     "y_m": 0,
+     "width_m": 0.05314112900415961,
+     "height_m": 0.06199798383818623
+    },
+    {
+     "x_m": 0.06962337662337663,
+     "y_m": 0,
+     "width_m": 0.057498890849994586,
+     "height_m": 0.0670820393249937
+    },
+    {
+     "x_m": 0.039352343308865056,
+     "y_m": 0,
+     "width_m": 0.059654618173178804,
+     "height_m": 0.06959705453537528
+    },
+    {
+     "x_m": 0.009081309994353498,
+     "y_m": 0,
+     "width_m": 0.06,
+     "height_m": 0.07
+    },
+    {
+     "x_m": -0.021189723320158088,
+     "y_m": 0,
+     "width_m": 0.06,
+     "height_m": 0.07
+    },
+    {
+     "x_m": -0.05146075663466965,
+     "y_m": 0,
+     "width_m": 0.06,
+     "height_m": 0.07
+    },
+    {
+     "x_m": -0.08173178994918126,
+     "y_m": 0,
+     "width_m": 0.06,
+     "height_m": 0.07
+    },
+    {
+     "x_m": -0.11200282326369279,
+     "y_m": 0,
+     "width_m": 0.04897959183673469,
+     "height_m": 0.05714285714285715
+    },
+    {
+     "x_m": -0.14227385657820438,
+     "y_m": 0,
+     "width_m": 0.03673469387755102,
+     "height_m": 0.042857142857142864
+    },
+    {
+     "x_m": -0.1725448898927159,
+     "y_m": 0,
+     "width_m": 0.024489795918367353,
+     "height_m": 0.02857142857142858
+    },
+    {
+     "x_m": -0.20281592320722755,
+     "y_m": 0,
+     "width_m": 0.012244897959183666,
+     "height_m": 0.01428571428571428
+    },
+    {
+     "x_m": -0.23308695652173908,
+     "y_m": 0,
+     "width_m": 0.008,
+     "height_m": 0.008
+    },
+    {
+     "x_m": -0.7365539596451046,
+     "y_m": 0,
+     "width_m": 0.008,
+     "height_m": 0.008
+    }
+   ]
+  },
+  "loft_wetted_area_m2": 0.07706887197668542,
   "CdA_front_m2": 0.0008246680715673207,
-  "CdA_top_m2": 0.018656910161633882,
-  "CdA_side_m2": 0.021766395188572863,
-  "volume_m3": 0.0008547643402444091,
+  "CdA_top_m2": 0.020342134387351773,
+  "CdA_side_m2": 0.023732490118577074,
+  "volume_m3": 0.0009009116982602804,
   "kMunk": 0.8,
   "cp": [
    0.05,
    0,
    0
   ],
-  "length_m": 0.3886856283673725,
+  "length_m": 0.423794466403162,
   "width_m": 0.06,
   "height_m": 0.07,
   "bottom_y_m": -0.035
  },
  "mass": {
-  "total_kg": 0.4120345213509492,
-  "total_g": 412.0345213509492,
-  "parts_g": 250.01000000000002,
-  "structure_g": 108.28088813126017,
-  "margin_g": 53.74363321968903,
+  "total_kg": 0.7277555744674592,
+  "total_g": 727.7555744674592,
+  "parts_g": 535.08,
+  "structure_g": 97.75093431952988,
+  "margin_g": 94.92464014792948,
   "margin_frac": 0.15,
   "lumps": [
    {
     "name": "flap motor",
-    "mass_kg": 0.10004999999999999,
+    "mass_kg": 0.10924999999999999,
     "pos": [
      0.04,
      0,
@@ -175,7 +278,7 @@
    },
    {
     "name": "gears and bearings",
-    "mass_kg": 0.0330165,
+    "mass_kg": 0.156722,
     "pos": [
      0.015,
      0,
@@ -185,7 +288,7 @@
    },
    {
     "name": "crank, rockers, plates",
-    "mass_kg": 0.017302899999999996,
+    "mass_kg": 0.0185495,
     "pos": [
      0.01,
      0.01,
@@ -195,7 +298,7 @@
    },
    {
     "name": "couplers",
-    "mass_kg": 0.001771,
+    "mass_kg": 0.0034776,
     "pos": [
      0,
      0,
@@ -205,7 +308,7 @@
    },
    {
     "name": "ESC",
-    "mass_kg": 0.017249999999999998,
+    "mass_kg": 0.026449999999999998,
     "pos": [
      0.07,
      -0.01,
@@ -245,7 +348,7 @@
    },
    {
     "name": "tail servos",
-    "mass_kg": 0.0138,
+    "mass_kg": 0.049449999999999994,
     "pos": [
      -0.08,
      0,
@@ -255,7 +358,7 @@
    },
    {
     "name": "stroke servo",
-    "mass_kg": 0.0069,
+    "mass_kg": 0.024724999999999997,
     "pos": [
      -0.03,
      0,
@@ -265,29 +368,29 @@
    },
    {
     "name": "keel and boom",
-    "mass_kg": 0.025153673667146978,
+    "mass_kg": 0.02810923659090908,
     "pos": [
-     -0.24495849517604312,
+     -0.2761175889328063,
      0,
      0
     ],
-    "gyration_m": 0.19279940170404714
+    "gyration_m": 0.21545337944664025
    },
    {
     "name": "fuselage shell and formers",
-    "mass_kg": 0.004863862040417808,
+    "mass_kg": 0.004975990649350098,
     "pos": [
      -0.05,
      0,
      0
     ],
-    "gyration_m": 0.11660568851021175
+    "gyration_m": 0.12713833992094858
    },
    {
     "name": "tail surfaces",
-    "mass_kg": 0.007865363469471373,
+    "mass_kg": 0.008297433152460669,
     "pos": [
-     -0.5773712567347451,
+     -0.647588932806324,
      0.02,
      0
     ],
@@ -295,9 +398,9 @@
    },
    {
     "name": "battery",
-    "mass_kg": 0.08279999999999998,
+    "mass_kg": 0.17939999999999998,
     "pos": [
-     0.12290449821734584,
+     0.1060145959730681,
      -0.005,
      0
     ],
@@ -305,81 +408,87 @@
    }
   ],
   "wing": {
-   "spar_kg_per_m": 0.04611499999999999,
-   "skin_kg_per_m2": 0.06055821739130435,
+   "spar_kg_per_m": 0.028405000000000003,
+   "skin_kg_per_m2": 0.0624023280632411,
    "point": [
     {
      "name": "twist servo",
      "s_m": 0.474375,
-     "mass_kg": 0.0069,
+     "mass_kg": 0.024724999999999997,
      "d_m": 0
     }
    ],
-   "one_wing_kg": 0.040683111086956505
+   "one_wing_kg": 0.04922690703736974
   },
-  "x_battery_m": 0.12290449821734584
+  "x_battery_m": 0.1060145959730681
  },
  "motor": {
-  "id": "motor-eflite-park480-910",
-  "kv_rad_per_v_s": 95.29497715889039,
-  "R": 0.08,
-  "I0": 0.85,
-  "I_cont": 20,
+  "id": "motor-scorpion-sii-3008-1090",
+  "kv_rad_per_v_s": 114.14453308042916,
+  "R": 0.058,
+  "I0": 0.79,
+  "I_cont": 26,
   "I_cont_rule": "published continuous rating",
-  "I_burst": 25,
-  "burst_s": 15,
-  "J_kg_m2": 0.000005524848,
-  "mass_kg": 0.087,
+  "I_burst": null,
+  "burst_s": null,
+  "J_kg_m2": 0.000010821093750000003,
+  "mass_kg": 0.095,
   "J_estimated": true
  },
  "esc": {
-  "id": "esc-hobbywing-skywalker-20a-v2-mini",
-  "I_cont": 20,
-  "bec_A": 2,
+  "id": "esc-hobbywing-skywalker-30a-v2-mini",
+  "I_cont": 30,
+  "bec_A": 3,
   "bec_V": 5,
+  "bec_kind": "switching",
   "eta": 0.95,
-  "eta_assumed": true
+  "eta_assumed": true,
+  "regenerative": false,
+  "regenerative_basis": "no regenerative operation stated in the ESC documentation read for the catalogue"
  },
  "battery": {
-  "id": "batt-gensace-800-3s-45c",
+  "id": "batt-nexus-3s1p-p30b",
+  "chemistry": "Li-ion",
   "cells": 3,
-  "V_nom": 11.1,
-  "capacity_Ah": 0.8,
-  "I_cont": 36,
-  "R_int": 0.03083333333333334,
+  "V_nom": 10.8,
+  "capacity_Ah": 3,
+  "I_cont": 30,
+  "R_int": 0.03700000000000001,
   "R_estimated": true,
-  "mass_kg": 0.072
+  "cell_shift_V": -0.10000000000000009,
+  "ocv_assumed": "LiPo rested curve shifted to the published nominal cell voltage",
+  "mass_kg": 0.156
  },
  "servos": {
   "twist": {
-   "id": "servo-kst-x06-v6",
-   "stall_Nm": 0.11591818181818184,
-   "speed_rad_s": 10.665900984409792,
-   "stall_A": 0.58,
+   "id": "servo-hitec-md89mw",
+   "stall_Nm": 0.5377666666666667,
+   "speed_rad_s": 6.411413578754679,
+   "stall_A": 1.8666666666666667,
    "tau_s": 0.02,
-   "idle_A": 0,
+   "idle_A": 0.03,
    "volts": 5,
-   "mass_kg": 0.006
+   "mass_kg": 0.0215
   },
   "tail": {
-   "id": "servo-kst-x06-v6",
-   "stall_Nm": 0.11591818181818184,
-   "speed_rad_s": 10.665900984409792,
-   "stall_A": 0.58,
+   "id": "servo-hitec-md89mw",
+   "stall_Nm": 0.5377666666666667,
+   "speed_rad_s": 6.411413578754679,
+   "stall_A": 1.8666666666666667,
    "tau_s": 0.02,
-   "idle_A": 0,
+   "idle_A": 0.03,
    "volts": 5,
-   "mass_kg": 0.006
+   "mass_kg": 0.0215
   },
   "stroke": {
-   "id": "servo-kst-x06-v6",
-   "stall_Nm": 0.11591818181818184,
-   "speed_rad_s": 10.665900984409792,
-   "stall_A": 0.58,
+   "id": "servo-hitec-md89mw",
+   "stall_Nm": 0.5377666666666667,
+   "speed_rad_s": 6.411413578754679,
+   "stall_A": 1.8666666666666667,
    "tau_s": 0.02,
-   "idle_A": 0,
+   "idle_A": 0.03,
    "volts": 5,
-   "mass_kg": 0.006,
+   "mass_kg": 0.0215,
    "amp_rate_rad_s": 0.5
   }
  },
@@ -387,19 +496,19 @@
   "items": [
    {
     "name": "inner spar, 2 off",
-    "material_id": "tube-ec-woven-8x6",
-    "material": "8 mm x 6 mm woven finish carbon tube",
-    "mass_g": 18.917499999999997,
-    "basis": "32.9 g/m x 0.287 m x 2",
-    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+    "material_id": "tube-cst-pultruded-8x7",
+    "material": "DPP carbon fiber tube 8 mm OD x 7 mm ID x 1 m (CS-529 1M)",
+    "mass_g": 10.0625,
+    "basis": "17.5 g/m x 0.287 m x 2",
+    "source_url": "https://www.cstsales.com/Carbon_Fiber_Tubes.html"
    },
    {
     "name": "outer spar, 2 off",
-    "material_id": "tube-ec-woven-8x6",
-    "material": "8 mm x 6 mm woven finish carbon tube",
-    "mass_g": 18.917499999999997,
-    "basis": "32.9 g/m x 0.287 m x 2",
-    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+    "material_id": "tube-cst-pultruded-8x7",
+    "material": "DPP carbon fiber tube 8 mm OD x 7 mm ID x 1 m (CS-529 1M)",
+    "mass_g": 10.0625,
+    "basis": "17.5 g/m x 0.287 m x 2",
+    "source_url": "https://www.cstsales.com/Carbon_Fiber_Tubes.html"
    },
    {
     "name": "leading edge rod, 2 off",
@@ -421,40 +530,40 @@
     "name": "wing film, both faces",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 8.4048,
-    "basis": "17 g/m2 x 0.494 m2",
+    "mass_g": 9.168872727272724,
+    "basis": "17 g/m2 x 0.539 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "ribs, 12 off",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 4.233436672967865,
-    "basis": "area 1.18e-3 m2 x 0.002 m x 150 kg/m3 each",
+    "mass_g": 5.038139511631174,
+    "basis": "area 1.40e-3 m2 x 0.002 m x 150 kg/m3 each",
     "source_url": "https://www.wood-database.com/balsa/"
    },
    {
     "name": "tail surfaces, film, spar and ribs",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 6.839446495192499,
-    "basis": "film 2.3 g + rods 3.7 g + ribs 0.8 g",
+    "mass_g": 7.215159263009278,
+    "basis": "film 2.5 g + rods 3.8 g + ribs 0.9 g",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "keel and tail boom",
     "material_id": "tube-ec-woven-8x6",
     "material": "8 mm x 6 mm woven finish carbon tube",
-    "mass_g": 21.87275971056259,
-    "basis": "32.9 g/m x 0.665 m",
+    "mass_g": 24.442814426877465,
+    "basis": "32.9 g/m x 0.743 m",
     "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
    },
    {
     "name": "fuselage film shell",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 1.0794452525372251,
-    "basis": "0.063 m2",
+    "mass_g": 1.1769483907392153,
+    "basis": "0.069 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
@@ -469,59 +578,61 @@
     "name": "crank, rockers and gearbox plates",
     "material_id": "plate-ec-2mm",
     "material": "High strength carbon fibre sheet 2 mm",
-    "mass_g": 15.046,
-    "basis": "2.71 kg/m2 x 2.60e-3 m2, plus gearbox cheek allowance",
+    "mass_g": 16.130000000000003,
+    "basis": "2.71 kg/m2 x 3.00e-3 m2, plus gearbox cheek allowance",
     "source_url": "https://media.easycomposites.co.uk/datasheets/EC-TDS-High-Strength-Carbon-Sheet.pdf"
    },
    {
     "name": "couplers, 2 off",
-    "material_id": "rod-ec-3mm",
-    "material": "3 mm pultruded carbon rod",
-    "mass_g": 1.54,
-    "basis": "11 g/m x 70 mm x 2",
-    "source_url": "https://www.easycomposites.co.uk/3mm-carbon-fibre-rod"
+    "material_id": "rod-ec-4mm",
+    "material": "4 mm pultruded carbon rod",
+    "mass_g": 3.024,
+    "basis": "18.9 g/m x 80 mm x 2",
+    "source_url": "https://www.easycomposites.co.uk/4mm-carbon-fibre-rod"
    }
   ],
   "spar_inner": {
-   "id": 0.006,
    "od": 0.008,
-   "I": 1.3744467859455348e-10,
+   "id_m": 0.007,
+   "I": 8.32031179349172e-11,
    "c": 0.004,
-   "kgPerM": 0.0329,
-   "allowable_MPa": 650,
-   "allowable_basis": "published tensile strength",
-   "mass_g_per_m": 32.9
+   "kgPerM": 0.0175,
+   "id": "tube-cst-pultruded-8x7",
+   "allowable_MPa": 800,
+   "allowable_basis": "published tensile strength, compressive lower and governs in bending; disclaimed by the maker (reference only / design guide): half value per SPEC",
+   "mass_g_per_m": 17.5
   },
   "spar_outer": {
-   "id": 0.006,
    "od": 0.008,
-   "I": 1.3744467859455348e-10,
+   "id_m": 0.007,
+   "I": 8.32031179349172e-11,
    "c": 0.004,
-   "kgPerM": 0.0329,
-   "allowable_MPa": 650,
-   "allowable_basis": "published tensile strength",
-   "mass_g_per_m": 32.9
+   "kgPerM": 0.0175,
+   "id": "tube-cst-pultruded-8x7",
+   "allowable_MPa": 800,
+   "allowable_basis": "published tensile strength, compressive lower and governs in bending; disclaimed by the maker (reference only / design guide): half value per SPEC",
+   "mass_g_per_m": 17.5
   },
   "gear_stages": [
    {
     "pinion": "gear-khk-ds0.8-12",
-    "gear": "gear-khk-ds0.8-30",
-    "ratio": 2.5,
+    "gear": "gear-khk-ds0.8-80",
+    "ratio": 6.666666666666667,
     "pinion_allowable_Nm": 0.22,
-    "gear_allowable_Nm": 0.79
+    "gear_allowable_Nm": 2.55
    },
    {
-    "pinion": "gear-khk-ds0.8-20",
-    "gear": "gear-khk-ds0.8-80",
-    "ratio": 4,
-    "pinion_allowable_Nm": 0.47,
-    "gear_allowable_Nm": 2.55
+    "pinion": "gear-khk-msga1-18",
+    "gear": "gear-khk-msgb1-40",
+    "ratio": 2.2222222222222223,
+    "pinion_allowable_Nm": 6.37,
+    "gear_allowable_Nm": 34.6
    }
   ],
   "coupler": {
-   "id": "rod-ec-3mm",
-   "od_m": 0.003,
-   "length_m": 0.07,
+   "id": "rod-ec-4mm",
+   "od_m": 0.004,
+   "length_m": 0.08,
    "E_GPa": 28,
    "compressive_MPa": 200
   }
@@ -529,73 +640,73 @@
  "bom": {
   "parts": [
    {
-    "id": "motor-eflite-park480-910",
-    "name": "Park 480 Brushless Outrunner 910Kv",
+    "id": "motor-scorpion-sii-3008-1090",
+    "name": "Scorpion SII-3008-1090KV (V2)",
     "role": "flap motor",
     "count": 1,
-    "unit_mass_g": 87,
-    "mass_g": 87,
-    "source_url": "https://assets.horizonhobby.com/on/demandware.static/-/Sites-horizon-master/default/dw76e9bdef/Manuals/EFLPark480910KvOutrunnerInstructions.pdf",
-    "verified": "datasheet",
+    "unit_mass_g": 95,
+    "mass_g": 95,
+    "source_url": "https://scorpionsystem.com/catalog/aeroplane/motors_1/s-30_v2/SII-3008-1090KV/",
+    "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
    },
    {
-    "id": "esc-hobbywing-skywalker-20a-v2-mini",
-    "name": "SkyWalker 20A V2 Mini",
-    "role": "flap ESC",
+    "id": "esc-hobbywing-skywalker-30a-v2-mini",
+    "name": "SkyWalker 30A V2 Mini",
+    "role": "flap ESC, its BEC supplies the servos and avionics",
     "count": 1,
-    "unit_mass_g": 15,
-    "mass_g": 15,
+    "unit_mass_g": 23,
+    "mass_g": 23,
     "source_url": "https://cdn.shopify.com/s/files/1/0109/9702/files/SKYWALKER_V2_mini_Leaflet_EN.pdf",
     "verified": "datasheet",
     "retrieved": "2026-11-02",
     "pos": null
    },
    {
-    "id": "batt-gensace-800-3s-45c",
-    "name": "Gens Ace 800mAh 3S 45C LiPo (GEA8003S45JS)",
+    "id": "batt-nexus-3s1p-p30b",
+    "name": "3s1p 10.8v Molicel P30B 3000mAh Li-Ion Battery Pack",
     "role": "battery",
     "count": 1,
-    "unit_mass_g": 72,
-    "mass_g": 72,
-    "source_url": "https://ozrc.com.au/products/gens-ace-3s-800mah-11-1v-45c-soft-case-lipo-battery-jst-gea8003s45js",
+    "unit_mass_g": 156,
+    "mass_g": 156,
+    "source_url": "https://wrekd.com/products/3s1p-10-8v-molicel-p30b-3000mah-li-ion-battery-pack",
     "verified": "retailer-page",
     "retrieved": "2026-11-02",
     "pos": null
    },
    {
-    "id": "servo-kst-x06-v6",
-    "name": "X06 V6.0 HV micro",
+    "id": "servo-hitec-md89mw",
+    "name": "MD89MW magnetic-encoder metal gear 25T digital micro servo",
     "role": "wing twist servo",
     "count": 2,
-    "unit_mass_g": 6,
-    "mass_g": 12,
-    "source_url": "https://kstservos.com/products/x06-v6-0-hv-micro-digital-metal-gear-glider-1-8kg-torque-servo-motor",
+    "unit_mass_g": 21.5,
+    "mass_g": 43,
+    "source_url": "https://hitecrcd.com/md89mw-magnetic-encoder-metal-gear-25t-digital-micro-servo/",
     "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
    },
    {
-    "id": "servo-kst-x06-v6",
-    "name": "X06 V6.0 HV micro",
+    "id": "servo-hitec-md89mw",
+    "name": "MD89MW magnetic-encoder metal gear 25T digital micro servo",
     "role": "tail servo",
     "count": 2,
-    "unit_mass_g": 6,
-    "mass_g": 12,
-    "source_url": "https://kstservos.com/products/x06-v6-0-hv-micro-digital-metal-gear-glider-1-8kg-torque-servo-motor",
+    "unit_mass_g": 21.5,
+    "mass_g": 43,
+    "source_url": "https://hitecrcd.com/md89mw-magnetic-encoder-metal-gear-25t-digital-micro-servo/",
     "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
    },
    {
-    "id": "servo-kst-x06-v6",
-    "name": "X06 V6.0 HV micro",
+    "id": "servo-hitec-md89mw",
+    "name": "MD89MW magnetic-encoder metal gear 25T digital micro servo",
     "role": "stroke amplitude servo",
     "count": 1,
-    "unit_mass_g": 6,
-    "mass_g": 6,
-    "source_url": "https://kstservos.com/products/x06-v6-0-hv-micro-digital-metal-gear-glider-1-8kg-torque-servo-motor",
+    "unit_mass_g": 21.5,
+    "mass_g": 21.5,
+    "source_url": "https://hitecrcd.com/md89mw-magnetic-encoder-metal-gear-25t-digital-micro-servo/",
     "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
@@ -661,30 +772,6 @@
     "pos": null
    },
    {
-    "id": "gear-khk-ds0.8-30",
-    "name": "DS0.8-30 injection molded spur gear",
-    "role": "gear",
-    "count": 1,
-    "unit_mass_g": 2.37,
-    "mass_g": 2.37,
-    "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
-    "verified": "datasheet",
-    "retrieved": "2026-11-02",
-    "pos": null
-   },
-   {
-    "id": "gear-khk-ds0.8-20",
-    "name": "DS0.8-20 injection molded spur gear",
-    "role": "gear",
-    "count": 1,
-    "unit_mass_g": 1.26,
-    "mass_g": 1.26,
-    "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
-    "verified": "datasheet",
-    "retrieved": "2026-11-02",
-    "pos": null
-   },
-   {
     "id": "gear-khk-ds0.8-80",
     "name": "DS0.8-80 injection molded spur gear",
     "role": "gear",
@@ -697,14 +784,38 @@
     "pos": null
    },
    {
-    "id": "bearing-skf-623-2z",
-    "name": "623-2Z deep groove ball bearing",
+    "id": "gear-khk-msga1-18",
+    "name": "MSGA1-18 ground carburized SCM415 spur gear",
+    "role": "gear",
+    "count": 1,
+    "unit_mass_g": 20,
+    "mass_g": 20,
+    "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-18",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "gear-khk-msgb1-40",
+    "name": "MSGB1-40 ground carburized SCM415 spur gear",
+    "role": "gear",
+    "count": 1,
+    "unit_mass_g": 100,
+    "mass_g": 100,
+    "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msgb1-40",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "bearing-skf-618-4",
+    "name": "618/4 deep groove ball bearing",
     "role": "bearing",
     "count": 8,
-    "unit_mass_g": 1.6,
-    "mass_g": 12.8,
-    "source_url": "https://www.electrokit.com/en/kullager-skf-3mm-dim-3x10x4",
-    "verified": "retailer-page",
+    "unit_mass_g": 0.5,
+    "mass_g": 4,
+    "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-618%2F4",
+    "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
    }
@@ -712,19 +823,19 @@
   "structure": [
    {
     "name": "inner spar, 2 off",
-    "material_id": "tube-ec-woven-8x6",
-    "material": "8 mm x 6 mm woven finish carbon tube",
-    "mass_g": 18.917499999999997,
-    "basis": "32.9 g/m x 0.287 m x 2",
-    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+    "material_id": "tube-cst-pultruded-8x7",
+    "material": "DPP carbon fiber tube 8 mm OD x 7 mm ID x 1 m (CS-529 1M)",
+    "mass_g": 10.0625,
+    "basis": "17.5 g/m x 0.287 m x 2",
+    "source_url": "https://www.cstsales.com/Carbon_Fiber_Tubes.html"
    },
    {
     "name": "outer spar, 2 off",
-    "material_id": "tube-ec-woven-8x6",
-    "material": "8 mm x 6 mm woven finish carbon tube",
-    "mass_g": 18.917499999999997,
-    "basis": "32.9 g/m x 0.287 m x 2",
-    "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
+    "material_id": "tube-cst-pultruded-8x7",
+    "material": "DPP carbon fiber tube 8 mm OD x 7 mm ID x 1 m (CS-529 1M)",
+    "mass_g": 10.0625,
+    "basis": "17.5 g/m x 0.287 m x 2",
+    "source_url": "https://www.cstsales.com/Carbon_Fiber_Tubes.html"
    },
    {
     "name": "leading edge rod, 2 off",
@@ -746,40 +857,40 @@
     "name": "wing film, both faces",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 8.4048,
-    "basis": "17 g/m2 x 0.494 m2",
+    "mass_g": 9.168872727272724,
+    "basis": "17 g/m2 x 0.539 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "ribs, 12 off",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 4.233436672967865,
-    "basis": "area 1.18e-3 m2 x 0.002 m x 150 kg/m3 each",
+    "mass_g": 5.038139511631174,
+    "basis": "area 1.40e-3 m2 x 0.002 m x 150 kg/m3 each",
     "source_url": "https://www.wood-database.com/balsa/"
    },
    {
     "name": "tail surfaces, film, spar and ribs",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 6.839446495192499,
-    "basis": "film 2.3 g + rods 3.7 g + ribs 0.8 g",
+    "mass_g": 7.215159263009278,
+    "basis": "film 2.5 g + rods 3.8 g + ribs 0.9 g",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "keel and tail boom",
     "material_id": "tube-ec-woven-8x6",
     "material": "8 mm x 6 mm woven finish carbon tube",
-    "mass_g": 21.87275971056259,
-    "basis": "32.9 g/m x 0.665 m",
+    "mass_g": 24.442814426877465,
+    "basis": "32.9 g/m x 0.743 m",
     "source_url": "https://www.easycomposites.co.uk/8mm-woven-finish-carbon-fibre-tube"
    },
    {
     "name": "fuselage film shell",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 1.0794452525372251,
-    "basis": "0.063 m2",
+    "mass_g": 1.1769483907392153,
+    "basis": "0.069 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
@@ -794,32 +905,41 @@
     "name": "crank, rockers and gearbox plates",
     "material_id": "plate-ec-2mm",
     "material": "High strength carbon fibre sheet 2 mm",
-    "mass_g": 15.046,
-    "basis": "2.71 kg/m2 x 2.60e-3 m2, plus gearbox cheek allowance",
+    "mass_g": 16.130000000000003,
+    "basis": "2.71 kg/m2 x 3.00e-3 m2, plus gearbox cheek allowance",
     "source_url": "https://media.easycomposites.co.uk/datasheets/EC-TDS-High-Strength-Carbon-Sheet.pdf"
    },
    {
     "name": "couplers, 2 off",
-    "material_id": "rod-ec-3mm",
-    "material": "3 mm pultruded carbon rod",
-    "mass_g": 1.54,
-    "basis": "11 g/m x 70 mm x 2",
-    "source_url": "https://www.easycomposites.co.uk/3mm-carbon-fibre-rod"
+    "material_id": "rod-ec-4mm",
+    "material": "4 mm pultruded carbon rod",
+    "mass_g": 3.024,
+    "basis": "18.9 g/m x 80 mm x 2",
+    "source_url": "https://www.easycomposites.co.uk/4mm-carbon-fibre-rod"
    }
   ],
-  "parts_g": 250.01000000000002,
-  "structure_g": 108.28088813126017,
-  "margin_g": 53.74363321968903,
-  "total_g": 412.03452135094926
+  "parts_g": 535.08,
+  "structure_g": 97.75093431952988,
+  "margin_g": 94.92464014792948,
+  "total_g": 727.7555744674594
  },
  "electrical": {
   "avionics_A_5V": 0.35,
-  "avionics_note": "FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw"
+  "avionics_note": "FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw",
+  "servo_supply_V": 5,
+  "bec": {
+   "part": "esc-hobbywing-skywalker-30a-v2-mini",
+   "volts": 5,
+   "amps": 3,
+   "kind": "switching",
+   "published": "Switch 5V 3A",
+   "note": "built into the flap ESC; its mass is in the BOM with the ESC"
+  }
  },
  "cruise": {
-  "V": 9,
-  "amp": 0.24434609527920614,
-  "dyn": 0.13962634015954636,
+  "V": 12.5,
+  "amp": 0.3490658503988659,
+  "dyn": 0.17453292519943295,
   "sym": 0,
   "lead": 0
  },
@@ -832,372 +952,402 @@
   "Tail polar is an assumed thin plate."
  ],
  "control": {
-  "glide": [
+  "envelope": [
    {
-    "V": 8,
-    "theta": -0.05256877607285902,
-    "gamma": -0.12686029416742467,
-    "tail": 0.02477169573217025,
-    "sink": 1.012162368987047,
-    "LD": 7.840354861882845,
-    "stalled": 0.004674781680322737
+    "amp": 0.20943951023931953,
+    "freqMax": 10.789407614898533,
+    "limitedBy": "gear",
+    "atV": 17.5
    },
    {
-    "V": 8.5,
-    "theta": -0.06904729076324186,
-    "gamma": -0.12434135582388035,
-    "tail": 0.015545889165697106,
-    "sink": 1.0541802099848752,
-    "LD": 8.000886613725557,
-    "stalled": 0.003370952645324298
+    "amp": 0.2792526803190927,
+    "freqMax": 8.483161080524724,
+    "limitedBy": "gear",
+    "atV": 17.5
    },
    {
-    "V": 9,
-    "theta": -0.08736969504814818,
-    "gamma": -0.1267362546923491,
-    "tail": 0.007809162252646272,
-    "sink": 1.137575272087786,
-    "LD": 7.848111295593736,
-    "stalled": 0.002564158082604564
+    "amp": 0.34906585039886595,
+    "freqMax": 6.975230654203386,
+    "limitedBy": "gear",
+    "atV": 17.5
    },
    {
-    "V": 9.5,
-    "theta": -0.10361748651001103,
-    "gamma": -0.12960598336911003,
-    "tail": 0.0014839628847798103,
-    "sink": 1.227812686558148,
-    "LD": 7.672442713189267,
-    "stalled": 0.0020382024322639393
+    "amp": 0.4188790204786391,
+    "freqMax": 6.176914546150915,
+    "limitedBy": "gear",
+    "atV": 17.5
    },
    {
-    "V": 10,
-    "theta": -0.11861374270625336,
-    "gamma": -0.13320284638889318,
-    "tail": -0.003818972241494591,
-    "sink": 1.3280929271310038,
-    "LD": 7.462893522760015,
-    "stalled": 0.0016766192640165142
-   },
-   {
-    "V": 10.5,
-    "theta": -0.13252898532780594,
-    "gamma": -0.13734081417603589,
-    "tail": -0.008295772837677892,
-    "sink": 1.4375492883630319,
-    "LD": 7.235318834058857,
-    "stalled": 0.0014182617124919494
-   },
-   {
-    "V": 11,
-    "theta": -0.14556231354587595,
-    "gamma": -0.14193184288733315,
-    "tail": -0.012105280885307986,
-    "sink": 1.5560137427453902,
-    "LD": 6.998261009316339,
-    "stalled": 0.0012275300050411165
-   },
-   {
-    "V": 11.5,
-    "theta": -0.15785444642696256,
-    "gamma": -0.14685804742219255,
-    "tail": -0.015393772745032896,
-    "sink": 1.6828033735163053,
-    "LD": 6.760273367149063,
-    "stalled": 0.001082391431529157
-   },
-   {
-    "V": 12,
-    "theta": -0.16951865655637266,
-    "gamma": -0.15206501817572954,
-    "tail": -0.018246904419381968,
-    "sink": 1.8177557117472538,
-    "LD": 6.525367767078001,
-    "stalled": 0.0009694473877921425
-   },
-   {
-    "V": 12.5,
-    "theta": -0.1806500970766058,
-    "gamma": -0.15751850689129726,
-    "tail": -0.020727852793471207,
-    "sink": 1.9608490112855017,
-    "LD": 6.295867152066711,
-    "stalled": 0.000879931070535765
-   },
-   {
-    "V": 13,
-    "theta": -0.19130924474421326,
-    "gamma": -0.1631381295814237,
-    "tail": -0.022913116288504818,
-    "sink": 2.111401034601403,
-    "LD": 6.075298721375239,
-    "stalled": 0.000807521639481493
-   },
-   {
-    "V": 13.5,
-    "theta": -0.20155249970691325,
-    "gamma": -0.16888653183476407,
-    "tail": -0.024848917307853866,
-    "sink": 2.2691451665868017,
-    "LD": 5.864732419627342,
-    "stalled": 0.0007480572534632883
+    "amp": 0.4886921905584123,
+    "freqMax": 5.644703807449266,
+    "limitedBy": "gear",
+    "atV": 17.5
    }
   ],
-  "dThetaPerG": 0.058901300318454274,
-  "trim": [
+  "envelopeBest": {
+   "amp": 0.4886921905584123,
+   "freqMax": 5.644703807449266,
+   "limitedBy": "gear",
+   "atV": 17.5
+  },
+  "freqMax": 10.789407614898533,
+  "dt": 0.001388888888888889,
+  "glide": [
+   {
+    "V": 7.5,
+    "theta": 0.016294350380406414,
+    "gamma": -0.1863815879313658,
+    "tail": 0.08480064304360299,
+    "sink": 1.389782778000034,
+    "LD": 5.3030652875167,
+    "stalled": 0.03547058996201282
+   },
    {
     "V": 8,
-    "theta": 0.011457430535959517,
-    "freq": 10.030865706200036,
-    "tail": 0.19613102393283277,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636
+    "theta": -0.008334644278748811,
+    "gamma": -0.16993205232970046,
+    "tail": 0.05849262730945723,
+    "sink": 1.3529230439016442,
+    "LD": 5.827951646612723,
+    "stalled": 0.01734649488307901
    },
    {
     "V": 8.5,
-    "theta": 0.023793591812839975,
-    "freq": 11.519502294822384,
-    "tail": 0.19367985462263973,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636
+    "theta": -0.023160115423373186,
+    "gamma": -0.15607951220140096,
+    "tail": 0.04531547250406866,
+    "sink": 1.3212959268841753,
+    "LD": 6.35487961360992,
+    "stalled": 0.010657952022454637
    },
    {
     "V": 9,
-    "theta": 0.06320158262208306,
-    "freq": 6.054137830682745,
-    "tail": 0.03782448974968858,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636
+    "theta": -0.03715565655623873,
+    "gamma": -0.14551248833285607,
+    "tail": 0.03360548603572312,
+    "sink": 1.3049956885079201,
+    "LD": 6.823689614948982,
+    "stalled": 0.00705735263409749
    },
    {
     "V": 9.5,
-    "theta": 0.0444321989705951,
-    "freq": 6.059714692309583,
-    "tail": 0.023294718348591245,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636
+    "theta": -0.04945380701227633,
+    "gamma": -0.13718221036121586,
+    "tail": 0.02410464678118586,
+    "sink": 1.2991472678176732,
+    "LD": 7.243790043185706,
+    "stalled": 0.005005932004671726
    },
    {
     "V": 10,
-    "theta": 0.030233863336996365,
-    "freq": 6.197294798092766,
-    "tail": 0.014615215656628574,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636
+    "theta": -0.06051244134878492,
+    "gamma": -0.13069258890079624,
+    "tail": 0.01620749172929474,
+    "sink": 1.3032085623541965,
+    "LD": 7.607929393486156,
+    "stalled": 0.0037443431812621197
    },
    {
     "V": 10.5,
-    "theta": 0.020399708628967613,
-    "freq": 6.345407352968614,
-    "tail": 0.008872966336603914,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636
+    "theta": -0.07053745227855776,
+    "gamma": -0.12571076592081906,
+    "tail": 0.009602648617586591,
+    "sink": 1.3164891822844853,
+    "LD": 7.912820372418632,
+    "stalled": 0.0029240173515992967
    },
    {
     "V": 11,
-    "theta": 0.010589108039736573,
-    "freq": 6.527502181392104,
-    "tail": 0.004369274011462193,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636
+    "theta": -0.07973308361041109,
+    "gamma": -0.12191710477407598,
+    "tail": 0.003973354113097366,
+    "sink": 1.337768347410767,
+    "LD": 8.16161515486609,
+    "stalled": 0.002362740368073816
    },
    {
     "V": 11.5,
-    "theta": 0.0035035454842211955,
-    "freq": 6.746423835661155,
-    "tail": 0.00007300284853321616,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636
+    "theta": -0.08822772547033017,
+    "gamma": -0.11908673664886307,
+    "tail": -0.0008719824409150149,
+    "sink": 1.3662628101268783,
+    "LD": 8.357507609139335,
+    "stalled": 0.001963421630868664
    },
    {
     "V": 12,
-    "theta": -0.00215672120176727,
-    "freq": 6.957556802728073,
-    "tail": -0.0034750679034424585,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636
+    "theta": -0.09612559513887764,
+    "gamma": -0.11704600735985238,
+    "tail": -0.005078689165093284,
+    "sink": 1.4013472781092753,
+    "LD": 8.504597952352507,
+    "stalled": 0.001669900128226508
    },
    {
     "V": 12.5,
-    "theta": -0.009342100631156489,
-    "freq": 7.235841256475563,
-    "tail": -0.007212974958725334,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636
+    "theta": -0.10350842541948958,
+    "gamma": -0.11567574434847235,
+    "tail": -0.008743097253747365,
+    "sink": 1.4427242881933082,
+    "LD": 8.606261659068497,
+    "stalled": 0.0014484457764877565
    },
    {
     "V": 13,
-    "theta": -0.010268191168772195,
-    "freq": 7.500743687011956,
-    "tail": -0.00892305011236983,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636
+    "theta": -0.11044438547699183,
+    "gamma": -0.11485886157634236,
+    "tail": -0.01195836827798175,
+    "sink": 1.489884254005177,
+    "LD": 8.668017377799256,
+    "stalled": 0.0012773105008369232
    },
    {
     "V": 13.5,
-    "theta": -0.019805522242886196,
-    "freq": 7.787099545817903,
-    "tail": -0.012744539311446841,
-    "amp": 0.24434609527920614,
+    "theta": -0.11740748393414074,
+    "gamma": -0.11493738696653412,
+    "tail": -0.014786891678989235,
+    "sink": 1.5482405975566953,
+    "LD": 8.662042951033742,
+    "stalled": 0.0011427500894068223
+   },
+   {
+    "V": 14,
+    "theta": -0.1248472951835931,
+    "gamma": -0.11628039059026485,
+    "tail": -0.01725752186875315,
+    "sink": 1.624259382515449,
+    "LD": 8.561107199089154,
+    "stalled": 0.0010358119732910686
+   },
+   {
+    "V": 14.5,
+    "theta": -0.13328899521492052,
+    "gamma": -0.11923295383358752,
+    "tail": -0.01950780822381216,
+    "sink": 1.7247843102840814,
+    "LD": 8.347161067285302,
+    "stalled": 0.0009482824449518439
+   },
+   {
+    "V": 15,
+    "theta": -0.14271011070710019,
+    "gamma": -0.12370734412203621,
+    "tail": -0.02153774089125831,
+    "sink": 1.850880891488786,
+    "LD": 8.042316534093942,
+    "stalled": 0.0008758693251750512
+   },
+   {
+    "V": 15.5,
+    "theta": -0.15211574277591772,
+    "gamma": -0.12864412948009044,
+    "tail": -0.02334308472267733,
+    "sink": 1.9884887121547778,
+    "LD": 7.730453545330782,
+    "stalled": 0.0008153106692436817
+   },
+   {
+    "V": 16,
+    "theta": -0.16114512320718413,
+    "gamma": -0.133617076609208,
+    "tail": -0.024965382136333723,
+    "sink": 2.1315174738372122,
+    "LD": 7.439481206127979,
+    "stalled": 0.0007640473616639131
+   },
+   {
+    "V": 16.5,
+    "theta": -0.16972880716980357,
+    "gamma": -0.13850782281041987,
+    "tail": -0.026430283421323014,
+    "sink": 2.2780788049377922,
+    "LD": 7.173580383400088,
+    "stalled": 0.0007202441148161852
+   },
+   {
+    "V": 17,
+    "theta": -0.17826378309644125,
+    "gamma": -0.14367163575715658,
+    "tail": -0.0277616676610713,
+    "sink": 2.434023931975367,
+    "LD": 6.9123595262833035,
+    "stalled": 0.0006824943917527415
+   },
+   {
+    "V": 17.5,
+    "theta": -0.18708518749056668,
+    "gamma": -0.14941706414983263,
+    "tail": -0.02897135528198833,
+    "sink": 2.6050800476173643,
+    "LD": 6.642796030171647,
+    "stalled": 0.0006497934923650175
+   }
+  ],
+  "dThetaPerG": 0.052450658853581626,
+  "trim": [
+   {
+    "V": 12.5,
+    "theta": 0.023152317422312194,
+    "freq": 5.973386927254858,
+    "tail": 0.0035313239226730368,
+    "amp": 0.3490658503988659,
     "sym": 0,
-    "dyn": 0.13962634015954636
+    "dyn": 0.17453292519943295
+   },
+   {
+    "V": 13,
+    "theta": 0.015227445437418333,
+    "freq": 5.970871570530231,
+    "tail": -0.0005769335892618473,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.17453292519943295
+   },
+   {
+    "V": 13.5,
+    "theta": 0.009250626084033606,
+    "freq": 6.012718666533549,
+    "tail": -0.004027673899247748,
+    "amp": 0.3490658503988659,
+    "sym": 0,
+    "dyn": 0.17453292519943295
    }
   ],
   "trimDetail": [
    {
-    "V": 8,
-    "power_w": 7.199155459155075,
-    "Irms_A": 3.2735533047914434,
-    "stalled": 0.05070376434718226,
-    "crankPeak_Nm": 0.5113507200882368,
-    "freq": 4.498161356442992,
-    "theta_deg": 5.219994834357182,
-    "tail_deg": 2.4833407135221304
-   },
-   {
-    "V": 8.5,
-    "power_w": 11.327357885985375,
-    "Irms_A": 4.48786224034778,
-    "stalled": 0.07820501979815482,
-    "crankPeak_Nm": 0.7190952969554595,
-    "freq": 5.771515790196947,
-    "theta_deg": 4.719484308041922,
-    "tail_deg": 2.923142753664416
-   },
-   {
-    "V": 9,
-    "power_w": 8.855012510877527,
-    "Irms_A": 3.6771296494554453,
-    "stalled": 0.01673243211071341,
-    "crankPeak_Nm": 0.5621966019175733,
-    "freq": 4.662866076169475,
-    "theta_deg": 2.6994138588983314,
-    "tail_deg": 1.0297820654671208
-   },
-   {
-    "V": 9.5,
-    "power_w": 9.967311897193232,
-    "Irms_A": 3.9588304590257017,
-    "stalled": 0.01286273448737534,
-    "crankPeak_Nm": 0.6048407598909793,
-    "freq": 4.853655183519681,
-    "theta_deg": 1.9855170842407652,
-    "tail_deg": 0.8594687327244941
-   },
-   {
-    "V": 10,
-    "power_w": 10.86501413090708,
-    "Irms_A": 4.20832518135708,
-    "stalled": 0.009687898178341951,
-    "crankPeak_Nm": 0.6459288798697083,
-    "freq": 5.049934742675598,
-    "theta_deg": 1.189460810645757,
-    "tail_deg": 0.3061173576648163
-   },
-   {
-    "V": 10.5,
-    "power_w": 12.169429772035155,
-    "Irms_A": 4.488951404208884,
-    "stalled": 0.007943225572554722,
-    "crankPeak_Nm": 0.6844724502445119,
-    "freq": 5.2011340594562805,
-    "theta_deg": 0.6448792102879747,
-    "tail_deg": 0.010508247456672464
-   },
-   {
-    "V": 11,
-    "power_w": 13.751730297771468,
-    "Irms_A": 4.818289140848828,
-    "stalled": 0.0068217760447180165,
-    "crankPeak_Nm": 0.7328781416303636,
-    "freq": 5.398518003897089,
-    "theta_deg": 0.15335662918337017,
-    "tail_deg": -0.2413935058303672
-   },
-   {
-    "V": 11.5,
-    "power_w": 15.042214597207106,
-    "Irms_A": 5.154585623343047,
-    "stalled": 0.005962635346604533,
-    "crankPeak_Nm": 0.7883988904782682,
-    "freq": 5.628201145666775,
-    "theta_deg": -0.26808820128829514,
-    "tail_deg": -0.45129879034782483
-   },
-   {
-    "V": 12,
-    "power_w": 17.10125265383189,
-    "Irms_A": 5.565083642764539,
-    "stalled": 0.005455287686144205,
-    "crankPeak_Nm": 0.8480359279810545,
-    "freq": 5.857992667169781,
-    "theta_deg": -0.6211610523612443,
-    "tail_deg": -0.6402340229853576
-   },
-   {
     "V": 12.5,
-    "power_w": 19.606734410494035,
-    "Irms_A": 6.032336192755123,
-    "stalled": 0.005171964697735815,
-    "crankPeak_Nm": 0.9146500377534362,
-    "freq": 6.112929598489,
-    "theta_deg": -0.904212358474609,
-    "tail_deg": -0.6402340229853576
+    "power_w": 39.257504134592835,
+    "Irms_A": 9.296819711763519,
+    "stalled": 0.016259427767637512,
+    "crankPeak_Nm": 1.8595606886476637,
+    "freq": 5.227335196144832,
+    "theta_deg": 1.253674960217412,
+    "tail_deg": 0.1525349720044016
    },
    {
     "V": 13,
-    "power_w": 22.670513867644196,
-    "Irms_A": 6.5981841174413995,
-    "stalled": 0.00504963199127855,
-    "crankPeak_Nm": 0.9983462689848132,
-    "freq": 6.427860819598463,
-    "theta_deg": -1.1803728949780758,
-    "tail_deg": -0.6402340229853576
+    "power_w": 40.33134002904609,
+    "Irms_A": 9.458356952836056,
+    "stalled": 0.011103875038844937,
+    "crankPeak_Nm": 1.8778189491491983,
+    "freq": 5.217321284457338,
+    "theta_deg": 0.6855723750349564,
+    "tail_deg": -0.16933889959852638
    },
    {
     "V": 13.5,
-    "power_w": 24.800663634796177,
-    "Irms_A": 6.9851141101495084,
-    "stalled": 0.004716278300304259,
-    "crankPeak_Nm": 1.056919255600242,
-    "freq": 6.603164704260371,
-    "theta_deg": -1.338569578094436,
-    "tail_deg": -0.6729259781626535
+    "power_w": 42.4282109668449,
+    "Irms_A": 9.79094614654927,
+    "stalled": 0.008824338846729828,
+    "crankPeak_Nm": 1.9368693268122092,
+    "freq": 5.2845265201529354,
+    "theta_deg": 0.2542037806796777,
+    "tail_deg": -0.3928600335730026
+   },
+   {
+    "V": 14,
+    "power_w": 45.21190320287406,
+    "Irms_A": 10.209235581330818,
+    "stalled": 0.0075413329773240095,
+    "crankPeak_Nm": 2.0117535747772473,
+    "freq": 5.370521635001884,
+    "theta_deg": -0.0716145453046821,
+    "tail_deg": -0.5793083051127773
+   },
+   {
+    "V": 14.5,
+    "power_w": 50.043060458802124,
+    "Irms_A": 10.924733609122296,
+    "stalled": 0.006930118598259469,
+    "crankPeak_Nm": 2.138629963575689,
+    "freq": 5.567468973818056,
+    "theta_deg": -0.4359278146091141,
+    "tail_deg": -0.7246061051134035
+   },
+   {
+    "V": 15,
+    "power_w": 55.22738366395842,
+    "Irms_A": 11.654681123601861,
+    "stalled": 0.006503221522667256,
+    "crankPeak_Nm": 2.270273551947434,
+    "freq": 5.752372903251461,
+    "theta_deg": -0.7103757295247625,
+    "tail_deg": -0.860081845519279
+   },
+   {
+    "V": 15.5,
+    "power_w": 61.53789566123443,
+    "Irms_A": 12.52322475626577,
+    "stalled": 0.006296453064722483,
+    "crankPeak_Nm": 2.42772618199357,
+    "freq": 5.975369324319263,
+    "theta_deg": -0.954639331957474,
+    "tail_deg": -0.9757143430048976
+   },
+   {
+    "V": 16,
+    "power_w": 71.66807534136416,
+    "Irms_A": 13.85673863548642,
+    "stalled": 0.006627086870447641,
+    "crankPeak_Nm": 2.6671851096421055,
+    "freq": 6.332148935505962,
+    "theta_deg": -1.2048619952307213,
+    "tail_deg": -0.9757143430048976
+   },
+   {
+    "V": 16.5,
+    "power_w": 83.33647176814551,
+    "Irms_A": 15.285986684696516,
+    "stalled": 0.0071073666370122185,
+    "crankPeak_Nm": 2.9189200243547195,
+    "freq": 6.67876556521798,
+    "theta_deg": -1.367058945957426,
+    "tail_deg": -1.105059050037484
+   },
+   {
+    "V": 17,
+    "power_w": 101.72277926521848,
+    "Irms_A": 17.39796195849744,
+    "stalled": 0.008612909832343021,
+    "crankPeak_Nm": 3.2910300010400078,
+    "freq": 7.1805308906257945,
+    "theta_deg": -1.454715280621371,
+    "tail_deg": -1.105059050037484
+   },
+   {
+    "V": 17.5,
+    "power_w": 125.18008925222209,
+    "Irms_A": 19.86510098054231,
+    "stalled": 0.011189535166347127,
+    "crankPeak_Nm": 3.7222931810228843,
+    "freq": 7.735886061534552,
+    "theta_deg": -1.469988119404891,
+    "tail_deg": -1.105059050037484
    }
   ],
-  "Vcruise": 9,
-  "Vmin": 8,
-  "Md": 5.7348740606156605,
-  "Ld": -5.705984275922848,
-  "Nd": -4.308688585131636,
-  "Tf": 0.12162965673488758,
-  "Mq": 0.24466703700032436,
-  "Lp": 0.4437916995393483,
-  "Nr": 0.14145476174155006,
+  "Vcruise": 12.5,
+  "Vmin": 12.5,
+  "Md": 13.191010285049497,
+  "Ld": -12.4744565373888,
+  "Nd": -9.73472974799863,
+  "Tf": 0.1359173022974205,
+  "Mq": 0.4551867595727015,
+  "Lp": 0.7182695697656788,
+  "Nr": 0.2548078489690832,
   "inertia": {
-   "Ix": 0.012595659801666267,
-   "Iy": 0.01835282215970892,
-   "Iz": 0.0068270921393359585,
-   "xCg": 0.008973616211101057,
-   "m": 0.41203452135094915
+   "Ix": 0.019246015143933228,
+   "Iy": 0.02749796160233945,
+   "Iz": 0.009751913225299483,
+   "xCg": 0.013121625622985597,
+   "m": 0.7277555744674594
   },
-  "kTheta": 0.13870312265751877,
+  "kTheta": 0.11017560189403995,
   "kQ": 0,
-  "kPhi": 0.20823788940718965,
+  "kPhi": 0.15359078075435229,
   "kP": 0,
-  "kR": 0.01641505982002044,
-  "kFv": 0.8469038974784088,
-  "kFc": 1.0162846769740905,
+  "kR": 0.013087566659026632,
+  "kFv": 1.3385999467436294,
+  "kFc": 1.6063199360923552,
   "kFcFf": 1,
   "kH": 0.5,
   "kGamma": 1,
@@ -1207,323 +1357,232 @@
   "kChi": 1,
   "maxBank": 0.6108652381980153,
   "diffMax": 0.3141592653589793,
+  "diffRate_rad_s": 4.80203712166775,
+  "diffLimit": {
+   "geometric_rad": 0.3141592653589793,
+   "servo_rad": 2.8440332102503,
+   "twist_torque_trim_Nm": 0.13498879804093877,
+   "twist_torque_per_rad": 0.14162206938163002,
+   "servo_stall_Nm": 0.5377666666666667,
+   "servo_speed_rad_s": 6.411413578754679,
+   "supply_V": 5
+  },
   "climbMax": 2,
   "sinkMax": 2.5,
-  "freqMin": 2.249080678221496,
-  "freqMax": 13.206329408520743,
-  "ampNominal": 0.24434609527920614,
-  "currentLimit_A": 20,
-  "ampMax": 0.39095375244672986,
-  "ampFlightMax": 0.3298672286269283,
+  "freqMin": 2.608660642228669,
+  "ampNominal": 0.3490658503988659,
+  "currentLimit_A": 26,
+  "ampMax": 0.4886921905584123,
   "lead": 0,
   "parkPhase": 1.5707963267948966,
   "attGain": 0.15,
   "notchQ": 1.2,
   "trimFlight": [
    {
-    "V": 8,
-    "theta": 0.011457430535959517,
-    "freq": 10.030865706200036,
-    "tail": 0.19613102393283277,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 111.29890088464214,
-    "flight_V": 8.081312621211252
-   },
-   {
-    "V": 8.5,
-    "theta": 0.023793591812839975,
-    "freq": 11.519502294822384,
-    "tail": 0.19367985462263973,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 139.4394960853027,
-    "flight_V": 8.612644825776743
-   },
-   {
-    "V": 9,
-    "theta": 0.06320158262208306,
-    "freq": 6.054137830682745,
-    "tail": 0.03782448974968858,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 23.73314726664178,
-    "flight_V": 8.64075026297534
-   },
-   {
-    "V": 9.5,
-    "theta": 0.0444321989705951,
-    "freq": 6.059714692309583,
-    "tail": 0.023294718348591245,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 23.91962645154856,
-    "flight_V": 9.143161329639172
-   },
-   {
-    "V": 10,
-    "theta": 0.030233863336996365,
-    "freq": 6.197294798092766,
-    "tail": 0.014615215656628574,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 25.470698539953272,
-    "flight_V": 9.645131635729204
-   },
-   {
-    "V": 10.5,
-    "theta": 0.020399708628967613,
-    "freq": 6.345407352968614,
-    "tail": 0.008872966336603914,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 27.207688281315697,
-    "flight_V": 10.080560949047491
-   },
-   {
-    "V": 11,
-    "theta": 0.010589108039736573,
-    "freq": 6.527502181392104,
-    "tail": 0.004369274011462193,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 29.373402130578228,
-    "flight_V": 10.504234706685738
-   },
-   {
-    "V": 11.5,
-    "theta": 0.0035035454842211955,
-    "freq": 6.746423835661155,
-    "tail": 0.00007300284853321616,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 31.920049321387747,
-    "flight_V": 10.973781063328959
-   },
-   {
-    "V": 12,
-    "theta": -0.00215672120176727,
-    "freq": 6.957556802728073,
-    "tail": -0.0034750679034424585,
-    "amp": 0.24434609527920614,
-    "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 34.91117917850677,
-    "flight_V": 11.423908318161168
-   },
-   {
     "V": 12.5,
-    "theta": -0.009342100631156489,
-    "freq": 7.235841256475563,
-    "tail": -0.007212974958725334,
-    "amp": 0.24434609527920614,
+    "theta": 0.023152317422312194,
+    "freq": 5.973386927254858,
+    "tail": 0.0035313239226730368,
+    "amp": 0.3490658503988659,
     "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 38.60592543998011,
-    "flight_V": 11.905713295130065
+    "dyn": 0.17453292519943295,
+    "flight_power_w": 67.04880676678665,
+    "flight_power_regen_credit_w": 58.71771197829085,
+    "flight_V": 12.446598046059163,
+    "converged": true,
+    "convergence": {
+     "climb_m_s": 0.017116173268685173,
+     "speed_err_m_s": -0.05340195394083658,
+     "freq_drift_frac": 0.0023830113572429227,
+     "tail_drift_rad": 0.00038491074689850444
+    }
    },
    {
     "V": 13,
-    "theta": -0.010268191168772195,
-    "freq": 7.500743687011956,
-    "tail": -0.00892305011236983,
-    "amp": 0.24434609527920614,
+    "theta": 0.015227445437418333,
+    "freq": 5.970871570530231,
+    "tail": -0.0005769335892618473,
+    "amp": 0.3490658503988659,
     "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 41.53908574186061,
-    "flight_V": 12.147686957371917
+    "dyn": 0.17453292519943295,
+    "flight_power_w": 68.03795449439016,
+    "flight_power_regen_credit_w": 59.942565138608174,
+    "flight_V": 12.853829992319536,
+    "converged": true,
+    "convergence": {
+     "climb_m_s": 0.01435139350358883,
+     "speed_err_m_s": -0.14617000768046395,
+     "freq_drift_frac": 0.0007639281968971158,
+     "tail_drift_rad": 0.00010188371536604829
+    }
    },
    {
     "V": 13.5,
-    "theta": -0.019805522242886196,
-    "freq": 7.787099545817903,
-    "tail": -0.012744539311446841,
-    "amp": 0.24434609527920614,
+    "theta": 0.009250626084033606,
+    "freq": 6.012718666533549,
+    "tail": -0.004027673899247748,
+    "amp": 0.3490658503988659,
     "sym": 0,
-    "dyn": 0.13962634015954636,
-    "flight_power_w": 47.14189693241022,
-    "flight_V": 12.751433721614708
+    "dyn": 0.17453292519943295,
+    "flight_power_w": 69.97412314467988,
+    "flight_power_regen_credit_w": 61.89057881871282,
+    "flight_V": 13.257185575812677,
+    "converged": true,
+    "convergence": {
+     "climb_m_s": 0.022843433084126386,
+     "speed_err_m_s": -0.24281442418732269,
+     "freq_drift_frac": 0.0016983541992307786,
+     "tail_drift_rad": 0.00006972093947049066
+    }
    }
   ],
-  "Vrough": 12
+  "trimConverged": true,
+  "Vrough": 13.5
  },
  "selection": {
   "pipeline": "src/design/pipeline.mjs",
-  "screened": 21168,
-  "refined": 6,
+  "screened": 940896,
+  "refined": 3,
   "rank": [
    {
-    "k": 2,
-    "passCount": 4,
-    "m4": 0.75,
-    "mass_g": 412.0345213509492
-   },
-   {
-    "k": 5,
-    "passCount": 4,
-    "m4": 0.75,
-    "mass_g": 439.6345213509492
-   },
-   {
     "k": 0,
-    "passCount": 3,
-    "m4": 0.75,
-    "mass_g": 487.8402326618665
-   },
-   {
-    "k": 3,
-    "passCount": 3,
-    "m4": 0.625,
-    "mass_g": 517.7402326618666
-   },
-   {
-    "k": 1,
-    "passCount": 4,
+    "passCount": 2,
     "m4": 0.5,
-    "mass_g": 380.98452135094925
+    "mass_g": 727.7555744674592
    },
    {
     "k": 4,
-    "passCount": 3,
-    "m4": 0.5,
-    "mass_g": 472.1197326618665
+    "passCount": 2,
+    "m4": 0.375,
+    "mass_g": 644.9555744674592
+   },
+   {
+    "k": 1,
+    "passCount": 2,
+    "m4": 0.25,
+    "mass_g": 726.6055744674592
    }
   ],
   "quick": {
    "M1": {
-    "passed": true,
+    "passed": false,
     "measured": {
      "release_speed_m_s": 8,
      "release_pitch_deg": 5,
-     "climb_rate_2_to_3s_m_s": 1.1082499971177442,
-     "first_1s_window_climbing_s": 2.129166666666667,
-     "height_lost_m": 1.0573655329259253,
-     "height_at_6s_m": 3.1324100957765006,
-     "peak_motor_A": 21.38240957671908,
-     "peak_batt_A": 9.826250150569097
+     "climb_rate_2_to_3s_m_s": 0.5990536852368091,
+     "first_1s_window_climbing_s": 2.8291666666666666,
+     "height_lost_m": 6.4676427324507415,
+     "height_at_6s_m": -3.117656522155639,
+     "peak_motor_A": 36.07778910699997,
+     "peak_batt_A": 18.400797488455595
     },
     "peaks": {
-     "servoEach": 0.5076802796563327,
-     "rootBend": 6.080639087370394,
-     "elbowBend": 2.1159478690706806,
-     "crankTorque": 1.6996179171580637,
-     "motorI": 21.38240957671908,
-     "battI": 9.826250150569097,
-     "servoI": 1.3727790979945111,
-     "twistTorque": 0.10146443959087616,
-     "tailTorque": 0.013750915456564664,
-     "couplerForce": 297.3189375941969,
-     "loadFactor": 7.272486004339585,
-     "shoulderTorque": 7.137318688658066
+     "servoEach": 0.48754280717309995,
+     "rootBend": 12.101986909948899,
+     "elbowBend": 4.243358328363374,
+     "crankTorque": 4.166669883679883,
+     "motorI": 36.07778910699997,
+     "battI": 18.400797488455595,
+     "servoI": 1.4226112599743268,
+     "twistTorque": 0.13181318050220753,
+     "tailTorque": 0.0187642549812562,
+     "couplerForce": 671.481630586431,
+     "loadFactor": 3.1432121422415666,
+     "shoulderTorque": 14.223696932426611
     }
    },
    "M2": {
     "passed": true,
     "measured": {
-     "cruise_power_w": 19.90059990848591,
-     "cruise_batt_A": 1.606171714199527,
-     "endurance_min": 23.907780009148976,
+     "cruise_power_w": 68.84040081981212,
+     "cruise_batt_A": 5.828405162757172,
+     "endurance_min": 24.706587132985053,
      "usable_fraction": 0.8,
-     "continuous_limit_A": 20,
-     "power_available_w": 221.00952744291033,
-     "power_ratio": 11.105671610867802,
-     "altitude_dev_m": 0.5214158783026311,
+     "continuous_limit_A": 26,
+     "power_available_w": 282.99307423342765,
+     "power_ratio": 4.1108574450946955,
+     "altitude_dev_m": 0.9246627546361835,
      "simulated_s": 60,
      "motor_rating_rule": "published continuous rating",
      "extrapolated_from_s": 40
     },
     "peaks": {
-     "servoEach": 0.24799739937624316,
-     "rootBend": 2.5777897242144645,
-     "elbowBend": 0.9384878440096844,
-     "crankTorque": 0.9438140109567856,
-     "motorI": 10.952710022267125,
-     "battI": 4.217814174307803,
-     "servoI": 0.8492535845950755,
-     "twistTorque": 0.04956449591608898,
-     "tailTorque": 0.004320007321134675,
-     "couplerForce": 104.82052540051916,
-     "loadFactor": 3.3583847420220234,
-     "shoulderTorque": 3.046550189392123
+     "servoEach": 0.4501169191689226,
+     "rootBend": 9.921015324210208,
+     "elbowBend": 3.6504271484041775,
+     "crankTorque": 3.424772551968704,
+     "motorI": 30.722456278716194,
+     "battI": 17.991038496114946,
+     "servoI": 1.3453741140024906,
+     "twistTorque": 0.12103118315986125,
+     "tailTorque": 0.009984571796146705,
+     "couplerForce": 423.7460535743082,
+     "loadFactor": 2.576099745096271,
+     "shoulderTorque": 11.746264077253834
     }
    },
    "M3": {
     "passed": true,
     "measured": {
-     "heading_change_deg": 360.0752638397318,
-     "altitude_dev_m": 1.0478080947061235,
-     "mean_bank_deg": 27.956986894575827,
-     "max_bank_deg": 37.718404550175045,
-     "max_sideslip_deg": 3.343618329604555,
-     "turn_time_s": 10.6875
+     "heading_change_deg": 360.0227749608527,
+     "altitude_dev_m": 1.6793146498164255,
+     "mean_bank_deg": 28.843845446267423,
+     "max_bank_deg": 36.825738217265986,
+     "max_sideslip_deg": 1.45153157280573,
+     "turn_time_s": 15.4375
     },
     "peaks": {
-     "servoEach": 0.2885535200921156,
-     "rootBend": 3.08004824269766,
-     "elbowBend": 1.0757315930925964,
-     "crankTorque": 1.1683383047432618,
-     "motorI": 13.232811271075285,
-     "battI": 5.335574143318363,
-     "servoI": 0.9287826774359138,
-     "twistTorque": 0.057669998976403875,
-     "tailTorque": 0.005907098375753834,
-     "couplerForce": 123.57799507984376,
-     "loadFactor": 4.085172409918043,
-     "shoulderTorque": 3.554432541296988
+     "servoEach": 0.47270155862798746,
+     "rootBend": 9.822549195496068,
+     "elbowBend": 3.658721014254025,
+     "crankTorque": 3.766482934424666,
+     "motorI": 32.17201629183249,
+     "battI": 18.93135455089952,
+     "servoI": 1.3765735044841865,
+     "twistTorque": 0.1275375758097379,
+     "tailTorque": 0.00987241014130531,
+     "couplerForce": 446.2687277072913,
+     "loadFactor": 2.976766113894849,
+     "shoulderTorque": 11.649322433446622
     }
    },
    "M5": {
-    "passed": true,
+    "passed": false,
     "measured": {
-     "touchdown_sink_m_s": 0.5566190033592008,
-     "touchdown_speed_m_s": 7.011303212160211,
-     "pitch_deg": 1.6148498801632447,
-     "roll_deg": 0.0785809425853264,
-     "time_s": 26.762499999998802,
+     "touchdown_sink_m_s": 0.9539013457769425,
+     "touchdown_speed_m_s": 9.290846006115627,
+     "pitch_deg": 0.1364406395224957,
+     "roll_deg": 0.061539011911637256,
+     "time_s": 19.68055555555555,
      "from_height_m": 20
     },
     "peaks": {
-     "servoEach": 0.24286794386417865,
-     "rootBend": 2.4579627619299527,
-     "elbowBend": 0.861440251565639,
-     "crankTorque": 0.8888011080615194,
-     "motorI": 10.338671383125353,
-     "battI": 3.9406381965016464,
-     "servoI": 0.8391029720384708,
-     "twistTorque": 0.04853932840457904,
-     "tailTorque": 0.00450871934778382,
-     "couplerForce": 92.87082021193501,
-     "loadFactor": 3.627550369050318,
-     "shoulderTorque": 2.8395120457704404
+     "servoEach": 0.28289458271940104,
+     "rootBend": 5.3729674826833875,
+     "elbowBend": 1.9247005499337964,
+     "crankTorque": 2.5336670857500248,
+     "motorI": 23.41066855095981,
+     "battI": 11.390816446883093,
+     "servoI": 1.0087723036249208,
+     "twistTorque": 0.0728562196966446,
+     "tailTorque": 0.004566521880692805,
+     "couplerForce": 192.6752821769628,
+     "loadFactor": 2.204273341811653,
+     "shoulderTorque": 6.206003758239537
     }
    },
    "M4": {
-    "passed": 6,
+    "passed": 4,
     "of": 8,
-    "worstAlt": 11.893288005176954,
-    "worstRoll": 22.41638156438043,
-    "worstPitch": 21.361995974514862
+    "worstAlt": 25.549668369895784,
+    "worstRoll": 29.323386383578534,
+    "worstPitch": 23.25473516356182
    }
-  }
+  },
+  "round2_choice": "strong-train pass (gear train rated >= 3 N m at the crank): every light-train finalist failed to converge a free-flight trim inside its rated stroke envelope (out/sweep/falco-pipeline.json)"
  },
- "calibration": {
-  "file": "data/calibration/falco-pf-2.json",
-  "source": "uvlm",
-  "multipliers": {
-   "lift": 0.9030733775290699,
-   "suction": 0.9921802718259811,
-   "induced": 1.057239923518852,
-   "lag": 1.0036980621098033,
-   "apparentMass": 1.0142347487494896,
-   "drag": 1
-  }
- }
+ "version": 2,
+ "version_written": "2026-11-02T12:14:19.784Z",
+ "supersedes_sha256": "fb2bd8f2b050175401d5280358fd7dee450a2950bbc25519f7359bd50f4d5dc1",
+ "status_round2": "FAILED AT TRIM: on the V5-calibrated strip model no frozen-body trim converges at the cruise or rough-air speed (residual 1.9-5.7% of weight against the 1% tolerance), so the control table here is from the uncalibrated model and is not evidence; M1-M8 were not run in round 2. The final round-2 pipeline (stronger twist servo, BEC sizing, provisional calibration) found no pick with a converged trim (out/sweep/falco-strong-pipeline.json)."
 }

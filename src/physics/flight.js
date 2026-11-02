@@ -69,17 +69,22 @@ export function solveN(A, b, x, n) {
 }
 
 // State layout
-const IX = { px: 0, py: 1, pz: 2, qx: 3, qy: 4, qz: 5, qw: 6, vx: 7, vy: 8, vz: 9, wx: 10, wy: 11, wz: 12, phase: 13, crank: 14, amp: 15, twR: 16, twL: 17, tlR: 18, tlL: 19, charge: 20 };
-const NS = 21;
+const IX = { px: 0, py: 1, pz: 2, qx: 3, qy: 4, qz: 5, qw: 6, vx: 7, vy: 8, vz: 9, wx: 10, wy: 11, wz: 12, phase: 13, crank: 14, amp: 15, twR: 16, twL: 17, tlR: 18, tlL: 19, charge: 20, twRateR: 21, twRateL: 22 };
+const NS = 23;
+// Twist servo output rate follows its torque-speed-limited target with this mechanical time constant, so the twist
+// acceleration is finite. Not published for any catalogue servo: an assumption (typical of small DC servo motors).
+// Round 1 and the first round-2 runs let the rate jump at each command update, which made twist acceleration, servo
+// torque and apparent-mass loads scale as 1/dt.
+export const SERVO_TAU_MECH_S = 0.01;
 
 /**
  * Everything physical about a bird, as numbers, from a design file. `perturb` applies the robustness cases:
  * { aero: 1.1, mass: 0.95, cgx: 0.005 (m), servoSpeed: 1 }.
  */
-export function buildBird(design, { cal = null, perturb = {}, n = 8, inviscid = false } = {}) {
+export function buildBird(design, { cal = null, perturb = {}, n = 8, inviscid = false, suctionEta = undefined } = {}) {
   const wing = makeWing(design.wing);
   const polar = design.wing.airfoil ?? 'e387-film';
-  const strip = createStrip(wing, { n, polar, cal: cal ?? design.calibration?.multipliers ?? null, inviscid });
+  const strip = createStrip(wing, { n, polar, cal: cal ?? design.calibration?.multipliers ?? null, inviscid, suctionEta });
   if (perturb.aero) strip.aeroScale = perturb.aero;
   const law = design.drive.kind === 'crank-rocker' ? makeFlapDrive(design.drive) : { kind: 'sine', phiMean: design.drive.phiMean ?? 0 };
   const st = strip.stations;
@@ -167,17 +172,43 @@ export function buildBird(design, { cal = null, perturb = {}, n = 8, inviscid = 
   };
 }
 
+/**
+ * Battery-side current of the flap ESC for a motor-side current `IbM` (duty x motor current, A, signed). SPEC ruling:
+ * no regeneration credit unless the ESC's own documentation states regenerative operation, in which case the
+ * returned current is negative with that ESC's stated efficiency (esc.regenerative, esc.regen_eta).
+ */
+export function escBatteryCurrent(IbM, esc = {}) {
+  if (IbM >= 0) return IbM / (esc?.eta ?? 0.95);
+  if (esc?.regenerative === true && Number.isFinite(esc.regen_eta)) return IbM * esc.regen_eta;
+  return 0;
+}
+
+/**
+ * Servo output rate towards a command. Linear torque-speed line from the published no-load speed and stall torque:
+ * speed falls to zero as the torque the servo must push against reaches stall. A load that helps the motion does
+ * not slow it. A load at or beyond stall stops the servo in that direction (assumed not back-driven; M7 fails such
+ * a load anyway). Tail hinge moments are carried as magnitudes (signed = false) and so oppose motion either way.
+ */
+export function servoSlewRate(want, pos, sv, loadTorque, speedScale = 1, signed = true) {
+  const r = (want - pos) / sv.tau_s;
+  const opposing = !signed ? Math.abs(loadTorque) : r >= 0 ? loadTorque : -loadTorque;
+  const frac = 1 - Math.max(0, opposing) / Math.max(sv.stall_Nm, 1e-6);
+  const slew = sv.speed_rad_s * speedScale * Math.max(0, frac);
+  return r > slew ? slew : r < -slew ? -slew : r;
+}
+
 export function batteryOcv(batt, soc) {
   // Rested LiPo curve per cell. Shape of a common 3.3-4.2 V discharge; capacity comes from the catalogue.
   const s = Math.max(0, Math.min(1, soc));
   const pts = [[0, 3.3], [0.05, 3.5], [0.1, 3.6], [0.2, 3.68], [0.4, 3.77], [0.6, 3.86], [0.8, 4.0], [1, 4.18]];
+  const shift = batt.cell_shift_V ?? 0; // published nominal cell voltage minus 3.7 (Li-ion packs)
   for (let i = 1; i < pts.length; i++) {
     if (s <= pts[i][0]) {
       const f = (s - pts[i - 1][0]) / (pts[i][0] - pts[i - 1][0]);
-      return batt.cells * (pts[i - 1][1] + f * (pts[i][1] - pts[i - 1][1]));
+      return batt.cells * (pts[i - 1][1] + f * (pts[i][1] - pts[i - 1][1]) + shift);
     }
   }
-  return batt.cells * 4.18;
+  return batt.cells * (4.18 + shift);
 }
 
 /**
@@ -219,6 +250,7 @@ export function createFlight(design, opts = {}) {
   let t = 0;
   let wind = { world: [0, 0, 0], rates: [0, 0, 0] };
   const frozen = { body: !!opts.frozenBody };
+  const imposeTwist = !!opts.imposeTwist;
   const rhoOverride = opts.rho ?? design.rho_override ?? null;
   const gAcc = opts.gravity ?? G0;
   const thddPrev = [0];
@@ -238,6 +270,7 @@ export function createFlight(design, opts = {}) {
   const lastTwistTorque = [0, 0];
   const tailTorque = [0, 0];
   const pol = new Float64Array(4);
+  const wingQ = [{}, {}];
   // Telemetry of the most recent step
   const tel = {
     power_w: 0, batt_V: 0, batt_I: 0, motor_I: 0, motor_V: 0, servo_I: 0, duty: 0, airspeed: 0, alpha: 0, beta: 0, sf: 0,
@@ -277,10 +310,25 @@ export function createFlight(design, opts = {}) {
     const lead = cmd.lead;
     const twCmdR = cmd.sym + cmd.diff - cmd.dyn * Math.sin(phaseCmd(phase, crank) + lead);
     const twCmdL = cmd.sym - cmd.diff - cmd.dyn * Math.sin(phaseCmd(phase, crank) + lead);
-    const rateR = servoRate(twCmdR, S[16], servoT, lastTwistTorque[0]);
-    const rateL = servoRate(twCmdL, S[17], servoT, lastTwistTorque[1]);
-    const jR = { phi: sa.phi, dphi: dphi0, ddphi: ddphi0, theta: S[16], dtheta: rateR, ddtheta: twistAccel[0] };
-    const jL = { phi: sa.phi, dphi: dphi0, ddphi: ddphi0, theta: S[17], dtheta: rateL, ddtheta: twistAccel[1] };
+    let rateR, rateL, accR, accL;
+    if (imposeTwist) {
+      // Kinematics imposed exactly (V4): the twist is the schedule itself, whatever torque that takes.
+      const ph = phaseCmd(phase, crank) + lead;
+      rateR = rateL = -cmd.dyn * Math.cos(ph) * crank;
+      accR = accL = cmd.dyn * Math.sin(ph) * crank * crank;
+      S[16] = twCmdR;
+      S[17] = twCmdL;
+      S[21] = rateR;
+      S[22] = rateL;
+    } else {
+      const tauM = servoT.tau_mech_s ?? SERVO_TAU_MECH_S;
+      rateR = S[21];
+      rateL = S[22];
+      accR = (servoRate(twCmdR, S[16], servoT, lastTwistTorque[0]) - rateR) / tauM;
+      accL = (servoRate(twCmdL, S[17], servoT, lastTwistTorque[1]) - rateL) / tauM;
+    }
+    const jR = { phi: sa.phi, dphi: dphi0, ddphi: ddphi0, theta: S[16], dtheta: rateR, ddtheta: accR };
+    const jL = { phi: sa.phi, dphi: dphi0, ddphi: ddphi0, theta: S[17], dtheta: rateL, ddtheta: accL };
     // Wing aero (fills section states)
     bodyAcc.dph = sa.dphi;
     const aero = strip.evaluate([ub, vb, wb], omAir, [wub, wvb, wwb], jR, jL, rho, mu, advanceDt, frozen.body ? null : bodyAcc);
@@ -363,6 +411,9 @@ export function createFlight(design, opts = {}) {
       Mz += qv * 2 * (-relU) * relV * (bd.kMunk ?? 0.8);
       My += qv * 2 * relU * relW * (bd.kMunk ?? 0.8);
     }
+    // All external force but gravity: its magnitude over the weight is the load factor at the system's mass centre
+    // (Newton for the whole system of body and moving wings: M a_cg = F_aero + M g).
+    const FaX = Fx, FaY = Fy, FaZ = Fz;
     // Gravity in body axes
     const gxb = -gAcc * R10, gyb = -gAcc * R11, gzb = -gAcc * R12;
     // Lumps: positions, rates, and accelerations without the crank's angular acceleration.
@@ -377,6 +428,8 @@ export function createFlight(design, opts = {}) {
     const dph = sa.dphi;
     for (let w = 0; w < 2; w++) {
       const W = w === 0 ? R : L;
+      // Per-wing shares of the same sums, for each shoulder's own load (couplers are separate per wing).
+      const qr0 = Qrest, i0 = iPhi, f0y0 = cFy, f0z0 = cFz, m0x = cMx, m0y = cMy, m0z = cMz;
       for (let i = 0; i < n; i++) {
         const j = 3 * i;
         const q = 3 * (i + w * n);
@@ -415,6 +468,9 @@ export function createFlight(design, opts = {}) {
         cMy += m * (-rx * pz);
         cMz += m * (rx * py);
       }
+      const wq = wingQ[w];
+      wq.Qrest = Qrest - qr0; wq.iPhi = iPhi - i0; wq.cFy = cFy - f0y0; wq.cFz = cFz - f0z0;
+      wq.cMx = cMx - m0x; wq.cMy = cMy - m0y; wq.cMz = cMz - m0z;
     }
     // Crank: rotor, gear and reflected wing inertia, solved together with the body below.
     const Qaero = aero.Qphi[0] + aero.Qphi[1];
@@ -499,6 +555,11 @@ export function createFlight(design, opts = {}) {
     // Generalised inertial force on phi with the solved accelerations (for torque and structure outputs)
     const Qin = Qrest - (cFy * sol[1] + cFz * sol[2] + cMx * sol[3] + cMy * sol[4] + cMz * sol[5]) - iPhi * dph * thDD;
     const Qtotal = Qaero + Qin;
+    // Each shoulder's generalised force (aero plus inertial reaction), what that wing's coupler must carry.
+    const qWing = (w) => {
+      const s = wingQ[w];
+      return aero.Qphi[w] + s.Qrest - (s.cFy * sol[1] + s.cFz * sol[2] + s.cMx * sol[3] + s.cMy * sol[4] + s.cMz * sol[5]) - s.iPhi * dph * thDD;
+    };
     const abx = sol[0], aby = sol[1], abz = sol[2];
     // Kinematics
     out[0] = vwx;
@@ -522,11 +583,13 @@ export function createFlight(design, opts = {}) {
     out[15] = servoA ? Math.max(-servoA.amp_rate_rad_s, Math.min(servoA.amp_rate_rad_s, (wantAmp - amp) / 0.1)) : 0;
     out[16] = rateR;
     out[17] = rateL;
+    out[21] = imposeTwist ? 0 : accR;
+    out[22] = imposeTwist ? 0 : accL;
     // Tail servos
     const tR = -cmd.tailPitch + cmd.tailYaw;
     const tL = -cmd.tailPitch - cmd.tailYaw;
-    out[18] = servoRate(clampTail(tR), S[18], servoP, tailMR);
-    out[19] = servoRate(clampTail(tL), S[19], servoP, tailML);
+    out[18] = servoRate(clampTail(tR), S[18], servoP, tailMR, false);
+    out[19] = servoRate(clampTail(tL), S[19], servoP, tailML, false);
     // Battery draw
     const IbM = Math.max(0, dutyNow) * Im;
     // Servo current, SPEC M8: stall current x (torque / stall torque), plus published idle if any.
@@ -537,7 +600,13 @@ export function createFlight(design, opts = {}) {
     const iTlL = iServo(servoP, tailML);
     const iStroke = servoA ? (servoA.idle_A ?? 0) : 0;
     const I5 = iTwR + iTwL + iTlR + iTlL + iStroke + (design.electrical?.avionics_A_5V ?? 0.35);
-    const Ibatt = IbM / (design.esc?.eta ?? 0.95) + (5.0 * I5) / (0.85 * Vbus);
+    // SPEC ruling: no regeneration credit. When the crank drives the motor (aero or inertia doing work on it), the
+    // drive's braking stays in the dynamics but its energy is not returned to the battery, unless the chosen ESC's
+    // own documentation states regenerative operation (design.esc.regenerative with its stated efficiency).
+    const etaEsc = design.esc?.eta ?? 0.95;
+    const Iesc = escBatteryCurrent(IbM, design.esc);
+    const I5batt = (5.0 * I5) / (0.85 * Vbus);
+    const Ibatt = Iesc + I5batt;
     out[20] = Ibatt; // coulombs per second
     let bendR = 0, bendL = 0, elbowR = 0, elbowL = 0, chordR = 0, chordL = 0;
     let QtwR = aero.Qtheta[0], QtwL = aero.Qtheta[1];
@@ -584,9 +653,8 @@ export function createFlight(design, opts = {}) {
         aBody[0] = abx; aBody[1] = aby; aBody[2] = abz;
         wDot[0] = sol[3]; wDot[1] = sol[4]; wDot[2] = sol[5];
       }
-      const dtS = advanceDt > 0 ? advanceDt : dt;
-      twistAccel[0] = (rateR - lastTwistRate[0]) / dtS;
-      twistAccel[1] = (rateL - lastTwistRate[1]) / dtS;
+      twistAccel[0] = accR;
+      twistAccel[1] = accL;
       lastTwistRate[0] = rateR;
       lastTwistRate[1] = rateL;
       // Load on the twist servo: the torque that has to oppose the air and move the wing.
@@ -604,6 +672,8 @@ export function createFlight(design, opts = {}) {
       duty = dutyNow;
       const fTot = Math.hypot(abx - gxb, aby - gyb, abz - gzb);
       tel.power_w = Vbus * Ibatt;
+      // For information only: what the battery would see if the ESC regenerated at its forward efficiency.
+      tel.power_regen_credit_w = Vbus * ((IbM >= 0 ? IbM / etaEsc : IbM * etaEsc) + I5batt);
       tel.batt_V = Vbus - 0;
       tel.batt_I = Ibatt;
       tel.motor_I = Im;
@@ -614,13 +684,15 @@ export function createFlight(design, opts = {}) {
       tel.airspeed = relU * -1;
       tel.alpha = Math.atan2(relV, -relU);
       tel.beta = Math.atan2(relW, -relU);
-      tel.sf = fTot;
-      tel.loadFactor = fTot / G0;
+      tel.sf = fTot; // specific force at the body origin (where the IMU is)
+      tel.loadFactorOrigin = fTot / G0;
+      tel.loadFactor = Math.hypot(FaX, FaY, FaZ) / (mT * G0); // at the system mass centre
       tel.stalled = aero.stalledFraction;
       tel.rootBend = Math.max(Math.abs(bendR), Math.abs(bendL));
       tel.rootBendChord = Math.max(Math.abs(chordR), Math.abs(chordL));
       tel.elbowBend = Math.max(Math.abs(elbowR), Math.abs(elbowL));
-      tel.shoulderTorque = Math.abs(Qtotal) / 2 + 0;
+      const qR = qWing(0), qL = qWing(1);
+      tel.shoulderTorque = Math.max(Math.abs(qR), Math.abs(qL));
       tel.crankTorque = -dph * Qtotal;
       tel.motorTorque = tauM;
       tel.twistTorque[0] = lastTwistTorque[0];
@@ -629,8 +701,13 @@ export function createFlight(design, opts = {}) {
       tel.tailTorque[1] = tailML;
       tel.phi = sa.phi;
       tel.mu = sa.mu;
-      const cLen = sa.c ?? 0.02;
-      tel.couplerForce = (Math.abs(Qtotal) / 2) / (cLen * Math.max(0.2, sa.sinTrans));
+      tel.phase = phase;
+      tel.amp = amp;
+      // Coupler: a pinned two-force member, so the shoulder moment is F c sin(mu), mu the transmission angle. No
+      // floor on sin(mu): near toggle the force does grow without bound, and the design must keep mu away from it.
+      // A sine stroke law has no linkage, so no coupler force is reported for it.
+      tel.couplerForce = sa.c ? tel.shoulderTorque / (sa.c * sa.sinTrans) : 0;
+      tel.transmissionAngle = sa.mu;
       tel.Fx = Fx; tel.Fy = Fy; tel.Fz = Fz;
       tel.Mx = Mx; tel.My = My; tel.Mz = Mz;
       tel.aeroPower = aero.power;
@@ -657,10 +734,8 @@ export function createFlight(design, opts = {}) {
     const m = design.tail.deflection_max_rad ?? 0.5;
     return a > m ? m : a < -m ? -m : a;
   }
-  function servoRate(want, pos, sv, loadTorque) {
-    const slew = sv.speed_rad_s * speedScale * Math.max(0.15, 1 - Math.abs(loadTorque) / Math.max(sv.stall_Nm, 1e-6));
-    const r = (want - pos) / sv.tau_s;
-    return r > slew ? slew : r < -slew ? -slew : r;
+  function servoRate(want, pos, sv, loadTorque, signed = true) {
+    return servoSlewRate(want, pos, sv, loadTorque, speedScale, signed);
   }
   function batteryState(chargeUsed) {
     const bt = design.battery;
@@ -682,7 +757,10 @@ export function createFlight(design, opts = {}) {
     x[16] = s.twistR ?? 0; x[17] = s.twistL ?? 0;
     x[18] = s.tailR ?? 0; x[19] = s.tailL ?? 0;
     x[20] = s.charge ?? 0;
+    x[21] = s.twistRateR ?? 0; x[22] = s.twistRateL ?? 0;
     strip.reset();
+    // Starting in flight (trim, release from the hand at speed): circulation is already established.
+    if (s.primeAero !== false) strip.prime();
     aBody.fill(0);
     wDot.fill(0);
     thddPrev[0] = 0;
@@ -731,7 +809,7 @@ export function createFlight(design, opts = {}) {
     rmsAcc.motorI2Win += tel.motor_I * tel.motor_I;
     rmsAcc.battI2Win += tel.batt_I * tel.batt_I;
     rmsAcc.nWin += 1;
-    if (rmsAcc.nWin >= 480) {
+    if (rmsAcc.nWin >= Math.round(2 / dt)) {
       rmsAcc.motorRmsMax = Math.max(rmsAcc.motorRmsMax, Math.sqrt(rmsAcc.motorI2Win / rmsAcc.nWin));
       rmsAcc.battRmsMax = Math.max(rmsAcc.battRmsMax, Math.sqrt(rmsAcc.battI2Win / rmsAcc.nWin));
       rmsAcc.motorI2Win = 0;

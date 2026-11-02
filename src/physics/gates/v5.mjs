@@ -28,11 +28,22 @@ const op = (t, ampScale = 1, label) => ({ label, U: t.V, bodyAlpha: t.theta, fre
 const fitOps = [op(cruise, 1, 'cruise'), op(cruise, 1.3, 'cruise, stroke x1.3')];
 const testOps = [op(lo, 1, 'slowest trim'), op(hi, 1, 'fastest trim'), op(cruise, 0.8, 'cruise, stroke x0.8'), op(pick((lo.V + cruise.V) / 2), 1.15, 'mid speed, stroke x1.15')];
 
-const uv = (o) => uvlmFlappingCycle(wing, o, { nc: 5, ns: 12, stepsPerCycle: 80, cycles: 3 });
+// Round 2: the reference lattice is resolved chordwise. Round 1's nc = 5 under-resolved the cambered section's lift
+// (steady camber lift on larus-gl-2: 0.256 at nc 5, 0.282 at 10, 0.292 at 16, 0.298 at 24, against 0.30 from the
+// mean-line integral), which the strip's lift multiplier then absorbed. nc = 16 chosen before results; a check at
+// nc = 24 on the cruise point is in the evidence.
+const UV = { nc: 16, ns: 12, stepsPerCycle: 80, cycles: 3 };
+const uv = (o, g = UV) => uvlmFlappingCycle(wing, o, g);
 const strip = (o, cal) => stripFlappingCycle(wing, o, { n: 8, cal, inviscid: true });
 console.log('UVLM runs...');
 const refFit = fitOps.map((o) => ({ o, r: uv(o) }));
 const refTest = testOps.map((o) => ({ o, r: uv(o) }));
+const gridCheck = (() => {
+  const fine = uv(fitOps[0], { ...UV, nc: 24 });
+  const base = refFit[0].r;
+  return { point: fitOps[0].label, nc16: { lift_N: base.Fy, thrust_N: base.Fx }, nc24: { lift_N: fine.Fy, thrust_N: fine.Fx }, lift_change_pct: (fine.Fy / base.Fy - 1) * 100, thrust_change_pct: (fine.Fx / base.Fx - 1) * 100 };
+})();
+console.log('UVLM grid check', JSON.stringify(gridCheck));
 
 // Objective on the fit point: cycle means, plus the shape of the lift over the cycle (harmonic content), so that
 // a multiplier is not used to cancel an error in another.
@@ -111,6 +122,6 @@ writeJson(`data/calibration/${d.name}.json`, {
   note: 'Multipliers of the inviscid strip terms fitted to UVLM on the cruise point. The drag multiplier is not touched here: UVLM has no viscous drag. LBM and OpenFOAM results are to refit these.',
   ran_at: new Date().toISOString(),
 });
-const ev = writeJson(`out/verification/evidence/V5-${d.name}.json`, { rows, calibration: cal, at_bounds: atBound, uvlm: { nc: 5, ns: 12, stepsPerCycle: 80, cycles: 3, wake: 'prescribed' } });
-writeGate({ gate: 'V5', design: d.name, passed: worstL <= 10 && worstT <= 10, measured: { protocol: 'multipliers fitted on cruise and cruise x1.3 stroke; judged on four other points', earlier_protocol_note: 'single-point fit gave 11.4% held-out lift error on columba-rp-2 (2026-11-02), replaced before falco and larus ran', held_out_points: held.length, worst_lift_err_pct: worstL, worst_thrust_err_pct: worstT, calibration: cal, multipliers_at_bounds: atBound, rows: held.map((r) => [r.point, +r.lift_err_pct.toFixed(2), +r.thrust_err_pct.toFixed(2)]) }, limit: { lift_err_pct: 10, thrust_err_pct: 10 }, evidence: ev.slice(ROOT.length + 1) });
+const ev = writeJson(`out/verification/evidence/V5-${d.name}.json`, { rows, calibration: cal, at_bounds: atBound, uvlm: { ...UV, wake: 'prescribed' }, uvlm_grid_check: gridCheck, strip_changes_round2: ['inviscid section uses the thin-airfoil zero-lift angle and moment of the wing\'s own NACA-type mean line (round 1: parabolic -2f)'] });
+writeGate({ gate: 'V5', design: d.name, passed: worstL <= 10 && worstT <= 10, measured: { protocol: 'multipliers fitted on cruise and cruise x1.3 stroke; judged on four other points', uvlm_grid: UV, uvlm_grid_check: gridCheck, earlier_protocol_note: 'single-point fit gave 11.4% held-out lift error on columba-rp-2 (2026-11-02), replaced before falco and larus ran', held_out_points: held.length, worst_lift_err_pct: worstL, worst_thrust_err_pct: worstT, calibration: cal, multipliers_at_bounds: atBound, rows: held.map((r) => [r.point, +r.lift_err_pct.toFixed(2), +r.thrust_err_pct.toFixed(2)]) }, limit: { lift_err_pct: 10, thrust_err_pct: 10 }, evidence: ev.slice(ROOT.length + 1) });
 console.log(`V5 ${d.name}: worst held-out lift ${worstL.toFixed(1)}% thrust ${worstT.toFixed(1)}%`, worstL <= 10 && worstT <= 10 ? 'PASS' : 'FAIL');

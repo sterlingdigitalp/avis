@@ -23,6 +23,14 @@ export function validateDesign(d) {
     if (!p.id) errs.push(`BOM entry ${p.name} has no catalogue id`);
     if (!(p.unit_mass_g >= 0)) errs.push(`BOM entry ${p.id} has no mass`);
   }
+  // Body geometry for the tunnels, page and film (src/physics/geometry.js): a loft of elliptic sections, nose first.
+  const sec = d.body.loft?.sections;
+  if (!Array.isArray(sec) || sec.length < 3) errs.push('body.loft.sections: at least three sections');
+  else {
+    for (let i = 1; i < sec.length; i++) if (!(sec[i].x_m <= sec[i - 1].x_m)) errs.push(`body.loft.sections[${i}] must run nose to tail (x decreasing)`);
+    for (const q of sec) if (!(q.width_m >= 0 && q.height_m >= 0)) errs.push('body.loft section sizes must be non-negative');
+  }
+  for (const k of ['x_m', 'y_m', 'z_m', 'span_each_m', 'chord_root_m', 'dihedral_rad']) if (!Number.isFinite(d.tail[k])) errs.push(`tail.${k} must be a number`);
   const lumpMass = d.mass.lumps.reduce((a, l) => a + l.mass_kg, 0);
   if (!(d.mass.total_kg > 0)) errs.push('mass.total_kg must be positive');
   if (lumpMass <= 0) errs.push('mass.lumps empty');

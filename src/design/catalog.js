@@ -14,7 +14,7 @@ export function ofCategory(catalog, cat) {
 export function isEligible(part) {
   const s = part.specs ?? {};
   const notes = [s.stock_note, s.availability, s.availability_note, s.status, s.eol_note].filter(Boolean).join(' ');
-  return !/sold.?out|out of stock|end.?of.?life|discontinu|obsolete/i.test(notes);
+  return !/sold.?out|out of stock|end.?of.?life|discontinu|obsolete|no longer available/i.test(notes);
 }
 
 /** kg per unit of the part's mass basis, read from specs.mass_basis as SPEC requires. */
@@ -22,29 +22,56 @@ export function massBasis(part) {
   return part.specs?.mass_basis ?? 'per_part';
 }
 
-/** Interpolate a servo's speed and stall-style torque at a supply voltage, from its published rows. */
+/**
+ * A servo's speed and stall-style torque at a supply voltage, interpolated between its published rows. SPEC ruling:
+ * no extrapolation outside the published voltage rows, so a supply outside them returns null (the servo cannot be
+ * used on that supply). Stall current: a value published without a voltage is used as published at any supply;
+ * values at stated voltages are interpolated, and outside them the nearest is used (the higher-voltage figure when
+ * the supply is below every stated row, which is the conservative side).
+ */
 export function servoAt(part, volts) {
-  const rows = [...(part.specs.performance ?? [])].sort((a, b) => a.voltage_v - b.voltage_v);
+  const rows = [...(part.specs.performance ?? [])].filter((r) => Number.isFinite(r.voltage_v)).sort((a, b) => a.voltage_v - b.voltage_v);
   if (!rows.length) return null;
-  const v = Math.max(rows[0].voltage_v, Math.min(rows[rows.length - 1].voltage_v, volts));
+  if (volts < rows[0].voltage_v - 1e-9 || volts > rows[rows.length - 1].voltage_v + 1e-9) return null;
   let a = rows[0], b = rows[rows.length - 1];
   for (let i = 1; i < rows.length; i++) {
-    if (v <= rows[i].voltage_v) {
+    if (volts <= rows[i].voltage_v) {
       a = rows[i - 1];
       b = rows[i];
       break;
     }
   }
-  const f = b.voltage_v === a.voltage_v ? 0 : (v - a.voltage_v) / (b.voltage_v - a.voltage_v);
+  if (rows.length === 1) a = b = rows[0];
+  const f = b.voltage_v === a.voltage_v ? 0 : (volts - a.voltage_v) / (b.voltage_v - a.voltage_v);
   const torque = a.torque_nm + f * (b.torque_nm - a.torque_nm);
   const secPer60 = a.speed_s_per_60deg + f * (b.speed_s_per_60deg - a.speed_s_per_60deg);
-  // Published stall current if there is one, else null. The caller must not invent it.
-  const sc = part.specs.stall_current;
-  let stallA = null;
-  if (Array.isArray(sc) && sc.length) {
-    stallA = sc.reduce((p, q) => (Math.abs(q.voltage_v - volts) < Math.abs(p.voltage_v - volts) ? q : p)).current_a;
+  return { stall_Nm: torque, speed_rad_s: (Math.PI / 3) / secPer60, stall_A: servoStallCurrent(part, volts), volts };
+}
+
+/** Published stall current at a supply voltage per the SPEC ruling, or null if none is published. */
+export function servoStallCurrent(part, volts) {
+  const sc = (part.specs.stall_current ?? []).filter((q) => Number.isFinite(q.current_a));
+  if (!sc.length) return null;
+  const free = sc.find((q) => q.voltage_v === null || q.voltage_v === undefined);
+  if (free) return free.current_a;
+  const r = sc.slice().sort((p, q) => p.voltage_v - q.voltage_v);
+  if (volts <= r[0].voltage_v) return r[0].current_a;
+  if (volts >= r[r.length - 1].voltage_v) return r[r.length - 1].current_a;
+  for (let i = 1; i < r.length; i++) {
+    if (volts <= r[i].voltage_v) {
+      const f = (volts - r[i - 1].voltage_v) / (r[i].voltage_v - r[i - 1].voltage_v);
+      return r[i - 1].current_a + f * (r[i].current_a - r[i - 1].current_a);
+    }
   }
-  return { stall_Nm: torque, speed_rad_s: (Math.PI / 3) / secPer60, stall_A: stallA, volts: v };
+  return r[r.length - 1].current_a;
+}
+
+/** Output voltage and current of an ESC's built-in BEC from its published text, e.g. "Switch 5V 3A". */
+export function becOf(esc) {
+  const t = String(esc.specs?.bec ?? '');
+  const v = /(\d+(?:\.\d+)?)\s*V/.exec(t);
+  const a = /(\d+(?:\.\d+)?)\s*A/.exec(t);
+  return { volts: v ? parseFloat(v[1]) : null, amps: a ? parseFloat(a[1]) : null, kind: /switch/i.test(t) ? 'switching' : /linear/i.test(t) ? 'linear' : null, text: t || null };
 }
 
 /**
@@ -88,15 +115,34 @@ export function batteryModel(part) {
   // Pack resistance is not in the catalogue. Estimated so that the claimed C rate sags about 10% of
   // nominal voltage, a common rule for hobby packs; flagged in the design file.
   const Rint = C && Ah ? (0.1 * cells * 3.7) / (C * Ah) : 0.1 * cells;
-  return { id: part.id, cells, V_nom: s.nominal_voltage_v, capacity_Ah: Ah, I_cont: C ? C * Ah : null, R_int: Rint, R_estimated: true, mass_kg: part.mass_g / 1000 };
+  // Rested voltage curve: the model's LiPo shape shifted to the published nominal cell voltage (Li-ion 3.6 V cells sit
+  // about 0.1 V lower); an assumption, flagged, since no discharge curve is published for these packs.
+  const shift = Number.isFinite(s.nominal_voltage_v) && cells ? s.nominal_voltage_v / cells - 3.7 : 0;
+  return { id: part.id, chemistry: s.chemistry, cells, V_nom: s.nominal_voltage_v, capacity_Ah: Ah, I_cont: C ? C * Ah : null, R_int: Rint, R_estimated: true, cell_shift_V: shift, ocv_assumed: 'LiPo rested curve shifted to the published nominal cell voltage', mass_kg: part.mass_g / 1000 };
 }
 
-/** SPEC M7: only published strength counts. Woven tube 650 MPa, 64 GPa; rods the lower of their range; roll-wrapped none. */
+/**
+ * SPEC M7: only published strength counts. Woven tube 650 MPa, 64 GPa; rods the lower of their range; roll-wrapped
+ * none. Ruling after catalogue round 2: a strength the maker labels "reference only" or "design guide" counts at half
+ * value (its modulus in full); a metal tube uses its published minimum yield. In bending the lower of the published
+ * tensile and compressive strengths governs.
+ */
 export function tubeAllowable(part) {
   const s = part.specs;
-  if (Number.isFinite(s.tensile_strength_lengthways_mpa)) return { sigma_MPa: s.tensile_strength_lengthways_mpa, E_GPa: s.tensile_modulus_lengthways_gpa ?? null, basis: 'published tensile strength' };
-  if (s.tensile_strength_lengthways_mpa_range) return { sigma_MPa: s.tensile_strength_lengthways_mpa_range[0], E_GPa: s.tensile_modulus_lengthways_gpa_range?.[0] ?? null, basis: 'lower of the published range' };
-  return { sigma_MPa: null, E_GPa: null, basis: 'no published strength: carries no primary load' };
+  if (part.category === 'metal_tube') {
+    if (Number.isFinite(s.yield_strength_mpa)) return { sigma_MPa: s.yield_strength_mpa, E_GPa: s.elastic_modulus_gpa ?? null, basis: 'published minimum yield (metal tube)' };
+    return { sigma_MPa: null, E_GPa: null, basis: 'no published yield: carries no primary load' };
+  }
+  let sigma = null, E = null, basis = null;
+  if (Number.isFinite(s.tensile_strength_lengthways_mpa)) {
+    sigma = s.tensile_strength_lengthways_mpa; E = s.tensile_modulus_lengthways_gpa ?? null; basis = 'published tensile strength';
+  } else if (s.tensile_strength_lengthways_mpa_range) {
+    sigma = s.tensile_strength_lengthways_mpa_range[0]; E = s.tensile_modulus_lengthways_gpa_range?.[0] ?? null; basis = 'lower of the published range';
+  } else return { sigma_MPa: null, E_GPa: null, basis: 'no published strength: carries no primary load' };
+  const comp = Number.isFinite(s.compressive_strength_mpa) ? s.compressive_strength_mpa : s.compressive_strength_lengthways_mpa_range?.[0];
+  if (Number.isFinite(comp) && comp < sigma) { sigma = comp; basis += ', compressive lower and governs in bending'; }
+  if (/reference only|design guide/i.test(String(s.strength_note ?? ''))) { sigma *= 0.5; basis += '; disclaimed by the maker (reference only / design guide): half value per SPEC'; }
+  return { sigma_MPa: sigma, E_GPa: E, basis };
 }
 
 export function tubeSection(part) {

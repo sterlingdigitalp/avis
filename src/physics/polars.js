@@ -60,6 +60,10 @@ export function polarEval(P, alpha, Re, kCl, kCd, out) {
     out[1] = cd * kCd * P.cdFactor;
     out[2] = sigma * P.cm0 + (1 - sigma) * (-0.25 * (cl * Math.cos(a) + cd * Math.sin(a)));
     out[3] = sigma;
+    // Friction part: the fit's minimum drag at this Re, scaled as cd is (used by the suction-efficiency limit).
+    let cdf = P.fits[i].cdMin + f * (P.fits[i + 1].cdMin - P.fits[i].cdMin);
+    if (lr < L[0]) cdf *= Math.pow(10, 0.5 * (L[0] - lr));
+    if (out.length > 4) out[4] = cdf * kCd * P.cdFactor;
     return out;
   }
   const s = Math.sin(a);
@@ -72,15 +76,40 @@ export function polarEval(P, alpha, Re, kCl, kCd, out) {
   out[1] = (sigma * (cdm + P.kDrag * clLin * clLin) + (1 - sigma) * (cdm + 1.9 * s * s)) * kCd;
   out[2] = sigma * P.cm0 + (1 - sigma) * (-0.25 * clFp * c);
   out[3] = sigma;
+  if (out.length > 4) out[4] = cdm * kCd;
   return out;
 }
 
-/** Inviscid thin-airfoil: 2 pi slope, zero-lift angle from the mean line, no drag, no stall. */
+/**
+ * Thin-airfoil properties of the NACA 4-digit mean line (max camber f at chord fraction p) by Glauert's integrals:
+ *   alpha_L0 = -(1/pi) int_0^pi (dz/dx)(cos t - 1) dt,  cm_c/4 = (pi/4)(A2 - A1),  A_n = (2/pi) int_0^pi (dz/dx) cos(n t) dt,
+ * with x = (1 - cos t)/2. For p = 0.5 (parabolic) these reduce to -2f and -pi f / 2.
+ */
+export function thinAirfoilCamber(f, p = 0.4, n = 4000) {
+  if (!f) return { alphaL0: 0, cmC4: 0 };
+  let i0 = 0, a1 = 0, a2 = 0;
+  for (let k = 0; k < n; k++) {
+    const t = ((k + 0.5) * Math.PI) / n;
+    const x = 0.5 * (1 - Math.cos(t));
+    const dz = x < p ? (2 * f * (p - x)) / (p * p) : (2 * f * (p - x)) / ((1 - p) * (1 - p));
+    const w = Math.PI / n;
+    i0 += dz * (Math.cos(t) - 1) * w;
+    a1 += dz * Math.cos(t) * w;
+    a2 += dz * Math.cos(2 * t) * w;
+  }
+  return { alphaL0: -i0 / Math.PI, cmC4: (Math.PI / 4) * ((2 / Math.PI) * a2 - (2 / Math.PI) * a1) };
+}
+
+/**
+ * Inviscid thin-airfoil: 2 pi slope, zero-lift angle and moment from the mean line, no drag, no stall. `camber` is
+ * either the max camber (parabolic mean line, round 1) or { alphaL0, cmC4 } from thinAirfoilCamber.
+ */
 export function inviscidEval(camber, alpha, kCl, out) {
-  const al = alpha + 2 * camber;
+  const tp = typeof camber === 'object' ? camber : { alphaL0: -2 * camber, cmC4: -0.5 * Math.PI * camber };
+  const al = alpha - tp.alphaL0;
   out[0] = 2 * Math.PI * kCl * al;
   out[1] = 0;
-  out[2] = -0.5 * Math.PI * camber;
+  out[2] = tp.cmC4;
   out[3] = 1;
   return out;
 }

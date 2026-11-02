@@ -39,6 +39,14 @@ export function createWind(spec, seed = 1) {
   let qg = 0, rg = 0;
   const lastOut = { world: [0, 0, 0], rates: [0, 0, 0] };
   let primed = false;
+  // The turbulence is generated on its own fixed clock, independent of the flight's time step, and interpolated
+  // linearly in between. Halving the flight step then flies through the same air, which a time-step convergence
+  // study needs; driving the filters with a fresh random number per flight step would change the realisation.
+  const dtw = spec.gridDt ?? 1 / 240;
+  let tGrid = null;
+  const prev = new Float64Array(6); // u, v, w, p, q, r at tGrid - dtw
+  const cur = new Float64Array(6); // at tGrid
+  const turb = sigU > 0 || sigV > 0 || sigW > 0;
 
   function second(y1, y2, sigma, tau, dt, n) {
     // y1' = (-y1 + K u)/tau, y2' = (-y2 + y1 + sqrt3 tau y1')/tau, u = n / sqrt(dt)
@@ -50,55 +58,79 @@ export function createWind(spec, seed = 1) {
     return [y1n, out];
   }
 
-  /** Advance turbulence by dt at airspeed V (m/s) and return wind at time t in world axes, plus rotary terms. */
+  /** One step of the turbulence filters on the fixed clock, at airspeed v. */
+  function advance(v) {
+    const dt = dtw;
+    const tauU = Lu / v;
+    const eU = Math.exp(-dt / tauU);
+    if (!primed) {
+      // Start from the stationary distribution so the first seconds are not artificially calm.
+      u1 = sigU * rng.normal();
+      const tv = Lv / v, tw = Lw / v;
+      // Run the 2nd-order filters a few time constants to reach their stationary state.
+      const mx = Math.ceil((5 * Math.max(tv, tw)) / dt);
+      for (let i = 0; i < Math.min(mx, 20000); i++) {
+        [v1, v2] = second(v1, v2, sigV, tv, dt, rng.normal());
+        [w1, w2] = second(w1, w2, sigW, tw, dt, rng.normal());
+      }
+      primed = true;
+    }
+    u1 = u1 * eU + sigU * Math.sqrt(1 - eU * eU) * rng.normal();
+    const tv = Lv / v;
+    const tw = Lw / v;
+    [v1, v2] = second(v1, v2, sigV, tv, dt, rng.normal());
+    [w1, w2] = second(w1, w2, sigW, tw, dt, rng.normal());
+    // Rotary terms. MIL-F-8785C H_p = sigma_w sqrt(0.8/V) (pi/(4b))^(1/6) / (L_w^(1/3) (1 + tau s)) with noise
+    // density pi. (flight-standards.md prints sigma_w/(0.8 V), which is dimensionally wrong: it should be
+    // sqrt(0.8/V), as here.) rms of the first order filter = K sqrt(pi / (2 tau)).
+    const tauP = (4 * b) / (Math.PI * v);
+    const eP = Math.exp(-dt / tauP);
+    const kP = sigW * Math.sqrt(0.8 / v) * Math.pow(Math.PI / (4 * b), 1 / 6) * Math.pow(Lw, -1 / 3);
+    const sigP = kP * Math.sqrt(Math.PI / (2 * tauP));
+    pg = pg * eP + sigP * Math.sqrt(1 - eP * eP) * rng.normal();
+    // Pitch and yaw gust rates: gradients of frozen turbulence along the body, dw/dx = (dw/dt)/V.
+    const eQ = Math.exp(-dt / tauP);
+    const wPrev = qgLag;
+    qgLag = eQ * qgLag + (1 - eQ) * w2;
+    qg = (qgLag - wPrev) / (dt * v);
+    const vPrev = rgLag;
+    const tauR = (3 * b) / (Math.PI * v);
+    const eR = Math.exp(-dt / tauR);
+    rgLag = eR * rgLag + (1 - eR) * v2;
+    rg = (rgLag - vPrev) / (dt * v);
+    prev.set(cur);
+    cur[0] = u1; cur[1] = v2; cur[2] = w2; cur[3] = pg; cur[4] = qg; cur[5] = rg;
+  }
+
+  /** Wind at time t in world axes, plus rotary terms, for a bird at airspeed V (m/s). dt is not used. */
   function step(t, dt, V) {
     const v = Math.max(V, 2);
-    if (sigU > 0 || sigV > 0 || sigW > 0) {
-      const tauU = Lu / v;
-      const eU = Math.exp(-dt / tauU);
-      if (!primed) {
-        // Start from the stationary distribution so the first seconds are not artificially calm.
-        u1 = sigU * rng.normal();
-        const tv = Lv / v, tw = Lw / v;
-        // Run the 2nd-order filters a few time constants to reach their stationary state.
-        const mx = Math.ceil((5 * Math.max(tv, tw)) / dt);
-        for (let i = 0; i < Math.min(mx, 20000); i++) {
-          [v1, v2] = second(v1, v2, sigV, tv, dt, rng.normal());
-          [w1, w2] = second(w1, w2, sigW, tw, dt, rng.normal());
-        }
-        primed = true;
+    let tu = 0, tvv = 0, tww = 0, tp = 0, tq = 0, tr = 0;
+    if (turb) {
+      if (tGrid === null) {
+        advance(v);
+        prev.set(cur);
+        tGrid = t;
       }
-      u1 = u1 * eU + sigU * Math.sqrt(1 - eU * eU) * rng.normal();
-      const tv = Lv / v;
-      const tw = Lw / v;
-      [v1, v2] = second(v1, v2, sigV, tv, dt, rng.normal());
-      [w1, w2] = second(w1, w2, sigW, tw, dt, rng.normal());
-      // Rotary terms. MIL-F-8785C H_p = sigma_w sqrt(0.8/V) (pi/(4b))^(1/6) / (L_w^(1/3) (1 + tau s)) with noise
-      // density pi. (flight-standards.md prints sigma_w/(0.8 V), which is dimensionally wrong: it should be
-      // sqrt(0.8/V), as here.) rms of the first order filter = K sqrt(pi / (2 tau)).
-      const tauP = (4 * b) / (Math.PI * v);
-      const eP = Math.exp(-dt / tauP);
-      const kP = sigW * Math.sqrt(0.8 / v) * Math.pow(Math.PI / (4 * b), 1 / 6) * Math.pow(Lw, -1 / 3);
-      const sigP = kP * Math.sqrt(Math.PI / (2 * tauP));
-      pg = pg * eP + sigP * Math.sqrt(1 - eP * eP) * rng.normal();
-      // Pitch and yaw gust rates: gradients of frozen turbulence along the body, dw/dx = (dw/dt)/V.
-      const eQ = Math.exp(-dt / tauP);
-      const wPrev = qgLag;
-      qgLag = eQ * qgLag + (1 - eQ) * w2;
-      qg = (qgLag - wPrev) / (dt * v);
-      const vPrev = rgLag;
-      const tauR = (3 * b) / (Math.PI * v);
-      const eR = Math.exp(-dt / tauR);
-      rgLag = eR * rgLag + (1 - eR) * v2;
-      rg = (rgLag - vPrev) / (dt * v);
+      while (tGrid < t - 1e-12) {
+        advance(v);
+        tGrid += dtw;
+      }
+      const f = Math.max(0, Math.min(1, 1 - (tGrid - t) / dtw));
+      tu = prev[0] + f * (cur[0] - prev[0]);
+      tvv = prev[1] + f * (cur[1] - prev[1]);
+      tww = prev[2] + f * (cur[2] - prev[2]);
+      tp = prev[3] + f * (cur[3] - prev[3]);
+      tq = prev[4] + f * (cur[4] - prev[4]);
+      tr = prev[5] + f * (cur[5] - prev[5]);
     }
     // Align: u along the mean wind's horizontal direction (or x when calm), w vertical, v lateral to it.
     const mh = Math.hypot(mean[0], mean[2]);
     const ex = mh > 1e-6 ? mean[0] / mh : 1;
     const ez = mh > 1e-6 ? mean[2] / mh : 0;
-    const wx = mean[0] + u1 * ex - v2 * ez;
-    const wy = mean[1] + w2;
-    const wz = mean[2] + u1 * ez + v2 * ex;
+    const wx = mean[0] + tu * ex - tvv * ez;
+    const wy = mean[1] + tww;
+    const wz = mean[2] + tu * ez + tvv * ex;
     // 1-cosine gust of length H, returning to zero: v(x) = (A/2)(1 - cos(2 pi x / H)), x = V_air (t - t0).
     let gx = 0, gy = 0, gz = 0;
     for (let i = 0; i < gusts.length; i++) {
@@ -117,9 +149,9 @@ export function createWind(spec, seed = 1) {
     lastOut.world[2] = wz + gz;
     // Rates the air presents to the bird, as subtracted from body rates in the flight model. A lateral gust
     // gradient acts like a nose-left body rate of opposite sign; see test/physics/wind.test.js.
-    lastOut.rates[0] = pg;
-    lastOut.rates[1] = -rg;
-    lastOut.rates[2] = qg;
+    lastOut.rates[0] = tp;
+    lastOut.rates[1] = -tr;
+    lastOut.rates[2] = tq;
     return lastOut;
   }
 

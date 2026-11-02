@@ -5,7 +5,7 @@ import { cpus } from 'node:os';
 
 export const MAX_WORKERS = 6;
 
-export async function runPool(jobs, { workers = MAX_WORKERS, onResult = null } = {}) {
+export async function runPool(jobs, { workers = +(process.env.AVIS_WORKERS ?? MAX_WORKERS), onResult = null } = {}) {
   const n = Math.max(1, Math.min(workers, MAX_WORKERS, cpus().length - 1, jobs.length));
   const results = new Array(jobs.length);
   let next = 0;

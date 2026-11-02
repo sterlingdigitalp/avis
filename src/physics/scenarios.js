@@ -62,9 +62,10 @@ function makeLog(sim, design, scenario) {
 }
 
 /** Sets up one flight in steady cruise, or from given initial conditions, with controller wired in. */
-export function setupFlight(design, { seed = 1, perturb = {}, wind = null, delay = 0.02, sensorNoise = true, init = {}, groundY = -1e9, servoSpeedScale } = {}) {
+export function setupFlight(design, { seed = 1, perturb = {}, wind = null, delay = 0.02, sensorNoise = true, init = {}, groundY = -1e9, servoSpeedScale, dt = null } = {}) {
+  dt = dt ?? design.control?.dt ?? 1 / 240;
   const bird = buildBird(design, { perturb: { ...perturb, servoSpeed: perturb.servoSpeed ?? servoSpeedScale } });
-  const sim = createFlight(design, { bird, wind, dt: 1 / 240, groundY });
+  const sim = createFlight(design, { bird, wind, dt, groundY });
   const ctl = design.control;
   const tr = ctl.trim;
   const Vc = init.V ?? ctl.Vcruise;
@@ -77,7 +78,7 @@ export function setupFlight(design, { seed = 1, perturb = {}, wind = null, delay
   const gam = init.gamma ?? 0;
   const vh = Vc * Math.cos(gam);
   // Start at the given airspeed in whatever wind is blowing at t = 0, so the bird is not dropped into a gust.
-  const w0 = wind ? wind.step(0, 1 / 240, Vc).world.slice() : [0, 0, 0];
+  const w0 = wind ? wind.step(0, dt, Vc).world.slice() : [0, 0, 0];
   sim.setState({
     pos: init.pos ?? [0, init.y ?? 0, 0],
     quat: q,
@@ -111,12 +112,14 @@ function attitude(sim) {
 }
 
 // ---- M1 hand launch: released at the speed and angle limits of the gate. ---------------------------------------
-export function runM1(design, { seed = 1, perturb = {}, speed = 8, pitchDeg = 5, sensorNoise = true, delay = 0.02, log = false, servoSpeedScale } = {}) {
+export function runM1(design, { seed = 1, perturb = {}, speed = 8, pitchDeg = 5, sensorNoise = true, delay = 0.02, log = false, servoSpeedScale, dt = null } = {}) {
+  dt = dt ?? design.control?.dt ?? 1 / 240;
+  const HZ = Math.round(1 / dt);
   // Released at the gate's speed and angle limits. "Positive climb within 3 s" is read as: the climb rate
   // averaged over the last whole second before 3 s is positive. Height lost is measured from release.
   const row = design.control.trim[0];
   const { sim, ctl, tick } = setupFlight(design, {
-    seed, perturb, sensorNoise, delay, servoSpeedScale,
+    seed, perturb, sensorNoise, delay, servoSpeedScale, dt,
     init: { V: speed, theta: pitchDeg * DEG, gamma: pitchDeg * DEG, freq: row.freq, y: 0 },
   });
   ctl.guidance.mode = 'launch';
@@ -127,34 +130,36 @@ export function runM1(design, { seed = 1, perturb = {}, speed = 8, pitchDeg = 5,
   let minY = 0;
   const ys = [];
   const T = 6;
-  for (let k = 0; k < T * 240; k++) {
-    if (k === 4 * 240) {
+  for (let k = 0; k < T * HZ; k++) {
+    if (k === 4 * HZ) {
       ctl.guidance.mode = 'cruise';
       ctl.guidance.climb = null;
     }
     tick();
-    if (L && k % 2 === 0) L.add();
+    if (L && k % Math.max(1, Math.round(HZ / 120)) === 0) L.add();
     const s = sim.snapshot();
     ys.push(s.pos[1]);
-    if (k <= 3 * 240 && s.pos[1] < minY) minY = s.pos[1];
+    if (k <= 3 * HZ && s.pos[1] < minY) minY = s.pos[1];
   }
-  const climb3 = ys[3 * 240 - 1] - ys[2 * 240 - 1]; // metres over the second before 3 s
+  const climb3 = ys[3 * HZ - 1] - ys[2 * HZ - 1]; // metres over the second before 3 s
   let firstPositive = null;
-  for (let k = 240; k < ys.length; k++) if (ys[k] - ys[k - 240] > 0) { firstPositive = k / 240; break; }
+  for (let k = HZ; k < ys.length; k++) if (ys[k] - ys[k - HZ] > 0) { firstPositive = k / HZ; break; }
   const passed = climb3 > 0 && -minY < 1.5;
   return { passed, measured: { release_speed_m_s: speed, release_pitch_deg: pitchDeg, climb_rate_2_to_3s_m_s: climb3, first_1s_window_climbing_s: firstPositive, height_lost_m: -minY, height_at_6s_m: ys[ys.length - 1], peak_motor_A: sim.peaks.motorI, peak_batt_A: sim.peaks.battI }, peaks: { ...sim.peaks }, rms: { ...sim.rms }, log: L?.output() };
 }
 
 // ---- M2 endurance: level cruise for long enough to measure draw, extrapolated to empty against the real battery. --
-export function runM2(design, { seed = 1, perturb = {}, sensorNoise = true, delay = 0.02, log = false, tEnd = 120, servoSpeedScale } = {}) {
-  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, sensorNoise, delay, servoSpeedScale, init: { y: 0 } });
+export function runM2(design, { seed = 1, perturb = {}, sensorNoise = true, delay = 0.02, log = false, tEnd = 120, servoSpeedScale, dt = null } = {}) {
+  dt = dt ?? design.control?.dt ?? 1 / 240;
+  const HZ = Math.round(1 / dt);
+  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, sensorNoise, delay, servoSpeedScale, dt, init: { y: 0 } });
   const L = log ? makeLog(sim, design, 'M2') : null;
-  const N = Math.round(tEnd * 240);
+  const N = Math.round(tEnd * HZ);
   let sumP = 0, sumI = 0, n = 0, maxDev = 0;
   for (let k = 0; k < N; k++) {
     tick();
-    if (L && k % 2 === 0) L.add();
-    if (k > 20 * 240) {
+    if (L && k % Math.max(1, Math.round(HZ / 120)) === 0) L.add();
+    if (k > 20 * HZ) {
       sumP += sim.tel.power_w;
       sumI += sim.tel.batt_I;
       n++;
@@ -177,14 +182,16 @@ export function runM2(design, { seed = 1, perturb = {}, sensorNoise = true, dela
 }
 
 // ---- M3 coordinated turn ---------------------------------------------------------------------------------------
-export function runM3(design, { seed = 1, perturb = {}, sensorNoise = true, delay = 0.02, log = false, bankDeg = 30, servoSpeedScale } = {}) {
-  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, sensorNoise, delay, servoSpeedScale, init: { y: 0 } });
+export function runM3(design, { seed = 1, perturb = {}, sensorNoise = true, delay = 0.02, log = false, bankDeg = 30, servoSpeedScale, dt = null } = {}) {
+  dt = dt ?? design.control?.dt ?? 1 / 240;
+  const HZ = Math.round(1 / dt);
+  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, sensorNoise, delay, servoSpeedScale, dt, init: { y: 0 } });
   const L = log ? makeLog(sim, design, 'M3') : null;
   let k = 0;
   // Settle
-  while (k < 6 * 240) {
+  while (k < 6 * HZ) {
     tick();
-    if (L && k % 2 === 0) L.add();
+    if (L && k % Math.max(1, Math.round(HZ / 120)) === 0) L.add();
     k++;
   }
   const y0 = 0;
@@ -194,10 +201,10 @@ export function runM3(design, { seed = 1, perturb = {}, sensorNoise = true, dela
   let chiPrev = Math.atan2(sim.snapshot().vel[2], sim.snapshot().vel[0]);
   let maxDev = 0;
   let bankSum = 0, n = 0, maxBank = 0, slipMax = 0;
-  const Tmax = 80 * 240;
+  const Tmax = 80 * HZ;
   while (k < Tmax && Math.abs(turned) < TWO_PI) {
     tick();
-    if (L && k % 2 === 0) L.add();
+    if (L && k % Math.max(1, Math.round(HZ / 120)) === 0) L.add();
     const s = sim.snapshot();
     const chi = Math.atan2(s.vel[2], s.vel[0]);
     let d = chi - chiPrev;
@@ -214,7 +221,7 @@ export function runM3(design, { seed = 1, perturb = {}, sensorNoise = true, dela
     k++;
   }
   const ok = Math.abs(turned) >= TWO_PI - 1e-3 && maxDev <= 3;
-  return { passed: ok, measured: { heading_change_deg: turned / DEG, altitude_dev_m: maxDev, mean_bank_deg: bankSum / Math.max(n, 1) / DEG, max_bank_deg: maxBank / DEG, max_sideslip_deg: slipMax / DEG, turn_time_s: n / 240 }, peaks: { ...sim.peaks }, rms: { ...sim.rms }, log: L?.output() };
+  return { passed: ok, measured: { heading_change_deg: turned / DEG, altitude_dev_m: maxDev, mean_bank_deg: bankSum / Math.max(n, 1) / DEG, max_bank_deg: maxBank / DEG, max_sideslip_deg: slipMax / DEG, turn_time_s: n / HZ }, peaks: { ...sim.peaks }, rms: { ...sim.rms }, log: L?.output() };
 }
 
 // ---- M4 rough air: one seed ------------------------------------------------------------------------------------
@@ -228,25 +235,27 @@ export function m4Wind(design, seed, { agl = 30, Hforce = null } = {}) {
   return { spec: { mean: [6 * Math.cos(dir), 0, 6 * Math.sin(dir)], uRms: 2, vRms: 2, wRms: 2 * low.ratioW, Lu: low.Lu_m, Lv: low.Lu_m, Lw: low.Lw_m, wingspan: span, gusts, agl }, H: gusts[0].H, dir, T };
 }
 
-export function runM4Seed(design, seed, { perturb = {}, sensorNoise = true, delay = 0.02, log = false, Hforce = null, servoSpeedScale } = {}) {
+export function runM4Seed(design, seed, { perturb = {}, sensorNoise = true, delay = 0.02, log = false, Hforce = null, servoSpeedScale, dt = null } = {}) {
+  dt = dt ?? design.control?.dt ?? 1 / 240;
+  const HZ = Math.round(1 / dt);
   const w = m4Wind(design, seed, { Hforce });
   const wind = createWind(w.spec, seed);
-  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, wind, sensorNoise, delay, servoSpeedScale, init: { y: 0, chi: 0, V: design.control.Vrough ?? design.control.Vcruise } });
+  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, wind, sensorNoise, delay, servoSpeedScale, dt, init: { y: 0, chi: 0, V: design.control.Vrough ?? design.control.Vcruise } });
   ctl.guidance.holdHeading = true;
   // Rough-air technique: wings-level priority, gentle heading hold, penetration speed from the design.
   ctl.guidance.maxBank = design.control.roughMaxBank ?? 15 * DEG;
   ctl.guidance.kChi = 0.6;
   ctl.guidance.speed = design.control.Vrough ?? design.control.Vcruise;
   const L = log ? makeLog(sim, design, 'M4') : null;
-  const N = Math.round(w.T * 240);
+  const N = Math.round(w.T * HZ);
   let maxRoll = 0, maxPitch = 0, maxDev = 0, minV = 1e9, stallTime = 0, longest = 0, run = 0;
   let departure = false;
   for (let k = 0; k < N; k++) {
     tick();
-    if (L && k % 2 === 0) L.add();
+    if (L && k % Math.max(1, Math.round(HZ / 120)) === 0) L.add();
     const a = attitude(sim);
     const s = sim.snapshot();
-    if (k > 3 * 240) {
+    if (k > 3 * HZ) {
       // The first seconds are the wind arriving on a bird started in calm trim, kept out of the band check only
       // to the extent that nothing is excluded for attitude.
       maxDev = Math.max(maxDev, Math.abs(s.pos[1]));
@@ -256,8 +265,8 @@ export function runM4Seed(design, seed, { perturb = {}, sensorNoise = true, dela
     if (sim.tel.airspeed < minV) minV = sim.tel.airspeed;
     // Stall departure: more than half the wing stalled through a whole second with falling nose or speed.
     if (sim.tel.stalled > 0.5) {
-      run += 1 / 240;
-      stallTime += 1 / 240;
+      run += 1 / HZ;
+      stallTime += 1 / HZ;
       longest = Math.max(longest, run);
     } else run = 0;
     if (longest > 1.0) departure = true;
@@ -271,10 +280,12 @@ export function runM4Seed(design, seed, { perturb = {}, sensorNoise = true, dela
 }
 
 // ---- M5 belly landing ------------------------------------------------------------------------------------------
-export function runM5(design, { seed = 1, perturb = {}, sensorNoise = true, delay = 0.02, log = false, startHeight = 20, servoSpeedScale } = {}) {
+export function runM5(design, { seed = 1, perturb = {}, sensorNoise = true, delay = 0.02, log = false, startHeight = 20, servoSpeedScale, dt = null } = {}) {
+  dt = dt ?? design.control?.dt ?? 1 / 240;
+  const HZ = Math.round(1 / dt);
   const groundY = 0;
   const ctlC = design.control;
-  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, sensorNoise, delay, servoSpeedScale, init: { y: startHeight, V: ctlC.Vcruise } });
+  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, sensorNoise, delay, servoSpeedScale, dt, init: { y: startHeight, V: ctlC.Vcruise } });
   const L = log ? makeLog(sim, design, 'M5') : null;
   ctl.guidance.altitude = startHeight;
   const bottom = design.body.bottom_y_m ?? -0.04;
@@ -309,8 +320,8 @@ export function runM5(design, { seed = 1, perturb = {}, sensorNoise = true, dela
       ctl.guidance.pitchCmd = pitch;
     }
     tick();
-    if (L && Math.round(t * 240) % 2 === 0) L.add();
-    t += 1 / 240;
+    if (L && Math.round(t * HZ) % Math.max(1, Math.round(HZ / 120)) === 0) L.add();
+    t += 1 / HZ;
     const s2 = sim.snapshot();
     if (s2.pos[1] + bottom <= groundY && t > 3) {
       const speed = Math.hypot(s2.vel[0], s2.vel[1], s2.vel[2]);
@@ -364,8 +375,8 @@ export function runCorridor(design0, corridor, { seed = 1, wind = null, log = tr
     ctl.guidance.course = chiCmd;
     ctl.guidance.altitude = yTrack;
     tick();
-    if (L && Math.round(t * 240) % 2 === 0) L.add();
-    t += 1 / 240;
+    if (L && Math.round(t / sim.dt) % Math.max(1, Math.round(1 / (120 * sim.dt))) === 0) L.add();
+    t += sim.dt;
     maxCross = Math.max(maxCross, Math.abs(cross));
     maxVert = Math.max(maxVert, Math.abs(s.pos[1] - yTrack));
     if (leg === wp.length - 2 && along >= lenH) {
@@ -388,11 +399,12 @@ export function runClimb(design0, { V, altitude_m = null, climbCmd = 3, seconds 
   ctl.guidance.speed = V;
   ctl.guidance.climb = climbCmd;
   ctl.guidance.altitude = 1e4;
-  const N = Math.round(seconds * 240);
+  const HZ = Math.round(1 / sim.dt);
+  const N = Math.round(seconds * HZ);
   let y0 = null, t0 = null, sumV = 0, sumI = 0, n = 0, Ipk = 0;
   for (let k = 0; k < N; k++) {
     tick();
-    if (k === Math.round(15 * 240)) {
+    if (k === Math.round(15 * HZ)) {
       y0 = sim.snapshot().pos[1];
       t0 = sim.t;
     }

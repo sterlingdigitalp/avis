@@ -1,7 +1,7 @@
 // Coarse screen: thousands of parameterised designs scored in seconds with closed-form estimates, using real
 // catalogue parts only. It ranks; the flight model decides. Nothing here is evidence for a gate.
 
-import { ofCategory, isEligible, motorModel, batteryModel, servoAt, tubeAllowable, tubeSection } from './catalog.js';
+import { ofCategory, isEligible, motorModel, batteryModel, servoAt, tubeAllowable, tubeSection, becOf } from './catalog.js';
 import { buildDesign, minRating, CANDIDATES } from './build.js';
 import { designAtmosphere, G0 } from '../physics/atmosphere.js';
 
@@ -11,10 +11,12 @@ const DEG = Math.PI / 180;
 export function eligibleParts(catalog) {
   const ok = (p) => isEligible(p);
   const motors = ofCategory(catalog, 'motor').filter(ok).filter((p) => motorModel(p).I_cont !== null);
-  const batteries = ofCategory(catalog, 'battery').filter(ok).filter((p) => p.specs.chemistry === 'LiPo' && p.specs.cells_series >= 2 && p.specs.cells_series <= 4 && p.specs.capacity_mah > 0);
+  // SPEC ruling after catalogue round 2: Li-ion packs are eligible on the same terms as LiPo.
+  const batteries = ofCategory(catalog, 'battery').filter(ok).filter((p) => ['LiPo', 'Li-ion'].includes(p.specs.chemistry) && p.specs.cells_series >= 2 && p.specs.cells_series <= 4 && p.specs.capacity_mah > 0 && Number.isFinite(p.specs.c_rating_continuous_claimed));
   const escs = ofCategory(catalog, 'esc').filter(ok).filter((p) => Number.isFinite(p.specs.continuous_current_a));
-  const servos = ofCategory(catalog, 'servo').filter(ok).filter((p) => Array.isArray(p.specs.stall_current) && p.specs.stall_current.length);
-  const tubes = [...ofCategory(catalog, 'carbon_tube'), ...ofCategory(catalog, 'carbon_rod')].filter(ok).filter((p) => tubeAllowable(p).sigma_MPa !== null);
+  // Eligible servos: a published stall current, and published rows covering the 5 V of every catalogue ESC's BEC.
+  const servos = ofCategory(catalog, 'servo').filter(ok).filter((p) => Array.isArray(p.specs.stall_current) && p.specs.stall_current.length && servoAt(p, 5) !== null);
+  const tubes = [...ofCategory(catalog, 'carbon_tube'), ...ofCategory(catalog, 'carbon_rod'), ...ofCategory(catalog, 'metal_tube')].filter(ok).filter((p) => tubeAllowable(p).sigma_MPa !== null);
   const fcs = ofCategory(catalog, 'flight_controller').filter(ok).filter((p) => p.specs.imu_onboard && p.specs.baro_onboard);
   const gps = ofCategory(catalog, 'gps').filter(ok).filter((p) => p.specs.compass || p.specs.compass_conflict || p.specs.magnetometer_onboard);
   const aspd = ofCategory(catalog, 'airspeed').filter(ok);
@@ -110,11 +112,17 @@ export function coarse(params, catalog) {
   return { design: d, Vs, V, P, endurance, ratio, f, Tcrank, Vneed, margins, minMargin, mass_g: d.mass.total_g };
 }
 
+// Round 2: larger strokes at lower frequency (round 1 flapped at 6-13 Hz with 14-20 deg strokes, which put the
+// wing inertia loads past every rating), and the stronger parts of catalogue round 2.
 const CAND_GRID = {
-  larus: { span: [1.5, 1.6, 1.7, 1.8, 1.9, 2.0], AR: [7, 8, 9, 10], taper: [0.5, 0.65], amp: [14, 18] },
-  falco: { span: [1.0, 1.1, 1.2], AR: [6, 7, 8], taper: [0.45, 0.6], amp: [14, 18] },
-  columba: { span: [0.7, 0.8, 0.9], AR: [4.5, 5.5, 6.5], taper: [0.6, 0.75], amp: [16, 20] },
+  larus: { span: [1.6, 1.8, 2.0], AR: [7, 8.5, 10], taper: [0.6], amp: [20, 26, 32] },
+  falco: { span: [1.0, 1.1, 1.2], AR: [5.5, 6.5, 7.5], taper: [0.5], amp: [20, 26, 32] },
+  columba: { span: [0.7, 0.8, 0.9], AR: [4.5, 5.5, 6.5], taper: [0.65], amp: [22, 28, 34] },
 };
+// Twist servos strong enough to matter for roll (round 1's 0.12 N m servo stalled), and spars that can carry load.
+// The first round-2 missions measured twist torques of 1.7 N m in rough air: at least 1 N m at the 5 V supply.
+const TWIST_MIN_NM = 1.0;
+const SPAR_MIN_OD_MM = 8;
 
 /** Score many designs for one candidate. Returns all results sorted best first. */
 export function screen(candidate, catalog, { limit = Infinity } = {}) {
@@ -124,30 +132,45 @@ export function screen(candidate, catalog, { limit = Infinity } = {}) {
   const g = CAND_GRID[candidate];
   const out = [];
   const tubeBy = (od) => E.tubes.filter((t) => t.category === 'carbon_tube').sort((a, b) => Math.abs(a.specs.od_mm - od) - Math.abs(b.specs.od_mm - od))[0];
-  const inner = E.tubes.filter((t) => t.category === 'carbon_tube');
-  const servos = E.servos;
+  const inner = E.tubes.filter((t) => (t.category === 'carbon_tube' || t.category === 'metal_tube') && t.specs.od_mm >= SPAR_MIN_OD_MM);
+  const servos = E.servos.filter((p) => servoAt(p, 5).stall_Nm >= TWIST_MIN_NM);
   const avionics = { fc: L(E.fcs).id, gps: L(E.gps).id, airspeed: L(E.aspd).id, receiver: L(E.rx).id };
   const rods = E.tubes.filter((t) => t.category === 'carbon_rod').sort((a, b) => a.specs.od_mm - b.specs.od_mm);
   let count = 0;
   for (const span of g.span) for (const AR of g.AR) for (const taper of g.taper) for (const amp of g.amp) {
     for (const motor of E.motors) for (const battery of E.batteries) {
-      const esc = E.escs.filter((e) => cellsOk(e, battery)).sort((a, b) => a.mass_g - b.mass_g).find((e) => e.specs.continuous_current_a >= Math.min(motorModel(motor).I_cont, 1e9));
-      if (!esc) continue;
+      const escs = E.escs.filter((e) => cellsOk(e, battery)).sort((a, b) => a.mass_g - b.mass_g).filter((e) => e.specs.continuous_current_a >= Math.min(motorModel(motor).I_cont, 1e9));
+      if (!escs.length) continue;
       for (const sparIn of inner) for (const tw of servos) {
+        // The ESC's BEC carries the servo bus (SPEC M8): two twist servos near 80% of stall, tail servos light, avionics.
+        const twA = servoAt(tw, 5).stall_A ?? 0;
+        const tailA = servoAt(L(servos), 5).stall_A ?? 0;
+        const busNeed = 2 * 0.8 * twA + 2 * 0.3 * tailA + 0.35;
+        const esc = escs.find((e) => (becOf(e).amps ?? 0) >= busNeed);
+        if (!esc) continue;
         // Gear ratio aimed at the motor speed needed for the estimated flap frequency at 70% battery voltage
         const semi = span / 2;
         const V0 = 8;
-        const f0 = (0.3 * V0) / (2 * amp * DEG * 0.75 * semi * 1.2);
+        const f0 = (0.3 * V0) / (2 * amp * DEG * 0.75 * semi * 1.2); // Strouhal 0.3 at 3/4 semispan
         const Gwant = (0.65 * battery.specs.cells_series * 3.7 * motorModel(motor).kv_rad_per_v_s) / (2 * Math.PI * f0);
         // Within a third of the wanted ratio, the strongest train per gram; the flight model checks it.
         const band = trains.filter((t) => t.ratio >= 0.75 * Gwant && t.ratio <= 1.33 * Gwant);
-        const train = (band.length ? band : trains).slice().sort((a, b) => b.crankRating / (b.mass + 10) - a.crankRating / (a.mass + 10))[0];
+        const inBand = band.length ? band : trains;
+        // Two trains per design: the strongest per gram, and the strongest outright (round 1 and the first round-2
+        // pass were limited by gear rating in every finalist; heavier is acceptable if it flies better).
+        const light = inBand.slice().sort((a, b) => b.crankRating / (b.mass + 10) - a.crankRating / (a.mass + 10))[0];
+        // Strong: the highest-rated train of at most 170 g within a wider ratio band (the strongest outright weigh
+        // 300-1000 g, more than the bird).
+        const wide = trains.filter((t) => t.mass <= 170 && t.ratio >= 0.6 * Gwant && t.ratio <= 1.5 * Gwant);
+        const strong = (wide.length ? wide : inBand).slice().sort((a, b) => b.crankRating - a.crankRating || a.mass - b.mass)[0];
+        for (const train of light === strong ? [light] : [light, strong]) {
         if (!train) continue;
         const outerSpar = sparIn.specs.od_mm > 10 ? tubeBy(8) : sparIn;
         const params = {
-          candidate, span_m: span, AR, taper, elbowFrac: 0.5, elbowGain: 0.5, amp_deg: amp, ampMax_deg: Math.min(1.6 * amp, 30), phiMean_deg: 5,
-          gearRatio: train.ratio, crankRating: train.crankRating, staticMargin: 0.1, sparFrac: 0.35, crank_mm: 8, coupler_mm: 70,
+          candidate, span_m: span, AR, taper, elbowFrac: 0.5, elbowGain: 0.5, amp_deg: amp, ampMax_deg: Math.min(1.4 * amp, 45), phiMean_deg: 5,
+          gearRatio: train.ratio, crankRating: train.crankRating, staticMargin: 0.1, sparFrac: 0.35, crank_mm: 12, coupler_mm: 80,
           parts: {
+            coupler: 'rod-ec-4mm',
             motor: motor.id, esc: esc.id, battery: battery.id, twistServo: tw.id, tailServo: L(servos).id, strokeServo: L(servos).id,
             ...avionics, sparInner: sparIn.id, sparOuter: outerSpar.id, leRod: rods.find((r) => r.specs.od_mm >= 2)?.id ?? rods[0].id,
             teRod: rods.find((r) => r.specs.od_mm >= 1.5)?.id ?? rods[0].id, ribMaterial: L(E.ribs).id, film: L(E.films).id, keel: tubeBy(8).id,
@@ -157,6 +180,7 @@ export function screen(candidate, catalog, { limit = Infinity } = {}) {
         const r = coarse(params, catalog);
         out.push({ params, ...summary(r) });
         if (++count >= limit) break;
+        }
       }
     }
   }

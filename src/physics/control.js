@@ -122,6 +122,18 @@ export function createController(design, opts = {}) {
   const line = [];
   for (let i = 0; i <= delaySteps; i++) line.push(blank());
   let thetaCmdRate = 0;
+  let diffPrev = 0;
+  /** Highest stroke frequency the component ratings allow at a stroke amplitude (design.control.envelope). */
+  function envelopeFreq(amp) {
+    const env = cfg.envelope;
+    if (!env || !env.length) return cfg.freqMax ?? Infinity;
+    if (amp <= env[0].amp) return env[0].freqMax;
+    for (let i = 1; i < env.length; i++) if (amp <= env[i].amp) {
+      const f = (amp - env[i - 1].amp) / (env[i].amp - env[i - 1].amp);
+      return env[i - 1].freqMax + f * (env[i].freqMax - env[i - 1].freqMax);
+    }
+    return env[env.length - 1].freqMax;
+  }
   let phiCmdF = 0;
   let thCmdFilt = cfg.trim[0].theta;
 
@@ -298,18 +310,21 @@ export function createController(design, opts = {}) {
       iFreq += dt * cfg.kIF * ((g.speed - e.V) + 0.5 * (climbC - e.vy));
       iFreq = Math.max(-1.5, Math.min(2.5, iFreq));
       // Thrust demand beyond trim is shared between frequency and stroke amplitude: stroke speed goes as f*amp.
+      // Both are bounded by the stroke envelope built from component ratings (gear, motor, servo, spar).
+      const best = cfg.envelopeBest;
+      const ampTop = best ? Math.max(tr.amp, best.amp) : cfg.ampMax;
       const ratio = Math.max(0.3, freq / Math.max(tr.freq, 0.5));
       if (ratio > 1) {
         const share = Math.sqrt(ratio);
-        c.amp = Math.min(cfg.ampFlightMax ?? cfg.ampMax, tr.amp * share);
+        c.amp = Math.min(ampTop, cfg.ampMax, tr.amp * share);
         freq = (tr.freq * ratio * tr.amp) / c.amp;
       } else c.amp = tr.amp;
-      freq = Math.max(cfg.freqMin, Math.min(cfg.freqMax, freq));
-      if (g.mode === 'launch') {
-        // Launch: flap harder than cruise, but inside the loads the structure is sized for.
-        freq = Math.min(cfg.freqMax, (cfg.launchFreqFactor ?? 1.3) * tr.freq + Math.max(0, iFreq));
-        c.amp = Math.min(cfg.ampMax, (cfg.launchAmpFactor ?? 1.25) * tr.amp);
+      if (g.mode === 'launch' && best) {
+        // Launch: the most stroke speed the ratings allow.
+        c.amp = Math.min(cfg.ampMax, best.amp);
+        freq = best.freqMax;
       }
+      freq = Math.max(cfg.freqMin, Math.min(envelopeFreq(c.amp), freq));
       // Battery current limit, as flight controllers apply it: back the stroke off above the continuous rating.
       const lim = cfg.currentLimit_A ?? Infinity;
       iLimit = Math.max(0, Math.min(1, iLimit + dt * 0.8 * (e.amps - 0.9 * lim) / lim));
@@ -344,7 +359,14 @@ export function createController(design, opts = {}) {
     iPhi = Math.max(-0.1, Math.min(0.1, iPhi));
     // diff > 0 makes the right wing more nose up, so it lifts more and rolls left (negative phi).
     const diff = -(cfg.kPhi * (phiC - e.phi) + iPhi) + cfg.kP * e.wx;
-    c.diff = Math.max(-cfg.diffMax, Math.min(cfg.diffMax, diff));
+    let dCmd = Math.max(-cfg.diffMax, Math.min(cfg.diffMax, diff));
+    // The twist servo cannot move faster than its loaded speed: command no faster, so the loop does not wind up.
+    if (Number.isFinite(cfg.diffRate_rad_s)) {
+      const step = cfg.diffRate_rad_s * dt;
+      dCmd = diffPrev + Math.max(-step, Math.min(step, dCmd - diffPrev));
+    }
+    diffPrev = dCmd;
+    c.diff = dCmd;
     if (!g.flapping && cfg.glideDiffGain) c.diff *= cfg.glideDiffGain;
     // Rudder: yaw damping and coordination. tailYaw > 0 yaws the nose right. Body wy > 0 is nose left.
     // Turning right at rate chi-dot means wy is about -chi-dot cos(phi).

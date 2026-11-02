@@ -37,6 +37,14 @@ logOut('M4-seed1', m4log);
 const jobs = [];
 for (let s = 1; s <= seeds; s++) jobs.push({ task: 'M4', args: { design: path, seed: s, opts: {} } });
 const m4 = await runPool(jobs);
+// ---- Time-step convergence (SPEC ruling): the same flights at half the step. Peak loads must change < 10%. -----
+const DT = design.control?.dt ?? 1 / 240;
+const half = { dt: DT / 2 };
+const nominalHalf = {};
+for (const [m, fn] of [['M1', runM1], ['M2', runM2], ['M3', runM3], ['M5', runM5]]) nominalHalf[m] = fn(design, { ...half, ...(m === 'M2' ? { tEnd: 120 } : {}) });
+const passingSeeds = m4.map((r, i) => (r && !r.error && r.passed ? i + 1 : null)).filter((x) => x !== null);
+const halfSeeds = passingSeeds.length ? passingSeeds : m4.map((r, i) => i + 1).slice(0, 20);
+const m4half = await runPool(halfSeeds.map((s) => ({ task: 'M4', args: { design: path, seed: s, opts: half } })));
 const m4ok = m4.filter((r) => r && !r.error && r.passed).length;
 const byH = {};
 for (const r of m4) {
@@ -59,9 +67,17 @@ const robustOk = (m) => (robust ? Object.values(robust).every((v) => (m === 'M4'
 for (const m of ['M1', 'M2', 'M3', 'M5']) {
   const r = nominal[m];
   const rOk = robustOk(m);
-  writeGate({ gate: m, design: name, passed: r.passed && rOk !== false, measured: { ...r.measured, nominal_passed: r.passed, robustness_passed: rOk, robustness: robustNote(m) }, limit: LIMITS[m], evidence: `out/flight/${name}-${m}.json` });
+  const h = nominalHalf[m];
+  const change = Object.fromEntries(Object.entries(r.measured).filter(([k, v]) => typeof v === 'number' && typeof h.measured[k] === 'number').map(([k, v]) => [k, v ? +((h.measured[k] / v - 1) * 100).toFixed(2) : null]));
+  writeGate({ gate: m, design: name, passed: r.passed && rOk !== false, measured: { ...r.measured, nominal_passed: r.passed, robustness_passed: rOk, robustness: robustNote(m), timestep_check: { dt_half_s: DT / 2, passed_at_half_step: h.passed, measured_at_half_step: h.measured, change_pct: change } }, limit: LIMITS[m], evidence: `out/flight/${name}-${m}.json` });
 }
-writeGate({ gate: 'M4', design: name, passed: m4ok >= 98 * (seeds / 100) && robustOk('M4') !== false && seeds >= 100, measured: { seeds_passed: m4ok, seeds_run: seeds, worst_H_m: worstH ? +worstH : null, by_H: byH, robustness_passed: robustOk('M4'), robustness: robustNote('M4') }, limit: LIMITS.M4, evidence: rel(ev4) });
+const m4dt = (() => {
+  const full = halfSeeds.map((s) => m4[s - 1]).filter((r) => r && !r.error);
+  const hf = m4half.filter((r) => r && !r.error);
+  const w = (arr, k) => Math.max(0, ...arr.map((r) => r.measured[k]));
+  return { dt_half_s: DT / 2, seeds_rerun: halfSeeds.length, seeds_rerun_rule: passingSeeds.length ? 'the seeds that passed at the full step' : 'seeds 1-20 (none passed)', passed_at_full: full.filter((r) => r.passed).length, passed_at_half: hf.filter((r) => r.passed).length, worst: Object.fromEntries(['max_roll_deg', 'max_pitch_deg', 'altitude_dev_m'].map((k) => [k, { dt: w(full, k), dt_half: w(hf, k), change_pct: w(full, k) ? (w(hf, k) / w(full, k) - 1) * 100 : null }])) };
+})();
+writeGate({ gate: 'M4', design: name, passed: m4ok >= 98 * (seeds / 100) && robustOk('M4') !== false && seeds >= 100, measured: { seeds_passed: m4ok, seeds_run: seeds, worst_H_m: worstH ? +worstH : null, by_H: byH, robustness_passed: robustOk('M4'), robustness: robustNote('M4'), timestep_check: m4dt }, limit: LIMITS.M4, evidence: rel(ev4) });
 
 // ---- M6 mass: BOM completeness and margin ---------------------------------------------------------------------
 const bom = design.bom;
@@ -69,9 +85,21 @@ const missing = bom.parts.filter((p) => !p.source_url || !p.id);
 const m6ok = missing.length === 0 && Math.abs(bom.margin_g - 0.15 * (bom.parts_g + bom.structure_g)) < 1e-6 && Math.abs(bom.total_g - design.mass.total_g) < 0.5;
 writeGate({ gate: 'M6', design: name, passed: m6ok, measured: { total_g: design.mass.total_g, parts_g: bom.parts_g, structure_g: bom.structure_g, margin_g: bom.margin_g, margin_frac: 0.15, parts_without_source: missing.map((p) => p.id), structure_items: bom.structure.length }, limit: { margin_frac: 0.15, every_part_cited: true }, evidence: rel(path) });
 
-// ---- M7 structure at the worst load seen in M1-M5 and all M4 seeds ---------------------------------------------
-const allPeaks = [nominal.M1, nominal.M2, nominal.M3, nominal.M5, ...m4.filter((r) => r && !r.error)].map((r) => r.peaks);
-const worst = (k) => Math.max(...allPeaks.map((p) => p[k] ?? 0));
+// ---- M7 structure at the worst load seen in M1-M3, M5 and the M4 seeds that pass (SPEC ruling) ----------------
+const population = (nom, m4runs) => [nom.M1, nom.M2, nom.M3, nom.M5, ...m4runs.filter((r) => r && !r.error && r.passed)];
+const PEAK_KEYS = ['rootBend', 'elbowBend', 'crankTorque', 'couplerForce', 'twistTorque', 'tailTorque', 'loadFactor', 'shoulderTorque', 'motorI', 'battI', 'servoI'];
+const worstOf = (runs) => Object.fromEntries(PEAK_KEYS.map((k) => [k, Math.max(0, ...runs.map((r) => r.peaks[k] ?? 0))]));
+const m4passRuns = m4.filter((r) => r && !r.error && r.passed);
+const popRuns = population(nominal, m4);
+// Half-step population: the same scenarios and the same seeds (those that passed at the full step).
+const m4halfBySeed = new Map(halfSeeds.map((s, i) => [s, m4half[i]]));
+const popHalf = [nominalHalf.M1, nominalHalf.M2, nominalHalf.M3, nominalHalf.M5, ...(passingSeeds.length ? passingSeeds.map((s) => m4halfBySeed.get(s)).filter((r) => r && !r.error) : [])];
+const W1 = worstOf(popRuns);
+const W2 = worstOf(popHalf);
+const dtCheck = Object.fromEntries(PEAK_KEYS.map((k) => [k, { dt: W1[k], dt_half: W2[k], change_pct: W1[k] ? (W2[k] / W1[k] - 1) * 100 : 0 }]));
+const M7_KEYS = ['rootBend', 'elbowBend', 'crankTorque', 'couplerForce', 'twistTorque', 'tailTorque', 'loadFactor'];
+const loadsConverged = M7_KEYS.every((k) => Math.abs(dtCheck[k].change_pct) < 10);
+const worst = (k) => W1[k];
 const st = design.structure;
 const sIn = st.spar_inner, sOut = st.spar_outer;
 const sigIn = (worst('rootBend') * sIn.c) / sIn.I / 1e6;
@@ -102,22 +130,25 @@ const tailT = worst('tailTorque');
 const servoOk = twistT <= design.servos.twist.stall_Nm && tailT <= design.servos.tail.stall_Nm;
 const fosMin = Math.min(fosIn, fosOut, fosRodBuckle, fosRodStress);
 writeGate({
-  gate: 'M7', design: name, passed: fosMin >= 1.5 && gearOk && servoOk && seeds >= 100,
+  gate: 'M7', design: name, passed: fosMin >= 1.5 && gearOk && servoOk && seeds >= 100 && loadsConverged && m4passRuns.length > 0,
   measured: {
     spar_inner: { id: sIn.id, moment_Nm: worst('rootBend'), stress_MPa: sigIn, allowable_MPa: sIn.allowable_MPa, fos: fosIn },
     spar_outer: { id: sOut.id, moment_Nm: worst('elbowBend'), stress_MPa: sigOut, allowable_MPa: sOut.allowable_MPa, fos: fosOut },
     coupler: { id: cp.id, force_N: Fc, buckling_N: Pcr, fos_buckling: fosRodBuckle, stress_MPa: sigRod, fos_stress: fosRodStress, E_GPa: cp.E_GPa },
     crank_torque_Nm: crankT, gears: gearUse, gears_within_rating: gearOk,
     twist_servo: { torque_Nm: twistT, rated_stall_Nm: design.servos.twist.stall_Nm }, tail_servo: { torque_Nm: tailT, rated_stall_Nm: design.servos.tail.stall_Nm },
-    peak_load_factor: worst('loadFactor'), fos_min: fosMin,
-    note: 'Worst load over M1, M2, M3, M5 and every M4 seed. Gear and servo torques against their published ratings; spars and coupler against published strength with FoS 1.5.',
+    peak_load_factor_at_cg: worst('loadFactor'), fos_min: fosMin,
+    population: { scenarios: ['M1', 'M2', 'M3', 'M5'], m4_seeds_passing: m4passRuns.length, m4_seeds_run: seeds },
+    timestep_check: { dt_s: DT, dt_half_s: DT / 2, peaks: dtCheck, converged_within_10pct: loadsConverged },
+    note: 'Worst load over M1, M2, M3, M5 and the M4 seeds that pass (SPEC ruling), load factor at the system mass centre. Gear and servo torques against their published or Lewis ratings; spars and coupler against published strength with FoS 1.5. Peaks rerun at half the time step on the same flights and seeds.',
   },
   limit: { factor_of_safety: 1.5, gear_torque: 'within catalogue allowable', servo_torque: 'within published stall-style torque' },
   evidence: rel(ev4),
 });
 
 // ---- M8 electrical through M1-M5 -----------------------------------------------------------------------------
-const all = [nominal.M1, nominal.M2, nominal.M3, nominal.M5, ...m4.filter((r) => r && !r.error)];
+const all = popRuns; // M1-M3, M5 and the M4 seeds that pass, as for M7
+const rmsHalf = { motor: Math.max(0, ...popHalf.map((r) => r.rms.motorRmsMax)), batt: Math.max(0, ...popHalf.map((r) => r.rms.battRmsMax)) };
 const motorRms = Math.max(...all.map((r) => r.rms.motorRmsMax));
 const battRms = Math.max(...all.map((r) => r.rms.battRmsMax));
 const servo5 = Math.max(...all.map((r) => r.peaks.servoI));
@@ -126,8 +157,10 @@ const m8 = {
   esc_rms_2s_max_A: motorRms, esc_continuous_A: design.esc.I_cont,
   battery_rms_2s_max_A: battRms, battery_continuous_A: design.battery.I_cont, battery_peak_A: Math.max(...all.map((r) => r.peaks.battI)),
   servo_bus_peak_A: servo5, bec_rating_A: design.esc.bec_A, servo_model: 'stall current x torque/stall torque + published idle',
+  population: { scenarios: ['M1', 'M2', 'M3', 'M5'], m4_seeds_passing: m4passRuns.length },
+  timestep_check: { motor_rms_dt_half_A: rmsHalf.motor, battery_rms_dt_half_A: rmsHalf.batt, motor_change_pct: (rmsHalf.motor / motorRms - 1) * 100, battery_change_pct: (rmsHalf.batt / battRms - 1) * 100, servo_peak_change_pct: dtCheck.servoI.change_pct },
 };
-const m8ok = motorRms <= design.motor.I_cont && motorRms <= design.esc.I_cont && battRms <= (design.battery.I_cont ?? 0) && servo5 <= (design.esc.bec_A ?? 0);
+const m8ok = motorRms <= design.motor.I_cont && motorRms <= design.esc.I_cont && battRms <= (design.battery.I_cont ?? 0) && servo5 <= (design.esc.bec_A ?? 0) && m4passRuns.length > 0;
 writeGate({ gate: 'M8', design: name, passed: m8ok && seeds >= 100, measured: m8, limit: { continuous: 'rms over 2 s windows within published continuous ratings (SPEC rule where none published)' }, evidence: rel(ev4) });
 
 }

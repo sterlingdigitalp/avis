@@ -13,8 +13,22 @@
 //    thrust out of Kutta-Joukowski and not out of a thrust factor) and profile drag along it
 
 import { makeStations, makeSectionState, sectionStates } from './kinematics.js';
-import { POLARS, polarEval, inviscidEval } from './polars.js';
+import { POLARS, polarEval, inviscidEval, thinAirfoilCamber } from './polars.js';
 import { luFactor, luSolve } from './uvlm.js';
+
+/**
+ * Leading-edge suction efficiency of the viscous model (DeLaurier 1993's eta_s): the fraction of the ideal suction
+ * force a section realises. Never fitted to SmartBird or any flight result. The inviscid model (V1, V3, V5) keeps
+ * full suction, as the lattice it is compared with does. Source and value: see SUCTION.source.
+ */
+export const SUCTION = Object.freeze({
+  eta: 0.6,
+  status: 'assumption: no independent measurement at Re ~ 1e5 for a film-over-rib wing with a small rod leading edge was found',
+  source: 'Value taken from the one published ornithopter value tied to a comparable vehicle: Lee, Yang, Lee & Han (2025), J. Bionic Eng. 22:144-156, doi 10.1007/s42235-024-00615-2, Table 3, eta_s = 0.6 for a 1.2 m polyester-fabric-over-spar wing at about 6 m/s (Re about 1e5). That value was identified from their own hardware trim, jointly with an unusually high friction drag coefficient, so it is not an independent measurement of eta_s.',
+  published_range: 'Other published values, all assumed or copied rather than measured: 0.98 (Liebeck LPT section, Zakaria et al., via Azam & Banik 2026), 0.18 (flat plate, Valiyff et al. 2010 citing Kim et al. 2008, unverified), 0 (Malik & Ahmad 2010). DeLaurier 1993 (the model eta_s comes from) could not be read in full.',
+  how_used: 'Realised chordwise force = min(measured quasi-steady polar form L sin a - D cos a, eta_s L sin a - D_f cos a), D_f the polar minimum (friction) drag at that Re; so the model is never more optimistic than the measured section polar or than eta_s of the ideal suction. eta_s = 1 recovers round 1 exactly. Never fitted to SmartBird or any flight result.',
+  to_measure: 'LBM and OpenFOAM: our wing section (film over ribs with the 2 mm rod leading edge, and E387 for comparison) in 2D harmonic plunge at Re 1e5, k = 0.2-0.5, h/c = 0.3-1.5, mean incidence 0-6 deg: cycle-mean chordwise force against the inviscid (Garrick) suction; eta_s = (mean chordwise force + friction drag) / mean ideal suction.',
+});
 
 export const UNCALIBRATED = Object.freeze({ lift: 1, suction: 1, induced: 1, lag: 1, apparentMass: 1, drag: 1 });
 
@@ -94,8 +108,11 @@ export function createStrip(wing, opts = {}) {
   const st = makeStations(wing, n);
   const polar = typeof opts.polar === 'string' ? POLARS[opts.polar] : opts.polar ?? POLARS['e387-film'];
   const inviscid = !!opts.inviscid;
+  const suctionEta = inviscid ? 1 : (opts.suctionEta ?? SUCTION.eta);
   let cal = clampCalibration(opts.cal);
-  const camber = wing.camber;
+  // The lattice it is compared with uses the wing's own mean line, so the inviscid section does too (round 1 used
+  // the parabolic -2f, which is 10% off for a NACA-type line with camber at 40%: 0.4 deg on E387).
+  const camber = opts.parabolicCamber ? wing.camber : thinAirfoilCamber(wing.camber ?? 0, wing.camber_pos ?? 0.4);
   let aeroScale = 1; // robustness scaling of all aero coefficients
 
   const R = makeSectionState(n);
@@ -128,6 +145,7 @@ export function createStrip(wing, opts = {}) {
   const vn2 = new Float64Array(N);
   const vnDot = new Float64Array(N);
   let histCount = 0;
+  let primeNext = false; // start the Wagner states at their quasi-steady value on the next advancing step
 
   // Section outputs (per evaluation)
   const out = {
@@ -143,6 +161,8 @@ export function createStrip(wing, opts = {}) {
     cl: new Float64Array(N),
     speed: new Float64Array(N),
     attached: new Float64Array(N),
+    fAm: new Float64Array(N), // apparent-mass force per unit span along the section normal (N/m)
+    fCirc: new Float64Array(N), // circulatory normal force per unit span (N/m)
     stalledFraction: 0,
     power: 0, // aero power into the air by wing motion relative to the body
     gammaSum: 0,
@@ -153,7 +173,7 @@ export function createStrip(wing, opts = {}) {
     // force and point are given for inertial accumulation in the flight model
     A: R.A,
   };
-  const pol = new Float64Array(4);
+  const pol = new Float64Array(5);
   const G7 = new Float64Array(7);
   const S = opts.refArea ?? (2 * wing.segments.reduce((p, g) => p + 0.5 * (g.chord_in + g.chord_out) * g.length, 0));
 
@@ -167,6 +187,14 @@ export function createStrip(wing, opts = {}) {
     vn2.fill(0);
     vnDot.fill(0);
     histCount = 0;
+  }
+
+  /**
+   * After reset(), a flight that starts in trim has had its circulation for a long time: start the lag states at
+   * their quasi-steady values instead of from rest (a start from rest gives half the lift on the first step).
+   */
+  function prime() {
+    primeNext = true;
   }
 
   /**
@@ -192,7 +220,7 @@ export function createStrip(wing, opts = {}) {
     const kAm = cal.apparentMass * aeroScale;
     const kCl = cal.lift * aeroScale;
     const kCd = cal.drag * aeroScale;
-    const kS = cal.suction;
+    const kS0 = cal.suction; // calibration of the inviscid suction to the lattice (V5); eta_s is applied below
     const kI = cal.induced;
     const kLag = cal.lag;
     for (let w = 0; w < 2; w++) {
@@ -232,6 +260,10 @@ export function createStrip(wing, opts = {}) {
         else if (alphaI < -0.3) alphaI = -0.3;
         const alphaE = alphaGeo - alphaI;
         const rate = (2 * V * kLag) / c;
+        if (dt > 0 && primeNext) {
+          x1[q] = A1 * alphaE;
+          x2[q] = A2 * alphaE;
+        }
         const alphaLag = (1 - A1 - A2) * alphaE + x1[q] + x2[q];
         if (dt > 0) {
           // Exact exponential integrator of the two lag states with alphaE held over the step.
@@ -259,7 +291,14 @@ export function createStrip(wing, opts = {}) {
         const Dp = qdyn * c * cd;
         // force per span along b (normal) and along t (towards the LE: suction when positive)
         const fN = Lp * ca + Dp * sa;
-        const fT = kS * (Lp * sa) - Dp * ca;
+        // Chordwise: suction towards the LE minus drag. With partial suction (eta_s < 1) the realised force is the
+        // lower of the measured-polar form and eta_s of the ideal suction less friction drag (see SUCTION).
+        const sIdeal = kS0 * (Lp * sa);
+        let fT = sIdeal - Dp * ca;
+        if (suctionEta < 1 && sIdeal > 0) {
+          const fEta = suctionEta * sIdeal - qdyn * c * pol[4] * ca;
+          if (fEta < fT) fT = fEta;
+        }
         // Apparent mass acts along the normal at mid chord (Theodorsen's L_nc), with c/2 = b
         v(d12);
         const vnMid = vRelX * bx + vRelY * by + vRelZ * bz;
@@ -350,6 +389,8 @@ export function createStrip(wing, opts = {}) {
         out.cl[q] = cl;
         out.speed[q] = V;
         out.attached[q] = sigma;
+        out.fAm[q] = fAm;
+        out.fCirc[q] = fN;
         const ar = c * ds;
         area += ar;
         stalled += (1 - sigma) * ar;
@@ -378,6 +419,7 @@ export function createStrip(wing, opts = {}) {
         wf[i] = sf;
       }
       histCount++;
+      primeNext = false;
     }
     out.F[0] = Fx; out.F[1] = Fy; out.F[2] = Fz;
     out.M[0] = Mx; out.M[1] = My; out.M[2] = Mz;
@@ -395,6 +437,7 @@ export function createStrip(wing, opts = {}) {
   return {
     evaluate,
     reset,
+    prime,
     out,
     stations: st,
     right: R,

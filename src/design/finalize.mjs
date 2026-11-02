@@ -5,6 +5,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeDesignAtomic } from './io.js';
 import { buildControl, refineTrimByFlight } from './trim.js';
 import { buildBird } from '../physics/flight.js';
 
@@ -26,6 +27,10 @@ if (!ctl) {
 }
 d.control = ctl;
 await refineTrimByFlight(d);
+if (!d.control.trimConverged) {
+  console.error(`${d.name}: no free-flight trim converged on the calibrated model: design fails`);
+  process.exit(1);
+}
 const tf = (d.control.trimFlight ?? []).filter((r) => !r.unflyable);
 if (tf.length) {
   const minP = tf.reduce((a, b) => (b.flight_power_w < a.flight_power_w ? b : a));
@@ -33,5 +38,5 @@ if (tf.length) {
   d.control.Vrough = Math.min(tf[tf.length - 1].V, minP.V + 3);
 }
 d.cruise.V = d.control.Vcruise;
-writeFileSync(path, JSON.stringify(d, null, 1));
+writeDesignAtomic(path, d);
 console.log(`${d.name}: calibrated ${JSON.stringify(d.calibration?.multipliers)}; cruise ${d.control.Vcruise} m/s, rough ${d.control.Vrough} m/s`);

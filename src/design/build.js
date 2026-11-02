@@ -1,8 +1,9 @@
 // From parameters and a catalogue to a complete design: geometry, BOM, sized structure, CG, margin (M6).
-import { byId, ofCategory, servoAt, motorModel, batteryModel, tubeAllowable, tubeSection } from './catalog.js';
+import { byId, ofCategory, servoAt, motorModel, batteryModel, tubeAllowable, tubeSection, becOf } from './catalog.js';
 import { makeFlapDrive, makeWing, wingArea, mac, wingSpan, linkageCycleStats } from '../physics/kinematics.js';
 import { designAtmosphere, DESIGN_ALTITUDE_M, DESIGN_TEMPERATURE_C } from '../physics/atmosphere.js';
 import { POLARS } from '../physics/polars.js';
+import { podAndBoomLoft, loftVolume, loftWettedArea } from '../physics/geometry.js';
 import { CLAIM } from './schema.js';
 
 const DEG = Math.PI / 180;
@@ -154,7 +155,7 @@ export function buildDesign(params, catalog) {
   const aspdP = byId(catalog, parts.airspeed);
   const rxP = byId(catalog, parts.receiver);
   add(motorP, 1, 'flap motor');
-  add(escP, 1, 'flap ESC');
+  add(escP, 1, 'flap ESC, its BEC supplies the servos and avionics');
   add(batP, 1, 'battery');
   add(twistP, 2, 'wing twist servo');
   add(tailP, 2, 'tail servo');
@@ -235,21 +236,34 @@ export function buildDesign(params, catalog) {
   const drive = { kind: 'crank-rocker', a, b: b0, d: d0, ampMin, ampMax, ampNominal: ampNom, phiMean: (p.phiMean_deg ?? 5) * DEG, gearRatio: p.gearRatio, gearEfficiency: p.gearEff ?? 0.85, crankFriction_Nm: 0.01, gears: parts.gears };
   const motor = motorModel(motorP);
   const batt = batteryModel(batP);
-  const esc = { id: escP.id, I_cont: escP.specs.continuous_current_a, bec_A: parseBec(escP.specs.bec), bec_V: 5, eta: 0.95, eta_assumed: true };
+  // SPEC ruling after catalogue round 2: the design states its servo supply voltage and the BEC that provides it
+  // (here the flap ESC's built-in BEC, in the BOM with the ESC), and no servo figure is extrapolated outside its rows.
+  const bec = becOf(escP);
+  const supplyV = p.servoSupply_V ?? bec.volts;
+  if (!Number.isFinite(supplyV)) throw new Error(`ESC ${escP.id} publishes no BEC voltage: no servo supply`);
+  const esc = { id: escP.id, I_cont: escP.specs.continuous_current_a, bec_A: bec.amps, bec_V: bec.volts, bec_kind: bec.kind, eta: 0.95, eta_assumed: true, regenerative: false, regenerative_basis: 'no regenerative operation stated in the ESC documentation read for the catalogue' };
   const servoSpec = (part, v) => {
     const s = servoAt(part, v);
+    if (!s) throw new Error(`servo ${part.id} has no published row covering ${v} V (no extrapolation)`);
+    if (!Number.isFinite(s.stall_A)) throw new Error(`servo ${part.id} has no published stall current (SPEC M8)`);
     return { id: part.id, stall_Nm: s.stall_Nm, speed_rad_s: s.speed_rad_s, stall_A: s.stall_A, tau_s: 0.02, idle_A: part.specs.idle_current_a ?? 0, volts: s.volts, mass_kg: part.mass_g / 1000 };
   };
   const servos = {
-    twist: servoSpec(twistP, 5),
-    tail: servoSpec(tailP, 5),
-    stroke: { ...servoSpec(strokeP, 5), amp_rate_rad_s: 0.5 },
+    twist: servoSpec(twistP, supplyV),
+    tail: servoSpec(tailP, supplyV),
+    stroke: { ...servoSpec(strokeP, supplyV), amp_rate_rad_s: 0.5 },
   };
+  // Body geometry: pod from the nose (ahead of the battery and receiver) back bodyLen, then the keel tube as a boom to
+  // the tail's trailing edge. The tunnels, page and film build from this loft (src/physics/geometry.js).
+  const noseX = Math.max(0.45 * bodyLen, xBattery + 0.05, 0.14);
+  const loft = podAndBoomLoft({ noseX_m: noseX, podLength_m: bodyLen, width_m: bodyW, height_m: bodyH, boomOd_m: keel.specs.od_mm / 1000, tailEndX_m: -lt - 0.75 * chordT, y_m: 0 });
   const body = {
+    loft,
+    loft_wetted_area_m2: loftWettedArea(loft),
     CdA_front_m2: (p.bodyCd ?? 0.25) * Math.PI / 4 * bodyW * bodyH,
     CdA_top_m2: 1.0 * bodyW * bodyLen * 0.8,
     CdA_side_m2: 1.0 * bodyH * bodyLen * 0.8,
-    volume_m3: (Math.PI / 6) * bodyW * bodyH * bodyLen,
+    volume_m3: loftVolume(loft), // one source: the Munk moment uses the loft's volume
     kMunk: 0.8,
     cp: [0.05, 0, 0],
     length_m: bodyLen,
@@ -287,7 +301,7 @@ export function buildDesign(params, catalog) {
     motor, esc, battery: batt, servos,
     structure: { items: structure, spar_inner: sparInner, spar_outer: sparOuter, gear_stages: gearStages, coupler: { id: couplerRod.id, od_m: couplerRod.specs.od_mm / 1000, length_m: bMm / 1000, E_GPa: couplerRod.specs.tensile_modulus_lengthways_gpa_range?.[0] ?? null, compressive_MPa: couplerRod.specs.compressive_strength_lengthways_mpa_range?.[0] ?? null } },
     bom: { parts: bom, structure, parts_g: partsG, structure_g: structG, margin_g: marginG, total_g: totalG },
-    electrical: { avionics_A_5V: 0.35, avionics_note: 'FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw' },
+    electrical: { avionics_A_5V: 0.35, avionics_note: 'FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw', servo_supply_V: supplyV, bec: { part: escP.id, volts: bec.volts, amps: bec.amps, kind: bec.kind, published: bec.text, note: 'built into the flap ESC; its mass is in the BOM with the ESC' } },
     cruise: {},
     assumptions: [
       `Section polar ${polarName}: ${pol.assumed ?? 'measured table'}`,

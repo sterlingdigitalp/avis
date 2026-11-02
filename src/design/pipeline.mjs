@@ -5,6 +5,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeDesignAtomic } from './io.js';
 import { screen } from './screen.js';
 import { buildDesign, CANDIDATES } from './build.js';
 import { buildControl, refineTrimByFlight, trimLevel } from './trim.js';
@@ -22,7 +23,7 @@ if (!CANDIDATES[cand]) {
 }
 const catalog = JSON.parse(readFileSync(join(ROOT, 'data/parts/catalog.json'), 'utf8'));
 mkdirSync(join(ROOT, 'out/sweep'), { recursive: true });
-const ckpt = join(ROOT, `out/sweep/${cand}-pipeline.json`);
+const ckpt = join(ROOT, `out/sweep/${cand}${process.argv.includes('--strong') ? '-strong' : ''}-pipeline.json`);
 const state = existsSync(ckpt) && process.argv.includes('--resume') ? JSON.parse(readFileSync(ckpt, 'utf8')) : { cand, evaluated: [] };
 const save = () => writeFileSync(ckpt, JSON.stringify(state, null, 1));
 
@@ -38,11 +39,25 @@ save();
 // battery pairs with the most power headroom.
 const bestM = ranked[0]?.minMargin ?? 0;
 const pool = ranked.filter((r) => r.minMargin >= Math.min(bestM, 0) - 0.15);
-pool.sort((a, b) => b.margins.power + b.margins.endurance + 0.02 * b.ws - (a.margins.power + a.margins.endurance + 0.02 * a.ws));
+// Round 2: gear margin counts too, and the same motor and battery may appear with a different gear train.
+pool.sort((a, b) => b.margins.power + b.margins.endurance + Math.min(1, b.margins.gear) + 0.02 * b.ws - (a.margins.power + a.margins.endurance + Math.min(1, a.margins.gear) + 0.02 * a.ws));
 const picks = [];
 const seen = new Set();
+// --strong: only designs whose gear train is rated for at least STRONG_NM at the crank (steel slow stage), ranked
+// the same way. Every finalist of the light-train pass was thrust-limited by the gear rating.
+const STRONG_NM = 3;
+const strongOnly = process.argv.includes('--strong');
+const strongRanked = ranked.filter((r) => r.params.crankRating >= STRONG_NM);
+if (strongOnly) {
+  const sp = strongRanked.filter((r) => r.minMargin >= (strongRanked[0]?.minMargin ?? 0) - 0.15);
+  sp.sort((a, b) => b.margins.power + b.margins.endurance + Math.min(1, b.margins.gear) + 0.02 * b.ws - (a.margins.power + a.margins.endurance + Math.min(1, a.margins.gear) + 0.02 * a.ws));
+  pool.length = 0;
+  for (const r of sp) pool.push(r);
+  ranked.length = 0;
+  for (const r of strongRanked) ranked.push(r);
+}
 for (const r of [...pool, ...ranked]) {
-  const key = [r.params.parts.battery, r.params.parts.motor].join('|');
+  const key = [r.params.parts.battery, r.params.parts.motor, r.params.parts.gears.join('+')].join('|');
   if (seen.has(key)) continue;
   seen.add(key);
   picks.push(r);
@@ -67,14 +82,26 @@ for (const [k, pick] of picks.entries()) {
   const p = { ...pick.params };
   const tStart = Date.now();
   const d = buildDesign(p, catalog);
+  // Provisional calibration: the candidate's last V5 multipliers (same wing family), so a design is not chosen on
+  // thrust the calibrated model then takes away. V5 is rerun on the chosen design and refits them.
+  const calP = join(ROOT, `data/calibration/${d.name}.json`);
+  if (existsSync(calP)) {
+    const cal = JSON.parse(readFileSync(calP, 'utf8'));
+    d.calibration = { file: `data/calibration/${d.name}.json`, source: cal.source, multipliers: cal.multipliers, provisional: true };
+  }
   const bird = buildBird(d);
   // Cruise schedule: twist amplitude chosen for least trimmed power at the screen's cruise speed.
-  const Vc = Math.max(6, Math.round(pick.V * 2) / 2);
+  // The screen's speed (1.3 x its stall estimate) can be below where the stroke trims within tolerance: step up in
+  // speed until a converged trim exists, then take the twist amplitude of least trimmed power there.
+  let Vc = Math.max(6, Math.round(pick.V * 2) / 2);
   let best = null;
-  for (const dyn of [8, 14, 20]) {
-    const t = trimLevel(d, bird, { V: Vc, amp: p.amp_deg * DEG, dyn: dyn * DEG });
-    if (t && t.converged && (!best || t.power < best.t.power)) best = { dyn, t };
+  for (let up = 0; up <= 5 && !best; up++, Vc += 1) {
+    for (const dyn of [10, 18, 26]) {
+      const t = trimLevel(d, bird, { V: Vc, amp: p.amp_deg * DEG, dyn: dyn * DEG });
+      if (t && t.converged && (!best || t.power < best.t.power)) best = { dyn, t };
+    }
   }
+  if (best) Vc = best.t.V;
   if (!best) {
     state.evaluated.push({ k, params: p, failed: 'no trim at cruise speed', minutes: (Date.now() - tStart) / 60000 });
     save();
@@ -90,6 +117,11 @@ for (const [k, pick] of picks.entries()) {
   }
   d.control = ctl;
   await refineTrimByFlight(d);
+  if (!d.control.trimConverged) {
+    state.evaluated.push({ k, params: p, failed: 'no free-flight trim converged', trimFlight: d.control.trimFlight, minutes: (Date.now() - tStart) / 60000 });
+    save();
+    continue;
+  }
   // Cruise at the least flight power, rough air at the fastest trimmed speed up to cruise + 3 m/s.
   const tf = (d.control.trimFlight ?? []).filter((r) => !r.unflyable);
   if (tf.length) {
@@ -112,8 +144,10 @@ ok.sort((a, b) => b.m4 - a.m4 || b.passCount - a.passCount || a.mass_g - b.mass_
 if (ok.length) {
   const win = ok[0].design;
   win.selection = { pipeline: 'src/design/pipeline.mjs', screened: state.screen.count, refined: ok.length, rank: ok.map((e) => ({ k: e.k, passCount: e.passCount, m4: e.m4, mass_g: e.mass_g })), quick: ok[0].quick };
-  writeFileSync(join(ROOT, `data/designs/${win.name}.json`), JSON.stringify(win, null, 1));
-  console.log(`${cand}: wrote data/designs/${win.name}.json`);
+  // --out writes elsewhere (a variant run while the design file is in use by a mission sweep).
+  const outPath = process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : join(ROOT, `data/designs/${win.name}.json`);
+  writeDesignAtomic(outPath, win);
+  console.log(`${cand}: wrote ${outPath}`);
 }
 for (const e of state.evaluated) delete e.design;
 state.chosen = ok.length ? ok[0].k : null;

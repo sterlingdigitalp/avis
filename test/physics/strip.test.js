@@ -69,3 +69,12 @@ test('calibration multipliers are clamped to their physical bounds', () => {
   assert.equal(c.suction, CALIBRATION_BOUNDS.suction[0]);
   assert.equal(c.induced, 1.1);
 });
+
+test('thin-airfoil mean line: NACA 2412 gives alpha_L0 = -2.077 deg and cm_c/4 = -0.053 (Anderson, Fundamentals of Aerodynamics, Ex. 4.6); parabolic gives -2f and -pi f', async () => {
+  const { thinAirfoilCamber } = await import('../../src/physics/polars.js');
+  const n = thinAirfoilCamber(0.02, 0.4);
+  assert.ok(Math.abs((n.alphaL0 * 180) / Math.PI + 2.077) < 0.01, `alpha_L0 ${(n.alphaL0 * 180) / Math.PI}`);
+  assert.ok(Math.abs(n.cmC4 + 0.053) < 0.001, `cm ${n.cmC4}`);
+  const q = thinAirfoilCamber(0.03, 0.5);
+  assert.ok(Math.abs(q.alphaL0 + 0.06) < 1e-5 && Math.abs(q.cmC4 + Math.PI * 0.03) < 1e-5);
+});

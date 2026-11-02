@@ -75,3 +75,30 @@ export function runPlunge({ U, chord, k, h0, AR, nc, ns, rho, periods = 3, measu
   const mean = (a) => a.reduce((p, q) => p + q, 0) / a.length;
   return { omega, T, dt, steps: nSteps, stepsPerPeriod, L, LT, thrustMid: mean(TMid), thrustTotal: mean(TTot) };
 }
+
+/**
+ * Flat elliptic wing (right half; the solver mirrors it): chord c(z) = c0 sqrt(1 - (z/s)^2) with a straight
+ * quarter-chord line, the planform Prandtl's closed form and Helmbold's formula describe. Spanwise edges at
+ * z = s sin(pi j / (2 ns)), clustered towards the tip. Grid layout as wingGrid: point (i, j) at 3 (i (ns+1) + j).
+ * AR = 8 s / (pi c0).
+ */
+export function ellipticPlateSurface({ c0 = 1, AR, nc, ns, chordCosine = false }) {
+  const s = (Math.PI * AR * c0) / 8;
+  const g = new Float64Array((nc + 1) * (ns + 1) * 3);
+  for (let j = 0; j <= ns; j++) {
+    const z = s * Math.sin((Math.PI * j) / (2 * ns));
+    const c = c0 * Math.sqrt(Math.max(0, 1 - (z / s) ** 2));
+    for (let i = 0; i <= nc; i++) {
+      const xi = chordCosine ? 0.5 * (1 - Math.cos((Math.PI * i) / nc)) : i / nc;
+      const p = 3 * (i * (ns + 1) + j);
+      g[p] = 0.25 * c - xi * c;
+      g[p + 1] = 0;
+      g[p + 2] = z;
+    }
+  }
+  return {
+    semi: s,
+    area: (Math.PI * s * c0) / 2, // whole wing
+    surface: { nc, ns, grid(t, out) { out.set(g); } },
+  };
+}
