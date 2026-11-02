@@ -2470,5 +2470,3169 @@
   "source_url": "https://www.electrokit.com/en/kullager-skf-6mm-dim-6x19x6",
   "retrieved": "2026-11-02",
   "verified": "retailer-page"
+ },
+ {
+  "id": "servo-hitec-md89mw",
+  "category": "servo",
+  "manufacturer": "Hitec",
+  "name": "MD89MW magnetic-encoder metal gear 25T digital micro servo",
+  "mass_g": 21.5,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 4.8,
+     "torque_kgf_cm": 5.3,
+     "torque_nm": 0.5198,
+     "speed_s_per_60deg": 0.17,
+     "torque_oz_in": 73.6
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 6.4,
+     "torque_nm": 0.6276,
+     "speed_s_per_60deg": 0.13,
+     "torque_oz_in": 88.88
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 8.5,
+     "torque_nm": 0.8336,
+     "speed_s_per_60deg": 0.11,
+     "torque_oz_in": 118.04
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating. Page publishes both oz-in and kg/cm; torque_nm computed from the kgf\u00b7cm value, oz-in kept in the row.",
+   "stall_current": [
+    {
+     "voltage_v": 4.8,
+     "current_a": 1.8
+    },
+    {
+     "voltage_v": 6.0,
+     "current_a": 2.2
+    },
+    {
+     "voltage_v": 7.4,
+     "current_a": 2.7
+    }
+   ],
+   "idle_current": [
+    {
+     "voltage_v": 4.8,
+     "current_a": 0.03
+    },
+    {
+     "voltage_v": 6.0,
+     "current_a": 0.03
+    },
+    {
+     "voltage_v": 7.4,
+     "current_a": 0.03
+    }
+   ],
+   "idle_current_a": 0.03,
+   "idle_current_note": "at 4.8 V (page: 'Standing Current: 30mA' at 4.8, 6.0 and 7.4 V)",
+   "running_current": [
+    {
+     "voltage_v": 4.8,
+     "current_a": 0.2
+    },
+    {
+     "voltage_v": 6.0,
+     "current_a": 0.25
+    },
+    {
+     "voltage_v": 7.4,
+     "current_a": 0.3
+    }
+   ],
+   "peak_efficiency_torque": [
+    {
+     "voltage_v": 4.8,
+     "torque_kgf_cm": 1.1,
+     "torque_oz_in": 15.28,
+     "torque_nm": 0.1079
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 1.3,
+     "torque_oz_in": 18.05,
+     "torque_nm": 0.1275
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 1.7,
+     "torque_oz_in": 23.61,
+     "torque_nm": 0.1667
+    }
+   ],
+   "peak_efficiency_torque_note": "Published 'Peak Efficiency Torque' per voltage; no current is given for that point, so no rated_* fields were filled.",
+   "dimensions_text_mm": "29.0 x 13.0 x 30.0",
+   "gears": "5 Metal Gears",
+   "motor_type": "coreless",
+   "motor_type_text": "coreless metal brushed motor",
+   "voltage_range_text": "3.5 ~ 8.4V",
+   "position_sensor": "Contactless: Magnetic Encoder",
+   "control": "PWM/TTL (Half Duplex)",
+   "mass_note": "Page: 'Weight: 21.5g (0.758oz) - Excluding the weight of Horn'.",
+   "note": "Page title 'MD89MW Magnetic Encoder Metal Gear 25T Digital Micro Servo Retail'; the description paragraph names it 'MD89MW-DroneCAN' while the spec block lists 'Control System: PWM/TTL (Half Duplex)'. Page shows price and add-to-cart; schema.org availability InStock."
+  },
+  "price_usd": 104.99,
+  "source_url": "https://hitecrcd.com/md89mw-magnetic-encoder-metal-gear-25t-digital-micro-servo/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-hitec-d89mw",
+  "category": "servo",
+  "manufacturer": "Hitec",
+  "name": "D89MW 32-bit metal gear 25T digital micro servo",
+  "mass_g": 25.0,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 4.8,
+     "torque_kgf_cm": 5.3,
+     "torque_nm": 0.5198,
+     "speed_s_per_60deg": 0.17,
+     "torque_oz_in": 74
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 8.5,
+     "torque_nm": 0.8336,
+     "speed_s_per_60deg": 0.11,
+     "torque_oz_in": 118
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating. Page publishes both oz-in and kg/cm; torque_nm computed from the kgf\u00b7cm value, oz-in kept in the row. Page gives the range '4.8V ~ 7.4V' with two values per row; rows mapped min-to-min, max-to-max.",
+   "stall_current": [
+    {
+     "voltage_v": null,
+     "current_a": 2.9
+    }
+   ],
+   "stall_current_note": "Page gives a single current figure with no voltage stated; voltage_v left null rather than guessed. Operating range 4.8-7.4 V.",
+   "idle_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.03
+    }
+   ],
+   "idle_current_a": 0.03,
+   "idle_current_note": "voltage not stated on page",
+   "running_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.3
+    }
+   ],
+   "running_current_note": "'No Load Operating Current Draw'; voltage not stated.",
+   "dimensions_text_mm": "29.0 x 13.0 x 30.0",
+   "gears": "5 Metal Gears",
+   "motor_type": "coreless",
+   "motor_type_text": "Coreless Metal Brush",
+   "voltage_range_text": "4.8V ~ 7.4V",
+   "circuit": "32bit Programmable Digital",
+   "note": "Page title 'D89MW 25g Metal Gear 25-Tooth Digital Micro Servo'. Shows price and add-to-cart; schema.org availability InStock."
+  },
+  "price_usd": 74.99,
+  "source_url": "https://hitecrcd.com/d89mw-32-bit-wide-voltage-metal-gear-servo/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-hitec-hs7245mh",
+  "category": "servo",
+  "manufacturer": "Hitec",
+  "name": "HS-7245MH coreless metal gear 24T digital mini servo",
+  "mass_g": 34.0,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 5.2,
+     "torque_nm": 0.5099,
+     "speed_s_per_60deg": 0.13,
+     "torque_oz_in": 72
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 6.4,
+     "torque_nm": 0.6276,
+     "speed_s_per_60deg": 0.11,
+     "torque_oz_in": 89
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating. Page publishes both oz-in and kg/cm; torque_nm computed from the kgf\u00b7cm value, oz-in kept in the row. Page gives the range '6.0V ~ 7.4V' with two values per row; rows mapped min-to-min, max-to-max. No 4.8 V row is published.",
+   "stall_current": [
+    {
+     "voltage_v": null,
+     "current_a": 1.6
+    }
+   ],
+   "stall_current_note": "Page gives a single current figure with no voltage stated; voltage_v left null rather than guessed. Operating range 6.0-7.4 V.",
+   "idle_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.012
+    }
+   ],
+   "idle_current_a": 0.012,
+   "idle_current_note": "voltage not stated on page",
+   "running_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.19
+    }
+   ],
+   "running_current_note": "'No Load Operating Current Draw'; voltage not stated.",
+   "dimensions_text_mm": "32.4 x 16.8 x 32.8",
+   "gears": "Metal",
+   "motor_type": "coreless",
+   "motor_type_text": "Coreless Metal Brush",
+   "voltage_range_text": "6.0V ~ 7.4V",
+   "circuit": "G2.5 Programable Digital",
+   "note": "Shows price and add-to-cart; schema.org availability InStock."
+  },
+  "price_usd": 89.99,
+  "source_url": "https://hitecrcd.com/hs-7245mh-high-voltage-high-torque-metal-gear-coreless-mini-servo/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-hitec-hs7985mg",
+  "category": "servo",
+  "manufacturer": "Hitec",
+  "name": "HS-7985MG high torque metal gear 24T digital coreless servo",
+  "mass_g": 62.0,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 4.8,
+     "torque_kgf_cm": 10.4,
+     "torque_nm": 1.0199,
+     "speed_s_per_60deg": 0.16,
+     "torque_oz_in": 144
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 12.4,
+     "torque_nm": 1.216,
+     "speed_s_per_60deg": 0.13,
+     "torque_oz_in": 172
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating. Page publishes both oz-in and kg/cm; torque_nm computed from the kgf\u00b7cm value, oz-in kept in the row. Page gives the range '4.8V ~ 6.0V' with two values per row; rows mapped min-to-min, max-to-max.",
+   "stall_current": [
+    {
+     "voltage_v": null,
+     "current_a": 3.0
+    }
+   ],
+   "stall_current_note": "Page gives a single current figure with no voltage stated; voltage_v left null rather than guessed. Operating range 4.8-6.0 V.",
+   "idle_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.009
+    }
+   ],
+   "idle_current_a": 0.009,
+   "idle_current_note": "voltage not stated on page",
+   "running_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.24
+    }
+   ],
+   "running_current_note": "'No Load Operating Current Draw'; voltage not stated.",
+   "dimensions_text_mm": "40.0 x 20.0 x 37.0",
+   "gears": "Metal",
+   "motor_type": "coreless",
+   "motor_type_text": "Coreless Metal Brush",
+   "voltage_range_text": "4.8V ~ 6.0V",
+   "circuit": "G2 Programable Digital",
+   "note": "Standard size. Shows price and add-to-cart; schema.org availability InStock."
+  },
+  "price_usd": 99.99,
+  "source_url": "https://hitecrcd.com/hs-7985mg-high-torque-metal-gear-coreless-premium-digital-servo/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-hitec-hs7954sh",
+  "category": "servo",
+  "manufacturer": "Hitec",
+  "name": "HS-7954SH high torque steel gear 24T digital coreless servo",
+  "mass_g": 65.0,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 4.8,
+     "torque_kgf_cm": 18.0,
+     "torque_nm": 1.7652,
+     "speed_s_per_60deg": 0.19,
+     "torque_oz_in": 250
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 24.0,
+     "torque_nm": 2.3536,
+     "speed_s_per_60deg": 0.15,
+     "torque_oz_in": 333
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 29.0,
+     "torque_nm": 2.8439,
+     "speed_s_per_60deg": 0.12,
+     "torque_oz_in": 402
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating. Page publishes both oz-in and kg/cm; torque_nm computed from the kgf\u00b7cm value, oz-in kept in the row. Page gives '4.8V ~ 6.0V ~ 7.4V' with three values per row; mapped in order.",
+   "stall_current": [
+    {
+     "voltage_v": null,
+     "current_a": 4.2
+    }
+   ],
+   "stall_current_note": "Page gives a single current figure with no voltage stated; voltage_v left null rather than guessed. Operating range 4.8-7.4 V.",
+   "idle_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.009
+    }
+   ],
+   "idle_current_a": 0.009,
+   "idle_current_note": "voltage not stated on page",
+   "running_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.3
+    }
+   ],
+   "running_current_note": "'No Load Operating Current Draw'; voltage not stated.",
+   "dimensions_text_mm": "40.0 x 20.0 x 37.0",
+   "gears": "Steel",
+   "motor_type": "coreless",
+   "motor_type_text": "Coreless Metal Brush",
+   "voltage_range_text": "4.8V ~ 6.0V ~ 7.4V",
+   "circuit": "G2 Programmable Digital",
+   "note": "Standard size. Shows price and add-to-cart; schema.org availability InStock."
+  },
+  "price_usd": 125.99,
+  "source_url": "https://hitecrcd.com/hs-7954sh-high-torque-steel-gear-24t-digital-coreless-servo/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-mks-hv6160",
+  "category": "servo",
+  "manufacturer": "MKS",
+  "name": "HV6160 coreless digital wing servo (F3X/F5X)",
+  "mass_g": 30.7,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 4.8,
+     "torque_kgf_cm": 11.7,
+     "torque_nm": 1.1474,
+     "speed_s_per_60deg": 0.23
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 14.5,
+     "torque_nm": 1.422,
+     "speed_s_per_60deg": 0.182
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 17.0,
+     "torque_nm": 1.6671,
+     "speed_s_per_60deg": 0.147
+    },
+    {
+     "voltage_v": 8.2,
+     "torque_kgf_cm": 18.6,
+     "torque_nm": 1.824,
+     "speed_s_per_60deg": 0.133
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating. Values as listed on the Lindinger retailer page.",
+   "stall_current": [
+    {
+     "voltage_v": 4.8,
+     "current_a": 1.56
+    },
+    {
+     "voltage_v": 6.0,
+     "current_a": 1.9
+    },
+    {
+     "voltage_v": 7.4,
+     "current_a": 2.2
+    },
+    {
+     "voltage_v": 8.2,
+     "current_a": 2.5
+    }
+   ],
+   "stall_current_note": "Page: 'Stall Current (at locked load)'; the 8.2 V value is printed as '2.5' without a unit, read as A like the others.",
+   "dimensions_text_mm": "33 x 10 x 35.2",
+   "gears": "Metal Alloy Gear",
+   "motor_type": "coreless",
+   "voltage_range_text": "4.8V - 8.4V DC Volt",
+   "bearing": "2*Oil-retaining Bearing",
+   "note": "MKS's own US store (mksservosusa.com) returned HTTP 403 (Cloudflare) to curl and WebFetch, so all numbers come from the Lindinger retailer page. Lindinger shows 'In stock. Usually ships within 1 business day.' Price EUR 65.99, price_usd null."
+  },
+  "price_usd": null,
+  "source_url": "https://www.lindinger.at/en/RC-ELECTRONICS/Servos-Accessories/Servos-Digital-High-Voltage/MKS-HV6160-Digital-Servo-F3X-F5X.../9794388",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "servo-savox-sg1212mg",
+  "category": "servo",
+  "manufacturer": "Savox",
+  "name": "SG-1212MG micro digital HV coreless metal gear wing servo",
+  "mass_g": 27,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 6,
+     "torque_nm": 0.5884,
+     "speed_s_per_60deg": 0.15
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 8,
+     "torque_nm": 0.7845,
+     "speed_s_per_60deg": 0.12
+    },
+    {
+     "voltage_v": 8.4,
+     "torque_kgf_cm": 10,
+     "torque_nm": 0.9807,
+     "speed_s_per_60deg": 0.11
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating.",
+   "stall_current": [
+    {
+     "voltage_v": null,
+     "current_a": 2.2
+    }
+   ],
+   "stall_current_note": "Page spec table gives one 'Blocking Current (mA)' with no voltage; voltage_v left null. On the same site the SB-3262SG page lists blocking current per voltage and its table value (6300 mA) equals its 8.4 V figure, which suggests the single value is at the top of the voltage range, but this page does not say so.",
+   "idle_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.005
+    }
+   ],
+   "idle_current_a": 0.005,
+   "idle_current_note": "'Quiescent Current'; voltage not stated on page",
+   "rated_current_as_labelled": [
+    {
+     "voltage_v": null,
+     "current_a": 0.18
+    }
+   ],
+   "rated_current_note": "Page label is 'Rated Current (mA)' with no voltage and no matching rated torque, so it is not treated as a continuous rating point.",
+   "dimensions_text_mm": "30 x 10 x 30",
+   "gears": "Metal Gears",
+   "motor_type": "coreless",
+   "motor_type_text": "Coreless Motor",
+   "voltage_range_text": "6.0V - 8.4V",
+   "case": "Aluminium Case",
+   "spline": "21T Spline 4,8mm",
+   "note": "Spec values from the page's 'Servo - Specs' table. Page shows '>10 in stock'. Price shown in EUR on savox-servo.com; price_usd null.",
+   "source_conflict": "The same page's description text says 'High Voltage Brushless Digital Servo' with 'Torque @ 6V - 4.0kg', '7.4V - 5.0kg', '8.4V - 6.0kg' and 'Speed @ 6V - .14sec', '7.4V - .10sec', '8.4V - .09sec'. Those match the SG-0212MG page exactly and look copied; the spec table (6/8/10 kg/cm, coreless, matching the title) is used. Lower description values would give 0.3923 N\u00b7m at 6 V."
+  },
+  "price_usd": null,
+  "source_url": "https://savox-servo.com/en/product/SG-1212MG/savox-servo-sg-1212mg-digital-high-voltage-coreless-motor-metal-gear",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-savox-sg1211mg",
+  "category": "servo",
+  "manufacturer": "Savox",
+  "name": "SG-1211MG micro digital HV coreless metal gear wing servo",
+  "mass_g": 30,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 9,
+     "torque_nm": 0.8826,
+     "speed_s_per_60deg": 0.17
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 11,
+     "torque_nm": 1.0787,
+     "speed_s_per_60deg": 0.145
+    },
+    {
+     "voltage_v": 8.4,
+     "torque_kgf_cm": 13,
+     "torque_nm": 1.2749,
+     "speed_s_per_60deg": 0.14
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating.",
+   "stall_current": [
+    {
+     "voltage_v": null,
+     "current_a": 4.2
+    }
+   ],
+   "stall_current_note": "Page spec table gives one 'Blocking Current (mA)' with no voltage; voltage_v left null. On the same site the SB-3262SG page lists blocking current per voltage and its table value (6300 mA) equals its 8.4 V figure, which suggests the single value is at the top of the voltage range, but this page does not say so.",
+   "idle_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.005
+    }
+   ],
+   "idle_current_a": 0.005,
+   "idle_current_note": "'Quiescent Current'; voltage not stated on page",
+   "rated_current_as_labelled": [
+    {
+     "voltage_v": null,
+     "current_a": 0.22
+    }
+   ],
+   "rated_current_note": "Page label is 'Rated Current (mA)' with no voltage and no matching rated torque, so it is not treated as a continuous rating point.",
+   "dimensions_text_mm": "30 x 10 x 36",
+   "gears": "Metal Gears",
+   "motor_type": "coreless",
+   "motor_type_text": "Coreless Motor",
+   "voltage_range_text": "6.0V - 8.4V",
+   "case": "Aluminium Case",
+   "spline": "21T Spline 4,8mm",
+   "note": "Spec values from the page's 'Servo - Specs' table. Page shows '>10 in stock'. Price shown in EUR on savox-servo.com; price_usd null.",
+   "source_conflict": "Same page's description lists '\u2022 Torque @6v - 8.0kg', '\u2022 Torque @7.4v - 11.03kg', '\u2022 Speed @6v - 0.18 sec/60 deg', '\u2022 Speed @7.4v - 0.15 sec/60 deg', '\u2022 Weight: 29g'. Spec table values used (9 kg/cm, 0.17 s at 6 V, 30 g). The description's 8.0 kg would give 0.7845 N\u00b7m at 6 V."
+  },
+  "price_usd": null,
+  "source_url": "https://savox-servo.com/en/product/SG-1211MG/savox-servo-sg-1211mg-digital-high-voltage-coreless-motor-metal-gear",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-savox-sv1250mgplus",
+  "category": "servo",
+  "manufacturer": "Savox",
+  "name": "SV-1250MG+ mini digital HV coreless metal gear servo",
+  "mass_g": 30,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 4.6,
+     "torque_nm": 0.4511,
+     "speed_s_per_60deg": 0.11
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 8,
+     "torque_nm": 0.7845,
+     "speed_s_per_60deg": 0.095
+    },
+    {
+     "voltage_v": 8.4,
+     "torque_kgf_cm": 10,
+     "torque_nm": 0.9807,
+     "speed_s_per_60deg": 0.085
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating.",
+   "stall_current": [
+    {
+     "voltage_v": null,
+     "current_a": 2.2
+    }
+   ],
+   "stall_current_note": "Page spec table gives one 'Blocking Current (mA)' with no voltage; voltage_v left null. On the same site the SB-3262SG page lists blocking current per voltage and its table value (6300 mA) equals its 8.4 V figure, which suggests the single value is at the top of the voltage range, but this page does not say so.",
+   "idle_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.005
+    }
+   ],
+   "idle_current_a": 0.005,
+   "idle_current_note": "'Quiescent Current'; voltage not stated on page",
+   "rated_current_as_labelled": [
+    {
+     "voltage_v": null,
+     "current_a": 0.15
+    }
+   ],
+   "rated_current_note": "Page label is 'Rated Current (mA)' with no voltage and no matching rated torque, so it is not treated as a continuous rating point.",
+   "dimensions_text_mm": "35 x 15 x 29.8",
+   "gears": "Metal Gears",
+   "motor_type": "coreless",
+   "motor_type_text": "Coreless Motor",
+   "voltage_range_text": "6.0V - 8.4V",
+   "case": "Aluminium + Composite Case",
+   "spline": "25T Spline 6,0mm",
+   "note": "Spec values from the page's 'Servo - Specs' table. Page shows '>10 in stock'. Price shown in EUR on savox-servo.com; price_usd null.",
+   "source_conflict": "Same page's description lists '\u2022 Dimensions L x W x H (mm): 35.0 x 15.0 x 29.2' and '\u2022 Weight: 29.6g'; spec table gives height 29,8 mm and 30 g (used). Torque 4.6/8.0 kg and speeds agree."
+  },
+  "price_usd": null,
+  "source_url": "https://savox-servo.com/en/product/SV-1250MGplus/savox-servo-sv-1250mg-digital-high-voltage-coreless-motor-metal-gear",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-savox-sv1261mg",
+  "category": "servo",
+  "manufacturer": "Savox",
+  "name": "SV-1261MG mini digital HV coreless metal gear servo",
+  "mass_g": 40,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 15,
+     "torque_nm": 1.471,
+     "speed_s_per_60deg": 0.12
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 20,
+     "torque_nm": 1.9613,
+     "speed_s_per_60deg": 0.095
+    },
+    {
+     "voltage_v": 8.4,
+     "torque_kgf_cm": 25,
+     "torque_nm": 2.4517,
+     "speed_s_per_60deg": 0.08
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating.",
+   "stall_current": [
+    {
+     "voltage_v": null,
+     "current_a": 5.6
+    }
+   ],
+   "stall_current_note": "Page spec table gives one 'Blocking Current (mA)' with no voltage; voltage_v left null. On the same site the SB-3262SG page lists blocking current per voltage and its table value (6300 mA) equals its 8.4 V figure, which suggests the single value is at the top of the voltage range, but this page does not say so.",
+   "idle_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.005
+    }
+   ],
+   "idle_current_a": 0.005,
+   "idle_current_note": "'Quiescent Current'; voltage not stated on page",
+   "rated_current_as_labelled": [
+    {
+     "voltage_v": null,
+     "current_a": 0.2
+    }
+   ],
+   "rated_current_note": "Page label is 'Rated Current (mA)' with no voltage and no matching rated torque, so it is not treated as a continuous rating point.",
+   "dimensions_text_mm": "35 x 15 x 31.9",
+   "gears": "Metal Gears",
+   "motor_type": "coreless",
+   "motor_type_text": "Coreless Motor",
+   "voltage_range_text": "6.0V - 8.4V",
+   "case": "Aluminium Case",
+   "spline": "25T Spline 6,0mm",
+   "note": "Spec values from the page's 'Servo - Specs' table. Page shows '9 in stock'. Price shown in EUR on savox-servo.com; price_usd null.",
+   "source_conflict": "Same page's description lists '\u2022 Dimensions L x W x H (mm): 35 x 15 x 30.7'; spec table gives height 31,9 mm (used). Torque 15/20 kg, speeds and 40.0 g agree."
+  },
+  "price_usd": null,
+  "source_url": "https://savox-servo.com/en/product/SV-1261MG/savox-servo-sv-1261mg-digital-high-voltage-coreless-motor-metal-gear",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-savox-sv1254mgplus",
+  "category": "servo",
+  "manufacturer": "Savox",
+  "name": "SV-1254MG+ low profile digital HV coreless metal gear servo",
+  "mass_g": 46,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 12,
+     "torque_nm": 1.1768,
+     "speed_s_per_60deg": 0.1
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 15,
+     "torque_nm": 1.471,
+     "speed_s_per_60deg": 0.085
+    },
+    {
+     "voltage_v": 8.4,
+     "torque_kgf_cm": 18,
+     "torque_nm": 1.7652,
+     "speed_s_per_60deg": 0.075
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating.",
+   "stall_current": [
+    {
+     "voltage_v": null,
+     "current_a": 7.3
+    }
+   ],
+   "stall_current_note": "Page spec table gives one 'Blocking Current (mA)' with no voltage; voltage_v left null. On the same site the SB-3262SG page lists blocking current per voltage and its table value (6300 mA) equals its 8.4 V figure, which suggests the single value is at the top of the voltage range, but this page does not say so.",
+   "idle_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.005
+    }
+   ],
+   "idle_current_a": 0.005,
+   "idle_current_note": "'Quiescent Current'; voltage not stated on page",
+   "rated_current_as_labelled": [
+    {
+     "voltage_v": null,
+     "current_a": 0.18
+    }
+   ],
+   "rated_current_note": "Page label is 'Rated Current (mA)' with no voltage and no matching rated torque, so it is not treated as a continuous rating point.",
+   "dimensions_text_mm": "40.8 x 20.2 x 25.6",
+   "gears": "Metal Gears",
+   "motor_type": "coreless",
+   "motor_type_text": "Coreless Motor",
+   "voltage_range_text": "6.0V - 8.4V",
+   "case": "Aluminium + Composite Case",
+   "spline": "25T Spline 6,0mm",
+   "note": "Spec values from the page's 'Servo - Specs' table. Page shows '>10 in stock'. Price shown in EUR on savox-servo.com; price_usd null.",
+   "source_conflict": "Same page's description says '\u2022 Steel gear train provide durability against heavy use.', '\u2022 Speed @6v - 0.11 sec/60 deg' and '\u2022 Dimensions L x W x H (mm): 40.8 x 20.2 x 25.4'; spec table gives 'Metal Gears', 0,1 s at 6 V and height 25,6 mm (used). Torque 12/15 kg and 46.0 g agree."
+  },
+  "price_usd": null,
+  "source_url": "https://savox-servo.com/en/product/SV-1254MGplus/savox-servo-sv-1254mg-digital-high-voltage-coreless-motor-metal-gear",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-savox-sb3262sg",
+  "category": "servo",
+  "manufacturer": "Savox",
+  "name": "SB-3262SG low profile digital HV brushless steel gear servo",
+  "mass_g": 53,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 22,
+     "torque_nm": 2.1575,
+     "speed_s_per_60deg": 0.1
+    },
+    {
+     "voltage_v": 7.4,
+     "torque_kgf_cm": 28,
+     "torque_nm": 2.7459,
+     "speed_s_per_60deg": 0.08
+    },
+    {
+     "voltage_v": 8.4,
+     "torque_kgf_cm": 35,
+     "torque_nm": 3.4323,
+     "speed_s_per_60deg": 0.065
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating.",
+   "stall_current": [
+    {
+     "voltage_v": 6.0,
+     "current_a": 4.5
+    },
+    {
+     "voltage_v": 7.4,
+     "current_a": 5.6
+    },
+    {
+     "voltage_v": 8.4,
+     "current_a": 6.3
+    }
+   ],
+   "stall_current_note": "Page label 'Blocking Current' (locked rotor), given per voltage in the description.",
+   "idle_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.005
+    }
+   ],
+   "idle_current_a": 0.005,
+   "idle_current_note": "'Quiescent Current: 5 mA'; voltage not stated",
+   "rated_current_as_labelled": [
+    {
+     "voltage_v": 6.0,
+     "current_a": 0.2
+    },
+    {
+     "voltage_v": 7.4,
+     "current_a": 0.22
+    },
+    {
+     "voltage_v": 8.4,
+     "current_a": 0.25
+    }
+   ],
+   "rated_current_note": "Page label 'Rated Current' per voltage, with no matching rated torque, so it is not treated as a continuous rating point.",
+   "dimensions_text_mm": "40.8 x 20.2 x 25.8",
+   "gears": "Steel Gears",
+   "motor_type": "brushless",
+   "motor_type_text": "Lightweight Brushless Motor",
+   "voltage_range_text": "6.0V - 8.4V",
+   "case": "Aluminium Case",
+   "spline": "25T, 6.0 mm",
+   "note": "Spec values from the page's 'Servo - Specs' table. Page shows '>10 in stock'. Price shown in EUR on savox-servo.com; price_usd null.",
+   "source_conflict": "Description gives 'Dimensions: 40.8 x 20.2 x 25.75 mm'; spec table height 25,8 mm (used). Spec table 'Blocking Current (mA) 6300' and 'Rated Current (mA) 250' equal the description's 8.4 V values."
+  },
+  "price_usd": null,
+  "source_url": "https://savox-servo.com/en/product/SB-3262SG/savox-servo-sb-3262sg-digital-high-voltage-brushless-motor-steel-gears",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "servo-savox-sc1256tgplus",
+  "category": "servo",
+  "manufacturer": "Savox",
+  "name": "SC-1256TG+ standard size digital coreless titanium gear servo",
+  "mass_g": 64,
+  "specs": {
+   "performance": [
+    {
+     "voltage_v": 4.8,
+     "torque_kgf_cm": 16,
+     "torque_nm": 1.5691,
+     "speed_s_per_60deg": 0.18
+    },
+    {
+     "voltage_v": 6.0,
+     "torque_kgf_cm": 20,
+     "torque_nm": 1.9613,
+     "speed_s_per_60deg": 0.15
+    }
+   ],
+   "torque_note": "Manufacturer stall-style torque at stated voltage; not a continuous rating.",
+   "stall_current": [
+    {
+     "voltage_v": null,
+     "current_a": 5.0
+    }
+   ],
+   "stall_current_note": "Page spec table gives one 'Blocking Current (mA)' with no voltage; voltage_v left null. On the same site the SB-3262SG page lists blocking current per voltage and its table value (6300 mA) equals its 8.4 V figure, which suggests the single value is at the top of the voltage range, but this page does not say so.",
+   "idle_current": [
+    {
+     "voltage_v": null,
+     "current_a": 0.005
+    }
+   ],
+   "idle_current_a": 0.005,
+   "idle_current_note": "'Quiescent Current'; voltage not stated on page",
+   "rated_current_as_labelled": [
+    {
+     "voltage_v": null,
+     "current_a": 0.12
+    }
+   ],
+   "rated_current_note": "Page label is 'Rated Current (mA)' with no voltage and no matching rated torque, so it is not treated as a continuous rating point.",
+   "dimensions_text_mm": "40.3 x 20.2 x 37.4",
+   "gears": "Titanium Gears",
+   "motor_type": "coreless",
+   "motor_type_text": "Coreless Motor",
+   "voltage_range_text": "4.8V - 6.0V",
+   "case": "Aluminium + Composite Case",
+   "spline": "25T Spline 6,0mm",
+   "note": "Spec values from the page's 'Servo - Specs' table. Page shows '>10 in stock'. Price shown in EUR on savox-servo.com; price_usd null.",
+   "source_conflict": "Same page's description lists '\u2022 Weight: 52.4g' and '\u2022 Dimensions L x W x H (mm): 40.3 x 20.2 x 37.2'; spec table gives 64 g and height 37,4 mm. The heavier table mass (64 g) is used. Torque 16/20 kg and speeds agree."
+  },
+  "price_usd": null,
+  "source_url": "https://savox-servo.com/en/product/SC-1256TGplus/savox-servo-sc-1256tg-digital-coreless-motor-titanium-gear",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ss0.5-15a",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SS0.5-15A S45C steel spur gear",
+  "mass_g": 5.6,
+  "specs": {
+   "module_mm": 0.5,
+   "teeth": 15,
+   "material": "S45C",
+   "heat_treatment": "none (KHK spec: Heat treatment \"\u2014\", tooth hardness less than 194HB); black oxide coating",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 7.5,
+   "outside_dia_mm": 8.5,
+   "face_width_mm": 5.0,
+   "bore_mm": 3.0,
+   "shape": "S3T",
+   "fastening": "tapped for M3 set screw (KHK: for products having a tapped hole, a set screw is included)",
+   "backlash_mm": "0-0.10 mm",
+   "allowable_torque_bending_nm": 0.46,
+   "allowable_torque_surface_durability_nm": 0.022,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 49 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "not heat treated, as supplied (KHK: tooth hardness less than 194HB)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 570,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 49,
+    "hardness": "less than 194HB",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://sg.misumi-ec.com/tech-info/categories/technical_data/td05/a0116.html",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html",
+     "https://www.azom.com/article.aspx?ArticleID=9153"
+    ],
+    "note": "allowable_bending_stress_mpa is KHK sigma_Flim 19 kgf/mm2 (column SSS,SS / SSA,SSY / SSAY,SSR) x 9.80665, computed; KHK uses 2/3 of it for bidirectional load. Tensile 570 N/mm2 is the JIS G4051 normalizing figure as stated by Misumi. KHK Table 9.1 gives S45C tensile more than 690 N/mm2 at HB 201-269 (thermal refined / induction hardened), which is not this condition. No published yield strength for this condition could be read; AZoM cold-rolled AISI 1045 (yield 450 MPa, UTS 585 MPa, HB 163) is a different condition and is not used here (listed separately in gear_materials.json). Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 8.5,
+   "hub_width_mm": 11.0,
+   "total_length_mm": 16.0
+  },
+  "price_usd": 14.49,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss0-5-15a",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ss0.5-60a",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SS0.5-60A S45C steel spur gear",
+  "mass_g": 58.0,
+  "specs": {
+   "module_mm": 0.5,
+   "teeth": 60,
+   "material": "S45C",
+   "heat_treatment": "none (KHK spec: Heat treatment \"\u2014\", tooth hardness less than 194HB); black oxide coating",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 30.0,
+   "outside_dia_mm": 31.0,
+   "face_width_mm": 5.0,
+   "bore_mm": 6.0,
+   "shape": "S1T",
+   "fastening": "tapped for M4 set screw (KHK: for products having a tapped hole, a set screw is included)",
+   "backlash_mm": "0-0.10 mm",
+   "allowable_torque_bending_nm": 3.03,
+   "allowable_torque_surface_durability_nm": 0.39,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 49 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "not heat treated, as supplied (KHK: tooth hardness less than 194HB)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 570,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 49,
+    "hardness": "less than 194HB",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://sg.misumi-ec.com/tech-info/categories/technical_data/td05/a0116.html",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html",
+     "https://www.azom.com/article.aspx?ArticleID=9153"
+    ],
+    "note": "allowable_bending_stress_mpa is KHK sigma_Flim 19 kgf/mm2 (column SSS,SS / SSA,SSY / SSAY,SSR) x 9.80665, computed; KHK uses 2/3 of it for bidirectional load. Tensile 570 N/mm2 is the JIS G4051 normalizing figure as stated by Misumi. KHK Table 9.1 gives S45C tensile more than 690 N/mm2 at HB 201-269 (thermal refined / induction hardened), which is not this condition. No published yield strength for this condition could be read; AZoM cold-rolled AISI 1045 (yield 450 MPa, UTS 585 MPa, HB 163) is a different condition and is not used here (listed separately in gear_materials.json). Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 28.0,
+   "hub_width_mm": 7.0,
+   "total_length_mm": 12.0
+  },
+  "price_usd": 20.59,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss0-5-60a",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ss0.5-80a",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SS0.5-80A S45C steel spur gear",
+  "mass_g": 79.0,
+  "specs": {
+   "module_mm": 0.5,
+   "teeth": 80,
+   "material": "S45C",
+   "heat_treatment": "none (KHK spec: Heat treatment \"\u2014\", tooth hardness less than 194HB); black oxide coating",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 40.0,
+   "outside_dia_mm": 41.0,
+   "face_width_mm": 5.0,
+   "bore_mm": 6.0,
+   "shape": "S1T",
+   "fastening": "tapped for M4 set screw (KHK: for products having a tapped hole, a set screw is included)",
+   "backlash_mm": "0-0.10 mm",
+   "allowable_torque_bending_nm": 4.24,
+   "allowable_torque_surface_durability_nm": 0.72,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 49 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "not heat treated, as supplied (KHK: tooth hardness less than 194HB)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 570,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 49,
+    "hardness": "less than 194HB",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://sg.misumi-ec.com/tech-info/categories/technical_data/td05/a0116.html",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html",
+     "https://www.azom.com/article.aspx?ArticleID=9153"
+    ],
+    "note": "allowable_bending_stress_mpa is KHK sigma_Flim 19 kgf/mm2 (column SSS,SS / SSA,SSY / SSAY,SSR) x 9.80665, computed; KHK uses 2/3 of it for bidirectional load. Tensile 570 N/mm2 is the JIS G4051 normalizing figure as stated by Misumi. KHK Table 9.1 gives S45C tensile more than 690 N/mm2 at HB 201-269 (thermal refined / induction hardened), which is not this condition. No published yield strength for this condition could be read; AZoM cold-rolled AISI 1045 (yield 450 MPa, UTS 585 MPa, HB 163) is a different condition and is not used here (listed separately in gear_materials.json). Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 28.0,
+   "hub_width_mm": 7.0,
+   "total_length_mm": 12.0
+  },
+  "price_usd": 24.8,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss0-5-80a",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ss0.8-20a",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SS0.8-20A S45C steel spur gear",
+  "mass_g": 18.0,
+  "specs": {
+   "module_mm": 0.8,
+   "teeth": 20,
+   "material": "S45C",
+   "heat_treatment": "none (KHK spec: Heat treatment \"\u2014\", tooth hardness less than 194HB); black oxide coating",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 16.0,
+   "outside_dia_mm": 17.6,
+   "face_width_mm": 8.0,
+   "bore_mm": 5.0,
+   "shape": "S1T",
+   "fastening": "tapped for M4 set screw (KHK: for products having a tapped hole, a set screw is included)",
+   "backlash_mm": "0-0.10 mm",
+   "allowable_torque_bending_nm": 2.94,
+   "allowable_torque_surface_durability_nm": 0.17,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 49 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "not heat treated, as supplied (KHK: tooth hardness less than 194HB)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 570,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 49,
+    "hardness": "less than 194HB",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://sg.misumi-ec.com/tech-info/categories/technical_data/td05/a0116.html",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html",
+     "https://www.azom.com/article.aspx?ArticleID=9153"
+    ],
+    "note": "allowable_bending_stress_mpa is KHK sigma_Flim 19 kgf/mm2 (column SSS,SS / SSA,SSY / SSAY,SSR) x 9.80665, computed; KHK uses 2/3 of it for bidirectional load. Tensile 570 N/mm2 is the JIS G4051 normalizing figure as stated by Misumi. KHK Table 9.1 gives S45C tensile more than 690 N/mm2 at HB 201-269 (thermal refined / induction hardened), which is not this condition. No published yield strength for this condition could be read; AZoM cold-rolled AISI 1045 (yield 450 MPa, UTS 585 MPa, HB 163) is a different condition and is not used here (listed separately in gear_materials.json). Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 13.0,
+   "hub_width_mm": 8.0,
+   "total_length_mm": 16.0
+  },
+  "price_usd": 19.39,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss0-8-20a",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ss0.8-80a",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SS0.8-80A S45C steel spur gear",
+  "mass_g": 240.0,
+  "specs": {
+   "module_mm": 0.8,
+   "teeth": 80,
+   "material": "S45C",
+   "heat_treatment": "none (KHK spec: Heat treatment \"\u2014\", tooth hardness less than 194HB); black oxide coating",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 64.0,
+   "outside_dia_mm": 65.6,
+   "face_width_mm": 8.0,
+   "bore_mm": 6.0,
+   "shape": "S1T",
+   "fastening": "tapped for M4 set screw (KHK: for products having a tapped hole, a set screw is included)",
+   "backlash_mm": "0-0.10 mm",
+   "allowable_torque_bending_nm": 17.4,
+   "allowable_torque_surface_durability_nm": 3.11,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 49 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "not heat treated, as supplied (KHK: tooth hardness less than 194HB)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 570,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 49,
+    "hardness": "less than 194HB",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://sg.misumi-ec.com/tech-info/categories/technical_data/td05/a0116.html",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html",
+     "https://www.azom.com/article.aspx?ArticleID=9153"
+    ],
+    "note": "allowable_bending_stress_mpa is KHK sigma_Flim 19 kgf/mm2 (column SSS,SS / SSA,SSY / SSAY,SSR) x 9.80665, computed; KHK uses 2/3 of it for bidirectional load. Tensile 570 N/mm2 is the JIS G4051 normalizing figure as stated by Misumi. KHK Table 9.1 gives S45C tensile more than 690 N/mm2 at HB 201-269 (thermal refined / induction hardened), which is not this condition. No published yield strength for this condition could be read; AZoM cold-rolled AISI 1045 (yield 450 MPa, UTS 585 MPa, HB 163) is a different condition and is not used here (listed separately in gear_materials.json). Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Not in the printed 2025 catalogue (which lists SS0.8 only up to 45 teeth); all values from the live KHK USA item page. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair.",
+   "hub_dia_mm": 28.0,
+   "hub_width_mm": 8.0,
+   "total_length_mm": 16.0
+  },
+  "price_usd": 37.13,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss0-8-80a",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssy0.8-20h",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSY0.8-20H S45C thin-face spur gear, Hardened Plus (induction hardened teeth)",
+  "mass_g": 13.0,
+  "specs": {
+   "module_mm": 0.8,
+   "teeth": 20,
+   "material": "S45C",
+   "heat_treatment": "Hardened Plus (H): tooth surface induction hardened, HRC 50-60, applied by KHK to the standard SSY gear",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 16.0,
+   "outside_dia_mm": 17.6,
+   "face_width_mm": 4.0,
+   "bore_mm": 5.0,
+   "shape": "S1",
+   "fastening": "plain bore, no keyway or set screw (shape S1); needs its own fastening",
+   "backlash_mm": "0-0.10 mm",
+   "allowable_torque_bending_nm": 1.47,
+   "allowable_torque_surface_durability_nm": 0.41,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 90 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "gear teeth induction hardened (case HRC 50-60); core not hardened",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": null,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 90,
+    "hardness": "HRC 50-60 (teeth)",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.us/media/3qxm3fcm/catalog-2025-intro.pdf",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "KHK sigma_Flim 19 kgf/mm2 and sigma_Hlim 90 kgf/mm2 (columns SSG/SSAG for m1 and SS-H/SSY-H/SSAY-H); MPa value computed x 9.80665. No published core yield/tensile for this condition was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Hardened Plus variant (catalogue no. + H) of the SSY thin-face gear, listed as its own item on the KHK USA site. KHK intro catalogue p.22: induction hardening service, tooth surface HRC 50-60, \"The gear precision decreases after hardening. The original bore dimension tolerance H7 will also be degraded.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 13.5,
+   "hub_width_mm": 8.0,
+   "total_length_mm": 12.0
+  },
+  "price_usd": 35.0,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/thin-face-spur-gears-ssy/ssy0-8-20h",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssy0.8-50h",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSY0.8-50H S45C thin-face spur gear, Hardened Plus (induction hardened teeth)",
+  "mass_g": 68.0,
+  "specs": {
+   "module_mm": 0.8,
+   "teeth": 50,
+   "material": "S45C",
+   "heat_treatment": "Hardened Plus (H): tooth surface induction hardened, HRC 50-60, applied by KHK to the standard SSY gear",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 40.0,
+   "outside_dia_mm": 41.6,
+   "face_width_mm": 4.0,
+   "bore_mm": 5.0,
+   "shape": "S1",
+   "fastening": "plain bore, no keyway or set screw (shape S1); needs its own fastening",
+   "backlash_mm": "0-0.10 mm",
+   "allowable_torque_bending_nm": 4.98,
+   "allowable_torque_surface_durability_nm": 2.7,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 90 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "gear teeth induction hardened (case HRC 50-60); core not hardened",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": null,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 90,
+    "hardness": "HRC 50-60 (teeth)",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.us/media/3qxm3fcm/catalog-2025-intro.pdf",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "KHK sigma_Flim 19 kgf/mm2 and sigma_Hlim 90 kgf/mm2 (columns SSG/SSAG for m1 and SS-H/SSY-H/SSAY-H); MPa value computed x 9.80665. No published core yield/tensile for this condition was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Hardened Plus variant (catalogue no. + H) of the SSY thin-face gear, listed as its own item on the KHK USA site. KHK intro catalogue p.22: induction hardening service, tooth surface HRC 50-60, \"The gear precision decreases after hardening. The original bore dimension tolerance H7 will also be degraded.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 25.0,
+   "hub_width_mm": 8.0,
+   "total_length_mm": 12.0
+  },
+  "price_usd": 40.3,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/thin-face-spur-gears-ssy/ssy0-8-50h",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-msga1-18",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "MSGA1-18 ground carburized SCM415 spur gear",
+  "mass_g": 20.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 18,
+   "material": "SCM415",
+   "heat_treatment": "Carburized (KHK); teeth ground; tooth hardness 55-60 HRC",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N5 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 18.0,
+   "outside_dia_mm": 20.0,
+   "face_width_mm": 10.0,
+   "bore_mm": 8.0,
+   "shape": "S1",
+   "fastening": "keyway 3 x 1.4 mm",
+   "backlash_mm": "0.08-0.16 mm",
+   "allowable_torque_bending_nm": 12.1,
+   "allowable_torque_surface_durability_nm": 6.37,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 600 rpm; sigma_Flim 47 kgf/mm2, sigma_Hlim 166 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "SCM415 (KHK lists it as AISI 4115 alloy steel)",
+    "condition": "carburized, ground (case 55-60 HRC)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 830,
+    "allowable_bending_stress_mpa": 460.9,
+    "allowable_bending_stress_kgf_mm2": 47,
+    "allowable_hertz_stress_kgf_mm2": 166,
+    "hardness": "HRc 55-60 (teeth); KHK Table 9.1 material hardness HB 235-321",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "sigma_Flim 47 kgf/mm2 and sigma_Hlim 166 kgf/mm2 from KHK (column MSGA/MSGB); MPa computed x 9.80665. Tensile more than 830 N/mm2 from KHK Table 9.1. No published yield strength was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "KHK: \"No secondary operations can be performed on these finished gears due to the applied carburizing process.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 15.0,
+   "hub_width_mm": 5.0,
+   "total_length_mm": 15.0
+  },
+  "price_usd": 71.93,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-18",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-msgb1-40",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "MSGB1-40 ground carburized SCM415 spur gear",
+  "mass_g": 100.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 40,
+   "material": "SCM415",
+   "heat_treatment": "Carburized (KHK); teeth ground; tooth hardness 55-60 HRC",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N5 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 40.0,
+   "outside_dia_mm": 42.0,
+   "face_width_mm": 10.0,
+   "bore_mm": 15.0,
+   "shape": "S1",
+   "fastening": "keyway 5 x 2.3 mm",
+   "backlash_mm": "0.08-0.16 mm",
+   "allowable_torque_bending_nm": 36.5,
+   "allowable_torque_surface_durability_nm": 34.6,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 600 rpm; sigma_Flim 47 kgf/mm2, sigma_Hlim 166 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "SCM415 (KHK lists it as AISI 4115 alloy steel)",
+    "condition": "carburized, ground (case 55-60 HRC)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 830,
+    "allowable_bending_stress_mpa": 460.9,
+    "allowable_bending_stress_kgf_mm2": 47,
+    "allowable_hertz_stress_kgf_mm2": 166,
+    "hardness": "HRc 55-60 (teeth); KHK Table 9.1 material hardness HB 235-321",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "sigma_Flim 47 kgf/mm2 and sigma_Hlim 166 kgf/mm2 from KHK (column MSGA/MSGB); MPa computed x 9.80665. Tensile more than 830 N/mm2 from KHK Table 9.1. No published yield strength was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "KHK: \"No secondary operations can be performed on these finished gears due to the applied carburizing process.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 30.0,
+   "hub_width_mm": 5.0,
+   "total_length_mm": 15.0
+  },
+  "price_usd": 113.0,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msgb1-40",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-msga1-70",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "MSGA1-70 ground carburized SCM415 spur gear",
+  "mass_g": 370.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 70,
+   "material": "SCM415",
+   "heat_treatment": "Carburized (KHK); teeth ground; tooth hardness 55-60 HRC",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N5 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 70.0,
+   "outside_dia_mm": 72.0,
+   "face_width_mm": 10.0,
+   "bore_mm": 20.0,
+   "shape": "S1",
+   "fastening": "keyway 6 x 2.8 mm",
+   "backlash_mm": "0.10-0.18 mm",
+   "allowable_torque_bending_nm": 71.9,
+   "allowable_torque_surface_durability_nm": 111.0,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 600 rpm; sigma_Flim 47 kgf/mm2, sigma_Hlim 166 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "SCM415 (KHK lists it as AISI 4115 alloy steel)",
+    "condition": "carburized, ground (case 55-60 HRC)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 830,
+    "allowable_bending_stress_mpa": 460.9,
+    "allowable_bending_stress_kgf_mm2": 47,
+    "allowable_hertz_stress_kgf_mm2": 166,
+    "hardness": "HRc 55-60 (teeth); KHK Table 9.1 material hardness HB 235-321",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "sigma_Flim 47 kgf/mm2 and sigma_Hlim 166 kgf/mm2 from KHK (column MSGA/MSGB); MPa computed x 9.80665. Tensile more than 830 N/mm2 from KHK Table 9.1. No published yield strength was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "KHK: \"No secondary operations can be performed on these finished gears due to the applied carburizing process.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 45.0,
+   "hub_width_mm": 10.0,
+   "total_length_mm": 20.0
+  },
+  "price_usd": 165.09,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-70",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-msga1-80",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "MSGA1-80 ground carburized SCM415 spur gear",
+  "mass_g": 470.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 80,
+   "material": "SCM415",
+   "heat_treatment": "Carburized (KHK); teeth ground; tooth hardness 55-60 HRC",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N5 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 80.0,
+   "outside_dia_mm": 82.0,
+   "face_width_mm": 10.0,
+   "bore_mm": 20.0,
+   "shape": "S1",
+   "fastening": "keyway 6 x 2.8 mm",
+   "backlash_mm": "0.10-0.18 mm",
+   "allowable_torque_bending_nm": 83.9,
+   "allowable_torque_surface_durability_nm": 147.0,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 600 rpm; sigma_Flim 47 kgf/mm2, sigma_Hlim 166 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "SCM415 (KHK lists it as AISI 4115 alloy steel)",
+    "condition": "carburized, ground (case 55-60 HRC)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 830,
+    "allowable_bending_stress_mpa": 460.9,
+    "allowable_bending_stress_kgf_mm2": 47,
+    "allowable_hertz_stress_kgf_mm2": 166,
+    "hardness": "HRc 55-60 (teeth); KHK Table 9.1 material hardness HB 235-321",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "sigma_Flim 47 kgf/mm2 and sigma_Hlim 166 kgf/mm2 from KHK (column MSGA/MSGB); MPa computed x 9.80665. Tensile more than 830 N/mm2 from KHK Table 9.1. No published yield strength was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "KHK: \"No secondary operations can be performed on these finished gears due to the applied carburizing process.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 45.0,
+   "hub_width_mm": 10.0,
+   "total_length_mm": 20.0
+  },
+  "price_usd": 184.95,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-80",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssg1-15",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSG1-15 ground induction-hardened S45C spur gear",
+  "mass_g": 16.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 15,
+   "material": "S45C",
+   "heat_treatment": "Gear teeth induction hardened (KHK catalogue spec block); teeth ground; tooth hardness 50-60 HRC",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N7 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 15.0,
+   "outside_dia_mm": 17.0,
+   "face_width_mm": 8.0,
+   "bore_mm": 6.0,
+   "shape": "S1",
+   "fastening": "plain bore, no keyway or set screw (shape S1); needs its own fastening",
+   "backlash_mm": "0.08-0.16 mm",
+   "allowable_torque_bending_nm": 2.96,
+   "allowable_torque_surface_durability_nm": 1.03,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 600 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 90 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "gear teeth induction hardened (case HRC 50-60); core not hardened",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": null,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 90,
+    "hardness": "HRC 50-60 (teeth)",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.us/media/3qxm3fcm/catalog-2025-intro.pdf",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "KHK sigma_Flim 19 kgf/mm2 and sigma_Hlim 90 kgf/mm2 (columns SSG/SSAG for m1 and SS-H/SSY-H/SSAY-H); MPa value computed x 9.80665. No published core yield/tensile for this condition was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "KHK: no secondary operations on tooth areas including the bottom land (approx. 2 to 3 mm) because the teeth are induction hardened. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 12.0,
+   "hub_width_mm": 10.0,
+   "total_length_mm": 18.0
+  },
+  "price_usd": 40.73,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-ssg/ssg1-15",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssg1-60",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSG1-60 ground induction-hardened S45C spur gear",
+  "mass_g": 260.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 60,
+   "material": "S45C",
+   "heat_treatment": "Gear teeth induction hardened (KHK catalogue spec block); teeth ground; tooth hardness 50-60 HRC",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N7 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 60.0,
+   "outside_dia_mm": 62.0,
+   "face_width_mm": 8.0,
+   "bore_mm": 12.0,
+   "shape": "S1",
+   "fastening": "plain bore, no keyway or set screw (shape S1); needs its own fastening",
+   "backlash_mm": "0.10-0.18 mm",
+   "allowable_torque_bending_nm": 16.2,
+   "allowable_torque_surface_durability_nm": 15.8,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 600 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 90 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "gear teeth induction hardened (case HRC 50-60); core not hardened",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": null,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 90,
+    "hardness": "HRC 50-60 (teeth)",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.us/media/3qxm3fcm/catalog-2025-intro.pdf",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "KHK sigma_Flim 19 kgf/mm2 and sigma_Hlim 90 kgf/mm2 (columns SSG/SSAG for m1 and SS-H/SSY-H/SSAY-H); MPa value computed x 9.80665. No published core yield/tensile for this condition was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "KHK: no secondary operations on tooth areas including the bottom land (approx. 2 to 3 mm) because the teeth are induction hardened. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 40.0,
+   "hub_width_mm": 10.0,
+   "total_length_mm": 18.0
+  },
+  "price_usd": 89.24,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-ssg/ssg1-60",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssy1-15h",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSY1-15H S45C thin-face spur gear, Hardened Plus (induction hardened teeth)",
+  "mass_g": 12.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 15,
+   "material": "S45C",
+   "heat_treatment": "Hardened Plus (H): tooth surface induction hardened, HRC 50-60, applied by KHK to the standard SSY gear",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 15.0,
+   "outside_dia_mm": 17.0,
+   "face_width_mm": 6.0,
+   "bore_mm": 6.0,
+   "shape": "S1",
+   "fastening": "plain bore, no keyway or set screw (shape S1); needs its own fastening",
+   "backlash_mm": "0.08-0.18 mm",
+   "allowable_torque_bending_nm": 2.22,
+   "allowable_torque_surface_durability_nm": 0.54,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 90 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "gear teeth induction hardened (case HRC 50-60); core not hardened",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": null,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 90,
+    "hardness": "HRC 50-60 (teeth)",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.us/media/3qxm3fcm/catalog-2025-intro.pdf",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "KHK sigma_Flim 19 kgf/mm2 and sigma_Hlim 90 kgf/mm2 (columns SSG/SSAG for m1 and SS-H/SSY-H/SSAY-H); MPa value computed x 9.80665. No published core yield/tensile for this condition was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Hardened Plus variant (catalogue no. + H) of the SSY thin-face gear, listed as its own item on the KHK USA site. KHK intro catalogue p.22: induction hardening service, tooth surface HRC 50-60, \"The gear precision decreases after hardening. The original bore dimension tolerance H7 will also be degraded.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 12.0,
+   "hub_width_mm": 8.0,
+   "total_length_mm": 14.0
+  },
+  "price_usd": 35.3,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/thin-face-spur-gears-ssy/ssy1-15h",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssy1-60h",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSY1-60H S45C thin-face spur gear, Hardened Plus (induction hardened teeth)",
+  "mass_g": 190.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 60,
+   "material": "S45C",
+   "heat_treatment": "Hardened Plus (H): tooth surface induction hardened, HRC 50-60, applied by KHK to the standard SSY gear",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 60.0,
+   "outside_dia_mm": 62.0,
+   "face_width_mm": 6.0,
+   "bore_mm": 8.0,
+   "shape": "S1",
+   "fastening": "plain bore, no keyway or set screw (shape S1); needs its own fastening",
+   "backlash_mm": "0.08-0.18 mm",
+   "allowable_torque_bending_nm": 14.5,
+   "allowable_torque_surface_durability_nm": 9.34,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 90 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "gear teeth induction hardened (case HRC 50-60); core not hardened",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": null,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 90,
+    "hardness": "HRC 50-60 (teeth)",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.us/media/3qxm3fcm/catalog-2025-intro.pdf",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "KHK sigma_Flim 19 kgf/mm2 and sigma_Hlim 90 kgf/mm2 (columns SSG/SSAG for m1 and SS-H/SSY-H/SSAY-H); MPa value computed x 9.80665. No published core yield/tensile for this condition was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Hardened Plus variant (catalogue no. + H) of the SSY thin-face gear, listed as its own item on the KHK USA site. KHK intro catalogue p.22: induction hardening service, tooth surface HRC 50-60, \"The gear precision decreases after hardening. The original bore dimension tolerance H7 will also be degraded.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 35.0,
+   "hub_width_mm": 8.0,
+   "total_length_mm": 14.0
+  },
+  "price_usd": 45.2,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/thin-face-spur-gears-ssy/ssy1-60h",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssy1-80h",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSY1-80H S45C thin-face spur gear, Hardened Plus (induction hardened teeth)",
+  "mass_g": 310.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 80,
+   "material": "S45C",
+   "heat_treatment": "Hardened Plus (H): tooth surface induction hardened, HRC 50-60, applied by KHK to the standard SSY gear",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 80.0,
+   "outside_dia_mm": 82.0,
+   "face_width_mm": 6.0,
+   "bore_mm": 10.0,
+   "shape": "S1",
+   "fastening": "plain bore, no keyway or set screw (shape S1); needs its own fastening",
+   "backlash_mm": "0.08-0.18 mm",
+   "allowable_torque_bending_nm": 20.3,
+   "allowable_torque_surface_durability_nm": 16.9,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 90 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "gear teeth induction hardened (case HRC 50-60); core not hardened",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": null,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 90,
+    "hardness": "HRC 50-60 (teeth)",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.us/media/3qxm3fcm/catalog-2025-intro.pdf",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+    ],
+    "note": "KHK sigma_Flim 19 kgf/mm2 and sigma_Hlim 90 kgf/mm2 (columns SSG/SSAG for m1 and SS-H/SSY-H/SSAY-H); MPa value computed x 9.80665. No published core yield/tensile for this condition was read. Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Hardened Plus variant (catalogue no. + H) of the SSY thin-face gear, listed as its own item on the KHK USA site. KHK intro catalogue p.22: induction hardening service, tooth surface HRC 50-60, \"The gear precision decreases after hardening. The original bore dimension tolerance H7 will also be degraded.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 40.0,
+   "hub_width_mm": 8.0,
+   "total_length_mm": 14.0
+  },
+  "price_usd": 53.8,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/thin-face-spur-gears-ssy/ssy1-80h",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssay1-20",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSAY1-20 S45C hubless thin-face spur gear",
+  "mass_g": 13.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 20,
+   "material": "S45C",
+   "heat_treatment": "none (KHK spec: Heat treatment \"\u2014\", tooth hardness less than 194HB); black oxide coating",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 20.0,
+   "outside_dia_mm": 22.0,
+   "face_width_mm": 6.0,
+   "bore_mm": 6.0,
+   "shape": "S5",
+   "fastening": "plain bore, no keyway or set screw (shape S5); needs its own fastening",
+   "backlash_mm": "0.08-0.18 mm",
+   "allowable_torque_bending_nm": 3.45,
+   "allowable_torque_surface_durability_nm": 0.2,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 49 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "not heat treated, as supplied (KHK: tooth hardness less than 194HB)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 570,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 49,
+    "hardness": "less than 194HB",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://sg.misumi-ec.com/tech-info/categories/technical_data/td05/a0116.html",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html",
+     "https://www.azom.com/article.aspx?ArticleID=9153"
+    ],
+    "note": "allowable_bending_stress_mpa is KHK sigma_Flim 19 kgf/mm2 (column SSS,SS / SSA,SSY / SSAY,SSR) x 9.80665, computed; KHK uses 2/3 of it for bidirectional load. Tensile 570 N/mm2 is the JIS G4051 normalizing figure as stated by Misumi. KHK Table 9.1 gives S45C tensile more than 690 N/mm2 at HB 201-269 (thermal refined / induction hardened), which is not this condition. No published yield strength for this condition could be read; AZoM cold-rolled AISI 1045 (yield 450 MPa, UTS 585 MPa, HB 163) is a different condition and is not used here (listed separately in gear_materials.json). Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Hubless thin-face disc (shape S5), no hub: must be clamped or bonded. KHK catalogue also lists a Hardened Plus surface-durability figure for SSAY, but no SSAY ...H item is listed on the KHK USA site, so the plain gear is recorded. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree."
+  },
+  "price_usd": 12.66,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/hubless-thin-face-spur-gears-ssay/ssay1-20",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssay1-80",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSAY1-80 S45C hubless thin-face spur gear",
+  "mass_g": 230.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 80,
+   "material": "S45C",
+   "heat_treatment": "none (KHK spec: Heat treatment \"\u2014\", tooth hardness less than 194HB); black oxide coating",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 80.0,
+   "outside_dia_mm": 82.0,
+   "face_width_mm": 6.0,
+   "bore_mm": 10.0,
+   "shape": "S5",
+   "fastening": "plain bore, no keyway or set screw (shape S5); needs its own fastening",
+   "backlash_mm": "0.08-0.18 mm",
+   "allowable_torque_bending_nm": 20.3,
+   "allowable_torque_surface_durability_nm": 3.74,
+   "rating_basis": "published by KHK (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 19 kgf/mm2, sigma_Hlim 49 kgf/mm2). Values are reference figures; design takes the lower.",
+   "material_strength": {
+    "grade": "S45C (KHK lists it as AISI 1045 equivalent)",
+    "condition": "not heat treated, as supplied (KHK: tooth hardness less than 194HB)",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 570,
+    "allowable_bending_stress_mpa": 186.3,
+    "allowable_bending_stress_kgf_mm2": 19,
+    "allowable_hertz_stress_kgf_mm2": 49,
+    "hardness": "less than 194HB",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://sg.misumi-ec.com/tech-info/categories/technical_data/td05/a0116.html",
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html",
+     "https://www.azom.com/article.aspx?ArticleID=9153"
+    ],
+    "note": "allowable_bending_stress_mpa is KHK sigma_Flim 19 kgf/mm2 (column SSS,SS / SSA,SSY / SSAY,SSR) x 9.80665, computed; KHK uses 2/3 of it for bidirectional load. Tensile 570 N/mm2 is the JIS G4051 normalizing figure as stated by Misumi. KHK Table 9.1 gives S45C tensile more than 690 N/mm2 at HB 201-269 (thermal refined / induction hardened), which is not this condition. No published yield strength for this condition could be read; AZoM cold-rolled AISI 1045 (yield 450 MPa, UTS 585 MPa, HB 163) is a different condition and is not used here (listed separately in gear_materials.json). Rating uses KHK published torques, not Lewis."
+   },
+   "note": "Hubless thin-face disc (shape S5), no hub: must be clamped or bonded. KHK catalogue also lists a Hardened Plus surface-durability figure for SSAY, but no SSAY ...H item is listed on the KHK USA site, so the plain gear is recorded. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree."
+  },
+  "price_usd": 28.5,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/hubless-thin-face-spur-gears-ssay/ssay1-80",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-bss1-16b",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "BSS1-16B C3604 brass spur gear",
+  "mass_g": 15.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 16,
+   "material": "C3604 free-cutting brass",
+   "heat_treatment": "none (KHK spec: Heat Treatment \"\u2014\"; tooth hardness 80HV or more)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 16.0,
+   "outside_dia_mm": 18.0,
+   "face_width_mm": 6.0,
+   "bore_mm": 5.0,
+   "shape": "S1T",
+   "fastening": "tapped for M4 set screw (KHK: for products having a tapped hole, a set screw is included)",
+   "backlash_mm": "0.08-0.18 mm",
+   "allowable_torque_bending_nm": 0.52,
+   "allowable_torque_surface_durability_nm": null,
+   "rating_basis": "published by KHK, bending strength only (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 4 kgf/mm2). KHK publishes no surface-durability torque for BSS brass.",
+   "material_strength": {
+    "grade": "C3604 free-cutting brass",
+    "condition": "as machined, no heat treatment",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 335,
+    "allowable_bending_stress_mpa": 39.2,
+    "allowable_bending_stress_kgf_mm2": 4,
+    "allowable_hertz_stress_kgf_mm2": null,
+    "hardness": "80HV or more",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html",
+     "https://www.protolabs.com/media/a0yjqykb/2026-026-cnc-material-data-sheet_brass-c360.pdf"
+    ],
+    "note": "KHK sigma_Flim 4 kgf/mm2 for BSS (MPa computed x 9.80665); KHK gives no sigma_Hlim (\"\u2014\") and publishes no surface-durability torque for BSS, so only bending is rated. Tensile 335 N/mm2 from KHK Table 9.1. No C3604-specific yield was read; Proto Labs UNS C36000 (C360) gives 45,000 psi yield (0.5% ext.), a near-equivalent alloy, recorded separately in gear_materials.json."
+   },
+   "note": "KHK publishes no surface-durability torque for this brass gear (allowable_torque_surface_durability_nm null). Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 12.0,
+   "hub_width_mm": 8.0,
+   "total_length_mm": 14.0
+  },
+  "price_usd": 22.43,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/brass-spur-gears-bss/bss1-16b",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-bss1-40a",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "BSS1-40A C3604 brass spur gear",
+  "mass_g": 100.0,
+  "specs": {
+   "module_mm": 1.0,
+   "teeth": 40,
+   "material": "C3604 free-cutting brass",
+   "heat_treatment": "none (KHK spec: Heat Treatment \"\u2014\"; tooth hardness 80HV or more)",
+   "pressure_angle_deg": 20,
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "pitch_dia_mm": 40.0,
+   "outside_dia_mm": 42.0,
+   "face_width_mm": 6.0,
+   "bore_mm": 6.0,
+   "shape": "S1T",
+   "fastening": "tapped for M4 set screw (KHK: for products having a tapped hole, a set screw is included)",
+   "backlash_mm": "0.08-0.18 mm",
+   "allowable_torque_bending_nm": 1.86,
+   "allowable_torque_surface_durability_nm": null,
+   "rating_basis": "published by KHK, bending strength only (JGMA401-01 bending / JGMA402-01 surface durability; mating gear with the same number of teeth; design life over 10^7 cycles; uniform load from motor and load; bidirectional load (calculated with 2/3 of allowable bending stress); safety factor SF 1.2, SH 1.15; lubricant 100 cSt (50 C); symmetric support by bearings; 100 rpm; sigma_Flim 4 kgf/mm2). KHK publishes no surface-durability torque for BSS brass.",
+   "material_strength": {
+    "grade": "C3604 free-cutting brass",
+    "condition": "as machined, no heat treatment",
+    "yield_strength_mpa": null,
+    "tensile_strength_mpa": 335,
+    "allowable_bending_stress_mpa": 39.2,
+    "allowable_bending_stress_kgf_mm2": 4,
+    "allowable_hertz_stress_kgf_mm2": null,
+    "hardness": "80HV or more",
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "extra_source_urls": [
+     "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html",
+     "https://www.protolabs.com/media/a0yjqykb/2026-026-cnc-material-data-sheet_brass-c360.pdf"
+    ],
+    "note": "KHK sigma_Flim 4 kgf/mm2 for BSS (MPa computed x 9.80665); KHK gives no sigma_Hlim (\"\u2014\") and publishes no surface-durability torque for BSS, so only bending is rated. Tensile 335 N/mm2 from KHK Table 9.1. No C3604-specific yield was read; Proto Labs UNS C36000 (C360) gives 45,000 psi yield (0.5% ext.), a near-equivalent alloy, recorded separately in gear_materials.json."
+   },
+   "note": "KHK publishes no surface-durability torque for this brass gear (allowable_torque_surface_durability_nm null). Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "hub_dia_mm": 28.0,
+   "hub_width_mm": 8.0,
+   "total_length_mm": 14.0
+  },
+  "price_usd": 43.46,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/brass-spur-gears-bss/bss1-40a",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-scorpion-sii-2205-1490",
+  "category": "motor",
+  "manufacturer": "Scorpion Power System",
+  "name": "Scorpion SII-2205-1490KV (V2)",
+  "mass_g": 35.4,
+  "specs": {
+   "kv_rpm_per_v": 1490.0,
+   "no_load_current_a": 0.42,
+   "no_load_test_v": 10,
+   "resistance_ohm": 0.188,
+   "continuous_current_a": 10.0,
+   "continuous_power_w": 110.0,
+   "continuous_rating_note": "Max Continuous Current 10 Amps; Max Continuous Power 110 Watts (no time limit stated)",
+   "burst_current_a": null,
+   "burst_duration_s": null,
+   "max_power_w_published": null,
+   "max_efficiency_current_text": null,
+   "max_efficiency_pct": null,
+   "cells_text": "Max Lipo Cell 3s",
+   "dimensions_text_mm": "27.9 dia x 23.0",
+   "shaft_mm": 2.98,
+   "overall_shaft_length_mm": 42.0,
+   "note": "Scorpion SII series, 36 Turn Delta. Maker page lists no burst current, max power, or efficiency band (a separate data chart is linked but not read). resistance_ohm is the published 'Motor Resistance (Rm)'; the page does not say whether it is measured phase-to-phase or per phase. mass_g is the spec-table 'Weight' (the page lists 'Weight including packaging' separately; whether leads are included is not stated). Price shown in USD on the maker's store (currency selector set to USD; maker is Scorpion Power System Ltd, Hong Kong). Page shows struck old price $39.99 and current price $ 20.00.",
+   "stock_note": "Sorry, this product is currently out of stock and can not be ordered."
+  },
+  "price_usd": 20.0,
+  "source_url": "https://scorpionsystem.com/catalog/aeroplane/motors_1/s-22_v2/SII-2205-1490KV/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-scorpion-sii-2208-1100",
+  "category": "motor",
+  "manufacturer": "Scorpion Power System",
+  "name": "Scorpion SII-2208-1100KV (V2)",
+  "mass_g": 45.0,
+  "specs": {
+   "kv_rpm_per_v": 1100.0,
+   "no_load_current_a": 0.41,
+   "no_load_test_v": 10,
+   "resistance_ohm": 0.17,
+   "continuous_current_a": 12.0,
+   "continuous_power_w": 133.0,
+   "continuous_rating_note": "Max Continuous Current 12 Amps; Max Continuous Power 133 Watts (no time limit stated)",
+   "burst_current_a": null,
+   "burst_duration_s": null,
+   "max_power_w_published": null,
+   "max_efficiency_current_text": null,
+   "max_efficiency_pct": null,
+   "cells_text": "Max Lipo Cell 3s",
+   "dimensions_text_mm": "27.9 dia x 26.0",
+   "shaft_mm": 2.98,
+   "overall_shaft_length_mm": 45.0,
+   "note": "Scorpion SII series, 28 Turn Delta. Maker page lists no burst current, max power, or efficiency band (a separate data chart is linked but not read). resistance_ohm is the published 'Motor Resistance (Rm)'; the page does not say whether it is measured phase-to-phase or per phase. mass_g is the spec-table 'Weight' (the page lists 'Weight including packaging' separately; whether leads are included is not stated). Price shown in USD on the maker's store (currency selector set to USD; maker is Scorpion Power System Ltd, Hong Kong)."
+  },
+  "price_usd": 59.99,
+  "source_url": "https://scorpionsystem.com/catalog/aeroplane/motors_1/s-22_v2/SII-2208-1100KV/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-scorpion-sii-2208-1280",
+  "category": "motor",
+  "manufacturer": "Scorpion Power System",
+  "name": "Scorpion SII-2208-1280KV (V2)",
+  "mass_g": 45.0,
+  "specs": {
+   "kv_rpm_per_v": 1280.0,
+   "no_load_current_a": 0.47,
+   "no_load_test_v": 10,
+   "resistance_ohm": 0.15,
+   "continuous_current_a": 14.0,
+   "continuous_power_w": 155.0,
+   "continuous_rating_note": "Max Continuous Current 14 Amps; Max Continuous Power 155 Watts (no time limit stated)",
+   "burst_current_a": null,
+   "burst_duration_s": null,
+   "max_power_w_published": null,
+   "max_efficiency_current_text": null,
+   "max_efficiency_pct": null,
+   "cells_text": "Max Lipo Cell 3s",
+   "dimensions_text_mm": "27.9 dia x 26.0",
+   "shaft_mm": 2.98,
+   "overall_shaft_length_mm": 45.0,
+   "note": "Scorpion SII series, 26 Turn Delta. Maker page lists no burst current, max power, or efficiency band (a separate data chart is linked but not read). resistance_ohm is the published 'Motor Resistance (Rm)'; the page does not say whether it is measured phase-to-phase or per phase. mass_g is the spec-table 'Weight' (the page lists 'Weight including packaging' separately; whether leads are included is not stated). Price shown in USD on the maker's store (currency selector set to USD; maker is Scorpion Power System Ltd, Hong Kong). Page shows struck old price $44.99 and current price $ 18.00."
+  },
+  "price_usd": 18.0,
+  "source_url": "https://scorpionsystem.com/catalog/aeroplane/motors_1/s-22_v2/SII-2208-1280KV/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-scorpion-sii-2212-960",
+  "category": "motor",
+  "manufacturer": "Scorpion Power System",
+  "name": "Scorpion SII-2212-960KV (V2)",
+  "mass_g": 58.0,
+  "specs": {
+   "kv_rpm_per_v": 960.0,
+   "no_load_current_a": 0.51,
+   "no_load_test_v": 10,
+   "resistance_ohm": 0.139,
+   "continuous_current_a": 13.0,
+   "continuous_power_w": 192.0,
+   "continuous_rating_note": "Max Continuous Current 13 Amps; Max Continuous Power 192 Watts (no time limit stated)",
+   "burst_current_a": null,
+   "burst_duration_s": null,
+   "max_power_w_published": null,
+   "max_efficiency_current_text": null,
+   "max_efficiency_pct": null,
+   "cells_text": "Max Lipo Cell 4s",
+   "dimensions_text_mm": "27.9 dia x 30.0",
+   "shaft_mm": 2.98,
+   "overall_shaft_length_mm": 49.0,
+   "note": "Scorpion SII series, 22 Turn Delta. Maker page lists no burst current, max power, or efficiency band (a separate data chart is linked but not read). resistance_ohm is the published 'Motor Resistance (Rm)'; the page does not say whether it is measured phase-to-phase or per phase. mass_g is the spec-table 'Weight' (the page lists 'Weight including packaging' separately; whether leads are included is not stated). Price shown in USD on the maker's store (currency selector set to USD; maker is Scorpion Power System Ltd, Hong Kong). Page shows struck old price $49.99 and current price $ 20.00."
+  },
+  "price_usd": 20.0,
+  "source_url": "https://scorpionsystem.com/catalog/aeroplane/motors_1/s-22_v2/SII-2212-960KV/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-scorpion-sii-2212-1400",
+  "category": "motor",
+  "manufacturer": "Scorpion Power System",
+  "name": "Scorpion SII-2212-1400KV (V2)",
+  "mass_g": 58.0,
+  "specs": {
+   "kv_rpm_per_v": 1400.0,
+   "no_load_current_a": 0.73,
+   "no_load_test_v": 10,
+   "resistance_ohm": 0.088,
+   "continuous_current_a": 25.0,
+   "continuous_power_w": 370.0,
+   "continuous_rating_note": "Max Continuous Current 25 Amps; Max Continuous Power 370 Watts (no time limit stated)",
+   "burst_current_a": null,
+   "burst_duration_s": null,
+   "max_power_w_published": null,
+   "max_efficiency_current_text": null,
+   "max_efficiency_pct": null,
+   "cells_text": "Max Lipo Cell 4s",
+   "dimensions_text_mm": "27.9 dia x 30.0",
+   "shaft_mm": 2.98,
+   "overall_shaft_length_mm": 49.0,
+   "note": "Scorpion SII series, 15 Turn Delta. Maker page lists no burst current, max power, or efficiency band (a separate data chart is linked but not read). resistance_ohm is the published 'Motor Resistance (Rm)'; the page does not say whether it is measured phase-to-phase or per phase. mass_g is the spec-table 'Weight' (the page lists 'Weight including packaging' separately; whether leads are included is not stated). Price shown in USD on the maker's store (currency selector set to USD; maker is Scorpion Power System Ltd, Hong Kong)."
+  },
+  "price_usd": 49.99,
+  "source_url": "https://scorpionsystem.com/catalog/aeroplane/motors_1/s-22_v2/SII-2212-1400KV/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-scorpion-sii-3008-1090",
+  "category": "motor",
+  "manufacturer": "Scorpion Power System",
+  "name": "Scorpion SII-3008-1090KV (V2)",
+  "mass_g": 95.0,
+  "specs": {
+   "kv_rpm_per_v": 1090.0,
+   "no_load_current_a": 0.79,
+   "no_load_test_v": 10,
+   "resistance_ohm": 0.058,
+   "continuous_current_a": 26.0,
+   "continuous_power_w": 370.0,
+   "continuous_rating_note": "Max Continuous Current 26 Amps; Max Continuous Power 370 Watts (no time limit stated)",
+   "burst_current_a": null,
+   "burst_duration_s": null,
+   "max_power_w_published": null,
+   "max_efficiency_current_text": null,
+   "max_efficiency_pct": null,
+   "cells_text": "Max Lipo Cell 4s",
+   "dimensions_text_mm": "37.5 dia x 33.75",
+   "shaft_mm": 4.98,
+   "overall_shaft_length_mm": 62.5,
+   "note": "Scorpion SII series, 23 Turn Delta. Maker page lists no burst current, max power, or efficiency band (a separate data chart is linked but not read). resistance_ohm is the published 'Motor Resistance (Rm)'; the page does not say whether it is measured phase-to-phase or per phase. mass_g is the spec-table 'Weight' (the page lists 'Weight including packaging' separately; whether leads are included is not stated). Price shown in USD on the maker's store (currency selector set to USD; maker is Scorpion Power System Ltd, Hong Kong). Page shows 'Backorder (ship within 30 days)' and 'Notify me when this item is back in stock'."
+  },
+  "price_usd": 84.99,
+  "source_url": "https://scorpionsystem.com/catalog/aeroplane/motors_1/s-30_v2/SII-3008-1090KV/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-cobra-c-2808-30",
+  "category": "motor",
+  "manufacturer": "Cobra (Innov8tive Designs)",
+  "name": "Cobra C-2808/30 Brushless Motor, Kv=1000",
+  "mass_g": 80.5,
+  "specs": {
+   "kv_rpm_per_v": 1000.0,
+   "no_load_current_a": 0.53,
+   "no_load_test_v": 8.0,
+   "resistance_ohm": 0.096,
+   "resistance_per_phase_ohm": 0.144,
+   "continuous_current_a": 20.0,
+   "continuous_power_w": 220.0,
+   "continuous_power_by_cells_w": {
+    "3s": 220.0,
+    "4s": 300.0
+   },
+   "continuous_rating_note": "Maximum Continuous Current 20 Amps (no time limit stated); Max Continuous Power (3-cell Li-Po) 220 Watts; Max Continuous Power (4-cell Li-Po) 300 Watts. continuous_power_w is the lowest-cell-count row.",
+   "burst_current_a": null,
+   "burst_duration_s": null,
+   "max_power_w_published": null,
+   "max_efficiency_current_text": null,
+   "max_efficiency_pct": null,
+   "cells_text": "Max Continuous Power rows published for 3-cell Li-Po, 4-cell Li-Po",
+   "dimensions_text_mm": "35.0 dia x 28.1",
+   "shaft_mm": 5.0,
+   "overall_shaft_length_mm": 48.0,
+   "note": "30 Turn Delta. resistance_ohm is the published phase-to-phase Rm (what the ESC terminals see); per-phase Rm also published and kept in resistance_per_phase_ohm. No burst current, max power or efficiency band on the page (a propeller data chart is linked but not read). Innov8tive Designs (USA) is the home of the Cobra motor line; USD price."
+  },
+  "price_usd": 33.99,
+  "source_url": "https://innov8tivedesigns.com/cobra-c-2808-30-brushless-motor-kv-1000.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-cobra-c-2808-22",
+  "category": "motor",
+  "manufacturer": "Cobra (Innov8tive Designs)",
+  "name": "Cobra C-2808/22 Brushless Motor, Kv=1330",
+  "mass_g": 80.5,
+  "specs": {
+   "kv_rpm_per_v": 1330.0,
+   "no_load_current_a": 0.82,
+   "no_load_test_v": 8.0,
+   "resistance_ohm": 0.056,
+   "resistance_per_phase_ohm": 0.084,
+   "continuous_current_a": 24.0,
+   "continuous_power_w": 270.0,
+   "continuous_power_by_cells_w": {
+    "3s": 270.0,
+    "4s": 360.0
+   },
+   "continuous_rating_note": "Maximum Continuous Current 24 Amps (no time limit stated); Max Continuous Power (3-cell Li-Po) 270 Watts; Max Continuous Power (4-cell Li-Po) 360 Watts. continuous_power_w is the lowest-cell-count row.",
+   "burst_current_a": null,
+   "burst_duration_s": null,
+   "max_power_w_published": null,
+   "max_efficiency_current_text": null,
+   "max_efficiency_pct": null,
+   "cells_text": "Max Continuous Power rows published for 3-cell Li-Po, 4-cell Li-Po",
+   "dimensions_text_mm": "35.0 dia x 28.1",
+   "shaft_mm": 5.0,
+   "overall_shaft_length_mm": 48.0,
+   "note": "22 Turn Delta. resistance_ohm is the published phase-to-phase Rm (what the ESC terminals see); per-phase Rm also published and kept in resistance_per_phase_ohm. No burst current, max power or efficiency band on the page (a propeller data chart is linked but not read). Innov8tive Designs (USA) is the home of the Cobra motor line; USD price."
+  },
+  "price_usd": 33.99,
+  "source_url": "https://innov8tivedesigns.com/cobra-c-2808-22-brushless-motor-kv-1330.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-cobra-c-2814-16",
+  "category": "motor",
+  "manufacturer": "Cobra (Innov8tive Designs)",
+  "name": "Cobra C-2814/16 Brushless Motor, Kv=1050",
+  "mass_g": 107.0,
+  "specs": {
+   "kv_rpm_per_v": 1050.0,
+   "no_load_current_a": 0.9,
+   "no_load_test_v": 10.0,
+   "resistance_ohm": 0.045,
+   "resistance_per_phase_ohm": 0.068,
+   "continuous_current_a": 30.0,
+   "continuous_power_w": 330.0,
+   "continuous_power_by_cells_w": {
+    "3s": 330.0,
+    "4s": 450.0
+   },
+   "continuous_rating_note": "Maximum Continuous Current 30 Amps (no time limit stated); Max Continuous Power (3-cell Li-Po) 330 Watts; Max Continuous Power (4-cell Li-Po) 450 Watts. continuous_power_w is the lowest-cell-count row.",
+   "burst_current_a": null,
+   "burst_duration_s": null,
+   "max_power_w_published": null,
+   "max_efficiency_current_text": null,
+   "max_efficiency_pct": null,
+   "cells_text": "Max Continuous Power rows published for 3-cell Li-Po, 4-cell Li-Po",
+   "dimensions_text_mm": "35.0 dia x 34.4",
+   "shaft_mm": 5.0,
+   "overall_shaft_length_mm": 54.0,
+   "note": "16 Turn Delta. resistance_ohm is the published phase-to-phase Rm (what the ESC terminals see); per-phase Rm also published and kept in resistance_per_phase_ohm. No burst current, max power or efficiency band on the page (a propeller data chart is linked but not read). Innov8tive Designs (USA) is the home of the Cobra motor line; USD price."
+  },
+  "price_usd": 37.99,
+  "source_url": "https://innov8tivedesigns.com/cobra-c-2814-16-brushless-motor-kv-1050.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "motor-cobra-c-2820-14",
+  "category": "motor",
+  "manufacturer": "Cobra (Innov8tive Designs)",
+  "name": "Cobra C-2820/14 Brushless Motor, Kv=840",
+  "mass_g": 140.0,
+  "specs": {
+   "kv_rpm_per_v": 840.0,
+   "no_load_current_a": 1.0,
+   "no_load_test_v": 10.0,
+   "resistance_ohm": 0.047,
+   "resistance_per_phase_ohm": 0.071,
+   "continuous_current_a": 36.0,
+   "continuous_power_w": 400.0,
+   "continuous_power_by_cells_w": {
+    "3s": 400.0,
+    "4s": 530.0
+   },
+   "continuous_rating_note": "Maximum Continuous Current 36 Amps (no time limit stated); Max Continuous Power (3-cell Li-Po) 400 Watts; Max Continuous Power (4-cell Li-Po) 530 Watts. continuous_power_w is the lowest-cell-count row.",
+   "burst_current_a": null,
+   "burst_duration_s": null,
+   "max_power_w_published": null,
+   "max_efficiency_current_text": null,
+   "max_efficiency_pct": null,
+   "cells_text": "Max Continuous Power rows published for 3-cell Li-Po, 4-cell Li-Po",
+   "dimensions_text_mm": "35.0 dia x 40.0",
+   "shaft_mm": 5.0,
+   "overall_shaft_length_mm": 60.0,
+   "note": "14 Turn Delta. resistance_ohm is the published phase-to-phase Rm (what the ESC terminals see); per-phase Rm also published and kept in resistance_per_phase_ohm. No burst current, max power or efficiency band on the page (a propeller data chart is linked but not read). Innov8tive Designs (USA) is the home of the Cobra motor line; USD price."
+  },
+  "price_usd": 42.99,
+  "source_url": "https://innov8tivedesigns.com/cobra-c-2820-14-brushless-motor-kv-840.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "batt-gensace-1300-2s-45c",
+  "category": "battery",
+  "manufacturer": "Gens Ace",
+  "name": "Gens Ace 1300mAh 2S 7.4V 45C G-Tech LiPo (Deans)",
+  "mass_g": 90,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 1300,
+   "cells_series": 2,
+   "nominal_voltage_v": 7.4,
+   "energy_wh_nominal_computed": 9.62,
+   "c_rating_continuous_claimed": 45,
+   "c_rating_burst_claimed": 90,
+   "burst_duration_s": null,
+   "c_rating_note": "Maker/retailer-stated hobby C ratings; not independent discharge tests.",
+   "continuous_discharge_a_claimed": null,
+   "cell": null,
+   "dimensions_text_mm": "70.87 x 35.24 x 14.5 (L x W x H; tolerances L \u00b15, W \u00b12, H \u00b12)",
+   "mass_note": "Spec table 'Net Weight(\u00b120g): 90' (\u00b120 g tolerance as published).",
+   "connector": "Deans (balance G-tech-3P)",
+   "note": "Gens Ace official US store (genstattu.com, Grepow). Burst duration not stated. Page shows stock count 20 - 100."
+  },
+  "price_usd": 20.59,
+  "source_url": "https://genstattu.com/gens-ace-1300mah-2s-7-4v-45c-g-tech-lipo-battery-pack-with-deans-plug/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "batt-gensace-2200-2s-60c",
+  "category": "battery",
+  "manufacturer": "Gens Ace",
+  "name": "Gens Ace 2200mAh 2S 7.4V 60C G-Tech LiPo (XT60)",
+  "mass_g": 130,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 2200,
+   "cells_series": 2,
+   "nominal_voltage_v": 7.4,
+   "energy_wh_nominal_computed": 16.28,
+   "c_rating_continuous_claimed": 60,
+   "c_rating_burst_claimed": 100,
+   "burst_duration_s": null,
+   "c_rating_note": "Maker/retailer-stated hobby C ratings; not independent discharge tests.",
+   "continuous_discharge_a_claimed": null,
+   "cell": null,
+   "dimensions_text_mm": "87.2 x 34 x 20 (L x W x H)",
+   "mass_note": "Description 'Net Weight (\u00b120g): 130g'; spec table also 'Net Weight(\u00b120g): 130'.",
+   "connector": "XT60 (balance G-Tech)",
+   "note": "Gens Ace official US store (genstattu.com). Listed in the 'Car Classic' series (soft pack per dimensions; case type not stated). Spec table gives L 87 mm vs description 87.2 mm. Burst duration not stated. Stock shown '> 100'."
+  },
+  "price_usd": 26.79,
+  "source_url": "https://genstattu.com/gens-ace-2200mah-2s-60c-7-4v-g-tech-lipo-battery-pack-with-xt60-plug/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "batt-gensace-2200-4s-60c",
+  "category": "battery",
+  "manufacturer": "Gens Ace",
+  "name": "Gens Ace Adventure 2200mAh 4S 14.8V 60C G-Tech LiPo (XT60)",
+  "mass_g": 204,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 2200,
+   "cells_series": 4,
+   "nominal_voltage_v": 14.8,
+   "energy_wh_nominal_computed": 32.56,
+   "c_rating_continuous_claimed": 60,
+   "c_rating_burst_claimed": 100,
+   "burst_duration_s": null,
+   "c_rating_note": "Maker/retailer-stated hobby C ratings; not independent discharge tests. Burst figure is from the description sentence 'With a maximum discharge rate of 100C'; the spec table lists only 'Discharge Rate (C): 60C'.",
+   "continuous_discharge_a_claimed": null,
+   "cell": null,
+   "dimensions_text_mm": "91.60 x 43.14 x 23.56 (L x W x H)",
+   "mass_note": "Description '- Weight:204g'; spec table 'Net Weight(\u00b120g): 204'.",
+   "connector": "XT60 (balance G-Tech-5P)",
+   "note": "Gens Ace official US store (genstattu.com). Page markup states schema.org InStock; no stock count shown."
+  },
+  "price_usd": 46.99,
+  "source_url": "https://genstattu.com/gens-ace-2200mah-4s-60c-14-8v-g-tech-adventure-lipo-battery-pack-with-xt60-plug/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "batt-cnhl-1300-4s-120c",
+  "category": "battery",
+  "manufacturer": "CNHL (China Hobby Line)",
+  "name": "CNHL MiniStar 1300mAh 14.8V 4S 120C LiPo (XT60)",
+  "mass_g": 152,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 1300,
+   "cells_series": 4,
+   "nominal_voltage_v": 14.8,
+   "energy_wh_nominal_computed": 19.24,
+   "c_rating_continuous_claimed": 120,
+   "c_rating_burst_claimed": 240,
+   "burst_duration_s": null,
+   "c_rating_note": "Maker/retailer-stated hobby C ratings; not independent discharge tests.",
+   "continuous_discharge_a_claimed": null,
+   "cell": null,
+   "dimensions_text_mm": "33 x 32 x 79 (as published: Size(1-5mm difference): 33X32X79mm)",
+   "mass_note": "Published 'Approx Weight(\u00b15g) : 152g'; Shopify variant weight also 152 g.",
+   "connector": "XT60 (balance JST / XH)",
+   "source_conflict": "Spec block for the 120C pack says 'Voltage: 14.8V / 4-Cell / 4S2P' although title, voltage and 1300mAh say a 4S pack; 4 cells in series taken.",
+   "note": "Maker's own store (chinahobbyline.com). Values are for the 'US / 120C / 1 Pack' variant (Stock Number 1301204, MiniStar), which the store's product.js shows available; the same page also sells a Black Series V2 130C variant that is unavailable in the US. Burst duration not stated."
+  },
+  "price_usd": 18.99,
+  "source_url": "https://chinahobbyline.com/products/cnhl-ministar-series-1300mah-14-8v-4s-120c-lipo-battery-with-xt60-plug",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "batt-nexus-3s1p-p30b",
+  "category": "battery",
+  "manufacturer": "Nexus Battery Systems (sold by WREKD)",
+  "name": "3s1p 10.8v Molicel P30B 3000mAh Li-Ion Battery Pack",
+  "mass_g": 156,
+  "specs": {
+   "chemistry": "Li-ion",
+   "capacity_mah": 3000,
+   "cells_series": 3,
+   "nominal_voltage_v": 10.8,
+   "energy_wh_nominal_computed": 32.4,
+   "c_rating_continuous_claimed": 10,
+   "c_rating_burst_claimed": null,
+   "burst_duration_s": null,
+   "c_rating_note": "Retailer states 'Max Cont. Discharge Current 30a'; c_rating_continuous_claimed is 30 A / 3.0 Ah computed. No burst rating published. Cell datasheet (Molicel INR-18650-P30B) gives Discharge Current Continuous 30 A (80oC cut-off). Not independent discharge tests.",
+   "continuous_discharge_a_claimed": 30,
+   "cell": "Molicel P30B (Molicel datasheet model INR-18650-P30B)",
+   "cell_continuous_discharge_a_datasheet": 30,
+   "dimensions_text_mm": "61 x 22 x 67 (Length x Width x Height as published)",
+   "mass_note": "Spec table 'Weight | 156g'; description 'Weighing 156g'. Shopify shipping weight 181 g (not used).",
+   "connector": "Discharge connector chosen at order (custom discharge cables); balance leads included",
+   "max_cont_charge_current_a": 5.0,
+   "source_conflict": "Page description says 'Molicel P30B 21700 cells'; Molicel's own datasheet names the cell INR-18650-P30B (18.6 mm dia max, 65.2 mm height max). Cell taken as the 18650 per the cell maker.",
+   "note": "Built in Nevada, USA by Nexus Battery Systems, sold by WREKD (wrekd.com). Store product.js shows available: true (the HTML product page could not be read: the store rate-limited requests, so any pre-order wording on it is unconfirmed; the sister 2S1P/P30B page shows 'On Demand' pre-order, 1 to 3 weeks). Recommended cut off 8.1v, min 7.5v, max charge 12.6v."
+  },
+  "price_usd": 57.0,
+  "source_url": "https://wrekd.com/products/3s1p-10-8v-molicel-p30b-3000mah-li-ion-battery-pack",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "batt-nexus-2s1p-p30b",
+  "category": "battery",
+  "manufacturer": "Nexus Battery Systems (sold by WREKD)",
+  "name": "2s1p 7.2v Molicel P30B 3000mAh Li-Ion Battery Pack",
+  "mass_g": 104,
+  "specs": {
+   "chemistry": "Li-ion",
+   "capacity_mah": 3000,
+   "cells_series": 2,
+   "nominal_voltage_v": 7.2,
+   "energy_wh_nominal_computed": 21.6,
+   "c_rating_continuous_claimed": 10,
+   "c_rating_burst_claimed": null,
+   "burst_duration_s": null,
+   "c_rating_note": "Retailer states 'Max Cont. Discharge Current 30a'; c_rating_continuous_claimed is 30 A / 3.0 Ah computed. No burst rating published. Cell datasheet (Molicel INR-18650-P30B) gives Discharge Current Continuous 30 A (80oC cut-off). Not independent discharge tests.",
+   "continuous_discharge_a_claimed": 30,
+   "cell": "Molicel P30B (Molicel datasheet model INR-18650-P30B)",
+   "cell_continuous_discharge_a_datasheet": 30,
+   "dimensions_text_mm": "42 x 22 x 67 (Length x Width x Height as published)",
+   "mass_note": "Spec table 'Weight | 104g'; description 'Weighing 104g'. Shopify shipping weight 118 g (not used).",
+   "connector": "Discharge connector chosen at order (custom discharge cables); balance leads included",
+   "max_cont_charge_current_a": 5.0,
+   "source_conflict": "Page description says 'Molicel P30B 21700 cells'; Molicel's own datasheet names the cell INR-18650-P30B (18.6 mm dia max, 65.2 mm height max). Cell taken as the 18650 per the cell maker.",
+   "note": "Built in Nevada, USA by Nexus Battery Systems, sold by WREKD (wrekd.com). Store product.js shows available: true; the product page shows 'On Demand' and 'NOTE: This item is on pre-order. Estimated to ship in 1 to 3 weeks.' and 'This product is custom made specifically for you'. Recommended cut off 5.4v, min 5v, max charge 8.4v. Watt Hours published as 21.6Wh."
+  },
+  "price_usd": 69.0,
+  "source_url": "https://wrekd.com/products/2s1p-7-2v-molicel-p30b-3000mah-li-ion-battery-pack",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "batt-cnhl-850-2s-70c",
+  "category": "battery",
+  "manufacturer": "CNHL (China Hobby Line)",
+  "name": "CNHL MiniStar 850mAh 7.4V 2S 70C LiPo (XT30U)",
+  "mass_g": 58,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 850,
+   "cells_series": 2,
+   "nominal_voltage_v": 7.4,
+   "energy_wh_nominal_computed": 6.29,
+   "c_rating_continuous_claimed": 70,
+   "c_rating_burst_claimed": 140,
+   "burst_duration_s": null,
+   "c_rating_note": "Maker/retailer-stated hobby C ratings; not independent discharge tests.",
+   "continuous_discharge_a_claimed": null,
+   "cell": null,
+   "dimensions_text_mm": "17 x 30 x 60 (as published: Size(1-5mm difference): 17X30X60mm)",
+   "mass_note": "Published 'Approx Weight(\u00b15g) : 58g' per pack; Shopify variant weight 116 g is the 2-pack.",
+   "connector": "XT30U (balance JST / XH)",
+   "price_usd_per_pack_computed": 7.29,
+   "note": "Maker's own store (chinahobbyline.com). Sold only as a 2-pack ('2 Packs CNHL MiniStar 850mAh 7.4V 2S 70C Lipo Battery with XT30'); US variant 1458 cents for the 2-pack, so price_usd is null and price_usd_per_pack_computed = 14.58/2. Store product.js shows the US variant available: true. Burst duration not stated. Product JSON endpoint was rate-limited; spec text read from the store's product.js description."
+  },
+  "price_usd": null,
+  "source_url": "https://chinahobbyline.com/products/cnhl-ministar-series-850mah-7-4v-2s-70c-lipo-battery-with-xt30-plug",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "batt-cnhl-850-4s-70c",
+  "category": "battery",
+  "manufacturer": "CNHL (China Hobby Line)",
+  "name": "CNHL MiniStar 850mAh 14.8V 4S 70C LiPo (XT60)",
+  "mass_g": 110,
+  "specs": {
+   "chemistry": "LiPo",
+   "capacity_mah": 850,
+   "cells_series": 4,
+   "nominal_voltage_v": 14.8,
+   "energy_wh_nominal_computed": 12.58,
+   "c_rating_continuous_claimed": 70,
+   "c_rating_burst_claimed": 140,
+   "burst_duration_s": null,
+   "c_rating_note": "Maker/retailer-stated hobby C ratings; not independent discharge tests.",
+   "continuous_discharge_a_claimed": null,
+   "cell": null,
+   "dimensions_text_mm": "62 x 33 x 30 (L x W x H, spec table)",
+   "mass_note": "Published 'Weight | Approx. 110g per pack'; Shopify variant weight 220 g is the 2-pack.",
+   "connector": "XT60 (balance JST / XH)",
+   "price_usd_per_pack_computed": 9.99,
+   "source_conflict": "Spec table gives 'Dimensions (L \u00d7 W \u00d7 H) | 62 \u00d7 33 \u00d7 30mm'; the description says 'a 62 \u00d7 30 \u00d7 33mm pack'. Spec table used.",
+   "note": "Maker's own store (chinahobbyline.com). Sold as a 2-pack ('[Combo] 2 Packs ...'); US variant price 19.98 is for 2 packs, so price_usd is null and price_usd_per_pack_computed = 19.98/2. Store product.js shows the US variant available: true. Burst duration not stated."
+  },
+  "price_usd": null,
+  "source_url": "https://chinahobbyline.com/products/cnhl-ministar-series-850mah-14-8v-4s-70c-lipo-battery-with-xt60-plug",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "tube-ec-woven-7x5",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "7 mm x 5 mm woven finish roll wrapped carbon fibre tube, 1 m",
+  "mass_g": 30.3,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 7,
+   "id_mm": 5,
+   "wall_mm": 1,
+   "length_mm_listed": 1000,
+   "construction": "woven finish roll wrapped (0/90 UD with 2x2 twill outer, epoxy)",
+   "tensile_strength_lengthways_mpa": 650,
+   "tensile_modulus_lengthways_gpa": 64,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "compressive_strength_mpa": null,
+   "od_tolerance_mm": 0.1,
+   "id_tolerance_mm": 0.2,
+   "tg_onset_c": 120,
+   "strength_source": "https://media.easycomposites.co.uk/datasheets/EC-TDS-Carbon-Fibre-Woven-Finish-Tube.pdf",
+   "strength_note": "Family value, not per size: page and TDS list the same 650 MPa / 64 GPa for every woven-finish size 5-60 mm; TDS: 'The Following Data is representative of a typical tube.' No test standard, no flexural or compressive values published. Do not apply these to the plain roll-wrapped tubes.",
+   "implied_density_kg_m3_computed": 1607,
+   "mass_note": "Weight per metre read from page spec table (not the packaged 'Gross Weight' row).",
+   "price_note": "Page price is GBP ex VAT, so price_usd is null."
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/7mm-woven-finish-carbon-fibre-tube",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-ec-woven-10x8",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "10 mm x 8 mm woven finish roll wrapped carbon fibre tube, 1 m",
+  "mass_g": 45.6,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 10,
+   "id_mm": 8,
+   "wall_mm": 1,
+   "length_mm_listed": 1000,
+   "construction": "woven finish roll wrapped (0/90 UD with 2x2 twill outer, epoxy)",
+   "tensile_strength_lengthways_mpa": 650,
+   "tensile_modulus_lengthways_gpa": 64,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "compressive_strength_mpa": null,
+   "od_tolerance_mm": 0.1,
+   "id_tolerance_mm": 0.2,
+   "tg_onset_c": 120,
+   "strength_source": "https://media.easycomposites.co.uk/datasheets/EC-TDS-Carbon-Fibre-Woven-Finish-Tube.pdf",
+   "strength_note": "Family value, not per size: page and TDS list the same 650 MPa / 64 GPa for every woven-finish size 5-60 mm; TDS: 'The Following Data is representative of a typical tube.' No test standard, no flexural or compressive values published. Do not apply these to the plain roll-wrapped tubes.",
+   "implied_density_kg_m3_computed": 1613,
+   "mass_note": "Weight per metre read from page spec table (not the packaged 'Gross Weight' row).",
+   "price_note": "Page price is GBP ex VAT, so price_usd is null."
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/10mm-8mm-woven-finish-carbon-fibre-tube",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-ec-woven-10x9",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "10 mm x 9 mm woven finish roll wrapped carbon fibre tube, 1 m",
+  "mass_g": 24.7,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 10,
+   "id_mm": 9,
+   "wall_mm": 0.5,
+   "length_mm_listed": 1000,
+   "construction": "woven finish roll wrapped (0/90 UD with 2x2 twill outer, epoxy)",
+   "tensile_strength_lengthways_mpa": 650,
+   "tensile_modulus_lengthways_gpa": 64,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "compressive_strength_mpa": null,
+   "od_tolerance_mm": 0.1,
+   "id_tolerance_mm": 0.2,
+   "tg_onset_c": 120,
+   "strength_source": "https://media.easycomposites.co.uk/datasheets/EC-TDS-Carbon-Fibre-Woven-Finish-Tube.pdf",
+   "strength_note": "Family value, not per size: page and TDS list the same 650 MPa / 64 GPa for every woven-finish size 5-60 mm; TDS: 'The Following Data is representative of a typical tube.' No test standard, no flexural or compressive values published. Do not apply these to the plain roll-wrapped tubes.",
+   "implied_density_kg_m3_computed": 1655,
+   "mass_note": "Weight per metre read from page spec table (not the packaged 'Gross Weight' row).",
+   "price_note": "Page price is GBP ex VAT, so price_usd is null."
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/10mm-9mm-woven-finish-carbon-fibre-tube",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-ec-woven-12x11",
+  "category": "carbon_tube",
+  "manufacturer": "Easy Composites",
+  "name": "12 mm x 11 mm woven finish roll wrapped carbon fibre tube, 1 m",
+  "mass_g": 30.3,
+  "specs": {
+   "mass_basis": "per_metre",
+   "od_mm": 12,
+   "id_mm": 11,
+   "wall_mm": 0.5,
+   "length_mm_listed": 1000,
+   "construction": "woven finish roll wrapped (0/90 UD with 2x2 twill outer, epoxy)",
+   "tensile_strength_lengthways_mpa": 650,
+   "tensile_modulus_lengthways_gpa": 64,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "compressive_strength_mpa": null,
+   "od_tolerance_mm": 0.15,
+   "id_tolerance_mm": 0.2,
+   "tg_onset_c": 120,
+   "strength_source": "https://media.easycomposites.co.uk/datasheets/EC-TDS-Carbon-Fibre-Woven-Finish-Tube.pdf",
+   "strength_note": "Family value, not per size: page and TDS list the same 650 MPa / 64 GPa for every woven-finish size 5-60 mm; TDS: 'The Following Data is representative of a typical tube.' No test standard, no flexural or compressive values published. Do not apply these to the plain roll-wrapped tubes.",
+   "implied_density_kg_m3_computed": 1677,
+   "mass_note": "Weight per metre read from page spec table (not the packaged 'Gross Weight' row).",
+   "price_note": "Page price is GBP ex VAT, so price_usd is null."
+  },
+  "price_usd": null,
+  "source_url": "https://www.easycomposites.co.uk/12mm-11mm-woven-finish-carbon-fibre-tube",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-rockwest-pultruded-5x3",
+  "category": "carbon_tube",
+  "manufacturer": "Rock West Composites",
+  "name": "Tube - Pultruded Unidirectional - 0.118 x 0.197 x 78 Inch (T-RND-197)",
+  "mass_g": 19.2,
+  "specs": {
+   "mass_basis": "per_metre",
+   "part_number": "T-RND-197",
+   "od_mm": 5.004,
+   "id_mm": 2.997,
+   "wall_mm": 1.016,
+   "length_mm_listed": 1981.2,
+   "od_in_published": 0.197,
+   "id_in_published": 0.118,
+   "wall_in_published": 0.04,
+   "construction": "pultruded unidirectional (all fibres 0 deg), Toray T700S / Bisphenol-A",
+   "tensile_strength_lengthways_mpa": 2372.0,
+   "tensile_modulus_lengthways_gpa": 133.8,
+   "compressive_strength_mpa": 1682.0,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "published_psi": {
+    "avg_ex_youngs_modulus": 19400000.0,
+    "x_tensile_yield_strength": 344000.0,
+    "x_compressive_yield_strength": 244000.0
+   },
+   "strength_source": "https://www.rockwestcomposites.com/t-rnd-197.html (Engineering Properties block)",
+   "strength_note": "Calculated, not tested: page says 'All laminate properties and mechanical calculations are based on Classical Lamination Theory and should be used as a reference only' and 'We cannot supply test or strength data for this product.' Identical values on every pultruded size read (T-RND-197/236/314/393/472), so family values for the T700S UD layup, not per size. Values published in psi (unit converter type 'psi'); MPa/GPa here are converted (computed). Pultruded UD tube: page warns 'not good for torque transfer OR crush resistance'.",
+   "implied_density_kg_m3_computed": 1525,
+   "mass_note": "Computed: page Weight 0.084 lb for the 78 in piece -> 0.084 x 453.592 g / 1.9812 m. Page Linear Density 0.013 lb/ft (unit 'lbs/ft' per page converter) = 19.3 g/m computed, consistent but only 1-2 significant figures. Page Volumetric Density 0.055 lb/in^3.",
+   "price_note": "USD for one 78 in tube, qty 1 tier (Price reduced from $26.99 to $13.49)."
+  },
+  "price_usd": 13.49,
+  "source_url": "https://www.rockwestcomposites.com/t-rnd-197.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "tube-rockwest-pultruded-6x5",
+  "category": "carbon_tube",
+  "manufacturer": "Rock West Composites",
+  "name": "Tube - Pultruded Unidirectional - 0.196 x 0.236 x 78 Inch (T-RND-236)",
+  "mass_g": 13.3,
+  "specs": {
+   "mass_basis": "per_metre",
+   "part_number": "T-RND-236",
+   "od_mm": 5.994,
+   "id_mm": 4.978,
+   "wall_mm": 0.508,
+   "length_mm_listed": 1981.2,
+   "od_in_published": 0.236,
+   "id_in_published": 0.196,
+   "wall_in_published": 0.02,
+   "construction": "pultruded unidirectional (all fibres 0 deg), Toray T700S / Bisphenol-A",
+   "tensile_strength_lengthways_mpa": 2372.0,
+   "tensile_modulus_lengthways_gpa": 133.8,
+   "compressive_strength_mpa": 1682.0,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "published_psi": {
+    "avg_ex_youngs_modulus": 19400000.0,
+    "x_tensile_yield_strength": 344000.0,
+    "x_compressive_yield_strength": 244000.0
+   },
+   "strength_source": "https://www.rockwestcomposites.com/t-rnd-236.html (Engineering Properties block)",
+   "strength_note": "Calculated, not tested: page says 'All laminate properties and mechanical calculations are based on Classical Lamination Theory and should be used as a reference only' and 'We cannot supply test or strength data for this product.' Identical values on every pultruded size read (T-RND-197/236/314/393/472), so family values for the T700S UD layup, not per size. Values published in psi (unit converter type 'psi'); MPa/GPa here are converted (computed). Pultruded UD tube: page warns 'not good for torque transfer OR crush resistance'.",
+   "implied_density_kg_m3_computed": 1517,
+   "mass_note": "Computed: page Weight 0.058 lb for the 78 in piece -> 0.058 x 453.592 g / 1.9812 m. Page Linear Density 0.009 lb/ft (unit 'lbs/ft' per page converter) = 13.4 g/m computed, consistent but only 1-2 significant figures. Page Volumetric Density 0.055 lb/in^3.",
+   "price_note": "USD for one 78 in tube, qty 1 tier (1 - 43 $27.99)."
+  },
+  "price_usd": 27.99,
+  "source_url": "https://www.rockwestcomposites.com/t-rnd-236.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "tube-rockwest-pultruded-8x6",
+  "category": "carbon_tube",
+  "manufacturer": "Rock West Composites",
+  "name": "Tube - Pultruded Unidirectional - 0.236 x 0.314 x 78 Inch (T-RND-314)",
+  "mass_g": 33.2,
+  "specs": {
+   "mass_basis": "per_metre",
+   "part_number": "T-RND-314",
+   "od_mm": 7.976,
+   "id_mm": 5.994,
+   "wall_mm": 0.991,
+   "length_mm_listed": 1981.2,
+   "od_in_published": 0.314,
+   "id_in_published": 0.236,
+   "wall_in_published": 0.039,
+   "construction": "pultruded unidirectional (all fibres 0 deg), Toray T700S / Bisphenol-A",
+   "tensile_strength_lengthways_mpa": 2372.0,
+   "tensile_modulus_lengthways_gpa": 133.8,
+   "compressive_strength_mpa": 1682.0,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "published_psi": {
+    "avg_ex_youngs_modulus": 19400000.0,
+    "x_tensile_yield_strength": 344000.0,
+    "x_compressive_yield_strength": 244000.0
+   },
+   "strength_source": "https://www.rockwestcomposites.com/t-rnd-314.html (Engineering Properties block)",
+   "strength_note": "Calculated, not tested: page says 'All laminate properties and mechanical calculations are based on Classical Lamination Theory and should be used as a reference only' and 'We cannot supply test or strength data for this product.' Identical values on every pultruded size read (T-RND-197/236/314/393/472), so family values for the T700S UD layup, not per size. Values published in psi (unit converter type 'psi'); MPa/GPa here are converted (computed). Pultruded UD tube: page warns 'not good for torque transfer OR crush resistance'.",
+   "implied_density_kg_m3_computed": 1527,
+   "mass_note": "Computed: page Weight 0.145 lb for the 78 in piece -> 0.145 x 453.592 g / 1.9812 m. Page Linear Density 0.022 lb/ft (unit 'lbs/ft' per page converter) = 32.7 g/m computed, consistent but only 1-2 significant figures. Page Volumetric Density 0.055 lb/in^3.",
+   "price_note": "USD for one 78 in tube, qty 1 tier (1 - ... $38.99)."
+  },
+  "price_usd": 38.99,
+  "source_url": "https://www.rockwestcomposites.com/t-rnd-314.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "tube-rockwest-pultruded-10x8",
+  "category": "carbon_tube",
+  "manufacturer": "Rock West Composites",
+  "name": "Tube - Pultruded Unidirectional - 0.314 x 0.393 x 78 Inch (T-RND-393)",
+  "mass_g": 43.0,
+  "specs": {
+   "mass_basis": "per_metre",
+   "part_number": "T-RND-393",
+   "od_mm": 9.982,
+   "id_mm": 7.976,
+   "wall_mm": 1.016,
+   "length_mm_listed": 1981.2,
+   "od_in_published": 0.393,
+   "id_in_published": 0.314,
+   "wall_in_published": 0.04,
+   "construction": "pultruded unidirectional (all fibres 0 deg), Toray T700S / Bisphenol-A",
+   "tensile_strength_lengthways_mpa": 2372.0,
+   "tensile_modulus_lengthways_gpa": 133.8,
+   "compressive_strength_mpa": 1682.0,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "published_psi": {
+    "avg_ex_youngs_modulus": 19400000.0,
+    "x_tensile_yield_strength": 344000.0,
+    "x_compressive_yield_strength": 244000.0
+   },
+   "strength_source": "https://www.rockwestcomposites.com/t-rnd-393.html (Engineering Properties block)",
+   "strength_note": "Calculated, not tested: page says 'All laminate properties and mechanical calculations are based on Classical Lamination Theory and should be used as a reference only' and 'We cannot supply test or strength data for this product.' Identical values on every pultruded size read (T-RND-197/236/314/393/472), so family values for the T700S UD layup, not per size. Values published in psi (unit converter type 'psi'); MPa/GPa here are converted (computed). Pultruded UD tube: page warns 'not good for torque transfer OR crush resistance'.",
+   "implied_density_kg_m3_computed": 1521,
+   "mass_note": "Computed: page Weight 0.188 lb for the 78 in piece -> 0.188 x 453.592 g / 1.9812 m. Page Linear Density 0.029 lb/ft (unit 'lbs/ft' per page converter) = 43.2 g/m computed, consistent but only 1-2 significant figures. Page Volumetric Density 0.055 lb/in^3.",
+   "price_note": "USD for one 78 in tube, qty 1 tier (1 - ... $41.99)."
+  },
+  "price_usd": 41.99,
+  "source_url": "https://www.rockwestcomposites.com/t-rnd-393.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "tube-cst-pultruded-5x4",
+  "category": "carbon_tube",
+  "manufacturer": "CST The Composites Store (DPP pultrusion)",
+  "name": "DPP carbon fiber tube 5 mm OD x 4 mm ID x 1 m (CS-509 1M)",
+  "mass_g": 11.1,
+  "specs": {
+   "mass_basis": "per_metre",
+   "item_number": "CS-509 1M",
+   "od_mm": 5,
+   "id_mm": 4,
+   "wall_mm": 0.5,
+   "length_mm_listed": 1000,
+   "od_mm_spec_sheet": 4.95,
+   "id_mm_spec_sheet": 3.9,
+   "mass_g_per_m_spec_sheet": 11.1,
+   "construction": "pultruded (DPP, Torayca T700 / Bisphenol A epoxy, 63% fibre volume)",
+   "tensile_strength_lengthways_mpa": 2500,
+   "tensile_modulus_lengthways_gpa": 140,
+   "compressive_strength_mpa": 1600,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "strength_source": "https://www.cstsales.com/rod_comp.html",
+   "strength_note": "Family value for all DPP pultruded shapes (column 'DPP' of CST 'Comparison Data for Pultruded Shapes', updated Jan. 2011), not per size; page says 'This data is to be used as a design guide only, not a certification of properties' and the data was 'furnished by the respective manufacturer'. Mapping to this tube is via the product name 'DPP Carbon Fiber Tube'. No test standard given.",
+   "implied_density_kg_m3_computed": 1570,
+   "mass_note": "Listing gives total weight of the 1 m (39.37 in) piece; mass per metre = that weight / 1 m (computed). CST DPP spec sheet lists this tube as 4.95 mm OD x 3.9 mm ID, 11.1 g/m; implied density uses the nominal listing dims.",
+   "price_note": "USD, quantity 1-5 tier; page: 'Prices are in US dollars'."
+  },
+  "price_usd": 9.79,
+  "source_url": "https://www.cstsales.com/Carbon_Fiber_Tubes.html",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-cst-pultruded-6x4",
+  "category": "carbon_tube",
+  "manufacturer": "CST The Composites Store (DPP pultrusion)",
+  "name": "DPP carbon fiber tube 6 mm OD x 4 mm ID x 1 m (CS-518 1M)",
+  "mass_g": 23.3,
+  "specs": {
+   "mass_basis": "per_metre",
+   "item_number": "CS-518 1M",
+   "od_mm": 6,
+   "id_mm": 4,
+   "wall_mm": 1.0,
+   "length_mm_listed": 1000,
+   "od_mm_spec_sheet": 5.9,
+   "id_mm_spec_sheet": 4.0,
+   "mass_g_per_m_spec_sheet": 23.3,
+   "construction": "pultruded (DPP, Torayca T700 / Bisphenol A epoxy, 63% fibre volume)",
+   "tensile_strength_lengthways_mpa": 2500,
+   "tensile_modulus_lengthways_gpa": 140,
+   "compressive_strength_mpa": 1600,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "strength_source": "https://www.cstsales.com/rod_comp.html",
+   "strength_note": "Family value for all DPP pultruded shapes (column 'DPP' of CST 'Comparison Data for Pultruded Shapes', updated Jan. 2011), not per size; page says 'This data is to be used as a design guide only, not a certification of properties' and the data was 'furnished by the respective manufacturer'. Mapping to this tube is via the product name 'DPP Carbon Fiber Tube'. No test standard given.",
+   "implied_density_kg_m3_computed": 1483,
+   "mass_note": "Listing gives total weight of the 1 m (39.37 in) piece; mass per metre = that weight / 1 m (computed). CST DPP spec sheet lists this tube as 5.9 mm OD x 4.0 mm ID, 23.3 g/m; implied density uses the nominal listing dims.",
+   "price_note": "USD, quantity 1-5 tier; page: 'Prices are in US dollars'."
+  },
+  "price_usd": 15.25,
+  "source_url": "https://www.cstsales.com/Carbon_Fiber_Tubes.html",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-cst-pultruded-6x5",
+  "category": "carbon_tube",
+  "manufacturer": "CST The Composites Store (DPP pultrusion)",
+  "name": "DPP carbon fiber tube 6 mm OD x 5 mm ID x 1 m (CS-527 1M)",
+  "mass_g": 13.3,
+  "specs": {
+   "mass_basis": "per_metre",
+   "item_number": "CS-527 1M",
+   "od_mm": 6,
+   "id_mm": 5,
+   "wall_mm": 0.5,
+   "length_mm_listed": 1000,
+   "od_mm_spec_sheet": 5.9,
+   "id_mm_spec_sheet": 4.9,
+   "mass_g_per_m_spec_sheet": 13.3,
+   "construction": "pultruded (DPP, Torayca T700 / Bisphenol A epoxy, 63% fibre volume)",
+   "tensile_strength_lengthways_mpa": 2500,
+   "tensile_modulus_lengthways_gpa": 140,
+   "compressive_strength_mpa": 1600,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "strength_source": "https://www.cstsales.com/rod_comp.html",
+   "strength_note": "Family value for all DPP pultruded shapes (column 'DPP' of CST 'Comparison Data for Pultruded Shapes', updated Jan. 2011), not per size; page says 'This data is to be used as a design guide only, not a certification of properties' and the data was 'furnished by the respective manufacturer'. Mapping to this tube is via the product name 'DPP Carbon Fiber Tube'. No test standard given.",
+   "implied_density_kg_m3_computed": 1539,
+   "mass_note": "Listing gives total weight of the 1 m (39.37 in) piece; mass per metre = that weight / 1 m (computed). CST DPP spec sheet lists this tube as 5.9 mm OD x 4.9 mm ID, 13.3 g/m; implied density uses the nominal listing dims.",
+   "price_note": "USD, quantity 1-5 tier; page: 'Prices are in US dollars'."
+  },
+  "price_usd": 12.3,
+  "source_url": "https://www.cstsales.com/Carbon_Fiber_Tubes.html",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-cst-pultruded-8x7",
+  "category": "carbon_tube",
+  "manufacturer": "CST The Composites Store (DPP pultrusion)",
+  "name": "DPP carbon fiber tube 8 mm OD x 7 mm ID x 1 m (CS-529 1M)",
+  "mass_g": 17.5,
+  "specs": {
+   "mass_basis": "per_metre",
+   "item_number": "CS-529 1M",
+   "od_mm": 8,
+   "id_mm": 7,
+   "wall_mm": 0.5,
+   "length_mm_listed": 1000,
+   "od_mm_spec_sheet": 7.8,
+   "id_mm_spec_sheet": 6.8,
+   "mass_g_per_m_spec_sheet": 18.1,
+   "construction": "pultruded (DPP, Torayca T700 / Bisphenol A epoxy, 63% fibre volume)",
+   "tensile_strength_lengthways_mpa": 2500,
+   "tensile_modulus_lengthways_gpa": 140,
+   "compressive_strength_mpa": 1600,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "strength_source": "https://www.cstsales.com/rod_comp.html",
+   "strength_note": "Family value for all DPP pultruded shapes (column 'DPP' of CST 'Comparison Data for Pultruded Shapes', updated Jan. 2011), not per size; page says 'This data is to be used as a design guide only, not a certification of properties' and the data was 'furnished by the respective manufacturer'. Mapping to this tube is via the product name 'DPP Carbon Fiber Tube'. No test standard given.",
+   "implied_density_kg_m3_computed": 1485,
+   "mass_note": "Listing gives total weight of the 1 m (39.37 in) piece; mass per metre = that weight / 1 m (computed). CST DPP spec sheet lists this tube as 7.8 mm OD x 6.8 mm ID, 18.1 g/m; implied density uses the nominal listing dims.",
+   "price_note": "USD, quantity 1-5 tier; page: 'Prices are in US dollars'."
+  },
+  "price_usd": 17.2,
+  "source_url": "https://www.cstsales.com/Carbon_Fiber_Tubes.html",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "mtube-tigertitanium-ti3al2.5v-6.35x5.54",
+  "category": "metal_tube",
+  "manufacturer": "Tiger Titanium",
+  "name": "3Al-2.5V (Grade 9) seamless tube, CWSR, 0.250 in OD x 0.016 in wall (SKU 80617)",
+  "mass_g": 34.0,
+  "specs": {
+   "mass_basis": "per_metre",
+   "alloy": "Ti-3Al-2.5V (Grade 9, UNS R56320)",
+   "temper": "CWSR (cold worked, stress relieved)",
+   "od_mm": 6.35,
+   "id_mm": 5.537,
+   "wall_mm": 0.406,
+   "od_in_published": 0.25,
+   "wall_in_published": 0.016,
+   "id_in_published": 0.218,
+   "length_mm_listed": null,
+   "length_note": "Sold per inch in cut lengths 6 in to 96 in (6 in steps) per page selector; page: 'Full lengths ALL have curves and bends to them ... Longest non curved lengths will be 42\"' (read on the SKU 80635 page of the same family; this SKU's page does not show it).",
+   "seam": "Seamless",
+   "spec_standard": "ASTM B338 (page cert)",
+   "yield_strength_mpa": 725,
+   "tensile_strength_mpa": 860,
+   "elastic_modulus_gpa": 107,
+   "density_g_cm3": 4.48,
+   "alloy_property_source_url": "https://www.finetubes.co.uk/products/materials/titanium-tubes/alloy-ti3al25v-uns-r56320-wnr-37194",
+   "alloy_property_note": "Yield/tensile are MINIMUMS for the CWSR temper from the Fine Tubes Ti3Al2.5V datasheet (AMS 4943-4946 / ASTM B338 family); Haynes lists the same CWSR minimums (AMS 4944/4945: 105.0 ksi / 724 MPa yield, 125.0 ksi / 862 MPa UTS) and density 4.48 g/cm3. Tiger certifies this SKU to ASTM B338, not AMS 4944/4945, so the supplier does not guarantee the AMS CWSR minimums for this lot. Modulus 107 GPa is Fine Tubes' physical-property value (typical, temper not stated).",
+   "mass_note": "Computed: no mass published; pi x (OD - wall) x wall x 4.48 g/cm3 using page OD and wall.",
+   "price_note": "USD 1.85 per inch as listed (price_usd is per inch, not per piece or metre). price_usd set null at merge: a per-inch price does not fit a per-metre entry."
+  },
+  "price_usd": null,
+  "source_url": "https://www.tigertitanium.com/Store/ProductTube/80617",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "mtube-tigertitanium-ti3al2.5v-6.35x4.57",
+  "category": "metal_tube",
+  "manufacturer": "Tiger Titanium",
+  "name": "3Al-2.5V (Grade 9) seamless tube, CWSR, 0.250 in OD x 0.035 in wall (SKU 80624)",
+  "mass_g": 68.3,
+  "specs": {
+   "mass_basis": "per_metre",
+   "alloy": "Ti-3Al-2.5V (Grade 9, UNS R56320)",
+   "temper": "CWSR (cold worked, stress relieved)",
+   "od_mm": 6.35,
+   "id_mm": 4.572,
+   "wall_mm": 0.889,
+   "od_in_published": 0.25,
+   "wall_in_published": 0.035,
+   "id_in_published": 0.18,
+   "length_mm_listed": null,
+   "length_note": "Sold per inch in cut lengths 6 in to 96 in (6 in steps) per page selector; page: 'Full lengths ALL have curves and bends to them ... Longest non curved lengths will be 42\"' (read on the SKU 80635 page of the same family; this SKU's page does not show it).",
+   "seam": "Seamless",
+   "spec_standard": "ASTM B338 (page cert)",
+   "yield_strength_mpa": 725,
+   "tensile_strength_mpa": 860,
+   "elastic_modulus_gpa": 107,
+   "density_g_cm3": 4.48,
+   "alloy_property_source_url": "https://www.finetubes.co.uk/products/materials/titanium-tubes/alloy-ti3al25v-uns-r56320-wnr-37194",
+   "alloy_property_note": "Yield/tensile are MINIMUMS for the CWSR temper from the Fine Tubes Ti3Al2.5V datasheet (AMS 4943-4946 / ASTM B338 family); Haynes lists the same CWSR minimums (AMS 4944/4945: 105.0 ksi / 724 MPa yield, 125.0 ksi / 862 MPa UTS) and density 4.48 g/cm3. Tiger certifies this SKU to ASTM B338, not AMS 4944/4945, so the supplier does not guarantee the AMS CWSR minimums for this lot. Modulus 107 GPa is Fine Tubes' physical-property value (typical, temper not stated).",
+   "mass_note": "Computed: no mass published; pi x (OD - wall) x wall x 4.48 g/cm3 using page OD and wall.",
+   "price_note": "USD 1.85 per inch as listed (price_usd is per inch, not per piece or metre). price_usd set null at merge: a per-inch price does not fit a per-metre entry."
+  },
+  "price_usd": null,
+  "source_url": "https://www.tigertitanium.com/Store/ProductTube/80624",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "mtube-tigertitanium-ti3al2.5v-7.95x6.17",
+  "category": "metal_tube",
+  "manufacturer": "Tiger Titanium",
+  "name": "3Al-2.5V (Grade 9) seamless tube, CWSR, 0.313 in OD x 0.035 in wall (SKU 80627)",
+  "mass_g": 88.4,
+  "specs": {
+   "mass_basis": "per_metre",
+   "alloy": "Ti-3Al-2.5V (Grade 9, UNS R56320)",
+   "temper": "CWSR (cold worked, stress relieved)",
+   "od_mm": 7.95,
+   "id_mm": 6.172,
+   "wall_mm": 0.889,
+   "od_in_published": 0.313,
+   "wall_in_published": 0.035,
+   "id_in_published": 0.243,
+   "length_mm_listed": null,
+   "length_note": "Sold per inch in cut lengths 6 in to 96 in (6 in steps) per page selector; page: 'Full lengths ALL have curves and bends to them ... Longest non curved lengths will be 42\"' (read on the SKU 80635 page of the same family; this SKU's page does not show it).",
+   "seam": "Seamless",
+   "spec_standard": "ASTM B338 (page cert)",
+   "yield_strength_mpa": 725,
+   "tensile_strength_mpa": 860,
+   "elastic_modulus_gpa": 107,
+   "density_g_cm3": 4.48,
+   "alloy_property_source_url": "https://www.finetubes.co.uk/products/materials/titanium-tubes/alloy-ti3al25v-uns-r56320-wnr-37194",
+   "alloy_property_note": "Yield/tensile are MINIMUMS for the CWSR temper from the Fine Tubes Ti3Al2.5V datasheet (AMS 4943-4946 / ASTM B338 family); Haynes lists the same CWSR minimums (AMS 4944/4945: 105.0 ksi / 724 MPa yield, 125.0 ksi / 862 MPa UTS) and density 4.48 g/cm3. Tiger certifies this SKU to ASTM B338, not AMS 4944/4945, so the supplier does not guarantee the AMS CWSR minimums for this lot. Modulus 107 GPa is Fine Tubes' physical-property value (typical, temper not stated).",
+   "mass_note": "Computed: no mass published; pi x (OD - wall) x wall x 4.48 g/cm3 using page OD and wall.",
+   "price_note": "USD 1.85 per inch as listed (price_usd is per inch, not per piece or metre). price_usd set null at merge: a per-inch price does not fit a per-metre entry."
+  },
+  "price_usd": null,
+  "source_url": "https://www.tigertitanium.com/Store/ProductTube/80627",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "mtube-tigertitanium-ti3al2.5v-9.52x8.25",
+  "category": "metal_tube",
+  "manufacturer": "Tiger Titanium",
+  "name": "3Al-2.5V (Grade 9) seamless tube, CWSR, 0.375 in OD x 0.025 in wall (SKU 80629)",
+  "mass_g": 79.5,
+  "specs": {
+   "mass_basis": "per_metre",
+   "alloy": "Ti-3Al-2.5V (Grade 9, UNS R56320)",
+   "temper": "CWSR (cold worked, stress relieved)",
+   "od_mm": 9.525,
+   "id_mm": 8.255,
+   "wall_mm": 0.635,
+   "od_in_published": 0.375,
+   "wall_in_published": 0.025,
+   "id_in_published": 0.325,
+   "length_mm_listed": null,
+   "length_note": "Sold per inch in cut lengths 6 in to 96 in (6 in steps) per page selector; page: 'Full lengths ALL have curves and bends to them ... Longest non curved lengths will be 42\"' (read on the SKU 80635 page of the same family; this SKU's page does not show it).",
+   "seam": "Seamless",
+   "spec_standard": "none (page: uncerted surplus stock)",
+   "yield_strength_mpa": 725,
+   "tensile_strength_mpa": 860,
+   "elastic_modulus_gpa": 107,
+   "density_g_cm3": 4.48,
+   "alloy_property_source_url": "https://www.finetubes.co.uk/products/materials/titanium-tubes/alloy-ti3al25v-uns-r56320-wnr-37194",
+   "alloy_property_note": "Yield/tensile are MINIMUMS for the CWSR temper from the Fine Tubes Ti3Al2.5V datasheet (AMS 4943-4946 / ASTM B338 family); Haynes lists the same CWSR minimums (AMS 4944/4945: 105.0 ksi / 724 MPa yield, 125.0 ksi / 862 MPa UTS) and density 4.48 g/cm3. Tiger certifies this SKU to ASTM B338, not AMS 4944/4945, so the supplier does not guarantee the AMS CWSR minimums for this lot. Modulus 107 GPa is Fine Tubes' physical-property value (typical, temper not stated).",
+   "mass_note": "Computed: no mass published; pi x (OD - wall) x wall x 4.48 g/cm3 using page OD and wall.",
+   "price_note": "USD 2.20 per inch as listed (price_usd is per inch, not per piece or metre). price_usd set null at merge: a per-inch price does not fit a per-metre entry."
+  },
+  "price_usd": null,
+  "source_url": "https://www.tigertitanium.com/Store/ProductTube/80629",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "bearing-skf-618-4",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "618/4 deep groove ball bearing",
+  "mass_g": 0.5,
+  "specs": {
+   "dimensions_mm_d_D_B": "4x9x2.5",
+   "dynamic_load_rating_kn": 0.423,
+   "static_load_rating_kn": 0.116,
+   "seal": "open (no seals/shields), no lubricant",
+   "limiting_speed_rpm": 85000,
+   "reference_speed_rpm": 140000,
+   "mass_note": "Page 'Product net weight' 0.0005 kg converted to g (computed)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-618%2F4",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-skf-628-4-2z",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "628/4-2Z deep groove ball bearing",
+  "mass_g": 1.0,
+  "specs": {
+   "dimensions_mm_d_D_B": "4x9x3.5",
+   "dynamic_load_rating_kn": 0.423,
+   "static_load_rating_kn": 0.116,
+   "seal": "2Z: shield on both sides (non-contact), greased",
+   "limiting_speed_rpm": 70000,
+   "reference_speed_rpm": 140000,
+   "mass_note": "Page 'Product net weight' 0.001 kg converted to g (computed)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-628%2F4-2Z",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-skf-618-5",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "618/5 deep groove ball bearing",
+  "mass_g": 1.5,
+  "specs": {
+   "dimensions_mm_d_D_B": "5x11x3",
+   "dynamic_load_rating_kn": 0.468,
+   "static_load_rating_kn": 0.143,
+   "seal": "open (no seals/shields), no lubricant",
+   "limiting_speed_rpm": 75000,
+   "reference_speed_rpm": 120000,
+   "mass_note": "Page 'Product net weight' 0.0015 kg converted to g (computed)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-618%2F5",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-skf-619-5-2z",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "619/5-2Z deep groove ball bearing",
+  "mass_g": 3.0,
+  "specs": {
+   "dimensions_mm_d_D_B": "5x13x4",
+   "dynamic_load_rating_kn": 0.884,
+   "static_load_rating_kn": 0.335,
+   "seal": "2Z: shield on both sides (non-contact), greased",
+   "limiting_speed_rpm": 50000,
+   "reference_speed_rpm": 110000,
+   "mass_note": "Page 'Product net weight' 0.003 kg converted to g (computed)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-619%2F5-2Z",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-skf-618-6",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "618/6 deep groove ball bearing",
+  "mass_g": 2.0,
+  "specs": {
+   "dimensions_mm_d_D_B": "6x13x3.5",
+   "dynamic_load_rating_kn": 0.715,
+   "static_load_rating_kn": 0.224,
+   "seal": "open (no seals/shields), no lubricant",
+   "limiting_speed_rpm": 67000,
+   "reference_speed_rpm": 110000,
+   "mass_note": "Page 'Product net weight' 0.002 kg converted to g (computed)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-618%2F6",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-skf-628-6-2z",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "628/6-2Z deep groove ball bearing",
+  "mass_g": 2.7,
+  "specs": {
+   "dimensions_mm_d_D_B": "6x13x5",
+   "dynamic_load_rating_kn": 0.88,
+   "static_load_rating_kn": 0.35,
+   "seal": "2Z: shield on both sides (non-contact), greased",
+   "limiting_speed_rpm": 53000,
+   "reference_speed_rpm": 110000,
+   "mass_note": "Page 'Product net weight' 0.0027 kg converted to g (computed)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-628%2F6-2Z",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-skf-618-7",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "618/7 deep groove ball bearing",
+  "mass_g": 2.2,
+  "specs": {
+   "dimensions_mm_d_D_B": "7x14x3.5",
+   "dynamic_load_rating_kn": 0.78,
+   "static_load_rating_kn": 0.26,
+   "seal": "open (no seals/shields), no lubricant",
+   "limiting_speed_rpm": 63000,
+   "reference_speed_rpm": 100000,
+   "mass_note": "Page 'Product net weight' 0.0022 kg converted to g (computed)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-618%2F7",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-skf-618-8",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "618/8 deep groove ball bearing",
+  "mass_g": 3.3,
+  "specs": {
+   "dimensions_mm_d_D_B": "8x16x4",
+   "dynamic_load_rating_kn": 0.819,
+   "static_load_rating_kn": 0.3,
+   "seal": "open (no seals/shields), no lubricant",
+   "limiting_speed_rpm": 56000,
+   "reference_speed_rpm": 90000,
+   "mass_note": "Page 'Product net weight' 0.0033 kg converted to g (computed)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-618%2F8",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-skf-628-8-2z",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "628/8-2Z deep groove ball bearing",
+  "mass_g": 3.8,
+  "specs": {
+   "dimensions_mm_d_D_B": "8x16x5",
+   "dynamic_load_rating_kn": 1.33,
+   "static_load_rating_kn": 0.57,
+   "seal": "2Z: shield on both sides (non-contact), greased",
+   "limiting_speed_rpm": 45000,
+   "reference_speed_rpm": 90000,
+   "mass_note": "Page 'Product net weight' 0.0038 kg converted to g (computed)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-628%2F8-2Z",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-skf-608-2z",
+  "category": "bearing",
+  "manufacturer": "SKF",
+  "name": "608-2Z deep groove ball bearing",
+  "mass_g": 12.1,
+  "specs": {
+   "dimensions_mm_d_D_B": "8x22x7",
+   "dynamic_load_rating_kn": 3.45,
+   "static_load_rating_kn": 1.37,
+   "seal": "2Z: shield on both sides (non-contact), greased",
+   "limiting_speed_rpm": 38000,
+   "reference_speed_rpm": 75000,
+   "mass_note": "Page 'Product net weight' 0.0121 kg converted to g (computed)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-608-2Z",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
  }
 ]

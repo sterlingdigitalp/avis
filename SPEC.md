@@ -83,6 +83,13 @@ Round 1 results stay on record as they are. These rulings fix how a gate is eval
 - **Converged or failed.** A trim that does not converge is reported as a failure, never as a result.
 - **Structural loads.** M7 uses loads from M1-M3, M5 and the M4 seeds that pass, with load factor at the CG. Peak loads must be converged in time step: halving the step changes them by less than 10%. Any gate on a time-integrated quantity reports the same check.
 
+### Rulings after catalogue round 2 (2026-11-02)
+
+- **Disclaimed tube strengths.** Manufacturer strength figures labelled "reference only" or "design guide" (Rock West lamination theory, CST 2011 table) count at half value, on top of the 1.5 factor of safety. Their modulus counts in full, because stiffness from lamination theory is reliable. Titanium tube uses its published minimum yield.
+- **Servo voltage.** No extrapolation outside a servo's published voltage rows. The design states its servo supply voltage and includes the BEC or regulator that provides it, with its mass, in the BOM.
+- **Stall current without a stated voltage** is used as published, at any supply voltage; that is conservative where makers list several.
+- **Batteries.** Li-ion packs are eligible on the same terms as LiPo, rated by their published continuous current.
+
 ### Public repository
 
 `github.com/sterlingdigitalp/avis` is public. UIUC-derived tables and airfoil coordinate files stay local and gitignored (`data/references/airfoil-e387.json`, `data/references/airfoils/`), because their licence terms are unclear or reserved. Our own CFD polars are ours to publish. Copernicus terrain, if used, requires the notice in `data/references/credits.md` in the film credits and README.
@@ -128,5 +135,6 @@ Only write inside directories you own. Read anything. Ask the orchestrator throu
 - **Licences.** Only assets you may use: CC0, CC-BY with credit recorded in `data/references/credits.md`, public-domain or open government data.
 - **Git.** Only the orchestrator commits and pushes milestones to `github.com/sterlingdigitalp/avis`. Agents never run `git commit`, `git push`, `git add` or anything that moves the index. Everything you create under an owned path may become public, so no secrets, and nothing large outside `out/` (no file over 5 MB).
 - **No outside actions.** No network posting, no accounts, no purchases, no paid generators. Do not use `generate_3d` or Sketchfab downloads.
+- **Not the operator's browser.** Never use the Claude-in-Chrome tools (`mcp__claude-in-chrome__*`): that is the operator's own Chrome with their sign-ins. Read pages with WebFetch, or with a headless browser under `tools/run-guarded.py`. A page that blocks both stays unread.
 - **Reporting.** End with what passed, what failed, what is unverified, with paths and numbers. Do not claim anything you did not measure.
 - **UI.** Any page follows `~/.claude/skills/design-principles/SKILL.md`: dark-first, one accent, tabular numbers, `prefers-reduced-motion`. This overrides Teardown's light-studio rule.

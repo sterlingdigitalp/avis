@@ -1,0 +1,225 @@
+[
+ {
+  "grade": "S45C",
+  "condition": "not heat treated, as supplied (KHK SS/SSY/SSAY: tooth hardness less than 194HB)",
+  "yield_strength_mpa": null,
+  "tensile_strength_mpa": 570,
+  "allowable_bending_stress_mpa": 186.3,
+  "allowable_bending_stress_kgf_mm2": 19,
+  "allowable_hertz_stress_kgf_mm2": 49,
+  "elastic_modulus_gpa": 200,
+  "density_g_cm3": 7.87,
+  "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+  "note": "sigma_Flim 19 kgf/mm2 / sigma_Hlim 49 kgf/mm2 from KHK (SSS,SS / SSA,SSY / SSAY,SSR column); MPa computed x 9.80665; KHK applies 2/3 of sigma_Flim for bidirectional load. Tensile 570 N/mm2 is the JIS G4051 normalizing value as stated by Misumi. No published yield for this condition was read. Modulus and density are AZoM AISI 1045 figures (KHK lists S45C as the AISI 1045 equivalent).",
+  "_evidence": {
+   "allowable_bending_stress_mpa": "catalogue p.4 (printed 48) \"Allowable bending stress at root sigma Flim (kgf/mm2)\" row: \"47 | 24.5 | 19 (24.5) Note 3 | 19 (24.5) Note 4 | 19 | 10.5 | 4 | 30 | 29.5 | 30 | 30 | 19\" under columns \"MSGA MSGB | SSGS | SSG SSAG | SSS,SS SSA,SSY SSAY,SSR | SS-H SSY-H SSAY-H | SUS SUSA SUSF | BSS | KSG | KS | KS-H | ZSTP | SSG SSCPG\"",
+   "allowable_hertz_stress_kgf_mm2": "catalogue p.4 \"Allowable Hertz stress sigma Hlim (kgf/mm2)\" row: \"166 | 99 | 90 (62.5) Note 3 | 49 (62.5) Note 4 | 90 | 41.3 | \u2014 | 112 | 76 | 112 | 112 | 90\"",
+   "tensile_strength_mpa": "Misumi technical data: \"S45C ... Tensile strength of 570 N/mm^2 (normalizing) JIS G 4051\"",
+   "elastic_modulus_gpa": "AZoM AISI 1045: \"Modulus of elasticity 200 GPa\"",
+   "density_g_cm3": "AZoM AISI 1045: \"Density 7.87 g/cm3\"",
+   "condition": "KHK SS spec: \"Heat treatment \u2014\", \"Tooth hardness (less than 194HB)\""
+  },
+  "_extra_sources": [
+   "https://sg.misumi-ec.com/tech-info/categories/technical_data/td05/a0116.html",
+   "https://www.azom.com/article.aspx?ArticleID=9153",
+   "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+  ]
+ },
+ {
+  "grade": "S45C",
+  "condition": "thermal refined (KHK Table 9.1 hardness HB 201-269); KHK SSG module under 1",
+  "yield_strength_mpa": null,
+  "tensile_strength_mpa": 690,
+  "allowable_bending_stress_mpa": 240.3,
+  "allowable_bending_stress_kgf_mm2": 24.5,
+  "allowable_hertz_stress_kgf_mm2": 62.5,
+  "elastic_modulus_gpa": 200,
+  "density_g_cm3": 7.87,
+  "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html",
+  "note": "Tensile \"More than 690\" N/mm2 from KHK Table 9.1 (S45C, \"Thermal refined / induction hardened\"). sigma_Flim 24.5 / sigma_Hlim 62.5 kgf/mm2 are KHK's parenthesised values for SSG module under 1 (thermal refined, Note 3); MPa computed. No published yield read. No gear in gears.json uses this condition; recorded for completeness.",
+  "_evidence": {
+   "tensile_strength_mpa": "KHK Table 9.1: \"JIS Material No. : S45C Tensile Strength N/mm2 More than : 690 ... Hardness HB : 201-269\"",
+   "allowable_bending_stress_mpa": "catalogue p.4 (printed 48) \"Allowable bending stress at root sigma Flim (kgf/mm2)\" row: \"47 | 24.5 | 19 (24.5) Note 3 | 19 (24.5) Note 4 | 19 | 10.5 | 4 | 30 | 29.5 | 30 | 30 | 19\" under columns \"MSGA MSGB | SSGS | SSG SSAG | SSS,SS SSA,SSY SSAY,SSR | SS-H SSY-H SSAY-H | SUS SUSA SUSF | BSS | KSG | KS | KS-H | ZSTP | SSG SSCPG\"; \"[NOTE 3] For SSG Ground Spur Gears, with module under 1, thermal refining is applied. Allowable bending stress and allowable hertz stress values are shown in parentheses.\"",
+   "allowable_hertz_stress_kgf_mm2": "catalogue p.4 \"Allowable Hertz stress sigma Hlim (kgf/mm2)\" row: \"166 | 99 | 90 (62.5) Note 3 | 49 (62.5) Note 4 | 90 | 41.3 | \u2014 | 112 | 76 | 112 | 112 | 90\""
+  },
+  "_extra_sources": [
+   "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+   "https://www.azom.com/article.aspx?ArticleID=9153"
+  ]
+ },
+ {
+  "grade": "S45C",
+  "condition": "gear teeth induction hardened, HRC 50-60 (KHK SSG m1, Hardened Plus SS-H/SSY-H/SSAY-H)",
+  "yield_strength_mpa": null,
+  "tensile_strength_mpa": null,
+  "allowable_bending_stress_mpa": 186.3,
+  "allowable_bending_stress_kgf_mm2": 19,
+  "allowable_hertz_stress_kgf_mm2": 90,
+  "elastic_modulus_gpa": 200,
+  "density_g_cm3": 7.87,
+  "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+  "note": "KHK sigma_Flim 19 / sigma_Hlim 90 kgf/mm2 (SSG SSAG and SS-H SSY-H SSAY-H columns); MPa computed. No core yield/tensile published for this condition was read.",
+  "_evidence": {
+   "allowable_bending_stress_mpa": "catalogue p.4 (printed 48) \"Allowable bending stress at root sigma Flim (kgf/mm2)\" row: \"47 | 24.5 | 19 (24.5) Note 3 | 19 (24.5) Note 4 | 19 | 10.5 | 4 | 30 | 29.5 | 30 | 30 | 19\" under columns \"MSGA MSGB | SSGS | SSG SSAG | SSS,SS SSA,SSY SSAY,SSR | SS-H SSY-H SSAY-H | SUS SUSA SUSF | BSS | KSG | KS | KS-H | ZSTP | SSG SSCPG\"",
+   "allowable_hertz_stress_kgf_mm2": "catalogue p.4 \"Allowable Hertz stress sigma Hlim (kgf/mm2)\" row: \"166 | 99 | 90 (62.5) Note 3 | 49 (62.5) Note 4 | 90 | 41.3 | \u2014 | 112 | 76 | 112 | 112 | 90\"",
+   "condition": "catalogue p.20 SSG m1: \"Heat treatment Gear teeth induction hardened**\", \"Tooth hardness 50 to 60HRC\"; intro catalogue p.22 Hardened Plus \"Area: Tooth surface hardened Hardness: HRC50 to 60\""
+  },
+  "_extra_sources": [
+   "https://khkgears.us/media/3qxm3fcm/catalog-2025-intro.pdf",
+   "https://www.azom.com/article.aspx?ArticleID=9153"
+  ]
+ },
+ {
+  "grade": "AISI 1045 (S45C equivalent per KHK)",
+  "condition": "cold rolled (AZoM); not the KHK gear condition",
+  "yield_strength_mpa": 450,
+  "tensile_strength_mpa": 585,
+  "allowable_bending_stress_mpa": null,
+  "elastic_modulus_gpa": 200,
+  "density_g_cm3": 7.87,
+  "source_url": "https://www.azom.com/article.aspx?ArticleID=9153",
+  "note": "Reference only: AZoM gives these for cold rolled AISI 1045 (Brinell 163). Not attributed to KHK S45C gears, whose condition differs.",
+  "_evidence": {
+   "yield_strength_mpa": "AZoM: \"Yield strength 450 MPa 65300 psi\"",
+   "tensile_strength_mpa": "AZoM: \"Tensile strength 585 MPa 84800 psi\"",
+   "elastic_modulus_gpa": "AZoM: \"Modulus of elasticity 200 GPa 29000 ksi\"",
+   "density_g_cm3": "AZoM: \"Density 7.87 g/cm3\"",
+   "condition": "AZoM mechanical table heading: cold rolled AISI 1045 carbon steel; \"Hardness, Brinell 163\""
+  },
+  "_extra_sources": []
+ },
+ {
+  "grade": "SCM415",
+  "condition": "carburized and ground (KHK MSGA/MSGB; teeth 55-60 HRC)",
+  "yield_strength_mpa": null,
+  "tensile_strength_mpa": 830,
+  "allowable_bending_stress_mpa": 460.9,
+  "allowable_bending_stress_kgf_mm2": 47,
+  "allowable_hertz_stress_kgf_mm2": 166,
+  "elastic_modulus_gpa": null,
+  "density_g_cm3": null,
+  "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+  "note": "sigma_Flim 47 / sigma_Hlim 166 kgf/mm2 (MSGA MSGB column); MPa computed. Tensile \"More than 830\" N/mm2 from KHK Table 9.1 (HB 235-321). No yield, modulus or density published for this grade was read.",
+  "_evidence": {
+   "allowable_bending_stress_mpa": "catalogue p.4 (printed 48) \"Allowable bending stress at root sigma Flim (kgf/mm2)\" row: \"47 | 24.5 | 19 (24.5) Note 3 | 19 (24.5) Note 4 | 19 | 10.5 | 4 | 30 | 29.5 | 30 | 30 | 19\" under columns \"MSGA MSGB | SSGS | SSG SSAG | SSS,SS SSA,SSY SSAY,SSR | SS-H SSY-H SSAY-H | SUS SUSA SUSF | BSS | KSG | KS | KS-H | ZSTP | SSG SSCPG\"",
+   "allowable_hertz_stress_kgf_mm2": "catalogue p.4 \"Allowable Hertz stress sigma Hlim (kgf/mm2)\" row: \"166 | 99 | 90 (62.5) Note 3 | 49 (62.5) Note 4 | 90 | 41.3 | \u2014 | 112 | 76 | 112 | 112 | 90\"",
+   "tensile_strength_mpa": "KHK Table 9.1: \"JIS Material No. : SCM415 Tensile Strength N/mm2 More than : 830 ... Hardness HB : 235-321\""
+  },
+  "_extra_sources": [
+   "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+  ]
+ },
+ {
+  "grade": "SUS303",
+  "condition": "no heat treatment (KHK SUS/SUSA/SUSF)",
+  "yield_strength_mpa": null,
+  "tensile_strength_mpa": 520,
+  "allowable_bending_stress_mpa": 103.0,
+  "allowable_bending_stress_kgf_mm2": 10.5,
+  "allowable_hertz_stress_kgf_mm2": 41.3,
+  "elastic_modulus_gpa": null,
+  "density_g_cm3": null,
+  "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+  "note": "Used by the existing gear-khk-sus1-* entries. sigma_Flim 10.5 / sigma_Hlim 41.3 kgf/mm2 (SUS SUSA SUSF column); MPa computed. Tensile \"More than 520\" N/mm2, hardness HB less than 187 from KHK Table 9.1. No published yield read.",
+  "_evidence": {
+   "allowable_bending_stress_mpa": "catalogue p.4 (printed 48) \"Allowable bending stress at root sigma Flim (kgf/mm2)\" row: \"47 | 24.5 | 19 (24.5) Note 3 | 19 (24.5) Note 4 | 19 | 10.5 | 4 | 30 | 29.5 | 30 | 30 | 19\" under columns \"MSGA MSGB | SSGS | SSG SSAG | SSS,SS SSA,SSY SSAY,SSR | SS-H SSY-H SSAY-H | SUS SUSA SUSF | BSS | KSG | KS | KS-H | ZSTP | SSG SSCPG\"",
+   "allowable_hertz_stress_kgf_mm2": "catalogue p.4 \"Allowable Hertz stress sigma Hlim (kgf/mm2)\" row: \"166 | 99 | 90 (62.5) Note 3 | 49 (62.5) Note 4 | 90 | 41.3 | \u2014 | 112 | 76 | 112 | 112 | 90\"",
+   "tensile_strength_mpa": "KHK Table 9.1: \"JIS Material No. :SUS303 Tensile Strength N/mm2 More than : 520 ... Hardness HB : Less than 187\""
+  },
+  "_extra_sources": [
+   "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+  ]
+ },
+ {
+  "grade": "C3604 free-cutting brass",
+  "condition": "as machined (KHK BSS; 80HV or more)",
+  "yield_strength_mpa": null,
+  "tensile_strength_mpa": 335,
+  "allowable_bending_stress_mpa": 39.2,
+  "allowable_bending_stress_kgf_mm2": 4,
+  "allowable_hertz_stress_kgf_mm2": null,
+  "elastic_modulus_gpa": null,
+  "density_g_cm3": null,
+  "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+  "note": "sigma_Flim 4 kgf/mm2 (BSS column); KHK gives \"\u2014\" for sigma_Hlim. MPa computed. Tensile 335 N/mm2 from KHK Table 9.1. No C3604-specific yield read; see the UNS C36000 row.",
+  "_evidence": {
+   "allowable_bending_stress_mpa": "catalogue p.4 (printed 48) \"Allowable bending stress at root sigma Flim (kgf/mm2)\" row: \"47 | 24.5 | 19 (24.5) Note 3 | 19 (24.5) Note 4 | 19 | 10.5 | 4 | 30 | 29.5 | 30 | 30 | 19\" under columns \"MSGA MSGB | SSGS | SSG SSAG | SSS,SS SSA,SSY SSAY,SSR | SS-H SSY-H SSAY-H | SUS SUSA SUSF | BSS | KSG | KS | KS-H | ZSTP | SSG SSCPG\"",
+   "allowable_hertz_stress_kgf_mm2": "catalogue p.4 \"Allowable Hertz stress sigma Hlim (kgf/mm2)\" row: \"166 | 99 | 90 (62.5) Note 3 | 49 (62.5) Note 4 | 90 | 41.3 | \u2014 | 112 | 76 | 112 | 112 | 90\"",
+   "tensile_strength_mpa": "KHK Table 9.1: \"JIS Material No. : C3604 Tensile Strength N/mm2 : 335 ... Hardness HB : More than 80HV\""
+  },
+  "_extra_sources": [
+   "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+  ]
+ },
+ {
+  "grade": "UNS C36000 (C360) free-cutting brass, near-equivalent of C3604",
+  "condition": "as supplied bar (Proto Labs CNC stock)",
+  "yield_strength_mpa": 310.3,
+  "tensile_strength_mpa": 386.1,
+  "allowable_bending_stress_mpa": null,
+  "elastic_modulus_gpa": 96.53,
+  "density_g_cm3": 8.498,
+  "source_url": "https://www.protolabs.com/media/a0yjqykb/2026-026-cnc-material-data-sheet_brass-c360.pdf",
+  "note": "Computed conversions: 45,000 psi x 0.00689476 = 310.3 MPa (yield at 0.5% extension, not 0.2% offset); 56,000 psi = 386.1 MPa; 14,000 ksi = 96.53 GPa; 0.307 lb/in3 x 27.6799 = 8.498 g/cm3. C36000 is not identical to JIS C3604; reference only.",
+  "_evidence": {
+   "yield_strength_mpa": "Proto Labs: \"Yield Strength (0.5% ext.) 45,000 psi\"",
+   "tensile_strength_mpa": "Proto Labs: \"Tensile Strength 56,000 psi\"",
+   "elastic_modulus_gpa": "Proto Labs: \"Modulus of Elasticity in Tension 14,000 ksi\"",
+   "density_g_cm3": "Proto Labs: \"Density (@ 68\u00baF) 0.307 lb/in3\""
+  },
+  "_extra_sources": []
+ },
+ {
+  "grade": "Duracon M90 acetal copolymer (KHK DS / DSF; KHK names M90-44)",
+  "condition": "injection molded",
+  "yield_strength_mpa": null,
+  "tensile_strength_mpa": 61,
+  "allowable_bending_stress_mpa": 39.2,
+  "allowable_bending_stress_kgf_mm2_by_module": {
+   "0.5": 4.0,
+   "0.8": 4.0,
+   "1.0": 3.5
+  },
+  "elastic_modulus_gpa": 2.824,
+  "density_g_cm3": 1.41,
+  "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/design-of-plastic-gears.html",
+  "note": "KHK Table 11.1 \"Acetal Copolymer\" column (ASTM tests): tensile strength 61 MPa, tensile elastic modulus 2824 MPa, specific gravity 1.41 (taken as g/cm3); KHK Table 9.1 lists M90 tensile 62 N/mm2. Allowable bending stress used by KHK for DS gears (Lewis formula): m0.5 4.0, m0.8 4.0, m1.0 3.5 kgf/mm2 at 40 C with grease lubrication; 39.2 MPa is m0.5/m0.8 (computed), m1.0 = 34.3 MPa (computed). Polyplastics' own M90-44 datasheet is login-gated on the sites found and was not read.",
+  "_evidence": {
+   "tensile_strength_mpa": "KHK Table 11.1 image: \"Tensile strength D-638 MPa ... 61\" (Acetal Copolymer)",
+   "elastic_modulus_gpa": "KHK Table 11.1: \"Tensile elastic modulus D-638 MPa ... 2824\"",
+   "density_g_cm3": "KHK Table 11.1: \"Specific gravity D-792 \u2014 ... 1.41\"",
+   "allowable_bending_stress_mpa": "catalogue p.4 DSF/DS column: \"Allowable bending stress (kgf/mm2)\" \"m 0.5 4.0 m 0.8 4.0 m 1.0 3.5 (40\u00b0C with grease lubrication)\"",
+   "tensile_strength_alt": "KHK Table 9.1: \"JIS Material No. : M90 Tensile Strength N/mm2 : 62\""
+  },
+  "_extra_sources": [
+   "https://khkgears.net/new/images/design-of-plastic-gears/Table11.1-Mechanical-Properties-of-MC-Nylon-and-Acetal-Copolymer.jpg",
+   "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html",
+   "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf"
+  ]
+ },
+ {
+  "grade": "MC901 cast nylon (KHK PS / PSA / PU)",
+  "condition": "machined, no lubrication rating",
+  "yield_strength_mpa": null,
+  "compressive_yield_mpa": 103,
+  "tensile_strength_mpa": 96,
+  "allowable_bending_stress_mpa": 11.28,
+  "allowable_bending_stress_kgf_mm2": 1.15,
+  "elastic_modulus_gpa": 3.432,
+  "density_g_cm3": 1.16,
+  "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/design-of-plastic-gears.html",
+  "note": "KHK Table 11.1 MC901 column: tensile strength 96 MPa, tensile elastic modulus 3432 MPa, compression yield point 103 MPa (no tensile yield published), specific gravity 1.16 (taken as g/cm3). Allowable bending stress 1.15 kgf/mm2 (40 C with no lubrication) used by KHK for PU/PS/PSA (Lewis formula); MPa computed.",
+  "_evidence": {
+   "tensile_strength_mpa": "KHK Table 11.1: \"Tensile strength D-638 MPa 96\" (MC901)",
+   "compressive_yield_mpa": "KHK Table 11.1: \"Compression (Yield point) D-695 MPa 103\"",
+   "elastic_modulus_gpa": "KHK Table 11.1: \"Tensile elastic modulus D-638 MPa 3432\"",
+   "density_g_cm3": "KHK Table 11.1: \"Specific gravity D-792 \u2014 1.16\"",
+   "allowable_bending_stress_mpa": "catalogue p.4 PU PS PSA column: \"1.15 (40\u00b0C with no lubrication)\""
+  },
+  "_extra_sources": [
+   "https://khkgears.net/new/images/design-of-plastic-gears/Table11.1-Mechanical-Properties-of-MC-Nylon-and-Acetal-Copolymer.jpg",
+   "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+   "https://khkgears.net/new/gear_knowledge/gear_technical_reference/gear_materials.html"
+  ]
+ }
+]
