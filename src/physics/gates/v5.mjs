@@ -118,7 +118,7 @@ const worstL = Math.max(...held.map((r) => Math.abs(r.lift_err_pct)));
 const worstT = Math.max(...held.map((r) => Math.abs(r.thrust_err_pct)));
 const atBound = Object.entries(cal).filter(([k, v]) => CALIBRATION_BOUNDS[k] && (Math.abs(v - CALIBRATION_BOUNDS[k][0]) < 1e-9 || Math.abs(v - CALIBRATION_BOUNDS[k][1]) < 1e-9)).map(([k]) => k);
 writeJson(`data/calibration/${d.name}.json`, {
-  design: d.name, source: 'uvlm', fitted_on: fitOps.map((o) => o.label), multipliers: cal, bounds: CALIBRATION_BOUNDS, at_bounds: atBound,
+  design: d.name, source: 'uvlm', fitted_on: fitOps.map((o) => o.label), wing: { span_m: d.geometry.span_m, area_m2: d.geometry.area_m2 }, multipliers: cal, bounds: CALIBRATION_BOUNDS, at_bounds: atBound,
   note: 'Multipliers of the inviscid strip terms fitted to UVLM on the cruise point. The drag multiplier is not touched here: UVLM has no viscous drag. LBM and OpenFOAM results are to refit these.',
   ran_at: new Date().toISOString(),
 });

@@ -156,6 +156,26 @@ function driveLookup(drive, amp) {
 }
 
 /**
+ * Round 4: the LEFT wing's stroke when one crank pin drives both couplers (the drive as built: crank pivot on the
+ * centre line, ground link d to each shoulder hinge at hingeZ off centre, the left four-bar the mirror image of the
+ * right). In the right four-bar's frame the mirrored pin sits at crank angle 2 beta - theta, beta = asin(hingeZ / d)
+ * the ground link's angle from the body's vertical, so the left linkage runs its crank backwards from a shifted
+ * start: its stroke is the right one's time-reversed and phase-shifted, and differs from it by the crank-rocker's
+ * quick-return. Same fields as strokeAngle; derivatives with respect to the (right) phase.
+ */
+export function strokeAngleLeft(phase, amp, law, hingeZ) {
+  if (!law || law.kind === 'sine') return strokeAngle(phase, amp, law);
+  const { c, psiMid, thetaTop } = driveLookup(law, amp);
+  const beta = Math.asin(hingeZ / law.d);
+  const r = crankRockerSolve({ a: law.a, b: law.b, c, d: law.d }, 2 * beta - (thetaTop + phase));
+  if (!r) throw new Error('linkage cannot assemble');
+  let dpsi = r.psi - psiMid;
+  while (dpsi > Math.PI) dpsi -= TWO_PI;
+  while (dpsi < -Math.PI) dpsi += TWO_PI;
+  return { phi: law.phiMean + dpsi, dphi: -r.dpsi, ddphi: r.ddpsi, mu: r.mu, sinTrans: r.sinTrans, c };
+}
+
+/**
  * Stroke law: phi and its derivatives with respect to phase at a given amplitude.
  * law.kind 'sine':  phi = mean + amp cos(phase).
  * law.kind 'crank-rocker': exact linkage; phase is the crank angle measured from the top of stroke.

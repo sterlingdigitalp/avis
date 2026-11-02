@@ -90,6 +90,16 @@ Round 1 results stay on record as they are. These rulings fix how a gate is eval
 - **Stall current without a stated voltage** is used as published, at any supply voltage; that is conservative where makers list several.
 - **Batteries.** Li-ion packs are eligible on the same terms as LiPo, rated by their published continuous current.
 
+### Rulings after physics round 4 (2026-11-02)
+
+Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. These apply existing gate language to parts it already covers; no limit changes.
+
+- **Bearings are linkage.** M7 covers linkage loads, and every bearing and bushing is part of the linkage. Each one carries its peak load from the M7 load population with a static safety factor C0/P0 >= 1.5. For ball bearings, P0 follows ISO 76 with the maker's X0/Y0. Plain bushings are judged by the maker's published static surface pressure, with FoS 1.5. A bearing or bushing without a published static rating is ineligible for a loaded joint. The design file states which bearing reacts which force.
+- **Control functions need real hardware.** A function the design relies on, such as a current clamp, crank-speed governor or limiter, must run in one of two places. Either it runs in firmware whose published documentation states the feature. Or it runs in our controller on the flight controller, with every sensor it reads in the BOM, at its published rate and resolution, and with that path's latency simulated.
+- **Servo voltage covers current too.** The no-extrapolation rule applies to current as well as torque and speed. A servo fed straight from the pack must have every voltage the pack can present, from full charge to cutoff, inside its published rows. Otherwise the design uses a regulator, or limits charge voltage and derates capacity in M2 accordingly.
+- **Mixed-material gear meshes.** Contact stress is computed by Hertz with the pair's combined modulus and the real face width. It is judged against each member's published allowable surface stress, or the maker's published rating for the pair. Bending is checked by Lewis for each member in its own material. A steel-on-steel surface figure is never applied to a steel pinion meshing with plastic.
+- **V2 stays a FAIL.** Its grid study converges: the AR 4 slope moves 0.2% from 12x48 to 16x64. So the 4.28% gap at AR 8 is not resolution, and the reference is not changed again. The final report states that V5's reference model fails V2 by that margin.
+
 ### Public repository
 
 `github.com/sterlingdigitalp/avis` is public. UIUC-derived tables and airfoil coordinate files stay local and gitignored (`data/references/airfoil-e387.json`, `data/references/airfoils/`), because their licence terms are unclear or reserved. Our own CFD polars are ours to publish. Copernicus terrain, if used, requires the notice in `data/references/credits.md` in the film credits and README.

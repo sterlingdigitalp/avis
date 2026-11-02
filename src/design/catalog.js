@@ -66,6 +66,32 @@ export function servoStallCurrent(part, volts) {
   return r[r.length - 1].current_a;
 }
 
+/** A servo's published operating voltage range [lo, hi] from text like "4.8V - 8.4V DC Volt" or "6.0V - 8.4V", or null. */
+export function servoVoltageRange(part) {
+  const m = /(\d+(?:\.\d+)?)\s*V?\s*[-~]\s*(?:\d+(?:\.\d+)?\s*V?\s*[-~]\s*)?(\d+(?:\.\d+)?)\s*V/i.exec(String(part.specs?.voltage_range_text ?? ''));
+  return m ? [parseFloat(m[1]), parseFloat(m[2])] : null;
+}
+
+/**
+ * Stall current at a supply voltage on the conservative side: the published figure (servoStallCurrent), and above the
+ * highest stated row the top row scaled by the voltage ratio (a locked rotor draws V / R). Never below a published value.
+ */
+export function servoStallCurrentConservative(part, volts) {
+  const base = servoStallCurrent(part, volts);
+  if (!Number.isFinite(base)) return null;
+  const stated = (part.specs.stall_current ?? []).filter((q) => Number.isFinite(q.current_a) && Number.isFinite(q.voltage_v));
+  if (!stated.length) return base; // published without a voltage: as published at any supply (SPEC ruling)
+  const top = stated.reduce((a, b) => (b.voltage_v > a.voltage_v ? b : a));
+  return volts > top.voltage_v ? top.current_a * (volts / top.voltage_v) : base;
+}
+
+/** Whether an ESC's published cell range ("2-4S LiPo", "3-4S") covers a pack of `cells`; null if none is published. */
+export function escCellsCover(esc, cells) {
+  const m = /(\d+)\s*-\s*(\d+)\s*S/i.exec(String(esc.specs?.cells_text ?? ''));
+  if (!m || !Number.isFinite(cells)) return null;
+  return cells >= +m[1] && cells <= +m[2];
+}
+
 /** Output voltage and current of an ESC's built-in BEC from its published text, e.g. "Switch 5V 3A". */
 export function becOf(esc) {
   const t = String(esc.specs?.bec ?? '');

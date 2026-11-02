@@ -1,5 +1,6 @@
 // From parameters and a catalogue to a complete design: geometry, BOM, sized structure, CG, margin (M6).
-import { byId, ofCategory, servoAt, motorModel, batteryModel, tubeAllowable, tubeSection, becOf } from './catalog.js';
+import { byId, ofCategory, servoAt, motorModel, batteryModel, tubeAllowable, tubeSection, becOf, escCellsCover, servoVoltageRange, servoStallCurrentConservative } from './catalog.js';
+import { batteryOcv } from '../physics/flight.js';
 import { makeFlapDrive, makeWing, wingArea, mac, wingSpan, linkageCycleStats } from '../physics/kinematics.js';
 import { designAtmosphere, DESIGN_ALTITUDE_M, DESIGN_TEMPERATURE_C } from '../physics/atmosphere.js';
 import { POLARS } from '../physics/polars.js';
@@ -131,6 +132,8 @@ export function buildDesign(params, catalog) {
   addStruct('keel and tail boom', keel, keel.mass_g * keelLen, `${keel.mass_g} g/m x ${keelLen.toFixed(3)} m`);
   const bodyW = p.bodyWidth_m ?? 0.06;
   const bodyH = p.bodyHeight_m ?? 0.07;
+  // Round 4: the pod's centre line may sit below the wing hinge so the crank and gear train fit inside it.
+  const bodyY = p.bodyY_m ?? 0;
   const shell = (Math.PI * 0.5 * (bodyW + bodyH) * bodyLen * 0.8);
   addStruct('fuselage film shell', film, (film.specs.areal_density_g_m2 ?? film.mass_g) * shell, `${shell.toFixed(3)} m2`);
   addStruct('fuselage formers', rib, 5 * bodyW * bodyH * 0.5 * 0.002 * ribDensity * 1000, '5 off, 50% lightened, 2 mm');
@@ -143,6 +146,22 @@ export function buildDesign(params, catalog) {
   const couplerRod = byId(catalog, parts.coupler ?? 'rod-ec-3mm');
   const bMm = p.coupler_mm ?? 70;
   addStruct('couplers, 2 off', couplerRod, (2 * couplerRod.mass_g * bMm) / 1000, `${couplerRod.mass_g} g/m x ${bMm} mm x 2`);
+  // Round 4 derived parts (p.derivedParts), each from catalogue materials with its basis stated:
+  //  - the stroke servo's linkage to the two slotted rockers: two 2 mm carbon pushrods and a 2 mm carbon-plate yoke;
+  //  - a pitot-static probe for the airspeed board, whose catalogue mass excludes the probe: a titanium outer tube with
+  //    a carbon inner (total-pressure) tube. Its silicone pressure lines are counted in the 15% unlisted margin with
+  //    the wiring (no catalogue source for tubing).
+  let strokeLinkG = 0, pitotG = 0;
+  if (p.derivedParts) {
+    const rod2 = byId(catalog, 'rod-ec-2mm'), plate2 = byId(catalog, 'plate-ec-2mm');
+    const pushL = p.strokePushrod_mm ?? 60;
+    strokeLinkG = 2 * rod2.mass_g * pushL / 1000 + plate2.specs.areal_density_kg_m2 * 1000 * 0.04 * 0.02;
+    addStruct('stroke servo linkage: 2 pushrods and a yoke', rod2, strokeLinkG, `2 x ${pushL} mm of ${rod2.id} (${rod2.mass_g} g/m) + yoke 40 x 20 mm of plate-ec-2mm (${plate2.specs.areal_density_kg_m2} kg/m2)`);
+    const ti = byId(catalog, 'mtube-tigertitanium-ti3al2.5v-6.35x5.54'), cst = byId(catalog, 'tube-cst-pultruded-5x4');
+    const probeL = p.pitotLength_mm ?? 100;
+    pitotG = (ti.mass_g + cst.mass_g) * probeL / 1000;
+    addStruct('pitot-static probe', ti, pitotG, `${probeL} mm of ${ti.id} (${ti.mass_g} g/m, static annulus) around ${probeL} mm of ${cst.id} (${cst.mass_g} g/m, total pressure); pressure lines in the 15% margin`);
+  }
   // Twist drive. Legacy (round 2): the servo sits on the hand wing at 65% of its length, no linkage counted. Round 3
   // option: the servo sits at the elbow on the arm wing and turns the hand wing through a torque rod running out to
   // the tip; the rod's mass is on the wing. A horn linkage ratio k (wing twist per servo turn) trades the servo's
@@ -163,7 +182,7 @@ export function buildDesign(params, catalog) {
   const aspdP = byId(catalog, parts.airspeed);
   const rxP = byId(catalog, parts.receiver);
   add(motorP, 1, 'flap motor');
-  add(escP, 1, 'flap ESC, its BEC supplies the servos and avionics');
+  add(escP, 1, p.servoSupply === 'battery' ? 'flap ESC, its BEC supplies the avionics (servos on the pack)' : 'flap ESC, its BEC supplies the servos and avionics');
   add(batP, 1, 'battery');
   add(twistP, 2, 'wing twist servo');
   add(tailP, 2, 'tail servo');
@@ -173,7 +192,13 @@ export function buildDesign(params, catalog) {
   add(aspdP, 1, 'airspeed sensor');
   add(rxP, 1, 'receiver');
   for (const g of parts.gears) add(byId(catalog, g), 1, 'gear');
-  add(byId(catalog, parts.bearing), p.bearingCount ?? 8, 'bearing');
+  // Bearings (round 4, p.bearingLayout 'auto'): two per shoulder pivot, two per gearbox shaft (one shaft per stage: the
+  // motor's own bearings carry the first pinion), two per elbow hinge if the hand wing is hinged (elbowGain > 0).
+  const nStages = Math.floor(parts.gears.length / 2);
+  const hinged = (p.elbowGain ?? 0.5) > 0;
+  const bearingLayout = p.bearingLayout === 'auto' ? [{ where: 'shoulder pivots', count: 4 }, { where: `gearbox shafts (${nStages} shafts, crank included)`, count: 2 * nStages }, { where: 'elbow hinges', count: hinged ? 4 : 0, ...(hinged ? {} : { note: 'rigid elbow: the hand wing is not hinged (elbowGain 0)' }) }] : null;
+  const nBearings = bearingLayout ? bearingLayout.reduce((a, b) => a + b.count, 0) : p.bearingCount ?? 8;
+  add(byId(catalog, parts.bearing), nBearings, 'bearing');
   const partsG = bom.reduce((a, b) => a + b.mass_g, 0);
   const structG = structure.reduce((a, b) => a + b.mass_g, 0);
   const marginG = MARGIN * (partsG + structG);
@@ -210,7 +235,9 @@ export function buildDesign(params, catalog) {
   const xCGtarget = xNP + (p.staticMargin ?? 0.1) * macv;
   // Body lumps. Battery is placed last to set the CG.
   const lumps = [];
-  const lump = (name, g, x, y = 0, z = 0, k = 0) => lumps.push({ name, mass_kg: (g / 1000) * marginFrac, pos: [x, y, z], gyration_m: k });
+  // Round 4: p.lumpPos { name: [x, y, z] } places a lump where the packing check put the real part (sims/avis-shared
+  // model.js layoutParts), so the CG and inertia follow the parts as fitted in the body.
+  const lump = (name, g, x, y = 0, z = 0, k = 0) => lumps.push({ name, mass_kg: (g / 1000) * marginFrac, pos: p.lumpPos?.[name] ?? [x, y, z], gyration_m: k });
   const motorX = 0.04;
   lump('flap motor', motorP.mass_g, motorX, 0.0);
   lump('gears and bearings', bom.filter((b) => b.role === 'gear' || b.role === 'bearing').reduce((a, b) => a + b.mass_g, 0), 0.015, 0.0);
@@ -221,7 +248,8 @@ export function buildDesign(params, catalog) {
   lump('receiver and airspeed', rxP.mass_g + aspdP.mass_g, 0.11, 0.0);
   lump('GPS', gpsP.mass_g, -0.03, 0.03);
   lump('tail servos', 2 * tailP.mass_g, -0.08, 0.0);
-  lump('stroke servo', strokeP.mass_g, -0.03, 0.0);
+  lump('stroke servo', strokeP.mass_g + strokeLinkG, -0.03, 0.0);
+  if (pitotG) lump('pitot-static probe', pitotG, Math.max(0.45 * bodyLen, 0.14) + 0.04, 0.0);
   lump('keel and boom', keel.mass_g * keelLen, -lt / 2 + noseLen * 0.25, 0.0, 0, 0.29 * keelLen);
   lump('fuselage shell and formers', (film.specs.areal_density_g_m2 ?? film.mass_g) * shell + 5 * bodyW * bodyH * 0.5 * 0.002 * ribDensity * 1000, -0.05, 0.0, 0, 0.3 * bodyLen);
   lump('tail surfaces', tailFilm + tailSparG + tailRibG, -lt, 0.02);
@@ -246,20 +274,44 @@ export function buildDesign(params, catalog) {
   const d0 = p.groundLink_mm ? p.groundLink_mm / 1000 : Math.max(0.05, b0);
   const ampMax = (p.ampMax_deg ?? Math.min((p.amp_deg ?? 25) * 1.6, 60)) * DEG;
   const ampMin = ampNom * 0.6;
-  const drive = { kind: 'crank-rocker', a, b: b0, d: d0, ampMin, ampMax, ampNominal: ampNom, phiMean: (p.phiMean_deg ?? 5) * DEG, gearRatio: p.gearRatio, gearEfficiency: p.gearEff ?? 0.85, crankFriction_Nm: 0.01, gears: parts.gears };
+  const drive = { kind: 'crank-rocker', a, b: b0, d: d0, ampMin, ampMax, ampNominal: ampNom, phiMean: (p.phiMean_deg ?? 5) * DEG, gearRatio: p.gearRatio, gearEfficiency: p.gearEff ?? 0.85, crankFriction_Nm: 0.01, gears: parts.gears, ...(p.pinLayout ? { pinLayout: p.pinLayout } : {}), ...(bearingLayout ? { bearings: bearingLayout.map((b) => ({ ...b, id: parts.bearing })) } : {}), ...(Number.isFinite(p.escCurrentClamp_A) ? { escCurrentClamp_A: p.escCurrentClamp_A } : {}) };
   const motor = motorModel(motorP);
+  // Braking (round 4). The flight model's default lets the drive brake at only half the motor's rating (an assumption
+  // with no source), so on the upstroke the wing back-drove the crank to twice its commanded speed and the reversal at
+  // the top of the stroke set the M7 root bending and twist torque peaks. An ESC whose own documentation states active
+  // freewheeling (synchronous rectification) lets the motor current reverse whenever the back-EMF exceeds the applied
+  // voltage; the drive firmware bounds it at the lower of the ESC's and motor's continuous ratings. The energy is still
+  // never credited to the battery (SPEC no-regeneration ruling), only the braking torque is real.
+  const af = p.escActiveFreewheeling;
+  if (af && (af.esc === escP.id || (af.family && escP.id.startsWith(af.family)))) {
+    motor.regenLimit_A = -Math.min(motor.I_cont ?? Infinity, escP.specs.continuous_current_a ?? Infinity);
+    motor.regenLimit_basis = `ESC documentation: ${af.quote} (${af.source}); braking current bounded at the lower continuous rating`;
+  }
   const batt = batteryModel(batP);
   // SPEC ruling after catalogue round 2: the design states its servo supply voltage and the BEC that provides it
   // (here the flap ESC's built-in BEC, in the BOM with the ESC), and no servo figure is extrapolated outside its rows.
   const bec = becOf(escP);
-  const supplyV = p.servoSupply_V ?? bec.volts;
+  const cellsOk = escCellsCover(escP, batP.specs.cells_series);
+  if (cellsOk === false) throw new Error(`ESC ${escP.id} is not rated for a ${batP.specs.cells_series}S pack (${escP.specs.cells_text})`);
+  // Servo supply. 'bec' (rounds 1-3): the ESC's BEC at its published voltage. 'battery' (round 4): HV servos straight
+  // on the flight pack, as is usual for HV servos on 2S; no regulator, so the supply is the pack itself, in the BOM with
+  // its mass. Its voltage moves with charge and load, so torque and speed are taken at the lowest terminal voltage in
+  // use (20% charge, the M2 reserve, sagging at the pack's continuous rating) and stall current at full charge.
+  const supply = batteryServoSupply(p.servoSupply, batteryModel(batP));
+  const supplyV = supply ? supply.performance_V : (p.servoSupply_V ?? bec.volts);
   if (!Number.isFinite(supplyV)) throw new Error(`ESC ${escP.id} publishes no BEC voltage: no servo supply`);
-  const esc = { id: escP.id, I_cont: escP.specs.continuous_current_a, bec_A: bec.amps, bec_V: bec.volts, bec_kind: bec.kind, eta: 0.95, eta_assumed: true, regenerative: false, regenerative_basis: 'no regenerative operation stated in the ESC documentation read for the catalogue' };
+  const esc = { id: escP.id, I_cont: escP.specs.continuous_current_a, bec_A: bec.amps, bec_V: bec.volts, bec_kind: bec.kind, eta: 0.95, eta_assumed: true, regenerative: false, regenerative_basis: 'no regenerative operation stated in the ESC documentation read for the catalogue', cells_text: escP.specs.cells_text ?? null };
   const servoSpec = (part, v) => {
     const s = servoAt(part, v);
     if (!s) throw new Error(`servo ${part.id} has no published row covering ${v} V (no extrapolation)`);
-    if (!Number.isFinite(s.stall_A)) throw new Error(`servo ${part.id} has no published stall current (SPEC M8)`);
-    return { id: part.id, stall_Nm: s.stall_Nm, speed_rad_s: s.speed_rad_s, stall_A: s.stall_A, tau_s: 0.02, idle_A: part.specs.idle_current_a ?? 0, volts: s.volts, mass_kg: part.mass_g / 1000 };
+    let stallA = s.stall_A;
+    if (supply) {
+      const range = servoVoltageRange(part);
+      if (!range || supply.current_V > range[1] + 1e-9) throw new Error(`servo ${part.id}: published voltage range does not reach the full-charge ${supply.current_V} V`);
+      stallA = servoStallCurrentConservative(part, supply.current_V);
+    }
+    if (!Number.isFinite(stallA)) throw new Error(`servo ${part.id} has no published stall current (SPEC M8)`);
+    return { id: part.id, stall_Nm: s.stall_Nm, speed_rad_s: s.speed_rad_s, stall_A: stallA, tau_s: 0.02, idle_A: part.specs.idle_current_a ?? 0, volts: s.volts, ...(supply ? { current_volts: supply.current_V } : {}), mass_kg: part.mass_g / 1000 };
   };
   // Twist linkage ratio k: the wing sees the servo's published torque / k and its no-load speed x k. Current is from
   // the torque at the servo (wing torque x k), which stall_A x (wing torque / (stall / k)) gives unchanged.
@@ -275,7 +327,7 @@ export function buildDesign(params, catalog) {
   // Body geometry: pod from the nose (ahead of the battery and receiver) back bodyLen, then the keel tube as a boom to
   // the tail's trailing edge. The tunnels, page and film build from this loft (src/physics/geometry.js).
   const noseX = Math.max(0.45 * bodyLen, xBattery + 0.05, 0.14);
-  const loft = podAndBoomLoft({ noseX_m: noseX, podLength_m: bodyLen, width_m: bodyW, height_m: bodyH, boomOd_m: keel.specs.od_mm / 1000, tailEndX_m: -lt - 0.75 * chordT, y_m: 0 });
+  const loft = podAndBoomLoft({ noseX_m: noseX, podLength_m: bodyLen, width_m: bodyW, height_m: bodyH, boomOd_m: keel.specs.od_mm / 1000, tailEndX_m: -lt - 0.75 * chordT, y_m: bodyY, boomY_m: 0 });
   const body = {
     loft,
     loft_wetted_area_m2: loftWettedArea(loft),
@@ -288,7 +340,8 @@ export function buildDesign(params, catalog) {
     length_m: bodyLen,
     width_m: bodyW,
     height_m: bodyH,
-    bottom_y_m: -bodyH / 2,
+    bottom_y_m: bodyY - bodyH / 2,
+    centre_y_m: bodyY,
   };
   // Spar check data; loads come from flight.
   const allow = tubeAllowable(inner);
@@ -318,9 +371,11 @@ export function buildDesign(params, catalog) {
       x_battery_m: xBattery,
     },
     motor, esc, battery: batt, servos,
-    structure: { items: structure, spar_inner: sparInner, spar_outer: sparOuter, gear_stages: gearStages, coupler: couplerSpec(couplerRod, bMm) },
+    structure: { items: structure, spar_inner: sparInner, spar_outer: sparOuter, gear_stages: gearStages, coupler: couplerSpec(couplerRod, bMm), ...(twistRod ? { twist_rod: twistRodSpec(twistRod, twistRodLen) } : {}) },
     bom: { parts: bom, structure, parts_g: partsG, structure_g: structG, margin_g: marginG, total_g: totalG },
-    electrical: { avionics_A_5V: 0.35, avionics_note: 'FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw', servo_supply_V: supplyV, bec: { part: escP.id, volts: bec.volts, amps: bec.amps, kind: bec.kind, published: bec.text, note: 'built into the flap ESC; its mass is in the BOM with the ESC' } },
+    electrical: supply
+      ? { avionics_A_5V: 0.35, avionics_note: 'FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw', servo_source: 'battery', servo_supply_V: supplyV, servo_supply: { part: batP.id, ...supply }, bec: { part: escP.id, volts: bec.volts, amps: bec.amps, kind: bec.kind, published: bec.text, carries: 'avionics only', note: 'built into the flap ESC; its mass is in the BOM with the ESC' } }
+      : { avionics_A_5V: 0.35, avionics_note: 'FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw', servo_source: 'bec', servo_supply_V: supplyV, bec: { part: escP.id, volts: bec.volts, amps: bec.amps, kind: bec.kind, published: bec.text, carries: 'servos and avionics', note: 'built into the flap ESC; its mass is in the BOM with the ESC' } },
     cruise: {},
     assumptions: [
       `Section polar ${polarName}: ${pol.assumed ?? 'measured table'}`,
@@ -335,6 +390,21 @@ export function buildDesign(params, catalog) {
 }
 
 /**
+ * Servo supply straight from the flight pack (round 4), or null for the BEC. Performance voltage: the lowest terminal
+ * voltage in use, the rested voltage at 20% charge (the M2 reserve) less the sag at the pack's continuous rating.
+ * Current voltage: full charge, rested (4.2 V per cell plus the pack's published-nominal shift).
+ */
+export function batteryServoSupply(kind, batt) {
+  if (kind !== 'battery') return null;
+  const ocv20 = batteryOcv(batt, 0.2);
+  const sag = (batt.I_cont ?? 0) * batt.R_int;
+  const performance_V = +(ocv20 - sag).toFixed(3);
+  // A fresh LiPo charge ends at 4.20 V per cell (the model's rested curve tops out at 4.18).
+  const current_V = +Math.max(batteryOcv(batt, 1), batt.cells * (4.2 + (batt.cell_shift_V ?? 0))).toFixed(3);
+  return { performance_V, current_V, rule: `torque and speed at ${performance_V} V: rested ${ocv20.toFixed(2)} V at 20% charge less ${sag.toFixed(2)} V sag at the pack's ${batt.I_cont} A continuous rating; stall current at the full-charge ${current_V} V` };
+}
+
+/**
  * Coupler section for the M7 check. A rod (round 2) keeps its fields: modulus and compressive strength at the lower
  * of the published ranges. A tube adds its bore, and its published strength by the SPEC M7 rules (tubeAllowable).
  */
@@ -344,6 +414,13 @@ export function couplerSpec(part, lengthMm) {
   if (part.category === 'carbon_rod') return { ...base, E_GPa: s.tensile_modulus_lengthways_gpa_range?.[0] ?? null, compressive_MPa: s.compressive_strength_lengthways_mpa_range?.[0] ?? null };
   const a = tubeAllowable(part);
   return { ...base, id_m: (s.id_mm ?? 0) / 1000, E_GPa: s.tensile_modulus_lengthways_gpa ?? a.E_GPa ?? null, allowable_MPa: a.sigma_MPa, allowable_basis: a.basis };
+}
+
+/** Twist torque rod or tube for the M7 torsion check (structure.js torsionCheck). */
+export function twistRodSpec(part, length_m) {
+  const s = part.specs;
+  const metal = part.category === 'metal_tube';
+  return { id: part.id, od_m: s.od_mm / 1000, id_m: (s.id_mm ?? 0) / 1000, length_m, kind: metal ? 'metal' : 'composite', yield_MPa: metal ? s.yield_strength_mpa ?? null : null };
 }
 
 function parseBec(s) {

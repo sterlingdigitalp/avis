@@ -223,6 +223,8 @@ export function createStrip(wing, opts = {}) {
     Ma.fill(0);
     const crankNow = bodyAcc ? bodyAcc.crank ?? 0 : 0;
     const dphNow = bodyAcc ? bodyAcc.dph : 0;
+    // Round 4: each wing's own velocity ratio when one crank pin drives both (flight.js, pinLayout 'shared').
+    const dphW = bodyAcc?.dphW;
     let rm0x = 0, rm0y = 0, rm0z = 0, rm1x = 0, rm1y = 0, rm1z = 0;
     const kAm = cal.apparentMass * aeroScale;
     const kCl = cal.lift * aeroScale;
@@ -314,7 +316,7 @@ export function createStrip(wing, opts = {}) {
         const gx0 = bx, gy0 = by, gz0 = bz;
         const gx1 = pmy * bz - pmz * by, gy1 = pmz * bx - pmx * bz, gz1 = pmx * by - pmy * bx;
         // The crank's own acceleration moves the section along its normal too: g7 = (dr/dphi . b) dphi/dtheta.
-        const gc = ((W.Ap[j3 + 1] + d12 * W.tp[j3 + 1]) * by + (W.Ap[j3 + 2] + d12 * W.tp[j3 + 2]) * bz) * dphNow;
+        const gc = ((W.Ap[j3 + 1] + d12 * W.tp[j3 + 1]) * by + (W.Ap[j3 + 2] + d12 * W.tp[j3 + 2]) * bz) * (dphW ? dphW[w] : dphNow);
         let vnDotNow;
         if (bodyAcc) {
           // Apparent mass with a moving body. The body's own accelerations (a, wdot) and the crank's go on the left

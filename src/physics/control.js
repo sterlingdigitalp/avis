@@ -5,6 +5,9 @@
 
 import { G0 } from './atmosphere.js';
 import { makeRng } from './rng.js';
+import { envelopeAt, motorCurrentEstimate, createCurrentLimiter, glaWashout } from './limits.js';
+
+export { envelopeAt, motorCurrentEstimate, createCurrentLimiter, glaWashout };
 
 const TWO_PI = 2 * Math.PI;
 const DEG = Math.PI / 180;
@@ -122,6 +125,10 @@ export function createController(design, opts = {}) {
   const nP = new Notch(), nQ = new Notch(), nR = new Notch(), nPhi = new Notch(), nTh = new Notch(), nA = new Notch();
   const nP2 = new Notch(), nQ2 = new Notch(), nR2 = new Notch();
   const nH = new Notch(), nV = new Notch();
+  const nN = new Notch(), nN2 = new Notch(); // normal load factor for gust load alleviation
+  let nzF = 1;
+  const limiter = cfg.motorCurrentLimit ? createCurrentLimiter(cfg.motorCurrentLimit) : null;
+  let ImEst = 0;
   let vyF = 0, hF = 0, VF2 = cfg.Vcruise;
   let ampsF = 0;
   let iLimit = 0;
@@ -143,16 +150,14 @@ export function createController(design, opts = {}) {
   for (let i = 0; i <= delaySteps; i++) line.push(blank());
   let thetaCmdRate = 0;
   let diffPrev = 0;
-  /** Highest stroke frequency the component ratings allow at a stroke amplitude (design.control.envelope). */
-  function envelopeFreq(amp) {
+  /**
+   * Highest stroke frequency the component ratings allow at a stroke amplitude (design.control.envelope), and, when the
+   * envelope was measured at several airspeeds (round 4, rows carry bySpeed), at the sensed airspeed V.
+   */
+  function envelopeFreq(amp, V) {
     const env = cfg.envelope;
     if (!env || !env.length) return cfg.freqMax ?? Infinity;
-    if (amp <= env[0].amp) return env[0].freqMax;
-    for (let i = 1; i < env.length; i++) if (amp <= env[i].amp) {
-      const f = (amp - env[i - 1].amp) / (env[i].amp - env[i - 1].amp);
-      return env[i - 1].freqMax + f * (env[i].freqMax - env[i - 1].freqMax);
-    }
-    return env[env.length - 1].freqMax;
+    return envelopeAt(env, amp, V);
   }
   let phiCmdF = 0;
   let thCmdFilt = cfg.trim[0].theta;
@@ -178,6 +183,9 @@ export function createController(design, opts = {}) {
     const pitot = t.airspeedX + k * noise.airspeedNoise * rng.normal();
     const mag = t.heading + magBias + k * noise.magNoise * rng.normal();
     const amps = t.battI + k * 0.1 * rng.normal(); // power-module current sense
+    // Power-module voltage sense, read only when the current limiter uses it (so designs without it keep their noise
+    // sequence and their results).
+    const volts = cfg.motorCurrentLimit ? (t.battV ?? 0) + k * 0.02 * rng.normal() : t.battV ?? 0;
     // GPS: buffered for latency
     gpsBuf.push({ t: t.t, pos: t.pos, vel: t.vel });
     gpsTimer += dt;
@@ -194,7 +202,8 @@ export function createController(design, opts = {}) {
         vel: [s.vel[0] + k * noise.gpsVelNoise * rng.normal(), s.vel[1] + k * noise.gpsVelNoise * rng.normal(), s.vel[2] + k * noise.gpsVelNoise * rng.normal()],
       };
     }
-    return { gyro, acc, baro, pitot, gps, mag, amps };
+    // Crank encoder (the stroke sync loop's sensor): rate read without noise at the controller rate.
+    return { gyro, acc, baro, pitot, gps, mag, amps, volts, crank: t.crank };
   }
 
   function estimate(s, crankHz) {
@@ -255,11 +264,19 @@ export function createController(design, opts = {}) {
     if (Math.abs(crankHz - lastNotchF) > 0.05) {
       lastNotchF = crankHz;
       for (const n of [nP, nQ, nR, nPhi, nTh, nA, nH, nV]) n.set(crankHz, fs, notchQ);
-      for (const n of [nP2, nQ2, nR2]) n.set(2 * crankHz, fs, notchQ * 1.5);
+      for (const n of [nP2, nQ2, nR2, nN2]) n.set(2 * crankHz, fs, notchQ * 1.5);
+      nN.set(crankHz, fs, notchQ);
     }
     // With the wings parked there is nothing to notch out, and a notch at a very low frequency would sit on
     // the lateral modes. Filters keep running so they are warm when flapping resumes.
     const bypass = crankHz < 0.7;
+    nzF = nN2.step(nN.step(s.acc[1] / G0));
+    if (bypass) nzF = s.acc[1] / G0;
+    if (limiter) {
+      const m = design.motor;
+      ImEst = motorCurrentEstimate({ battI: s.amps, battV: s.volts, crankRate: s.crank, G: design.drive.gearRatio, kv: m.kv_rad_per_v_s, R: m.R, etaEsc: design.esc?.eta ?? 0.95 });
+      limiter.step(ImEst, dt);
+    }
     pF = nP2.step(nP.step(p));
     qF = nQ2.step(nQ.step(q));
     rF = nR2.step(nR.step(r));
@@ -289,7 +306,7 @@ export function createController(design, opts = {}) {
     if (vPrevF === null) vPrevF = vNow;
     vdotF += (dt / 0.4) * ((vNow - vPrevF) / dt - vdotF);
     vPrevF = vNow;
-    return { wx: pF, wy: qF, wz: rF, phi: phiF, theta: thF, V: vNow, h: hF, vy: vyF, amps: ampsF, vdot: vdotF };
+    return { wx: pF, wy: qF, wz: rF, phi: phiF, theta: thF, V: vNow, h: hF, vy: vyF, amps: ampsF, vdot: vdotF, nz: nzF, Im: ImEst, Iattn: limiter ? limiter.attenuation : 0 };
   }
 
   function law(e) {
@@ -374,7 +391,7 @@ export function createController(design, opts = {}) {
         c.amp = Math.min(cfg.ampMax, best.amp);
         freq = best.freqMax;
       }
-      freq = Math.max(cfg.freqMin, Math.min(envelopeFreq(c.amp), freq));
+      freq = Math.max(cfg.freqMin, Math.min(envelopeFreq(c.amp, e.V), freq));
       // Battery current limit, as flight controllers apply it: back the stroke off above the continuous rating.
       const lim = cfg.currentLimit_A ?? Infinity;
       iLimit = Math.max(0, Math.min(1, iLimit + dt * 0.8 * (e.amps - 0.9 * lim) / lim));
@@ -382,8 +399,10 @@ export function createController(design, opts = {}) {
         freq = Math.max(cfg.freqMin, freq * (1 - 0.4 * iLimit));
         c.amp = Math.max(tr.amp * 0.8, c.amp * (1 - 0.3 * iLimit));
       }
+      // Round 4: motor-current limiter on the stroke frequency (createCurrentLimiter).
+      if (limiter && e.Iattn > 0) freq = Math.max(cfg.freqMin, freq * (1 - e.Iattn));
       c.dyn = twistSchedule(cfg, tr, freq, c.amp, e.V);
-      c.sym = tr.sym;
+      c.sym = tr.sym + glaWashout(cfg.gla, e.nz, e.phi);
     } else {
       c.amp = cfg.ampNominal * 0.8;
       c.throttleOff = true;
@@ -455,7 +474,7 @@ export function createController(design, opts = {}) {
     vyF = vyEst; hF = hEst; VF2 = VasEst;
     vdotF = 0;
     vPrevF = null;
-    for (const [f, v] of [[nPhi, phiF], [nTh, thF], [nA, vyEst], [nH, hEst], [nV, VasEst]]) {
+    for (const [f, v] of [[nPhi, phiF], [nTh, thF], [nA, vyEst], [nH, hEst], [nV, VasEst], [nN, 1], [nN2, 1]]) {
       f.x1 = f.x2 = f.y1 = f.y2 = v;
     }
     const tr = interpTable(cfg.trim, Math.max(guidance.speed, cfg.trim[0].V));
@@ -497,5 +516,5 @@ export function sensorTruth(sim) {
   const w = sim.wind.world;
   const vr = [s.vel[0] - w[0], s.vel[1] - w[1], s.vel[2] - w[2]];
   const airspeedX = R00 * vr[0] + R10 * vr[1] + R20 * vr[2];
-  return { t: s.t, dt: sim.dt, omega: s.omega, sf, up: [R10, R11, R12], y: s.pos[1], vel: s.vel, pos: s.pos, airspeedX, phase: s.phase, crank: s.crank, heading: Math.atan2(R20, R00), battI: sim.tel.batt_I };
+  return { t: s.t, dt: sim.dt, omega: s.omega, sf, up: [R10, R11, R12], y: s.pos[1], vel: s.vel, pos: s.pos, airspeedX, phase: s.phase, crank: s.crank, heading: Math.atan2(R20, R00), battI: sim.tel.batt_I, battV: sim.tel.batt_V };
 }

@@ -8,7 +8,7 @@ import { runPool } from './pool.js';
 import { writeGate, writeJson, ROOT } from './common.js';
 import { LIMITS, robustnessCorners, runM1, runM2, runM3, runM4Seed, runM5, runCorridor } from '../scenarios.js';
 import { createWind } from '../wind.js';
-import { couplerCheck } from '../structure.js';
+import { couplerCheck, torsionCheck } from '../structure.js';
 
 const path = resolve(process.argv[2]);
 const design = JSON.parse(readFileSync(path, 'utf8'));
@@ -91,7 +91,7 @@ writeGate({ gate: 'M6', design: name, passed: m6ok, measured: { total_g: design.
 
 // ---- M7 structure at the worst load seen in M1-M3, M5 and the M4 seeds that pass (SPEC ruling) ----------------
 const population = (nom, m4runs) => [nom.M1, nom.M2, nom.M3, nom.M5, ...m4runs.filter((r) => r && !r.error && r.passed)];
-const PEAK_KEYS = ['rootBend', 'elbowBend', 'crankTorque', 'couplerForce', 'twistTorque', 'tailTorque', 'loadFactor', 'shoulderTorque', 'motorI', 'battI', 'servoI'];
+const PEAK_KEYS = ['rootBend', 'elbowBend', 'crankTorque', 'crankDrive', 'crankBack', 'couplerForce', 'twistTorque', 'tailTorque', 'loadFactor', 'shoulderTorque', 'motorI', 'battI', 'servoI', 'becI'];
 const worstOf = (runs) => Object.fromEntries(PEAK_KEYS.map((k) => [k, Math.max(0, ...runs.map((r) => r.peaks[k] ?? 0))]));
 const m4passRuns = m4.filter((r) => r && !r.error && r.passed);
 const popRuns = population(nominal, m4);
@@ -132,14 +132,17 @@ const fosRodStress = cpc.fos_stress;
 const twistT = worst('twistTorque');
 const tailT = worst('tailTorque');
 const servoOk = twistT <= design.servos.twist.stall_Nm && tailT <= design.servos.tail.stall_Nm;
-const fosMin = Math.min(fosIn, fosOut, fosRodBuckle, fosRodStress);
+// Round 4: the twist torque rod (elbow servo to the hand wing) carries the hand wing's twist torque in torsion.
+const tr = st.twist_rod ? { id: st.twist_rod.id, torque_Nm: twistT, ...torsionCheck(st.twist_rod, twistT) } : null;
+const fosMin = Math.min(fosIn, fosOut, fosRodBuckle, fosRodStress, ...(tr ? [tr.fos ?? 0] : []));
 writeGate({
   gate: 'M7', design: name, passed: fosMin >= 1.5 && gearOk && servoOk && seeds >= 100 && loadsConverged && m4passRuns.length > 0,
   measured: {
     spar_inner: { id: sIn.id, moment_Nm: worst('rootBend'), stress_MPa: sigIn, allowable_MPa: sIn.allowable_MPa, fos: fosIn },
     spar_outer: { id: sOut.id, moment_Nm: worst('elbowBend'), stress_MPa: sigOut, allowable_MPa: sOut.allowable_MPa, fos: fosOut },
     coupler: { id: cp.id, force_N: Fc, buckling_N: Pcr, fos_buckling: fosRodBuckle, stress_MPa: sigRod, fos_stress: fosRodStress, allowable_MPa: cpc.allowable_MPa, E_GPa: cp.E_GPa, section: cpc.section },
-    crank_torque_Nm: crankT, gears: gearUse, gears_within_rating: gearOk,
+    crank_torque_Nm: crankT, crank_torque_split: { drive_pushing_Nm: worst('crankDrive'), back_driven_Nm: worst('crankBack'), note: 'drive pushing: load torque along the crank rotation; back-driven: air and wing inertia driving the crank and motor' }, gears: gearUse, gears_within_rating: gearOk,
+    twist_torque_rod: tr,
     twist_servo: { torque_Nm: twistT, rated_stall_Nm: design.servos.twist.stall_Nm }, tail_servo: { torque_Nm: tailT, rated_stall_Nm: design.servos.tail.stall_Nm },
     peak_load_factor_at_cg: worst('loadFactor'), fos_min: fosMin,
     population: { scenarios: ['M1', 'M2', 'M3', 'M5'], m4_seeds_passing: m4passRuns.length, m4_seeds_run: seeds },
@@ -155,12 +158,14 @@ const all = popRuns; // M1-M3, M5 and the M4 seeds that pass, as for M7
 const rmsHalf = { motor: Math.max(0, ...popHalf.map((r) => r.rms.motorRmsMax)), batt: Math.max(0, ...popHalf.map((r) => r.rms.battRmsMax)) };
 const motorRms = Math.max(...all.map((r) => r.rms.motorRmsMax));
 const battRms = Math.max(...all.map((r) => r.rms.battRmsMax));
-const servo5 = Math.max(...all.map((r) => r.peaks.servoI));
+const servosOnBattery = design.electrical?.servo_source === 'battery';
+// The BEC's load: servos and avionics (rounds 1-3), or the avionics only when the HV servos run off the pack (round 4).
+const servo5 = Math.max(...all.map((r) => (servosOnBattery ? r.peaks.becI ?? 0 : r.peaks.servoI)));
 const m8 = {
   motor_rms_2s_max_A: motorRms, motor_continuous_A: design.motor.I_cont, motor_rule: design.motor.I_cont_rule, motor_peak_A: Math.max(...all.map((r) => r.peaks.motorI)),
   esc_rms_2s_max_A: motorRms, esc_continuous_A: design.esc.I_cont,
   battery_rms_2s_max_A: battRms, battery_continuous_A: design.battery.I_cont, battery_peak_A: Math.max(...all.map((r) => r.peaks.battI)),
-  servo_bus_peak_A: servo5, bec_rating_A: design.esc.bec_A, servo_model: 'stall current x torque/stall torque + published idle',
+  servo_bus_peak_A: servo5, bec_rating_A: design.esc.bec_A, bec_carries: servosOnBattery ? 'avionics only (servos on the pack, in the battery current)' : 'servos and avionics', servo_and_avionics_peak_A: Math.max(...all.map((r) => r.peaks.servoI)), servo_model: 'stall current x torque/stall torque + published idle',
   population: { scenarios: ['M1', 'M2', 'M3', 'M5'], m4_seeds_passing: m4passRuns.length },
   timestep_check: { motor_rms_dt_half_A: rmsHalf.motor, battery_rms_dt_half_A: rmsHalf.batt, motor_change_pct: (rmsHalf.motor / motorRms - 1) * 100, battery_change_pct: (rmsHalf.batt / battRms - 1) * 100, servo_peak_change_pct: dtCheck.servoI.change_pct },
 };

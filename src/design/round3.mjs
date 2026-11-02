@@ -9,7 +9,7 @@ import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeDesignAtomic } from './io.js';
 import { buildDesign, gearRatioOf } from './build.js';
-import { buildControl, refineTrimByFlight, trimLevel, flightEnvelope, trainCrankRating } from './trim.js';
+import { buildControl, refineTrimByFlight, trimLevel, flightEnvelope, trainCrankRating, limiterConfig } from './trim.js';
 import { validateDesign } from './schema.js';
 import { buildBird } from '../physics/flight.js';
 import { runClimb } from '../physics/scenarios.js';
@@ -60,8 +60,22 @@ export function round3ControlOptions(d, opt = {}) {
   };
 }
 
+/**
+ * Round 4 options on a fresh control table: the converged flight step, the motor-current limiter and gust load
+ * alleviation, in place before the flight trim and the envelope tests so both fly the bird as it will be flown.
+ */
+export function applyRound4Options(d, opt = {}) {
+  if (opt.dt) {
+    d.control.dt = opt.dt;
+    d.control.dtRule = 'round 4: the step at which M4 peaks converge (half step changes them < 10%), not the 60-steps-per-cycle rule';
+  }
+  if (opt.motorCurrentLimit) d.control.motorCurrentLimit = limiterConfig(d, opt.motorCurrentLimit);
+  if (opt.gla) d.control.gla = opt.gla;
+  return d.control;
+}
+
 /** Cruise schedule: the given one, or the speed and twist of least frozen-body trim power over a small grid. */
-function pickCruiseTrim(d, bird, amp, sched, opt) {
+export function pickCruiseTrim(d, bird, amp, sched, opt) {
   if (sched) return { dyn: sched.dyn / DEG, t: { V: sched.V } };
   let best = null;
   for (const V of opt.Vtry ?? [9, 9.5, 10, 10.5, 11]) for (const dyn of opt.dynTry ?? [22, 30, 38]) {
@@ -74,8 +88,9 @@ function pickCruiseTrim(d, bird, amp, sched, opt) {
 /** Envelope by flight test at the slowest and fastest flight trims, with rough-air allowances on the ratings. */
 async function applyFlightEnvelope(d, opt) {
   const allowance = opt.allowance ?? { gear: 0.8, spar: 0.8, coupler: 0.8, servo: 0.8 };
-  const envSpeeds = [d.control.trim[0].V, d.control.trim[d.control.trim.length - 1].V];
-  const env = await flightEnvelope(d, { speeds: envSpeeds, allowance });
+  // Round 4 (opt.envSpeeds): the envelope at each of several airspeeds, interpolated in flight on the sensed airspeed.
+  const envSpeeds = opt.envSpeeds ?? [d.control.trim[0].V, d.control.trim[d.control.trim.length - 1].V];
+  const env = await flightEnvelope(d, { speeds: envSpeeds, allowance, perSpeed: !!opt.envSpeeds });
   const usable = env.filter((e) => e.freqMax > 0);
   if (!usable.length) return false;
   d.control.envelopeFrozen = d.control.envelope;
@@ -83,7 +98,8 @@ async function applyFlightEnvelope(d, opt) {
   d.control.envelopeAllowance = { ...allowance, note: 'fraction of each rating the calm-air envelope may use, leaving the rest for rough-air load increments; M7 judges the full rating against the loads of the flights themselves' };
   d.control.envelopeBest = usable.reduce((p, q) => (q.amp * q.freqMax > p.amp * p.freqMax ? q : p));
   d.control.freqMax = Math.max(...usable.map((e) => e.freqMax));
-  d.control.dt = 1 / (240 * Math.max(1, Math.ceil((60 * d.control.freqMax) / 240)));
+  // Round 4 passes opt.dt, the step at which the gates' peaks converge; rounds 1-3 used 60 steps per fastest cycle.
+  d.control.dt = opt.dt ?? 1 / (240 * Math.max(1, Math.ceil((60 * d.control.freqMax) / 240)));
   return true;
 }
 
@@ -98,6 +114,7 @@ export async function completeDesign(d, { sched = null, opt = {} } = {}) {
   const ctl = buildControl(d, { amp, sym: 0, dyn: best.dyn * DEG, lead: 0, V: Vc }, { speeds, bird });
   if (!ctl) return { failed: 'no trim table' };
   d.control = ctl;
+  applyRound4Options(d, opt);
   // The flight trim is a property of the bird: flown with the round-2 law, then the round-3 options go on top (at a
   // trim row the twist schedule returns the row's own twist, so the table holds for both).
   await refineTrimByFlight(d);
@@ -108,6 +125,7 @@ export async function completeDesign(d, { sched = null, opt = {} } = {}) {
   // Rough air fast (13 m/s, measured best of 12 and 13 over 30 M4 seeds): speed is the energy the bird trades for
   // height in sinking air, and a gust of length H passes in H / V.
   d.control.Vrough = opt.Vrough ?? 13;
+  if (opt.roughMaxBank_deg) d.control.roughMaxBank = opt.roughMaxBank_deg * DEG;
   d.control.Vmin = Math.min(d.control.Vmin, d.control.tecs.Vfloor);
   d.cruise = { V: d.control.Vcruise, amp, dyn: best.dyn * DEG, sym: 0, lead: 0 };
   if (!(await applyFlightEnvelope(d, opt))) return { failed: 'no stroke within ratings in flight' };

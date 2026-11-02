@@ -87,7 +87,8 @@ export function cycleResidual(design, bird, { V, theta, freq, tail, amp, sym, dy
       for (let j = 0; j < 6; j++) res[j] += sim.tel.residual[j];
       const dp = glide ? { P: 0, I: 0 } : drivePowerFromLoad(design, sim.tel.crankTorque, crank);
       const pd = batteryPower(dp.P, design.esc);
-      const pb = (5.0 * sim.tel.servo_I) / 0.85;
+      // Servos and avionics, battery side (through the BEC, or straight off the pack for HV servos on 2S).
+      const pb = sim.tel.aux_power_w ?? (5.0 * sim.tel.servo_I) / 0.85;
       pDrive += pd;
       p5 += pb;
       power += pd + pb;
@@ -424,7 +425,8 @@ export async function strokeFlightTest(design, { V, freq, amp, ramp = 2, settle 
  * given speeds. The frozen-body envelope (strokeEnvelope) under-reads free-flight loads: the body's recoil against
  * the wings raises crank torque and root bending at the same stroke.
  */
-export async function flightEnvelope(design, { speeds, nAmp = 5, allowance = {}, fTop = null, iters = 8, tester = null } = {}) {
+export async function flightEnvelope(design, { speeds, nAmp = 5, allowance = {}, fTop = null, iters = 8, tester = null, perSpeed = false } = {}) {
+  if (perSpeed) return flightEnvelopeBySpeed(design, { speeds, nAmp, allowance, fTop, iters, tester });
   // tester(V, f, amp) -> { ok, worst, pk }: the flight test by default; injectable so the search can be tested alone.
   const fly = tester ?? (async (V, f, amp) => {
     const pk = await strokeFlightTest(design, { V, freq: f, amp });
@@ -457,6 +459,72 @@ export async function flightEnvelope(design, { speeds, nAmp = 5, allowance = {},
       if (a < fmax) { fmax = a; limitedBy = lim; at = V; edge = pkA; }
     }
     out.push({ amp, freqMax: fmax, limitedBy, atV: at, method: 'flight test', edge_peaks: edge && Object.fromEntries(Object.entries(edge).map(([k, v]) => [k, +v.toFixed(4)])) });
+  }
+  return out;
+}
+
+/**
+ * Round 4 motor-current limiter configuration (src/physics/control.js createCurrentLimiter) from the design's ratings:
+ * the setpoint is a fraction of the lower of the motor's and ESC's continuous ratings (both carry the motor current).
+ * o: { fraction, tauRms_s?, kP?, kI?, attnCutoff_Hz?, maxAttn? }; null or undefined gives null (no limiter).
+ */
+export function limiterConfig(d, o) {
+  if (!o) return null;
+  if (!(o.fraction > 0 && o.fraction <= 1)) throw new Error('limiter fraction must be in (0, 1]');
+  const rated = Math.min(d.motor.I_cont ?? Infinity, d.esc.I_cont ?? Infinity);
+  if (!Number.isFinite(rated)) throw new Error('no continuous motor or ESC rating to limit to');
+  return {
+    setpoint_A: +(o.fraction * rated).toFixed(3), rated_A: rated, fraction: o.fraction, tauRms_s: o.tauRms_s ?? 0.5, kP: o.kP ?? 0.005, kI: o.kI ?? 0.02, attnCutoff_Hz: o.attnCutoff_Hz ?? 1.2, maxAttn: o.maxAttn ?? 0.5,
+    sensor: 'power-module battery current and voltage at the controller rate, crank encoder rate; motor current solved from the ESC input power (motorCurrentEstimate)',
+  };
+}
+
+/**
+ * Round 4: the stroke envelope at each of several airspeeds, so the controller can give the stroke the ratings allow at
+ * the speed it is flying (control.js envelopeFreq). Per amplitude: for every speed, the highest frequency in [0.8 Hz,
+ * fTop] whose flight-test peaks respect the ratings x allowance (0 when even 0.8 Hz does not), found by bisection
+ * from the trim's own stroke speed. freqMax (the minimum over speeds) stays for the launch and the envelope's best point.
+ */
+async function flightEnvelopeBySpeed(design, { speeds, nAmp, allowance, fTop, iters, tester }) {
+  const fly = tester ?? (async (V, f, amp) => {
+    const pk = await strokeFlightTest(design, { V, freq: f, amp });
+    return { ...flightRatios(design, pk, allowance), pk };
+  });
+  const lo = design.drive.ampMin, hi = design.drive.ampMax;
+  const trims = design.control.trim;
+  const fT = fTop ?? 2.5 * Math.max(...trims.map((t) => t.freq));
+  const round = (pk) => pk && Object.fromEntries(Object.entries(pk).map(([k, v]) => [k, +v.toFixed(4)]));
+  const out = [];
+  for (let i = 0; i < nAmp; i++) {
+    const amp = lo + ((hi - lo) * i) / (nAmp - 1);
+    const bySpeed = [];
+    for (const V of speeds) {
+      const tr0 = trims.reduce((a, b) => (Math.abs(b.V - V) < Math.abs(a.V - V) ? b : a));
+      const test = (f) => fly(V, f, amp);
+      const start = Math.max(0.8, (tr0.freq * tr0.amp) / amp);
+      let a, b, lim, pkA = null;
+      const qs = await test(start);
+      if (qs.ok) {
+        a = start; b = fT; pkA = qs.pk; lim = 'search cap';
+        const qb = await test(b);
+        if (qb.ok) { a = b; pkA = qb.pk; } else lim = qb.worst;
+      } else {
+        // Even the trim's stroke speed breaks a rating at this airspeed: search below it.
+        const q0 = await test(0.8);
+        if (!q0.ok) { bySpeed.push({ V, freqMax: 0, limitedBy: q0.worst, edge_peaks: round(q0.pk) }); continue; }
+        a = 0.8; b = start; pkA = q0.pk; lim = qs.worst;
+      }
+      if (b > a) {
+        for (let it = 0; it < iters; it++) {
+          const m = 0.5 * (a + b);
+          const q = await test(m);
+          if (q.ok) { a = m; pkA = q.pk; } else { b = m; lim = q.worst; }
+        }
+      }
+      bySpeed.push({ V, freqMax: a, limitedBy: lim, edge_peaks: round(pkA) });
+    }
+    const w = bySpeed.reduce((p, q) => (q.freqMax < p.freqMax ? q : p));
+    out.push({ amp, freqMax: w.freqMax, limitedBy: w.limitedBy, atV: w.V, method: 'flight test at each speed', bySpeed, edge_peaks: w.edge_peaks });
   }
   return out;
 }

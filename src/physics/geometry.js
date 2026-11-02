@@ -11,10 +11,12 @@ const TWO_PI = 2 * Math.PI;
 
 /**
  * Lofted section list for a pod-and-boom fuselage. Inputs are the builder's body numbers:
- *  { noseX_m, podLength_m, width_m, height_m, boomOd_m, tailEndX_m, y_m }.
- * Nose: elliptic profile over the first 40% of the pod; mid-pod constant; aft 35% tapers to the boom diameter.
+ *  { noseX_m, podLength_m, width_m, height_m, boomOd_m, tailEndX_m, y_m, boomY_m }.
+ * Nose: elliptic profile over the first 40% of the pod; mid-pod constant; aft 35% tapers to the boom diameter. The pod's
+ * centre line is at y_m; over the aft taper it moves to the boom's, boomY_m (default y_m: one straight centre line).
  */
-export function podAndBoomLoft({ noseX_m, podLength_m, width_m, height_m, boomOd_m, tailEndX_m, y_m = 0 }, nPod = 14) {
+export function podAndBoomLoft({ noseX_m, podLength_m, width_m, height_m, boomOd_m, tailEndX_m, y_m = 0, boomY_m = null }, nPod = 14) {
+  const yB = boomY_m ?? y_m;
   const sections = [];
   const xTail = noseX_m - podLength_m;
   const fNose = 0.4, fAft = 0.35;
@@ -28,9 +30,10 @@ export function podAndBoomLoft({ noseX_m, podLength_m, width_m, height_m, boomOd
     else k = 1 - (u - (1 - fAft)) / fAft; // linear to the boom
     const w = Math.max(boomOd_m, k * width_m);
     const h = Math.max(boomOd_m, k * height_m);
-    sections.push({ x_m: noseX_m - u * podLength_m, y_m, width_m: i === 0 ? 0 : w, height_m: i === 0 ? 0 : h });
+    const yc = u <= 1 - fAft ? y_m : y_m + ((u - (1 - fAft)) / fAft) * (yB - y_m);
+    sections.push({ x_m: noseX_m - u * podLength_m, y_m: yc, width_m: i === 0 ? 0 : w, height_m: i === 0 ? 0 : h });
   }
-  if (tailEndX_m < xTail) sections.push({ x_m: tailEndX_m, y_m, width_m: boomOd_m, height_m: boomOd_m });
+  if (tailEndX_m < xTail) sections.push({ x_m: tailEndX_m, y_m: yB, width_m: boomOd_m, height_m: boomOd_m });
   return { kind: 'elliptic-loft', sections };
 }
 

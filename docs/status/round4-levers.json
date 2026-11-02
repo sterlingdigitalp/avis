@@ -1,0 +1,612 @@
+{
+ "note": "M4 100 seeds per corner; peaks over passing seeds; corners: aero 0.9, mass 1.05, cg -5 / +5 mm. Produced by scratch sweep scripts with src/physics/gates/pool.js.",
+ "rows": [
+  {
+   "tag": "base-v9",
+   "what": "v9 at dt 1/480 (round 3 as built)",
+   "nominal": {
+    "M4": "93/100",
+    "crank_Nm": 10.57,
+    "crank_drive_Nm": 0,
+    "crank_back_Nm": 0,
+    "root_Nm": 33.7,
+    "twist_Nm": 0.757,
+    "motor_rms_A": 38.0,
+    "worst_roll_deg": 53.7,
+    "M1": null
+   },
+   "cg-5": {
+    "M4": "84/100",
+    "crank_Nm": 10.12,
+    "crank_drive_Nm": 0,
+    "crank_back_Nm": 0,
+    "root_Nm": 35.2,
+    "twist_Nm": 0.739,
+    "motor_rms_A": 36.4,
+    "worst_roll_deg": 74.1,
+    "M1": null
+   },
+   "cg+5": {
+    "M4": "85/100",
+    "crank_Nm": 9.94,
+    "crank_drive_Nm": 0,
+    "crank_back_Nm": 0,
+    "root_Nm": 38.7,
+    "twist_Nm": 0.792,
+    "motor_rms_A": 36.7,
+    "worst_roll_deg": 66.7,
+    "M1": null
+   }
+  },
+  {
+   "tag": "v9-dt4",
+   "what": "v9 at dt 1/1920 (converged step)",
+   "nominal": {
+    "M4": "92/100",
+    "crank_Nm": 10.54,
+    "crank_drive_Nm": 0,
+    "crank_back_Nm": 0,
+    "root_Nm": 33.0,
+    "twist_Nm": 0.728,
+    "motor_rms_A": 38.1,
+    "worst_roll_deg": 60.8,
+    "M1": null
+   }
+  },
+  {
+   "tag": "r4a",
+   "what": "+ HV servos on 2S pack (twist servo fast enough), dt 1/960, Vrough 13",
+   "nominal": {
+    "M4": "95/100",
+    "crank_Nm": 9.62,
+    "crank_drive_Nm": 9.62,
+    "crank_back_Nm": 9.07,
+    "root_Nm": 37.1,
+    "twist_Nm": 0.822,
+    "motor_rms_A": 35.2,
+    "worst_roll_deg": 39.9,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "95/100",
+    "crank_Nm": 9.54,
+    "crank_drive_Nm": 9.52,
+    "crank_back_Nm": 9.54,
+    "root_Nm": 39.8,
+    "twist_Nm": 0.81,
+    "motor_rms_A": 34.6,
+    "worst_roll_deg": 42.4,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "95/100",
+    "crank_Nm": 10.32,
+    "crank_drive_Nm": 9.84,
+    "crank_back_Nm": 10.32,
+    "root_Nm": 43.6,
+    "twist_Nm": 0.883,
+    "motor_rms_A": 34.6,
+    "worst_roll_deg": 48.5,
+    "M1": false
+   }
+  },
+  {
+   "tag": "vr14",
+   "what": "+ Vrough 14",
+   "nominal": {
+    "M4": "99/100",
+    "crank_Nm": 9.79,
+    "crank_drive_Nm": 9.79,
+    "crank_back_Nm": 9.71,
+    "root_Nm": 40.9,
+    "twist_Nm": 0.893,
+    "motor_rms_A": 37.0,
+    "worst_roll_deg": 39.4,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "98/100",
+    "crank_Nm": 9.94,
+    "crank_drive_Nm": 9.71,
+    "crank_back_Nm": 9.94,
+    "root_Nm": 42.0,
+    "twist_Nm": 0.859,
+    "motor_rms_A": 35.8,
+    "worst_roll_deg": 39.1,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "98/100",
+    "crank_Nm": 10.26,
+    "crank_drive_Nm": 10.16,
+    "crank_back_Nm": 10.26,
+    "root_Nm": 44.0,
+    "twist_Nm": 0.917,
+    "motor_rms_A": 35.3,
+    "worst_roll_deg": 53.0,
+    "M1": false
+   }
+  },
+  {
+   "tag": "vr15",
+   "what": "+ Vrough 15",
+   "nominal": {
+    "M4": "99/100",
+    "crank_Nm": 10.13,
+    "crank_drive_Nm": 10.13,
+    "crank_back_Nm": 9.88,
+    "root_Nm": 41.4,
+    "twist_Nm": 0.893,
+    "motor_rms_A": 36.6,
+    "worst_roll_deg": 37.4,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "99/100",
+    "crank_Nm": 10.24,
+    "crank_drive_Nm": 10.14,
+    "crank_back_Nm": 10.24,
+    "root_Nm": 44.0,
+    "twist_Nm": 0.925,
+    "motor_rms_A": 36.0,
+    "worst_roll_deg": 47.9,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "99/100",
+    "crank_Nm": 9.91,
+    "crank_drive_Nm": 9.91,
+    "crank_back_Nm": 9.87,
+    "root_Nm": 42.0,
+    "twist_Nm": 0.886,
+    "motor_rms_A": 35.9,
+    "worst_roll_deg": 39.5,
+    "M1": false
+   }
+  },
+  {
+   "tag": "b15",
+   "what": "+ braking at the ESC rating (active freewheeling)",
+   "nominal": {
+    "M4": "99/100",
+    "crank_Nm": 9.9,
+    "crank_drive_Nm": 9.9,
+    "crank_back_Nm": 9.54,
+    "root_Nm": 27.9,
+    "twist_Nm": 0.613,
+    "motor_rms_A": 37.9,
+    "worst_roll_deg": 39.2,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "99/100",
+    "crank_Nm": 9.59,
+    "crank_drive_Nm": 9.59,
+    "crank_back_Nm": 9.5,
+    "root_Nm": 28.3,
+    "twist_Nm": 0.6,
+    "motor_rms_A": 36.6,
+    "worst_roll_deg": 45.4,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "99/100",
+    "crank_Nm": 9.91,
+    "crank_drive_Nm": 9.4,
+    "crank_back_Nm": 9.91,
+    "root_Nm": 29.5,
+    "twist_Nm": 0.607,
+    "motor_rms_A": 36.6,
+    "worst_roll_deg": 44.3,
+    "M1": false
+   }
+  },
+  {
+   "tag": "b15m",
+   "what": "+ Cobra C-2820/14",
+   "nominal": {
+    "M4": "98/100",
+    "crank_Nm": 10.76,
+    "crank_drive_Nm": 10.76,
+    "crank_back_Nm": 8.22,
+    "root_Nm": 16.0,
+    "twist_Nm": 0.454,
+    "motor_rms_A": 28.1,
+    "worst_roll_deg": 42.1,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "98/100",
+    "crank_Nm": 10.29,
+    "crank_drive_Nm": 10.29,
+    "crank_back_Nm": 8.23,
+    "root_Nm": 15.9,
+    "twist_Nm": 0.423,
+    "motor_rms_A": 28.1,
+    "worst_roll_deg": 42.9,
+    "M1": false
+   },
+   "cg+5": {
+    "M4": "98/100",
+    "crank_Nm": 10.05,
+    "crank_drive_Nm": 10.05,
+    "crank_back_Nm": 8.44,
+    "root_Nm": 16.4,
+    "twist_Nm": 0.424,
+    "motor_rms_A": 27.8,
+    "worst_roll_deg": 39.2,
+    "M1": false
+   }
+  },
+  {
+   "tag": "b15s20m",
+   "what": "+ 2.0 m span",
+   "nominal": {
+    "M4": "98/100",
+    "crank_Nm": 11.44,
+    "crank_drive_Nm": 11.44,
+    "crank_back_Nm": 9.33,
+    "root_Nm": 20.4,
+    "twist_Nm": 0.631,
+    "motor_rms_A": 27.4,
+    "worst_roll_deg": 33.1,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "98/100",
+    "crank_Nm": 11.25,
+    "crank_drive_Nm": 11.25,
+    "crank_back_Nm": 8.7,
+    "root_Nm": 18.8,
+    "twist_Nm": 0.607,
+    "motor_rms_A": 27.3,
+    "worst_roll_deg": 40.9,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "98/100",
+    "crank_Nm": 11.15,
+    "crank_drive_Nm": 11.15,
+    "crank_back_Nm": 8.99,
+    "root_Nm": 19.4,
+    "twist_Nm": 0.596,
+    "motor_rms_A": 26.9,
+    "worst_roll_deg": 41.5,
+    "M1": true
+   }
+  },
+  {
+   "tag": "s20m-lim",
+   "what": "lever 1a: rms current limiter (setpoint 0.9 x 30 A) on b15s20m",
+   "nominal": {
+    "M4": "99/100",
+    "crank_Nm": 11.49,
+    "crank_drive_Nm": 11.49,
+    "crank_back_Nm": 8.82,
+    "root_Nm": 20.5,
+    "twist_Nm": 0.619,
+    "motor_rms_A": 27.0,
+    "worst_roll_deg": 34.9,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "98/100",
+    "crank_Nm": 11.3,
+    "crank_drive_Nm": 11.3,
+    "crank_back_Nm": 8.67,
+    "root_Nm": 18.7,
+    "twist_Nm": 0.587,
+    "motor_rms_A": 27.2,
+    "worst_roll_deg": 36.5,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "98/100",
+    "crank_Nm": 11.21,
+    "crank_drive_Nm": 11.21,
+    "crank_back_Nm": 8.91,
+    "root_Nm": 19.3,
+    "twist_Nm": 0.599,
+    "motor_rms_A": 26.6,
+    "worst_roll_deg": 38.7,
+    "M1": true
+   }
+  },
+  {
+   "tag": "s20m-c36",
+   "what": "lever 1b: drive clamp 36 A on b15s20m",
+   "nominal": {
+    "M4": "99/100",
+    "crank_Nm": 10.08,
+    "crank_drive_Nm": 9.56,
+    "crank_back_Nm": 10.08,
+    "root_Nm": 24.0,
+    "twist_Nm": 0.663,
+    "motor_rms_A": 28.4,
+    "worst_roll_deg": 32.8,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "99/100",
+    "crank_Nm": 9.92,
+    "crank_drive_Nm": 9.49,
+    "crank_back_Nm": 9.92,
+    "root_Nm": 23.3,
+    "twist_Nm": 0.648,
+    "motor_rms_A": 28.0,
+    "worst_roll_deg": 33.5,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "98/100",
+    "crank_Nm": 9.73,
+    "crank_drive_Nm": 9.2,
+    "crank_back_Nm": 9.73,
+    "root_Nm": 22.5,
+    "twist_Nm": 0.641,
+    "motor_rms_A": 28.1,
+    "worst_roll_deg": 37.6,
+    "M1": true
+   }
+  },
+  {
+   "tag": "s20m-gla",
+   "what": "lever 2: GLA k 0.1 rad/g on b15s20m",
+   "nominal": {
+    "M4": "98/100",
+    "crank_Nm": 11.05,
+    "crank_drive_Nm": 11.05,
+    "crank_back_Nm": 8.19,
+    "root_Nm": 19.0,
+    "twist_Nm": 0.631,
+    "motor_rms_A": 28.0,
+    "worst_roll_deg": 35.5,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "98/100",
+    "crank_Nm": 10.42,
+    "crank_drive_Nm": 10.42,
+    "crank_back_Nm": 8.38,
+    "root_Nm": 18.7,
+    "twist_Nm": 0.595,
+    "motor_rms_A": 27.2,
+    "worst_roll_deg": 35.0,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "98/100",
+    "crank_Nm": 10.43,
+    "crank_drive_Nm": 10.43,
+    "crank_back_Nm": 8.67,
+    "root_Nm": 18.9,
+    "twist_Nm": 0.594,
+    "motor_rms_A": 26.8,
+    "worst_roll_deg": 36.4,
+    "M1": true
+   }
+  },
+  {
+   "tag": "p3",
+   "what": "per-speed envelope on b15s20m",
+   "nominal": {
+    "M4": "99/100",
+    "crank_Nm": 11.87,
+    "crank_drive_Nm": 11.87,
+    "crank_back_Nm": 9.39,
+    "root_Nm": 22.0,
+    "twist_Nm": 0.651,
+    "motor_rms_A": 30.8,
+    "worst_roll_deg": 33.0,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "99/100",
+    "crank_Nm": 11.24,
+    "crank_drive_Nm": 11.24,
+    "crank_back_Nm": 9.55,
+    "root_Nm": 21.5,
+    "twist_Nm": 0.629,
+    "motor_rms_A": 29.9,
+    "worst_roll_deg": 34.8,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "99/100",
+    "crank_Nm": 11.27,
+    "crank_drive_Nm": 11.27,
+    "crank_back_Nm": 9.57,
+    "root_Nm": 21.3,
+    "twist_Nm": 0.627,
+    "motor_rms_A": 29.6,
+    "worst_roll_deg": 37.4,
+    "M1": true
+   }
+  },
+  {
+   "tag": "g4c36",
+   "what": "4-stage train + clamp 36 A",
+   "nominal": {
+    "M4": "100/100",
+    "crank_Nm": 11.68,
+    "crank_drive_Nm": 11.68,
+    "crank_back_Nm": 10.83,
+    "root_Nm": 20.8,
+    "twist_Nm": 0.607,
+    "motor_rms_A": 27.2,
+    "worst_roll_deg": 36.1,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "99/100",
+    "crank_Nm": 11.13,
+    "crank_drive_Nm": 11.13,
+    "crank_back_Nm": 11.13,
+    "root_Nm": 20.4,
+    "twist_Nm": 0.591,
+    "motor_rms_A": 27.1,
+    "worst_roll_deg": 36.7,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "99/100",
+    "crank_Nm": 11.23,
+    "crank_drive_Nm": 10.87,
+    "crank_back_Nm": 11.23,
+    "root_Nm": 21.2,
+    "twist_Nm": 0.598,
+    "motor_rms_A": 26.8,
+    "worst_roll_deg": 34.5,
+    "M1": true
+   }
+  },
+  {
+   "tag": "q3",
+   "what": "+ Ti torque tube, clamp 34 A, gear allowance 0.72",
+   "nominal": {
+    "M4": "98/100",
+    "crank_Nm": 11.03,
+    "crank_drive_Nm": 11.03,
+    "crank_back_Nm": 7.55,
+    "root_Nm": 15.7,
+    "twist_Nm": 0.54,
+    "motor_rms_A": 22.4,
+    "worst_roll_deg": 32.6,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "98/100",
+    "crank_Nm": 10.85,
+    "crank_drive_Nm": 10.85,
+    "crank_back_Nm": 7.9,
+    "root_Nm": 15.8,
+    "twist_Nm": 0.508,
+    "motor_rms_A": 22.0,
+    "worst_roll_deg": 33.5,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "98/100",
+    "crank_Nm": 10.39,
+    "crank_drive_Nm": 10.39,
+    "crank_back_Nm": 7.75,
+    "root_Nm": 16.1,
+    "twist_Nm": 0.499,
+    "motor_rms_A": 21.8,
+    "worst_roll_deg": 34.9,
+    "M1": true
+   }
+  },
+  {
+   "tag": "u3",
+   "what": "clamp 34 A, gear allowance 0.75",
+   "nominal": {
+    "M4": "99/100",
+    "crank_Nm": 11.19,
+    "crank_drive_Nm": 11.19,
+    "crank_back_Nm": 9.1,
+    "root_Nm": 20.9,
+    "twist_Nm": 0.566,
+    "motor_rms_A": 24.1,
+    "worst_roll_deg": 35.4,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "99/100",
+    "crank_Nm": 11.03,
+    "crank_drive_Nm": 11.03,
+    "crank_back_Nm": 9.31,
+    "root_Nm": 21.6,
+    "twist_Nm": 0.545,
+    "motor_rms_A": 23.6,
+    "worst_roll_deg": 39.1,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "98/100",
+    "crank_Nm": 10.53,
+    "crank_drive_Nm": 10.53,
+    "crank_back_Nm": 9.18,
+    "root_Nm": 19.3,
+    "twist_Nm": 0.574,
+    "motor_rms_A": 23.5,
+    "worst_roll_deg": 36.7,
+    "M1": true
+   }
+  },
+  {
+   "tag": "w1",
+   "what": "+ shared crank pin flown, body fitted, derived parts (hinged elbow)",
+   "nominal": {
+    "M4": "100/100",
+    "crank_Nm": 11.52,
+    "crank_drive_Nm": 11.52,
+    "crank_back_Nm": 9.6,
+    "root_Nm": 20.0,
+    "twist_Nm": 0.606,
+    "motor_rms_A": 26.6,
+    "worst_roll_deg": 36.1,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "99/100",
+    "crank_Nm": 10.54,
+    "crank_drive_Nm": 10.54,
+    "crank_back_Nm": 9.86,
+    "root_Nm": 19.6,
+    "twist_Nm": 0.6,
+    "motor_rms_A": 26.4,
+    "worst_roll_deg": 38.2,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "99/100",
+    "crank_Nm": 10.4,
+    "crank_drive_Nm": 10.4,
+    "crank_back_Nm": 9.97,
+    "root_Nm": 20.1,
+    "twist_Nm": 0.616,
+    "motor_rms_A": 26.2,
+    "worst_roll_deg": 42.1,
+    "M1": false
+   }
+  },
+  {
+   "tag": "w3",
+   "what": "rigid elbow, 48 deg stroke limit (final candidate)",
+   "nominal": {
+    "M4": "100/100",
+    "crank_Nm": 11.21,
+    "crank_drive_Nm": 11.21,
+    "crank_back_Nm": 8.59,
+    "root_Nm": 20.3,
+    "twist_Nm": 0.629,
+    "motor_rms_A": 25.4,
+    "worst_roll_deg": 32.3,
+    "M1": true
+   },
+   "cg-5": {
+    "M4": "100/100",
+    "crank_Nm": 10.53,
+    "crank_drive_Nm": 10.53,
+    "crank_back_Nm": 9.82,
+    "root_Nm": 20.4,
+    "twist_Nm": 0.59,
+    "motor_rms_A": 25.1,
+    "worst_roll_deg": 31.8,
+    "M1": true
+   },
+   "cg+5": {
+    "M4": "99/100",
+    "crank_Nm": 10.62,
+    "crank_drive_Nm": 10.62,
+    "crank_back_Nm": 9.39,
+    "root_Nm": 20.1,
+    "twist_Nm": 0.592,
+    "motor_rms_A": 25.0,
+    "worst_roll_deg": 33.3,
+    "M1": true
+   }
+  }
+ ]
+}

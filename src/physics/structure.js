@@ -19,6 +19,21 @@ export function couplerCheck(cp, F) {
   return { buckling_N: buckling, fos_buckling: buckling / F, stress_MPa: stress, allowable_MPa: allowable, fos_stress: allowable / stress, section: { I_m4: I, area_m2: area, kind: id > 0 ? 'tube' : 'rod' } };
 }
 
+/**
+ * Twist torque rod or tube in torsion (round 4, M7 linkage): shear stress T r / J with J = pi (od^4 - id^4) / 32.
+ * Allowable shear only from a published figure: a metal tube's published minimum yield through von Mises,
+ * tau_y = sigma_y / sqrt(3); a composite rod or tube publishes no shear strength in the catalogue, so it has none
+ * (fos null: the check cannot pass). rod: { od_m, id_m?, kind: 'metal'|'composite', yield_MPa? }. T in N m.
+ */
+export function torsionCheck(rod, T) {
+  const od = rod.od_m;
+  const id = rod.id_m ?? 0;
+  const J = (Math.PI * (od ** 4 - id ** 4)) / 32;
+  const stress = (Math.abs(T) * (od / 2)) / J / 1e6;
+  const allowable = rod.kind === 'metal' && Number.isFinite(rod.yield_MPa) ? rod.yield_MPa / Math.sqrt(3) : null;
+  return { stress_MPa: stress, allowable_shear_MPa: allowable, fos: allowable ? allowable / stress : null, J_m4: J, basis: allowable ? 'published minimum yield / sqrt(3) (von Mises shear yield)' : 'no published shear strength: torsion cannot be checked' };
+}
+
 /** Bending stress (MPa) of a tube section { I, c } under moment M (N m), and its factor of safety. */
 export function sparCheck(sp, M) {
   const stress = (M * sp.c) / sp.I / 1e6;
