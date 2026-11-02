@@ -118,6 +118,15 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
   - **What applies then.** For the M4 seed population only, the mean and the 90th percentile of the per-seed peaks must each change by less than 10%. M7 then uses the larger of the two steps' population maxima.
   - **Disclosure.** This ruling was written after round 6 failed the check, and any gate table that uses it must say so.
 
+### Rulings after physics round 7 (2026-11-02)
+
+- **Values with no basis count at half.** This covers anything a maker labels "reference" or "estimate", or publishes without saying whether it is a minimum. It is the same rule as for typical values.
+- **Crushing on a keyway or seat.** Use the yield that the material standard specifies for the stated heat treatment, for example JIS G4051 for S45C or JIS G4053 for SCM415. If the standard gives only a tensile minimum, use half of that.
+- **Every part reaches the airframe through a rated path.** The gearbox, battery, tail boom and pod each need fasteners or joints rated as follows:
+  - fasteners against ISO 898-1 or ISO 3506 minimum loads, or the fastener maker's rated loads;
+  - bonded joints against the adhesive maker's published strength on that substrate.
+- **No modifications against maker advice.** A part modified against its maker's stated advice (drilling, re-boring, cutting) is ineligible. The maker's own machined or keyed variants are fine.
+
 ### Public repository
 
 `github.com/sterlingdigitalp/avis` is public. UIUC-derived tables and airfoil coordinate files stay local and gitignored (`data/references/airfoil-e387.json`, `data/references/airfoils/`), because their licence terms are unclear or reserved. Our own CFD polars are ours to publish. Copernicus terrain, if used, requires the notice in `data/references/credits.md` in the film credits and README.
