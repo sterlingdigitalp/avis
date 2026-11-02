@@ -131,6 +131,7 @@ export function createController(design, opts = {}) {
   let ImEst = 0;
   let vyF = 0, hF = 0, VF2 = cfg.Vcruise;
   let ampsF = 0;
+  let lastAmps = 0; // the last current-sense reading (telemetry, and the tests of its resolution)
   let iLimit = 0;
   let lastNotchF = -1;
   let pF = 0, qF = 0, rF = 0;
@@ -205,6 +206,7 @@ export function createController(design, opts = {}) {
       };
     }
     // Crank encoder (the stroke sync loop's sensor): rate read without noise at the controller rate.
+    lastAmps = amps;
     return { gyro, acc, baro, pitot, gps, mag, amps, volts, crank: t.crank };
   }
 
@@ -501,6 +503,8 @@ export function createController(design, opts = {}) {
     get gpsPos() { return gpsPos; },
     get gnd() { return gnd; },
     get VEst() { return VasEst; },
+    /** The last battery current reading, as the flight controller's current sense delivers it (A). */
+    get sensedAmps() { return lastAmps; },
     rate: fs,
   };
 }

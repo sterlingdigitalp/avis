@@ -63,23 +63,31 @@ function eye(name, part, ch, surfacePerCrank, reacts) {
  * choice = { shoulder, shoulderSpan_mm, crankShaft, shafts: [part per intermediate shaft, crank side first],
  * couplerEyes }. Returns { joints, unchecked, layout }.
  */
-export function driveJoints(d, catalog, choice) {
+/**
+ * The drive's geometry and force ratios from the film's layout (model.js placeFourBar, gearTrain, gearPlanes): shared
+ * by the joints and, round 6, the loaded members (src/design/linkage.js).
+ */
+export function driveLayout(d, catalog) {
   const law = makeFlapDrive(d.drive);
   const fb = placeFourBar(d, law);
   const train = gearTrain(d, partsIndex(d, catalog), fb);
   const planes = gearPlanes(d, train);
-  const n = train.n;
-  const x0 = d.wing.hinge[0];
-  const span = (choice.shoulderSpan_mm ?? 24) / 1000;
-  const part = (id) => byId(catalog, id);
-  // Mesh force per N m of crank load torque at stage k: the tangential force T_wheel / r_wheel over cos(pressure angle).
+  // Torque ratio from the wheel of stage k to the crank, and the mesh force per N m of crank load torque at stage k:
+  // the tangential force T_wheel / r_wheel over cos(pressure angle).
   const below = (k) => train.stages.slice(k + 1).reduce((r, s) => r * (s.wheel.z / s.pinion.z), 1);
   const alpha = (k) => (byId(catalog, train.stages[k].wheel.id).specs.pressure_angle_deg ?? 20) * DEG;
   const meshPerNm = (k) => 1 / (below(k) * train.stages[k].wheel.rp * Math.cos(alpha(k)));
   // Stroke rates: the shoulder turns at most at the linkage's peak velocity ratio times the crank rate.
   const amps = [d.drive.ampMin, d.drive.ampMax];
   const ratio = Math.max(...amps.map((a) => linkageCycleStats(law, a).maxRatio));
-  const aOverB = d.drive.a / d.drive.b;
+  return { law, fb, train, planes, n: train.n, x0: d.wing.hinge[0], below, meshPerNm, ratio, aOverB: d.drive.a / d.drive.b };
+}
+
+export function driveJoints(d, catalog, choice) {
+  const lay = driveLayout(d, catalog);
+  const { train, planes, n, x0, below, meshPerNm, ratio, aOverB } = lay;
+  const span = (choice.shoulderSpan_mm ?? 24) / 1000;
+  const part = (id) => byId(catalog, id);
   const joints = [];
   for (const [side, w, xB] of [['right', 'R', planes.couplerR], ['left', 'L', planes.couplerL]]) {
     joints.push(shaft(`shoulder pivot ${side}`, part(choice.shoulder), x0 - span / 2, x0 + span / 2, [
@@ -106,6 +114,19 @@ export function driveJoints(d, catalog, choice) {
     joints.push(eye(`coupler eye ${side}, crank pin`, part(choice.couplerEyes), `coupler_${w}`, 1 + aOverB, `the ${side} coupler's force at the crank pin`));
     joints.push(eye(`coupler eye ${side}, rocker horn`, part(choice.couplerEyes), `coupler_${w}`, ratio + aOverB, `the ${side} coupler's force at the rocker horn`));
   }
-  const unchecked = [{ name: 'motor shaft', carries: `stage 1 mesh, pinion ${train.stages[0].pinion.id}`, force_per_crank_Nm: +meshPerNm(0).toFixed(4), note: 'the motor\'s own bearings carry the first pinion; the motor maker publishes no bearing rating, so this load is reported, not checked' }];
+  // Round 6 (SPEC ruling after round 5, motor bearings carrying a pinion): an outboard bearing in the forward gearbox
+  // plate on the motor shaft, between the motor and the first pinion. The pinion overhangs it by a; the nearest motor
+  // bearing can sit no closer than s = the gap to the motor's face plus half a published motor-bearing width (the
+  // motor's bearing positions are not published), and the smallest s gives the largest plate-bearing load,
+  // F (a + s) / s, which is what it is rated for. The motor bearing then carries F a / s (reported in unchecked).
+  let motorLever = null;
+  if (choice.motorOutboard) {
+    const a = planes.plateFwd - planes.stage[0];
+    const s0 = planes.motorAft - planes.plateFwd + (choice.motorBearingHalfWidth_mm ?? 2.5) / 1000;
+    motorLever = { a_m: +a.toFixed(5), s_min_m: +s0.toFixed(5), plate_share: (a + s0) / s0, motor_share: a / s0 };
+    const ob = part(choice.motorOutboard);
+    joints.push({ name: 'motor shaft outboard', part_id: ob.id, count: 1, reacts: `stage 1 mesh at pinion ${train.stages[0].pinion.id}, overhung ${(a * 1000).toFixed(1)} mm from this bearing`, supports: [{ name: 'plate', radial: [{ ch: 'crank_torque', k: +(meshPerNm(0) * motorLever.plate_share).toFixed(6), what: `stage 1 mesh x (a + s) / s, a ${(a * 1000).toFixed(1)} mm, s ${(s0 * 1000).toFixed(1)} mm (nearest a motor bearing can be)` }], axial: [], ...p0Form(ob), part: ratedPart(ob), surface_m_s_per_crank_rad_s: 0 }] });
+  }
+  const unchecked = [{ name: 'motor shaft', carries: `stage 1 mesh, pinion ${train.stages[0].pinion.id}`, force_per_crank_Nm: +meshPerNm(0).toFixed(4), ...(motorLever ? { motor_bearing_force_per_crank_Nm: +(meshPerNm(0) * motorLever.motor_share).toFixed(4), lever: motorLever, note: 'with the outboard bearing, the motor bearing nearest the pinion carries at most F a / s; the motor maker publishes its bearing sizes (11 x 5 x 5 and 16 x 5 x 5 mm) but not their maker, designation or positions, so it is reported against the lowest same-size C0 read (NMB L-1150ZZ 276 N), not credited' } : { note: 'the motor\'s own bearings carry the first pinion; the motor maker publishes no bearing rating, so this load is reported, not checked' }) }];
   return { joints, unchecked, layout: { source: 'sims/avis-shared/model.js placeFourBar, gearTrain, gearPlanes (film workstream), used unchanged', hinge_x_m: x0, shoulder_span_m: span, planes_m: { plateAft: planes.plateAft, plateFwd: planes.plateFwd, stage: planes.stage, couplerR: planes.couplerR, couplerL: planes.couplerL, crankArm: planes.crankArm }, max_stroke_velocity_ratio: +ratio.toFixed(4), mesh_force_per_crank_Nm: train.stages.map((s, k) => +meshPerNm(k).toFixed(4)) } };
 }

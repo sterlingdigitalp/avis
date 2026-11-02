@@ -65,7 +65,7 @@ function makeLog(sim, design, scenario) {
 export function setupFlight(design, { seed = 1, perturb = {}, wind = null, delay = 0.02, sensorNoise = true, init = {}, groundY = -1e9, servoSpeedScale, dt = null } = {}) {
   dt = dt ?? design.control?.dt ?? 1 / 240;
   const bird = buildBird(design, { perturb: { ...perturb, servoSpeed: perturb.servoSpeed ?? servoSpeedScale } });
-  const sim = createFlight(design, { bird, wind, dt, groundY });
+  const sim = createFlight(design, { bird, wind, dt, groundY, delay });
   const ctl = design.control;
   const tr = ctl.trim;
   const Vc = init.V ?? ctl.Vcruise;

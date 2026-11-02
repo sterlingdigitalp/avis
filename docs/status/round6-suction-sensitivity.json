@@ -1,0 +1,439 @@
+{
+ "note": "Information for the eta_s ruling, not a gate and not a fit. The design is the final one flown unchanged (trim tables, envelope and controller made at eta_s 0.6, not re-trimmed); eta_s is the same constant on every strip (buildBird perturb.suctionEta). Nothing here changes SUCTION.eta.",
+ "design": "larus-gl-2",
+ "version": 16,
+ "assumed_eta_s": 0.6,
+ "effective_angle_cruise": {
+  "cruise_airspeed_target_m_s": 9.5,
+  "flap_hz_measured": 1.808,
+  "cycles": 8,
+  "settle_s": 6,
+  "stations": [
+   {
+    "wing": "right",
+    "station": 0,
+    "s_m": 0.0609,
+    "frac_semispan": 0.063,
+    "alpha_eff_min_deg": -1.25,
+    "alpha_eff_max_deg": 2.6,
+    "alpha_eff_amplitude_deg": 1.93,
+    "alpha_geo_min_deg": 1.52,
+    "alpha_geo_max_deg": 8.91
+   },
+   {
+    "wing": "right",
+    "station": 1,
+    "s_m": 0.1828,
+    "frac_semispan": 0.188,
+    "alpha_eff_min_deg": -2.08,
+    "alpha_eff_max_deg": 4.53,
+    "alpha_eff_amplitude_deg": 3.3,
+    "alpha_geo_min_deg": -0.25,
+    "alpha_geo_max_deg": 7.77
+   },
+   {
+    "wing": "right",
+    "station": 2,
+    "s_m": 0.3047,
+    "frac_semispan": 0.313,
+    "alpha_eff_min_deg": -3.6,
+    "alpha_eff_max_deg": 6.08,
+    "alpha_eff_amplitude_deg": 4.84,
+    "alpha_geo_min_deg": -5.43,
+    "alpha_geo_max_deg": 11.45
+   },
+   {
+    "wing": "right",
+    "station": 3,
+    "s_m": 0.4266,
+    "frac_semispan": 0.438,
+    "alpha_eff_min_deg": -5.14,
+    "alpha_eff_max_deg": 7.22,
+    "alpha_eff_amplitude_deg": 6.18,
+    "alpha_geo_min_deg": -10.91,
+    "alpha_geo_max_deg": 15.52
+   },
+   {
+    "wing": "right",
+    "station": 4,
+    "s_m": 0.5484,
+    "frac_semispan": 0.563,
+    "alpha_eff_min_deg": -5.78,
+    "alpha_eff_max_deg": 7.66,
+    "alpha_eff_amplitude_deg": 6.72,
+    "alpha_geo_min_deg": -12.27,
+    "alpha_geo_max_deg": 16.04
+   },
+   {
+    "wing": "right",
+    "station": 5,
+    "s_m": 0.6703,
+    "frac_semispan": 0.688,
+    "alpha_eff_min_deg": -5.38,
+    "alpha_eff_max_deg": 7.36,
+    "alpha_eff_amplitude_deg": 6.37,
+    "alpha_geo_min_deg": -9.41,
+    "alpha_geo_max_deg": 13.44
+   },
+   {
+    "wing": "right",
+    "station": 6,
+    "s_m": 0.7922,
+    "frac_semispan": 0.813,
+    "alpha_eff_min_deg": -4.46,
+    "alpha_eff_max_deg": 6.4,
+    "alpha_eff_amplitude_deg": 5.43,
+    "alpha_geo_min_deg": -6.83,
+    "alpha_geo_max_deg": 11.81
+   },
+   {
+    "wing": "right",
+    "station": 7,
+    "s_m": 0.9141,
+    "frac_semispan": 0.938,
+    "alpha_eff_min_deg": -3.48,
+    "alpha_eff_max_deg": 4.38,
+    "alpha_eff_amplitude_deg": 3.93,
+    "alpha_geo_min_deg": -4.54,
+    "alpha_geo_max_deg": 10.71
+   },
+   {
+    "wing": "left",
+    "station": 0,
+    "s_m": 0.0609,
+    "frac_semispan": 0.063,
+    "alpha_eff_min_deg": -0.93,
+    "alpha_eff_max_deg": 2.8,
+    "alpha_eff_amplitude_deg": 1.86,
+    "alpha_geo_min_deg": 1.38,
+    "alpha_geo_max_deg": 8.35
+   },
+   {
+    "wing": "left",
+    "station": 1,
+    "s_m": 0.1828,
+    "frac_semispan": 0.188,
+    "alpha_eff_min_deg": -1.73,
+    "alpha_eff_max_deg": 4.83,
+    "alpha_eff_amplitude_deg": 3.28,
+    "alpha_geo_min_deg": 0.86,
+    "alpha_geo_max_deg": 8.53
+   },
+   {
+    "wing": "left",
+    "station": 2,
+    "s_m": 0.3047,
+    "frac_semispan": 0.313,
+    "alpha_eff_min_deg": -3.31,
+    "alpha_eff_max_deg": 6.44,
+    "alpha_eff_amplitude_deg": 4.87,
+    "alpha_geo_min_deg": -4.73,
+    "alpha_geo_max_deg": 12.11
+   },
+   {
+    "wing": "left",
+    "station": 3,
+    "s_m": 0.4266,
+    "frac_semispan": 0.438,
+    "alpha_eff_min_deg": -4.92,
+    "alpha_eff_max_deg": 7.63,
+    "alpha_eff_amplitude_deg": 6.27,
+    "alpha_geo_min_deg": -10.34,
+    "alpha_geo_max_deg": 16.21
+   },
+   {
+    "wing": "left",
+    "station": 4,
+    "s_m": 0.5484,
+    "frac_semispan": 0.563,
+    "alpha_eff_min_deg": -5.68,
+    "alpha_eff_max_deg": 8.07,
+    "alpha_eff_amplitude_deg": 6.88,
+    "alpha_geo_min_deg": -11.97,
+    "alpha_geo_max_deg": 16.74
+   },
+   {
+    "wing": "left",
+    "station": 5,
+    "s_m": 0.6703,
+    "frac_semispan": 0.688,
+    "alpha_eff_min_deg": -5.44,
+    "alpha_eff_max_deg": 7.71,
+    "alpha_eff_amplitude_deg": 6.57,
+    "alpha_geo_min_deg": -9.71,
+    "alpha_geo_max_deg": 14.1
+   },
+   {
+    "wing": "left",
+    "station": 6,
+    "s_m": 0.7922,
+    "frac_semispan": 0.813,
+    "alpha_eff_min_deg": -4.73,
+    "alpha_eff_max_deg": 6.64,
+    "alpha_eff_amplitude_deg": 5.68,
+    "alpha_geo_min_deg": -7.75,
+    "alpha_geo_max_deg": 12.27
+   },
+   {
+    "wing": "left",
+    "station": 7,
+    "s_m": 0.9141,
+    "frac_semispan": 0.938,
+    "alpha_eff_min_deg": -4,
+    "alpha_eff_max_deg": 4.52,
+    "alpha_eff_amplitude_deg": 4.26,
+    "alpha_geo_min_deg": -6,
+    "alpha_geo_max_deg": 10.93
+   }
+  ],
+  "wing_length_m": 0.975
+ },
+ "thresholds_lowest_passing_eta_s": {
+  "M1": {
+   "lowest_passing_eta": 0.1,
+   "note": "passes at the bottom of the range (0.1); the threshold is below it",
+   "grid_passing": [
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6
+   ],
+   "monotonic_on_grid": true
+  },
+  "M2": {
+   "lowest_passing_eta": 0.1,
+   "note": "passes at the bottom of the range (0.1); the threshold is below it",
+   "grid_passing": [
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6
+   ],
+   "monotonic_on_grid": true
+  },
+  "M4": {
+   "lowest_passing_eta": 0.55,
+   "highest_failing_eta": 0.5437,
+   "tolerance": 0.01,
+   "grid_passing": [
+    0.6
+   ],
+   "monotonic_on_grid": true
+  }
+ },
+ "runs": [
+  {
+   "eta": 0.1,
+   "M1": {
+    "passed": true,
+    "height_lost_m": 1.3699250006835846,
+    "climb_rate_2_to_3s_m_s": 0.3748206514748462
+   },
+   "M2": {
+    "passed": true,
+    "endurance_min": 13.204437154570394,
+    "power_ratio": 3.2126335374071053,
+    "cruise_power_w": 67.0266770138602
+   },
+   "M4": {
+    "passed": false,
+    "seeds_passed": 83,
+    "seeds_run": 100
+   }
+  },
+  {
+   "eta": 0.2,
+   "M1": {
+    "passed": true,
+    "height_lost_m": 1.2143994611573763,
+    "climb_rate_2_to_3s_m_s": 0.6819561863824852
+   },
+   "M2": {
+    "passed": true,
+    "endurance_min": 14.615331631427482,
+    "power_ratio": 3.5461767422323502,
+    "cruise_power_w": 60.90385465727341
+   },
+   "M4": {
+    "passed": false,
+    "seeds_passed": 88,
+    "seeds_run": 100
+   }
+  },
+  {
+   "eta": 0.3,
+   "M1": {
+    "passed": true,
+    "height_lost_m": 1.04918942692317,
+    "climb_rate_2_to_3s_m_s": 0.9599444885288427
+   },
+   "M2": {
+    "passed": true,
+    "endurance_min": 16.033765231076874,
+    "power_ratio": 3.881738405680618,
+    "cruise_power_w": 55.776237519741436
+   },
+   "M4": {
+    "passed": false,
+    "seeds_passed": 93,
+    "seeds_run": 100
+   }
+  },
+  {
+   "eta": 0.4,
+   "M1": {
+    "passed": true,
+    "height_lost_m": 0.9552102217199454,
+    "climb_rate_2_to_3s_m_s": 1.1265838092297362
+   },
+   "M2": {
+    "passed": true,
+    "endurance_min": 17.453613884410405,
+    "power_ratio": 4.217553525610894,
+    "cruise_power_w": 51.44107198643508
+   },
+   "M4": {
+    "passed": false,
+    "seeds_passed": 96,
+    "seeds_run": 100
+   }
+  },
+  {
+   "eta": 0.5,
+   "M1": {
+    "passed": true,
+    "height_lost_m": 0.8867776266869736,
+    "climb_rate_2_to_3s_m_s": 1.2823013415883677
+   },
+   "M2": {
+    "passed": true,
+    "endurance_min": 18.937570702498192,
+    "power_ratio": 4.568546298437176,
+    "cruise_power_w": 47.575476239992945
+   },
+   "M4": {
+    "passed": false,
+    "seeds_passed": 97,
+    "seeds_run": 100
+   }
+  },
+  {
+   "eta": 0.525,
+   "M1": {
+    "passed": true,
+    "height_lost_m": 0.8685372203153411,
+    "climb_rate_2_to_3s_m_s": 1.3244783733987837
+   },
+   "M2": {
+    "passed": true,
+    "endurance_min": 19.367698749249346,
+    "power_ratio": 4.670597130945974,
+    "cruise_power_w": 46.55807649735909
+   },
+   "M4": {
+    "passed": false,
+    "seeds_passed": 97,
+    "seeds_run": 100
+   }
+  },
+  {
+   "eta": 0.5375,
+   "M1": {
+    "passed": true,
+    "height_lost_m": 0.8529082251270924,
+    "climb_rate_2_to_3s_m_s": 1.3342774956058354
+   },
+   "M2": {
+    "passed": true,
+    "endurance_min": 19.552111079262144,
+    "power_ratio": 4.7142159997825495,
+    "cruise_power_w": 46.13638736082624
+   },
+   "M4": {
+    "passed": false,
+    "seeds_passed": 97,
+    "seeds_run": 100
+   }
+  },
+  {
+   "eta": 0.5437,
+   "M1": {
+    "passed": true,
+    "height_lost_m": 0.8495225130748082,
+    "climb_rate_2_to_3s_m_s": 1.3425586515103074
+   },
+   "M2": {
+    "passed": true,
+    "endurance_min": 19.657992613208737,
+    "power_ratio": 4.739185216585149,
+    "cruise_power_w": 45.898427698022616
+   },
+   "M4": {
+    "passed": false,
+    "seeds_passed": 97,
+    "seeds_run": 100
+   }
+  },
+  {
+   "eta": 0.55,
+   "M1": {
+    "passed": true,
+    "height_lost_m": 0.8466619052237665,
+    "climb_rate_2_to_3s_m_s": 1.3551769273612553
+   },
+   "M2": {
+    "passed": true,
+    "endurance_min": 19.742765667426248,
+    "power_ratio": 4.759095822028584,
+    "cruise_power_w": 45.7104437035301
+   },
+   "M4": {
+    "passed": true,
+    "seeds_passed": 98,
+    "seeds_run": 100
+   }
+  },
+  {
+   "eta": 0.6,
+   "M1": {
+    "passed": true,
+    "height_lost_m": 0.8158860253847846,
+    "climb_rate_2_to_3s_m_s": 1.411563652131516
+   },
+   "M2": {
+    "passed": true,
+    "endurance_min": 20.547635887456856,
+    "power_ratio": 4.9495109094738,
+    "cruise_power_w": 43.9871884472797
+   },
+   "M4": {
+    "passed": true,
+    "seeds_passed": 98,
+    "seeds_run": 100
+   }
+  }
+ ],
+ "smartbird_v4_at_eta_0_12_information_only": {
+  "source": "out/verification/evidence/V4.json sensitivity_information_only.suction_eta_0.12 (src/physics/gates/v4.mjs)",
+  "converged": true,
+  "net_streamwise_force_N": -1.1741502037087677,
+  "totals": {
+   "model_total_w": 14.083265380321361,
+   "drive_w": 9.265920522862805,
+   "servo_active_model_w": 2.758521328046791,
+   "avionics_model_w": 2.058823529411765,
+   "servo_idle_model_w": 0,
+   "with_published_servo_bias_w": 17.024441850909596,
+   "net_flapping_w": 12.024441850909596
+  },
+  "theta_deg": 11.998648076575568,
+  "stalled_fraction": 0.33141430582955117
+ },
+ "minutes": 5.57,
+ "ran_at": "2026-11-02T20:05:21.723Z",
+ "command": "node src/physics/gates/suction-sensitivity.mjs data/designs/larus-gl-2.json --seeds 100 --tol 0.01"
+}

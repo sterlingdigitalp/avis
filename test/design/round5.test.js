@@ -79,11 +79,13 @@ test('calibration belongs to the wing it was fitted on, stroke kind included; on
   assert.deepEqual(ampGrid(0.5, 0.5, 5), [0.5]);
   assert.deepEqual(ampGrid(0.2, 0.6, 3), [0.2, 0.4, 0.6]);
   assert.equal(ROUND5.fixedStroke, true);
-  // The film's packing check needs a stroke-servo lump: the view adds a massless one and leaves the design alone.
+  // Round 5's view of the film's packing check (placeholder on): a massless stroke-servo lump, the design left alone.
+  // Round 6 drops it by default (model.js no longer places a stroke servo without a lump): the design as it is.
   const dd = { params: {}, mass: { lumps: [{ name: 'battery', mass_kg: 0.1, pos: [0, 0, 0] }] } };
-  const v = packingView(dd);
+  const v = packingView(dd, { placeholder: true });
   assert.equal(v.mass.lumps.find((l) => l.name === 'stroke servo').mass_kg, 0);
   assert.equal(dd.mass.lumps.length, 1);
+  assert.equal(packingView(dd), dd);
 });
 
 test('round 5 assumptions name what replaced round 4\'s and drop what no longer holds', async () => {

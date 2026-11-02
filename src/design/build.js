@@ -6,7 +6,8 @@ import { designAtmosphere, DESIGN_ALTITUDE_M, DESIGN_TEMPERATURE_C } from '../ph
 import { POLARS } from '../physics/polars.js';
 import { podAndBoomLoft, loftVolume, loftWettedArea } from '../physics/geometry.js';
 import { CLAIM } from './schema.js';
-import { driveJoints } from './joints.js';
+import { driveJoints, driveLayout } from './joints.js';
+import { driveMembers } from './linkage.js';
 
 const DEG = Math.PI / 180;
 export const MARGIN = 0.15; // M6: unlisted margin for wire, glue and fasteners
@@ -28,6 +29,14 @@ export const CANDIDATES = {
  * }
  */
 export function buildDesign(params, catalog) {
+  // Round 6: with a linkage of sized metal parts (params.linkage, src/design/linkage.js), their masses come from the
+  // drive's layout, which comes from the built design: a first pass without them, then the design with them.
+  // The linkage's members ride on the joints' load path, so they need it (params.joints).
+  if (params.linkage && params.joints && !params._linkageItems) {
+    const d0 = buildDesign({ ...params, _linkageItems: [] }, catalog);
+    const lm = driveMembers(d0, catalog, params.linkage, driveLayout(d0, catalog), d0.structure.joints);
+    return buildDesign({ ...params, _linkageItems: lm.items }, catalog);
+  }
   const p = params;
   const cat = CANDIDATES[p.candidate];
   const atm = designAtmosphere();
@@ -142,11 +151,17 @@ export function buildDesign(params, catalog) {
   const plate = byId(catalog, parts.drivePlate ?? 'plate-ec-2mm');
   const bellArea = 4 * (p.crank_mm ?? 12) * 25e-6 + 2 * 0.03 * 0.03;
   const crankPlateG = (plate.specs.areal_density_kg_m2 * 1000) * bellArea;
-  addStruct('crank, rockers and gearbox plates', plate, crankPlateG + (p.gearboxPlate_g ?? 8), `${plate.specs.areal_density_kg_m2} kg/m2 x ${bellArea.toExponential(2)} m2, plus gearbox cheek allowance`);
+  // Round 6: with a sized metal linkage the crank, rockers, gearbox plates and couplers are its parts instead.
+  const linkItems = p.linkage && p.joints ? p._linkageItems ?? [] : null;
+  if (!linkItems) addStruct('crank, rockers and gearbox plates', plate, crankPlateG + (p.gearboxPlate_g ?? 8), `${plate.specs.areal_density_kg_m2} kg/m2 x ${bellArea.toExponential(2)} m2, plus gearbox cheek allowance`);
   // Couplers: pultruded rod or carbon tube, two
   const couplerRod = byId(catalog, parts.coupler ?? 'rod-ec-3mm');
   const bMm = p.coupler_mm ?? 70;
-  addStruct('couplers, 2 off', couplerRod, (2 * couplerRod.mass_g * bMm) / 1000, `${couplerRod.mass_g} g/m x ${bMm} mm x 2`);
+  if (!linkItems) addStruct('couplers, 2 off', couplerRod, (2 * couplerRod.mass_g * bMm) / 1000, `${couplerRod.mass_g} g/m x ${bMm} mm x 2`);
+  for (const it of linkItems ?? []) structure.push({ ...it });
+  const linkG = (re) => (linkItems ?? []).filter((it) => re.test(it.name)).reduce((a, it) => a + it.mass_g, 0);
+  const couplerG = linkItems ? linkG(/^coupler links/) : (2 * couplerRod.mass_g * bMm) / 1000;
+  const drivePlatesG = linkItems ? linkG(/^(?!coupler links)/) : crankPlateG + (p.gearboxPlate_g ?? 8);
   // Round 4 derived parts (p.derivedParts), each from catalogue materials with its basis stated:
   //  - the stroke servo's linkage to the two slotted rockers: two 2 mm carbon pushrods and a 2 mm carbon-plate yoke;
   //  - a pitot-static probe for the airspeed board, whose catalogue mass excludes the probe: a titanium outer tube with
@@ -193,6 +208,8 @@ export function buildDesign(params, catalog) {
   add(tailP, 2, 'tail servo');
   if (strokeP) add(strokeP, 1, 'stroke amplitude servo');
   add(fcP, 1, 'flight controller with IMU and baro');
+  // Round 6: the hardware variant the design needs (the F405-WMO's corrected current-sense PDB), on its BOM line.
+  if (p.currentSense?.hardware && p.currentSense.part === fcP.id) bom[bom.length - 1].hardware = p.currentSense.hardware;
   add(gpsP, 1, 'GPS');
   add(aspdP, 1, 'airspeed sensor');
   add(rxP, 1, 'receiver');
@@ -207,7 +224,7 @@ export function buildDesign(params, catalog) {
     // Round 5: every joint of the drive with its own rated part (src/design/joints.js; load path filled in below).
     const J = p.joints;
     const shafts = Array.from({ length: nStages - 1 }, (_, j) => J.shafts[j] ?? J.shafts[J.shafts.length - 1]);
-    const rows = [[J.shoulder, 4, 'shoulder pivots, two per side'], [J.crankShaft, 2, 'crank shaft'], ...shafts.map((id, j) => [id, 2, `gear shaft ${j + 1}`]), [J.couplerEyes, 4, 'coupler eyes, two per coupler']];
+    const rows = [[J.shoulder, 4, 'shoulder pivots, two per side'], [J.crankShaft, 2, 'crank shaft'], ...shafts.map((id, j) => [id, 2, `gear shaft ${j + 1}`]), [J.couplerEyes, 4, 'coupler eyes, two per coupler'], ...(J.motorOutboard ? [[J.motorOutboard, 1, 'motor outboard, on the motor shaft in the forward plate']] : [])];
     const merged = new Map();
     for (const [id, count, where] of rows) {
       const m = merged.get(id) ?? { count: 0, where: [] };
@@ -269,8 +286,8 @@ export function buildDesign(params, catalog) {
   const motorX = 0.04;
   lump('flap motor', motorP.mass_g, motorX, 0.0);
   lump('gears and bearings', bom.filter((b) => b.role === 'gear' || /^(bearing|bushing|rod end)/.test(b.role)).reduce((a, b) => a + b.mass_g, 0), 0.015, 0.0);
-  lump('crank, rockers, plates', crankPlateG + (p.gearboxPlate_g ?? 8), 0.01, 0.01);
-  lump('couplers', (2 * couplerRod.mass_g * bMm) / 1000, 0.0, 0.0);
+  lump('crank, rockers, plates', drivePlatesG, 0.01, 0.01);
+  lump('couplers', couplerG, 0.0, 0.0);
   lump('ESC', escP.mass_g, 0.07, -0.01);
   lump('flight controller', fcP.mass_g, 0.0, -0.01);
   lump('receiver and airspeed', rxP.mass_g + aspdP.mass_g, 0.11, 0.0);
@@ -389,7 +406,7 @@ export function buildDesign(params, catalog) {
 
   const d = {
     name: cat.name, label: cat.label, candidate: p.candidate, reference: cat.reference, claim: CLAIM,
-    params: p,
+    params: (({ _linkageItems, ...rest }) => rest)(p), // the linkage items are the structure list's, not a parameter
     atmosphere: { altitude_m: DESIGN_ALTITUDE_M, temperature_C: DESIGN_TEMPERATURE_C, rho_kg_m3: atm.rho, mu_Pa_s: atm.mu },
     wing,
     geometry: { span_m: wingSpan(w), area_m2: Sact, AR: wingSpan(w) ** 2 / Sact, mac_m: macv, chord_root_m: cr, chord_elbow_m: ce, chord_tip_m: ct, tail_arm_m: lt, wing_loading_N_m2: (total * 9.80665) / Sact, x_np_m: xNP, x_cg_m: xCGtarget, static_margin: p.staticMargin ?? 0.1 },
@@ -427,6 +444,13 @@ export function buildDesign(params, catalog) {
     d.structure.joints = jp.joints;
     d.structure.joints_unchecked = jp.unchecked;
     d.structure.joints_layout = jp.layout;
+    if (p.linkage) {
+      // Round 6: every loaded part of the drive (src/design/linkage.js), checked in M7 (src/physics/members.js).
+      const lm = driveMembers(d, catalog, p.linkage, driveLayout(d, catalog), jp.joints);
+      d.structure.members = lm.members;
+      d.structure.members_unchecked = lm.unchecked;
+      d.structure.coupler = lm.coupler;
+    }
   }
   return d;
 }

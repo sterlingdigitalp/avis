@@ -91,7 +91,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const tipOnly = { ...kin, dyn_rad: P.pitchDeg * DEG };
     sens.pitch_9deg_at_tip = imposedBalance(d, bird, tipOnly, P.target.speed_m_s);
     sens.phase_kappa_100deg = imposedBalance(d, bird, kin, P.target.speed_m_s, { lead: 10 * DEG });
-    for (const eta of [1.0, 0.98, 0.18]) sens[`suction_eta_${eta}`] = imposedBalance(d, buildBird(d, { suctionEta: eta }), kin, P.target.speed_m_s);
+    // Round 6: 0.12, near the cfd workstream's first plunge measurements (0.11-0.14), at the orchestrator's request.
+    for (const eta of [1.0, 0.98, 0.18, 0.12]) sens[`suction_eta_${eta}`] = imposedBalance(d, buildBird(d, { suctionEta: eta }), kin, P.target.speed_m_s);
   }
   const T47 = at47.converged ? totals(at47) : null;
   const T5 = at5.converged ? totals(at5) : null;

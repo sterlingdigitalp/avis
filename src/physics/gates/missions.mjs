@@ -10,6 +10,7 @@ import { LIMITS, robustnessCorners, runM1, runM2, runM3, runM4Seed, runM5, runCo
 import { createWind } from '../wind.js';
 import { couplerCheck, torsionCheck, strokeServoHold, mixedMeshCheck } from '../structure.js';
 import { checkJoints } from '../bearings.js';
+import { checkMembers, memberPeaks } from '../members.js';
 
 const path = resolve(process.argv[2]);
 const design = JSON.parse(readFileSync(path, 'utf8'));
@@ -90,6 +91,14 @@ const missing = bom.parts.filter((p) => !p.source_url || !p.id);
 const m6ok = missing.length === 0 && Math.abs(bom.margin_g - 0.15 * (bom.parts_g + bom.structure_g)) < 1e-6 && Math.abs(bom.total_g - design.mass.total_g) < 0.5;
 writeGate({ gate: 'M6', design: name, passed: m6ok, measured: { total_g: design.mass.total_g, parts_g: bom.parts_g, structure_g: bom.structure_g, margin_g: bom.margin_g, margin_frac: 0.15, parts_without_source: missing.map((p) => p.id), structure_items: bom.structure.length }, limit: { margin_frac: 0.15, every_part_cited: true }, evidence: rel(path) });
 
+// Round 6: the motor bearing nearest the first pinion, with the outboard bearing as the other support: information only
+// (its maker is not named, so the lowest C0 read for its published sizes is shown, not credited).
+function motorBearingInfo(d, crankT) {
+  const u = (d.structure.joints_unchecked ?? []).find((q) => q.name === 'motor shaft' && Number.isFinite(q.motor_bearing_force_per_crank_Nm));
+  if (!u) return null;
+  const P = u.motor_bearing_force_per_crank_Nm * crankT;
+  return { load_N: P, lowest_same_size_C0_N: 276, C0_over_P0: 276 / P, basis: 'NMB L-1150ZZ (5 x 11 x 5 mm, the smaller of the two published Cobra sizes) Cor 276 N; not the motor maker\'s rating' };
+}
 // ---- M7 structure at the worst load seen in M1-M3, M5 and the M4 seeds that pass (SPEC ruling) ----------------
 const population = (nom, m4runs) => [nom.M1, nom.M2, nom.M3, nom.M5, ...m4runs.filter((r) => r && !r.error && r.passed)];
 const PEAK_KEYS = ['rootBend', 'elbowBend', 'crankTorque', 'crankDrive', 'crankBack', 'couplerForce', 'twistTorque', 'tailTorque', 'loadFactor', 'shoulderTorque', 'motorI', 'battI', 'servoI', 'becI', 'crankRate', 'slotPair', 'motorIDrive', 'motorIBrake'];
@@ -110,7 +119,8 @@ const dtCheck = Object.fromEntries(PEAK_KEYS.map((k) => [k, { dt: W1[k], dt_half
 const M7_KEYS = ['rootBend', 'elbowBend', 'crankTorque', 'couplerForce', 'twistTorque', 'tailTorque', 'loadFactor'];
 // Bearings (round 5): every support's peak P0 (rolling) or radial load (bushing, rod end) at half the step, too.
 const S1 = worstSupports(popRuns), S2 = worstSupports(popHalf);
-const supKeys = (design.structure.joints ?? []).flatMap((j) => j.supports.map((s) => `${j.name}/${s.name}`));
+// Round 6: the loaded members' sections follow the joints' supports (flight.js), so they share the step check.
+const supKeys = [...(design.structure.joints ?? []).flatMap((j) => j.supports.map((s) => `${j.name}/${s.name}`)), ...(design.structure.members ?? []).flatMap((m) => m.sections.map((s) => `${m.name}/${s.name}`))];
 const supDt = supKeys.map((key, k) => ({ key, P0_dt: S1[k]?.P0 ?? 0, P0_dt_half: S2[k]?.P0 ?? 0, change_pct: S1[k]?.P0 ? ((S2[k]?.P0 ?? 0) / S1[k].P0 - 1) * 100 : 0 }));
 const loadsConverged = M7_KEYS.every((k) => Math.abs(dtCheck[k].change_pct) < 10) && supDt.every((q) => Math.abs(q.change_pct) < 10);
 const worst = (k) => W1[k];
@@ -149,22 +159,27 @@ const hold = strokeServoHold(design, worst('slotPair'));
 const servoOk = twistT <= design.servos.twist.stall_Nm && tailT <= design.servos.tail.stall_Nm && hold.ok;
 // Round 5: every bearing, bushing and rod end against its published static rating (SPEC ruling "Bearings are linkage").
 const hasBearings = design.bom.parts.some((b) => /^(bearing|bushing|rod end)/.test(b.role));
-const bj = design.structure.joints ? checkJoints(design.structure.joints, S1, { crankRate: worst('crankRate') }) : null;
+const nJointSup = (design.structure.joints ?? []).reduce((a, j) => a + j.supports.length, 0);
+const bj = design.structure.joints ? checkJoints(design.structure.joints, S1.slice(0, nJointSup), { crankRate: worst('crankRate') }) : null;
 const bearingsOk = bj ? bj.ok : !hasBearings;
+// Round 6 (SPEC ruling after round 5): every shaft, pin, seat, end fitting, adapter and key against published strength.
+const mb = design.structure.members ? checkMembers(design.structure.members, memberPeaks(design.structure.members, S1, nJointSup)) : null;
+const membersOk = mb ? mb.ok : null;
 // Round 4: the twist torque rod (elbow servo to the hand wing) carries the hand wing's twist torque in torsion.
 const tr = st.twist_rod ? { id: st.twist_rod.id, torque_Nm: twistT, ...torsionCheck(st.twist_rod, twistT) } : null;
-const fosMin = Math.min(fosIn, fosOut, fosRodBuckle, fosRodStress, ...(tr ? [tr.fos ?? 0] : []), ...(bj ? [bj.fos_min ?? 0] : []));
+const fosMin = Math.min(fosIn, fosOut, fosRodBuckle, fosRodStress, ...(tr ? [tr.fos ?? 0] : []), ...(bj ? [bj.fos_min ?? 0] : []), ...(mb ? [mb.fos_min ?? 0] : []));
 writeGate({
-  gate: 'M7', design: name, passed: fosMin >= 1.5 && gearOk && meshesOk && servoOk && bearingsOk && seeds >= 100 && loadsConverged && m4passRuns.length > 0,
+  gate: 'M7', design: name, passed: fosMin >= 1.5 && gearOk && meshesOk && servoOk && bearingsOk && membersOk !== false && seeds >= 100 && loadsConverged && m4passRuns.length > 0,
   measured: {
     spar_inner: { id: sIn.id, moment_Nm: worst('rootBend'), stress_MPa: sigIn, allowable_MPa: sIn.allowable_MPa, fos: fosIn },
     spar_outer: { id: sOut.id, moment_Nm: worst('elbowBend'), stress_MPa: sigOut, allowable_MPa: sOut.allowable_MPa, fos: fosOut },
-    coupler: { id: cp.id, force_N: Fc, buckling_N: Pcr, fos_buckling: fosRodBuckle, stress_MPa: sigRod, fos_stress: fosRodStress, allowable_MPa: cpc.allowable_MPa, E_GPa: cp.E_GPa, section: cpc.section },
+    coupler: { id: cp.id, kind: cp.kind ?? null, force_N: Fc, buckling_N: Pcr, fos_buckling: fosRodBuckle, stress_MPa: sigRod, fos_stress: fosRodStress, allowable_MPa: cpc.allowable_MPa, allowable_basis: cp.allowable_basis ?? null, E_GPa: cp.E_GPa, section: cpc.section },
     crank_torque_Nm: crankT, crank_torque_split: { drive_pushing_Nm: worst('crankDrive'), back_driven_Nm: worst('crankBack'), note: 'drive pushing: load torque along the crank rotation; back-driven: air and wing inertia driving the crank and motor' }, gears: gearUse, gears_within_rating: gearOk, mixed_material_meshes_ok: meshesOk,
     twist_torque_rod: tr,
     twist_servo: { torque_Nm: twistT, rated_stall_Nm: design.servos.twist.stall_Nm }, tail_servo: { torque_Nm: tailT, rated_stall_Nm: design.servos.tail.stall_Nm },
     stroke_servo_hold: hold,
-    bearings: bj ? { passed: bj.ok, fos_min: bj.fos_min, worst: bj.worst, peak_crank_rate_rad_s: worst('crankRate'), joints: bj.joints, unchecked: design.structure.joints_unchecked ?? [], layout: design.structure.joints_layout ?? null, rule: 'SPEC ruling after round 4: ISO 76 P0 with the maker X0/Y0 and C0/P0 >= 1.5; bushings by projected pressure against the published static surface pressure with FoS 1.5 (flange ring for axial load) and their published surface speed; loads are the worst over the M7 population at each support, combined in the flight model at every step' } : { passed: bearingsOk, note: hasBearings ? 'the design file has no load path (structure.joints): its bearings cannot be checked' : 'no bearings in the BOM' },
+    bearings: bj ? { passed: bj.ok, fos_min: bj.fos_min, worst: bj.worst, peak_crank_rate_rad_s: worst('crankRate'), joints: bj.joints, unchecked: design.structure.joints_unchecked ?? [], motor_bearing_information: motorBearingInfo(design, crankT), layout: design.structure.joints_layout ?? null, rule: 'SPEC ruling after round 4: ISO 76 P0 with the maker X0/Y0 and C0/P0 >= 1.5; bushings by projected pressure against the published static surface pressure with FoS 1.5 (flange ring for axial load) and their published surface speed; loads are the worst over the M7 population at each support, combined in the flight model at every step' } : { passed: bearingsOk, note: hasBearings ? 'the design file has no load path (structure.joints): its bearings cannot be checked' : 'no bearings in the BOM' },
+    members: mb ? { passed: mb.ok, fos_min: mb.fos_min, worst: mb.worst, members: mb.members, unchecked: design.structure.members_unchecked ?? [], rule: 'SPEC ruling after round 5: every shaft, pin, plate bearing seat, end fitting and bore adapter against published material strength with FoS 1.5 (src/physics/members.js); loads combined in the flight model at every step, worst over the M7 population' } : { passed: null, note: 'the design file states no loaded members (structure.members)' },
     peak_load_factor_at_cg: worst('loadFactor'), fos_min: fosMin,
     population: { scenarios: ['M1', 'M2', 'M3', 'M5'], m4_seeds_passing: m4passRuns.length, m4_seeds_run: seeds },
     timestep_check: { dt_s: DT, dt_half_s: DT / 2, peaks: dtCheck, supports_P0: supDt, converged_within_10pct: loadsConverged },

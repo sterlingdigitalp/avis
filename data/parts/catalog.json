@@ -4646,7 +4646,23 @@
    "dimensions_text_mm": "35.0 dia x 40.0",
    "shaft_mm": 5.0,
    "overall_shaft_length_mm": 60.0,
-   "note": "14 Turn Delta. resistance_ohm is the published phase-to-phase Rm (what the ESC terminals see); per-phase Rm also published and kept in resistance_per_phase_ohm. No burst current, max power or efficiency band on the page (a propeller data chart is linked but not read). Innov8tive Designs (USA) is the home of the Cobra motor line; USD price."
+   "note": "14 Turn Delta. resistance_ohm is the published phase-to-phase Rm (what the ESC terminals see); per-phase Rm also published and kept in resistance_per_phase_ohm. No burst current, max power or efficiency band on the page (a propeller data chart is linked but not read). Innov8tive Designs (USA) is the home of the Cobra motor line; USD price.",
+   "bearings_published": {
+    "internal_mm": "11 x 5 x 5",
+    "outer_mm": "16 x 5 x 5",
+    "front_or_rear": "not stated",
+    "maker": "not named",
+    "designation": "not published",
+    "positions_or_overhang": "not published (the only drawing is the cross mount)",
+    "kit_url": "https://innov8tivedesigns.com/cobra-bearing-kit-for-c-2808-2814-2820-and-3510-motors.html",
+    "same_size_ratings_other_makers": {
+     "5x11x5 NMB L-1150ZZ C0_N": 276,
+     "5x16x5 NMB R-1650HH C0_N": 671,
+     "5x16x5 SKF 625-2Z C0_N": 380
+    },
+    "shaft": "4.98 mm, 60.0 mm long, steel (grade not published), slight press fit into the front housing plus C-clip (https://innov8tivedesigns.com spare shaft page)",
+    "retrieved": "2026-11-02"
+   }
   },
   "price_usd": 42.99,
   "source_url": "https://innov8tivedesigns.com/cobra-c-2820-14-brushless-motor-kv-840.html",
@@ -5660,7 +5676,22 @@
    "bec_note": "bec holds the page's own words for the 5 V rail that feeds the FC and peripherals (servos are not on it in round 5)",
    "voltage_divider_ratio": 21,
    "current_scale_a_per_v": 40,
-   "adc_input_v": 3.3
+   "adc_input_v": 3.3,
+   "shunt_notice_2025_12_22": {
+    "quote": [
+     "Due to incorrect components of the shunt resistor were placed during the SMT process.",
+     "The current sensor range of the F405-WMO has been changed to 13.2A (scale 2500).",
+     "If the shunt resistor on your F405-WMO PDB is marked \"3m0\"(3 m\u03a9), please contact the dealer you originally purchased from to get a new PDB.",
+     "We will gradually send out the new PDBs to resellers.",
+     "The PDB equipped with 3 m\u03a9(mark 3m0) resistor can still be used on low-current(<15A) aircraft, with more accurate current measurement performance."
+    ],
+    "source_url": "https://www.mateksys.com/?portfolio=f405-wmo",
+    "retrieved": "2026-11-02",
+    "spec_unchanged_quote": "132A Current Sense (INAV Scale 250, ArduPilot 40A/V); PDB/Current sense resistor: 90A continuous, 132A burst",
+    "not_stated": "no batch, date or serial range; no marking of a correct shunt; no replacement PDB part number; not stated whether boards sold now are corrected",
+    "reading": "a correction for mis-built boards (the specification still reads 132 A and affected owners get a new PDB); Matek does not say so explicitly",
+    "required_hardware_for_avis": "a PDB whose shunt is NOT marked 3m0 (the 132 A / 40 A/V sense of the specification); a 3m0 PDB is replaced through the dealer before use. Avis draws about 25 A rms and 37 A peak, above the 3m0 PDB's stated <15 A use and its 13.2 A sense range."
+   }
   },
   "price_usd": null,
   "source_url": "https://www.mateksys.com/?portfolio=f405-wmo",
@@ -5689,7 +5720,29 @@
    "mass_basis": "per ESC",
    "mass_note": "Holybro page lists 'Weight: 5.8g'; RMRC lists net weight '5.8 grams'",
    "active_freewheeling_source": "https://github.com/AlkaMotors/AM32-MultiRotor-ESC-firmware/wiki/ESC-Settings-Explained",
-   "active_freewheeling_quote": "Complementary PWM: 'Applies PWM to the complementary output during the PWM off time.' 'This acts as a brake slowing the motor when going from a higher duty cycle to lower duty cycle' (AM32 settings wiki); default on (EEPROM byte 20 default 1)"
+   "active_freewheeling_quote": "Complementary PWM: 'Applies PWM to the complementary output during the PWM off time.' 'This acts as a brake slowing the motor when going from a higher duty cycle to lower duty cycle' (AM32 settings wiki); default on (EEPROM byte 20 default 1)",
+   "am32_current_limit": {
+    "version_read": "AM32 v2.21 (tag v2.21, Inc/version.h; latest release)",
+    "documentation": "No prose documentation of Current Limit found: the AlkaMotors and am32-wiki ESC-Settings-Explained pages do not mention it; am32.ca did not render. The configurator field: name=\"Current limit\", min 0, max 202, step 2, display-factor 2, disabled-value 202 (am32-configurator pages/configurator.vue); EEPROM byte 44 (Inc/eeprom.h).",
+    "implementation_quotes": [
+     "fastPID currentPid = { // 1khz loop time .Kp = 400, .Ki = 0, .Kd = 1000, .integral_limit = 20000, .output_limit = 100000 }",
+     "currentPid.Kp = eepromBuffer.current_P*2; currentPid.Ki = eepromBuffer.current_I; currentPid.Kd = eepromBuffer.current_D*2 (defaults 100/0/100 when eeprom_version < 3)",
+     "use_current_limit_adjust -= (int16_t)(doPidCalculations(&currentPid, actual_current, eepromBuffer.limits.current * 2 * 100) / 10000); clamped to [minimum_duty_cycle, 2000]",
+     "if (duty_cycle_setpoint > use_current_limit_adjust) duty_cycle_setpoint = use_current_limit_adjust; (setInput)",
+     "actual_current = ((smoothed_raw_current * 3300 / 41) - (CURRENT_OFFSET * 100)) / (MILLIVOLT_PER_AMP); //Actual current is in 10mA",
+     "const uint8_t numReadings = 50; (running mean advanced once per PROCESS_ADC_FLAG, set in the 1 kHz block)",
+     "if (one_khz_loop_counter > PID_LOOP_DIVIDER) { // 1khz PID loop; PID_LOOP_DIVIDER (LOOP_FREQUENCY_HZ / 1000), LOOP_FREQUENCY_HZ 20000"
+    ],
+    "source_urls": [
+     "https://raw.githubusercontent.com/am32-firmware/AM32/v2.21/Src/main.c",
+     "https://raw.githubusercontent.com/am32-firmware/AM32/main/Inc/targets.h",
+     "https://raw.githubusercontent.com/am32-firmware/AM32/main/Inc/eeprom.h",
+     "https://raw.githubusercontent.com/am32-firmware/am32-configurator/master/pages/configurator.vue"
+    ],
+    "not_stated": "Neither AM32 nor Holybro states whether the sensor reads battery (DC bus) or phase current. The am32-wiki flashing guide (AM32 2.12) names WRAITH32_F421 for the Holybro ESC and TEKKO32_F421 for the RDQ one, so the 45 mV/A, 529 mV calibration may not be this board's.",
+    "derived_not_published": "PID block every 21 ticks of 20 kHz (about 952 Hz); output_limit 100000 / 10000 caps the duty-cap change at 10 counts of 2000 per tick (0.5% per ms); the current is a 50-sample (about 50 ms) running mean.",
+    "retrieved": "2026-11-02"
+   }
   },
   "price_usd": 23.99,
   "source_url": "https://holybro.com/products/tekko32-f4-45a-esc",
@@ -6307,6 +6360,593 @@
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-64",
   "source_url_2": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-nmb-l-1150zz",
+  "category": "bearing_reference",
+  "manufacturer": "NMB (MinebeaMitsumi)",
+  "name": "L-1150ZZ miniature deep groove ball bearing 5x11x5",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not published (NMB page gives no mass)",
+   "dimensions_mm_d_D_B": "5x11x5",
+   "dynamic_load_rating_kn": 0.714,
+   "static_load_rating_kn": 0.276,
+   "ring_material": "Chromium Steel",
+   "seal": "ZZ (shielded per nmbtc.com 'Enclosure: Shielded')",
+   "iso_jis_equivalent": "none listed",
+   "note": "Same size as the Cobra C-2820 'internal' bearing (5x11x5). The Cobra bearing maker is not named, so this is a same-size NMB reference, not the OEM part. Ratings published in N (276 / 714) and converted to kN here.",
+   "eligibility": "reference only: no published mass, so not eligible for the BOM (M6); kept for its published rating or dimensions"
+  },
+  "price_usd": null,
+  "source_url": "https://product.minebeamitsumi.com/en/product/category/bearing/miniature_small/parts/L1150ZZ.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-nmb-r-1650hh",
+  "category": "bearing_reference",
+  "manufacturer": "NMB (MinebeaMitsumi)",
+  "name": "R-1650HH deep groove ball bearing 5x16x5 (ISO/JIS 625ZZ)",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not published (NMB page gives no mass)",
+   "dimensions_mm_d_D_B": "5x16x5",
+   "dynamic_load_rating_kn": 1.735,
+   "static_load_rating_kn": 0.671,
+   "ring_material": "Chromium Steel",
+   "iso_jis_equivalent": "625ZZ",
+   "note": "Same size as the Cobra C-2820 'outer' bearing. NMB's Cor (671 N) is higher than SKF 625-2Z C0 (380 N); these are different makers' ratings.",
+   "eligibility": "reference only: no published mass, so not eligible for the BOM (M6); kept for its published rating or dimensions"
+  },
+  "price_usd": null,
+  "source_url": "https://product.minebeamitsumi.com/en/product/category/bearing/miniature_small/parts/R1650HH.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bearing-cobra-2820-kit",
+  "category": "bearing_reference",
+  "manufacturer": "Cobra (Innov8tive Designs)",
+  "name": "Cobra bearing kit for C-2808/2814/2820/3510 motors (pair: 5x11x5 + 5x16x5)",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not published",
+   "contents": "2 bearings: inner 5x11x5, outer 5x16x5",
+   "designations": "not published",
+   "bearing_maker": "not published",
+   "seal": "not published",
+   "note": "OEM replacement pair for the motor already in the design. No load ratings published by Innov8tive.",
+   "eligibility": "reference only: no published mass, so not eligible for the BOM (M6); kept for its published rating or dimensions"
+  },
+  "price_usd": 5.29,
+  "source_url": "https://innov8tivedesigns.com/cobra-bearing-kit-for-c-2808-2814-2820-and-3510-motors.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "shaft-cobra-c2820-5mm",
+  "category": "shaft_reference",
+  "manufacturer": "Cobra (Innov8tive Designs)",
+  "name": "Cobra main shaft kit for C-2820 motors (5 mm, with C-clip)",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not published",
+   "diameter_mm_measured_published": 4.98,
+   "length_mm": 60.0,
+   "material": "steel (page: 'built with 5mm steel shafts')",
+   "clip_groove_from_back_mm": 16.1,
+   "retention": "slight press fit into the aluminium front housing plus C-clip",
+   "note": "Grade, hardness and shaft overhang not published.",
+   "eligibility": "reference only: no published mass, so not eligible for the BOM (M6); kept for its published rating or dimensions"
+  },
+  "price_usd": 3.49,
+  "source_url": "https://innov8tivedesigns.com/cobra-parts-main-shaft-for-2820-motors.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-dsf1-20",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DSF1-20 acetal spur gear with SUS303 F-Loc hub",
+  "mass_g": 12.6,
+  "specs": {
+   "mass_basis": "per part",
+   "module_mm": 1,
+   "teeth": 20,
+   "material": "Polyacetal (Hub: SUS303)",
+   "bore_mm": 5,
+   "bore_type": "F-Loc (keyless clamp, M2.5 cap screw)",
+   "hub_dia_mm": 14,
+   "face_width_mm": 6,
+   "total_length_mm": 14.5,
+   "allowable_torque_bending_nm": 0.96,
+   "reference_slipping_torque_nm_text": "0.62/0.36 (page does not define the two values)",
+   "note": "Keyless alternative to DS1-20 on a 5 mm shaft. Same bending rating as DS1-20 (0.96 N m), but 12.6 g vs 2.85 g. The hub slip torque, not the teeth, may govern."
+  },
+  "price_usd": null,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/acetal-f-loc-hub-spur-gears-dsf/dsf1-20",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-dsf1-32",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DSF1-32 acetal spur gear with SUS303 F-Loc hub",
+  "mass_g": 27.0,
+  "specs": {
+   "mass_basis": "per part",
+   "module_mm": 1,
+   "teeth": 32,
+   "material": "Polyacetal (Hub: SUS303)",
+   "bore_mm": 8,
+   "bore_type": "F-Loc (keyless clamp, M3 cap screw)",
+   "hub_dia_mm": 19,
+   "face_width_mm": 6,
+   "total_length_mm": 16,
+   "allowable_torque_bending_nm": 1.75,
+   "reference_slipping_torque_nm_text": "2.22/0.63 (page does not define the two values)",
+   "note": "8 mm bore, not 6 mm like DS1-32. 27 g vs 5.86 g for DS1-32."
+  },
+  "price_usd": null,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/acetal-f-loc-hub-spur-gears-dsf/dsf1-32",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-msga1-40",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "MSGA1-40 ground carburized SCM415 spur gear",
+  "mass_g": 110.0,
+  "specs": {
+   "mass_basis": "per part",
+   "module_mm": 1,
+   "teeth": 40,
+   "material": "SCM415 (AISI 4115) Alloy Steel",
+   "heat_treatment": "Carburized",
+   "precision": "JIS grade N5 (JIS B1702-1:1998)",
+   "bore_mm": 12,
+   "hub_dia_mm": 30,
+   "hub_width_mm": 5,
+   "face_width_mm": 10,
+   "total_length_mm": 15,
+   "fastening": "keyway 4 x 1.8 mm",
+   "allowable_torque_bending_nm": 36.5,
+   "allowable_torque_surface_durability_nm": 34.6,
+   "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
+   "note": "No secondary machining permitted; no J-series. Heavier than MSGB1-40 (100 g)."
+  },
+  "price_usd": null,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-40",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ksg1-40",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "KSG1-40 ground SCM440 spur gear (induction hardened teeth)",
+  "mass_g": 160.0,
+  "specs": {
+   "mass_basis": "per part",
+   "module_mm": 1,
+   "teeth": 40,
+   "material": "SCM440",
+   "heat_treatment": "Thermal refined, gear teeth induction hardened (50-60 HRC)",
+   "precision": "JIS grade N6 (JIS B1702-1: 1998)",
+   "bore_mm": 10,
+   "hub_dia_mm": 35,
+   "hub_width_mm": 10,
+   "face_width_mm": 10,
+   "total_length_mm": 20,
+   "allowable_torque_bending_nm": 25.1,
+   "allowable_torque_surface_durability_nm": 27.0,
+   "j_series_bores_mm": [
+    10,
+    12,
+    14,
+    15,
+    16,
+    17
+   ],
+   "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
+   "note": "Meets 13 N m but 160 g; no bore below 10 mm."
+  },
+  "price_usd": null,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-ksg/ksg1-40",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssag1-40",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSAG1-40 ground hubless S45C spur gear (induction hardened teeth)",
+  "mass_g": 92.0,
+  "specs": {
+   "mass_basis": "per part",
+   "module_mm": 1,
+   "teeth": 40,
+   "material": "S45C",
+   "heat_treatment": "Gear teeth induction hardened (50-60 HRC)",
+   "precision": "JIS grade N7 (JIS B1702-1: 1998)",
+   "bore_mm": 10,
+   "face_width_mm": 10,
+   "shape": "S5",
+   "allowable_torque_bending_nm": 12.3,
+   "allowable_torque_surface_durability_nm": 8.42,
+   "j_series_bores_mm": [
+    10,
+    12,
+    14,
+    15,
+    16,
+    17
+   ],
+   "j_series_keyway": "4 x 1.8 mm (J10)",
+   "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
+   "note": "Lightest hardened KHK m1 z40 found, but below the 12.9 N m stage 4 torque on both ratings."
+  },
+  "price_usd": null,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-hubless-spur-gears-ssag/ssag1-40",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssa1-40",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSA1-40 hubless S45C spur gear",
+  "mass_g": 95.0,
+  "specs": {
+   "mass_basis": "per part",
+   "module_mm": 1,
+   "teeth": 40,
+   "material": "S45C (AISI 1045) Carbon Steel",
+   "tooth_hardness": "less than 194HB",
+   "precision": "JIS grade N8 (JIS B1702-1:1998)",
+   "bore_mm": 8,
+   "bore_type": "Plain",
+   "face_width_mm": 10,
+   "shape": "S5",
+   "allowable_torque_bending_nm": 14.7,
+   "allowable_torque_surface_durability_nm": 1.45,
+   "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
+   "note": "Only m1 z40 steel gear found with an 8 mm bore. Surface durability (1.45 N m) is far below 12.9 N m."
+  },
+  "price_usd": null,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/hubless-spur-gears-ssa/ssa1-40",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ss1-40",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SS1-40 S45C spur gear",
+  "mass_g": 160.0,
+  "specs": {
+   "mass_basis": "per part",
+   "module_mm": 1,
+   "teeth": 40,
+   "material": "S45C (AISI 1045) Carbon Steel",
+   "tooth_hardness": "less than 194HB",
+   "bore_mm": 10,
+   "bore_type": "Plain",
+   "hub_dia_mm": 35,
+   "hub_width_mm": 10,
+   "face_width_mm": 10,
+   "total_length_mm": 20,
+   "shape": "S1",
+   "allowable_torque_bending_nm": 14.7,
+   "allowable_torque_surface_durability_nm": 1.45,
+   "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower."
+  },
+  "price_usd": null,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss1-40",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-ssg1-40",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSG1-40 ground S45C spur gear",
+  "mass_g": 125.0,
+  "specs": {
+   "mass_basis": "per part",
+   "module_mm": 1,
+   "teeth": 40,
+   "material": "S45C (AISI 1045) Carbon Steel",
+   "tooth_hardness": "HRC 50-60",
+   "precision": "JIS grade N7 (JIS B1702-1:1998)",
+   "bore_mm": 10,
+   "bore_type": "Ground",
+   "hub_dia_mm": 30,
+   "hub_width_mm": 10,
+   "face_width_mm": 8,
+   "total_length_mm": 18,
+   "shape": "S1",
+   "allowable_torque_bending_nm": 9.83,
+   "allowable_torque_surface_durability_nm": 6.79,
+   "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower."
+  },
+  "price_usd": null,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-ssg/ssg1-40",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "bushing-khk-bb50812",
+  "category": "bushing_reference",
+  "manufacturer": "KHK",
+  "name": "BB50812 sintered oil-free copper alloy bushing (for DS1 idlers)",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not published",
+   "d1_mm": 5,
+   "d2_mm": 8,
+   "length_mm": 12,
+   "material": "Oil-free copper alloy",
+   "note": "KHK-listed press-fit bushing for DS1 gears used as idlers.",
+   "eligibility": "reference only: no published mass, so not eligible for the BOM (M6); kept for its published rating or dimensions"
+  },
+  "price_usd": null,
+  "source_url": "https://khkgears.net/pdf/ds%20bb.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "adhesive-loctite-638",
+  "category": "adhesive",
+  "manufacturer": "Henkel (LOCTITE)",
+  "name": "LOCTITE 638 retaining compound",
+  "mass_g": 1100,
+  "specs": {
+   "mass_basis": "per_litre (computed: specific gravity 1.1 x 1000 g/L)",
+   "specific_gravity": 1.1,
+   "compressive_shear_iso10123_72h_mpa": {
+    "steel_pins_collars": 29,
+    "stainless_pins_collars": 28,
+    "aluminium_pins_collars": 17
+   },
+   "compressive_shear_iso10123_15min_steel_mpa": 13.5,
+   "max_gap_mm": 0.25,
+   "tds_date": "May 2024",
+   "note": "Typical values, not a specification. Strength falls with gap (graph: 0.15 mm about 60%, 0.25 mm about 55% of 0.05 mm strength, read from the graph). Not recommended on thermoplastics (do not use on Duracon DS gears). The product page shows 31.0 N/mm2 on steel with no method; the TDS figure is used."
+  },
+  "price_usd": null,
+  "source_url": "https://datasheets.tdx.henkel.com/LOCTITE-638-en_GL.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "metal-al-6061-t6",
+  "category": "metal_bar",
+  "manufacturer": "ASM Aerospace Specification Metals (distributor)",
+  "name": "Aluminium 6061-T6 / T651",
+  "mass_g": 2700,
+  "specs": {
+   "mass_basis": "per_litre (density 2.7 g/cc)",
+   "density_g_cm3": 2.7,
+   "tensile_strength_mpa": 310,
+   "yield_strength_mpa": 276,
+   "shear_strength_mpa": 207,
+   "bearing_yield_mpa": 386,
+   "bearing_ultimate_mpa": 607,
+   "bearing_e_over_d": 2.0,
+   "elastic_modulus_gpa": 68.9,
+   "fatigue_strength_mpa": 96.5,
+   "value_type": "Tensile, yield and shear are 'AA; Typical' (sheet: NOT FOR DESIGN). Bearing values carry no AA note; quoted at edge distance/pin diameter = 2.0.",
+   "design_values": {
+    "yield_MPa": 138,
+    "shear_yield_MPa": 103.5,
+    "bearing_yield_MPa": 386,
+    "bearing_e_over_d_min": 2.0,
+    "basis": "tensile yield 276 and shear 207 MPa are AA typical values the sheet marks NOT FOR DESIGN: counted at half (SPEC ruling after catalogue round 2 on disclaimed strengths, applied by analogy); bearing yield 386 MPa carries no AA note and counts in full where edge distance / hole diameter >= 2.0, the condition it is quoted at"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "metal-al-7075-t6",
+  "category": "metal_bar",
+  "manufacturer": "ASM Aerospace Specification Metals (distributor)",
+  "name": "Aluminium 7075-T6 / T651",
+  "mass_g": 2810,
+  "specs": {
+   "mass_basis": "per_litre (density 2.81 g/cc)",
+   "density_g_cm3": 2.81,
+   "tensile_strength_mpa": 572,
+   "yield_strength_mpa": 503,
+   "shear_strength_mpa": 331,
+   "bearing_yield_mpa": null,
+   "elastic_modulus_gpa": 71.7,
+   "fatigue_strength_mpa": 159,
+   "value_type": "AA; Typical (NOT FOR DESIGN). No bearing strength on this sheet.",
+   "design_values": {
+    "yield_MPa": 251.5,
+    "shear_yield_MPa": 165.5,
+    "bearing_yield_MPa": null,
+    "basis": "tensile yield 503 and shear 331 MPa are AA typical values marked NOT FOR DESIGN: counted at half; no bearing strength published (a seat in this material is judged against the half tensile yield, a lower bound)"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "metal-ti-6al-4v-annealed-bar",
+  "category": "metal_bar",
+  "manufacturer": "ASM Aerospace Specification Metals (distributor)",
+  "name": "Titanium Ti-6Al-4V (Grade 5) annealed bar",
+  "mass_g": 4430,
+  "specs": {
+   "mass_basis": "per_litre (density 4.43 g/cc)",
+   "density_g_cm3": 4.43,
+   "tensile_strength_mpa": 900,
+   "yield_strength_mpa": 830,
+   "compressive_yield_mpa": 860,
+   "elastic_modulus_gpa": 114,
+   "fatigue_strength_mpa": 510,
+   "astm_b348_gr5_minimums_ksi": {
+    "tensile": 130,
+    "yield": 120
+   },
+   "astm_b348_minimums_source_url": "https://performancetitanium.com/product/astm-b348-6al-4v-grade-5/",
+   "astm_b348_gr5_minimums_mpa_computed": {
+    "tensile": 896,
+    "yield": 827
+   },
+   "value_type": "ASM values unlabelled (not stated as minimum). ASTM B348 Gr5 minimums from Performance Titanium. No shear or bearing strength published.",
+   "design_values": {
+    "yield_MPa": 827,
+    "shear_yield_MPa": 477.5,
+    "bearing_yield_MPa": null,
+    "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound)"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "metal-17-4ph-h900",
+  "category": "metal_bar",
+  "manufacturer": "United Performance Metals (distributor)",
+  "name": "17-4 PH stainless (UNS S17400, AMS 5643 bar) condition H900",
+  "mass_g": 7806,
+  "specs": {
+   "mass_basis": "per_litre (computed from 0.2820 lb/in3 = 7.806 g/cm3)",
+   "density_lb_in3": 0.282,
+   "tensile_strength_ksi_min": 190,
+   "yield_strength_ksi_min": 170,
+   "tensile_strength_mpa_min_computed": 1310,
+   "yield_strength_mpa_min_computed": 1172,
+   "elongation_pct_min": 10,
+   "hardness": "40 HRC max",
+   "bar_sizes_in": "0.250-5.000",
+   "value_type": "minimum (sheet disclaimer: information only, not for design)",
+   "design_values": {
+    "yield_MPa": 586,
+    "basis": "minimum yield 170 ksi on a sheet disclaimed information only, not for design: counted at half"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://www.upmet.com/sites/default/files/datasheets/17-4-ph.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "metal-17-4ph-h1025",
+  "category": "metal_bar",
+  "manufacturer": "United Performance Metals (distributor)",
+  "name": "17-4 PH stainless (UNS S17400, AMS 5643 bar) condition H1025",
+  "mass_g": 7806,
+  "specs": {
+   "mass_basis": "per_litre (computed from 0.2820 lb/in3 = 7.806 g/cm3)",
+   "density_lb_in3": 0.282,
+   "tensile_strength_ksi_min": 155,
+   "yield_strength_ksi_min": 145,
+   "tensile_strength_mpa_min_computed": 1069,
+   "yield_strength_mpa_min_computed": 1000,
+   "elongation_pct_min": 12,
+   "hardness": "35 HRC max",
+   "bar_sizes_in": "0.250-5.000",
+   "value_type": "minimum (sheet disclaimer: information only, not for design)"
+  },
+  "price_usd": null,
+  "source_url": "https://www.upmet.com/sites/default/files/datasheets/17-4-ph.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "pin-mcmaster-91595a436",
+  "category": "pin_reference",
+  "manufacturer": "McMaster-Carr",
+  "name": "H6 dowel pin, high-strength alloy steel, 6 mm x 8 mm (ISO 8734 / DIN 6325-m6)",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not published",
+   "diameter_mm": 6,
+   "length_mm": 8,
+   "material": "High-Strength Alloy Steel",
+   "min_hardness": "Rockwell C52",
+   "double_shear_breaking_strength_lbf": 6600,
+   "double_shear_breaking_strength_n_computed": 29358,
+   "note": "Most 6 mm lengths are 'Not Rated' on the page; 6,600 lbf is shown for the rated 6 mm rows. The table was reassembled by the fetch tool, so confirm the row on the page before relying on it. A longer pin needed for a pivot (e.g. 6x20, 91595A452) shows 'Not Rated'.",
+   "eligibility": "reference only: no published mass, so not eligible for the BOM (M6); kept for its published rating or dimensions"
+  },
+  "price_usd": null,
+  "source_url": "https://www.mcmaster.com/products/h6-dowel-pins/",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "pin-mcmaster-91595a178",
+  "category": "pin_reference",
+  "manufacturer": "McMaster-Carr",
+  "name": "H6 dowel pin, high-strength alloy steel, 5 mm x 8 mm (ISO 8734 / DIN 6325-m6)",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not published",
+   "diameter_mm": 5,
+   "length_mm": 8,
+   "material": "High-Strength Alloy Steel",
+   "min_hardness": "Rockwell C52",
+   "double_shear_breaking_strength_lbf": 4600,
+   "double_shear_breaking_strength_n_computed": 20462,
+   "note": "Same caveat as the 6 mm entry: most rows 'Not Rated'; the table was reassembled by the fetch tool.",
+   "eligibility": "reference only: no published mass, so not eligible for the BOM (M6); kept for its published rating or dimensions"
+  },
+  "price_usd": null,
+  "source_url": "https://www.mcmaster.com/products/h6-dowel-pins/",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "gear-khk-ssag1-40j10",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "SSAG1-40J10 ground hubless S45C spur gear (induction hardened teeth), KHK J-series bore 10 mm with keyway",
+  "mass_g": 92.0,
+  "specs": {
+   "mass_basis": "per part: the stock SSAG1-40 mass (92 g) published by KHK; the J10 modification cuts only the keyway (its own mass not published)",
+   "module_mm": 1,
+   "teeth": 40,
+   "material": "S45C",
+   "heat_treatment": "Gear teeth induction hardened (50-60 HRC)",
+   "precision": "JIS grade N7 (JIS B1702-1: 1998)",
+   "bore_mm": 10,
+   "face_width_mm": 10,
+   "shape": "S5",
+   "allowable_torque_bending_nm": 12.3,
+   "allowable_torque_surface_durability_nm": 8.42,
+   "j_series_bores_mm": [
+    10,
+    12,
+    14,
+    15,
+    16,
+    17
+   ],
+   "j_series_keyway": "4 x 1.8 mm (J10)",
+   "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
+   "note": "KHK J-series bore modification of SSAG1-40 as published on the SSAG1-40 page (bores 10-17 mm, J10 keyway 4 x 1.8 mm). Rated above the stage 3 wheel torque (about 6.2 N m) on both ratings; not for stage 4.",
+   "fastening": "keyway 4 x 1.8 mm (KHK J-series J10, bore 10 mm)"
+  },
+  "price_usd": null,
+  "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-hubless-spur-gears-ssag/ssag1-40",
   "retrieved": "2026-11-02",
   "verified": "manufacturer-page"
  }

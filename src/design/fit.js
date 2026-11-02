@@ -10,13 +10,13 @@ export function protrusions(fit) {
 }
 
 /**
- * The design as the film's packing check needs it. Round 5: a fixed stroke has no stroke servo, but layoutParts
- * places one from its lump unconditionally, so a massless placeholder lump stands in for it: the packing then keeps a
- * servo-sized box free that nothing fills (conservative: the pod is at least as big as the parts need). The lump is
- * only in this view, never in the design's mass.
+ * The design as the film's packing check needs it. Round 5: a fixed stroke has no stroke servo, but layoutParts placed
+ * one from its lump unconditionally, so a massless placeholder lump stood in for it and kept a servo-sized box free.
+ * Round 6: model.js no longer places a stroke servo without its lump, so the placeholder is dropped by default and the
+ * pod holds only real parts; { placeholder: true } restores round 5's view. Never in the design's mass.
  */
-export function packingView(design) {
-  if (design.mass.lumps.some((l) => l.name === 'stroke servo')) return design;
+export function packingView(design, { placeholder = false } = {}) {
+  if (!placeholder || design.mass.lumps.some((l) => l.name === 'stroke servo')) return design;
   return { ...design, mass: { ...design.mass, lumps: [...design.mass.lumps, { name: 'stroke servo', mass_kg: 0, pos: design.params?.lumpPos?.['stroke servo'] ?? [-0.03, 0, 0], gyration_m: 0, placeholder: 'no stroke servo (fixed stroke): kept free by the packing check' }] } };
 }
 

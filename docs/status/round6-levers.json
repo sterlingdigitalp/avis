@@ -1,0 +1,80 @@
+{
+ "note": "Round 6 exploration (Larus GL-2), probes through src/physics/gates/pool.js: nominal M1, M2 (60 s), M3, M5 and M4 seeds; corners as missions.mjs. Not gate files; the gate table is docs/status/round6-gates-larus.txt. Probe outputs in out/sweep/round6/ and out/sweep/round6/levers/.",
+ "rows": [
+  {
+   "tag": "v14 + 20 ms",
+   "what": "v14 unchanged, with the 20 ms control delay on the FC governor and clamp (round 6 flight model)",
+   "mass_g": 1073.8,
+   "M4": "100/100 nominal; corners 99-100",
+   "M1_worst_corner_m": 1.474,
+   "crank_Nm_nominal": 13.78,
+   "motor_peak_drive_A": 54.7,
+   "clamp_A": 34,
+   "verdict": "the delayed clamp lets the motor current reach 55 A against its 34 A setting; the crank stays within the 14.16 N m train rating at nominal (13.78)",
+   "files": [
+    "out/sweep/round6/v14-delay20-nominal.json",
+    "out/sweep/round6/v14-delay20-corners.json"
+   ]
+  },
+  {
+   "tag": "A",
+   "what": "every loaded part made real: Ti-6Al-4V one-piece crank, Ti and 7075 gear shafts, Ti pins and keys, 7075 rockers, 6061 coupler links, plates and housings, outboard motor bearing",
+   "mass_g": 1213.0,
+   "delta_g": 139.2,
+   "M1": "FAIL at all four aero 0.9 corners: 1.53, 1.73, 2.18, 2.30 m",
+   "M4": "99/100 nominal; aero 0.9 mass 1.05: 28/30",
+   "files": [
+    "out/sweep/round6/levers/A-nominal.json",
+    "out/sweep/round6/levers/A-corners30.json"
+   ]
+  },
+  {
+   "tag": "B (chosen, v15)",
+   "what": "A with the Li-ion 2S Molicel P30B 3000 mAh pack (104 g, 30 A cont.) for the 130 g 2200 LiPo, and KHK SSAG1-40J10 (92 g) for the stage 3 MSGB1-40",
+   "mass_g": 1168.4,
+   "delta_g_vs_v14": 94.6,
+   "M1": "FAIL at aero 0.9 mass 1.05: 1.56 (cg -5 mm), 1.85 m (cg +5 mm); passes elsewhere",
+   "M2_min": "19.0-22.2 at the corners",
+   "M4": "98/100 nominal; corners at 100 seeds: 97 (aero 0.9 mass 1.05 cg +5), 98, 98",
+   "envelope": "2.71 Hz at 38 deg, motor-speed limited (Li-ion voltage)",
+   "files": [
+    "out/sweep/round6/levers/B-nominal.json",
+    "out/sweep/round6/levers/B-corners50.json"
+   ]
+  },
+  {
+   "tag": "C",
+   "what": "A with SSAG1-40J10 only (2200 LiPo kept)",
+   "mass_g": 1198.3,
+   "M1": "FAIL at all four aero 0.9 corners: 1.63, 1.86, 2.18, 2.40 m (cruise 10 m/s)",
+   "M4": "99/100 nominal; 98/100 at the worst corner",
+   "files": [
+    "out/sweep/round6/levers/C-nominal.json",
+    "out/sweep/round6/levers/C-corner-worst.json"
+   ]
+  },
+  {
+   "tag": "D",
+   "what": "B with the fixed stroke at 41 deg",
+   "mass_g": 1168.1,
+   "M1": "FAIL at three aero 0.9 corners: 1.62, 1.83, 2.16 m",
+   "crank_Nm_nominal": 14.66,
+   "verdict": "crank torque over the 14.16 N m train rating",
+   "files": [
+    "out/sweep/round6/levers/D-nominal.json",
+    "out/sweep/round6/levers/D-corner-worst.json"
+   ]
+  },
+  {
+   "tag": "AM32 current limit",
+   "what": "the drive clamp in the ESC firmware (exempt from the 20 ms delay)",
+   "verdict": "not adopted: AM32 documents no Current Limit behaviour beyond its code and neither AM32 nor Holybro states whether the sensor reads battery or phase current, so it cannot be modelled exactly; its code averages the current over 50 samples at about 1 kHz and moves the duty cap at most 10/2000 per tick (0.5%/ms), slower than the FC path with 20 ms"
+  },
+  {
+   "tag": "v15 -> v16 (flight step)",
+   "what": "v15 (lever B at the round-5 step 1/960 s) flew M1-M8 with corners: M7 failed only its time-step rule, the left forward shoulder bushing's peak (its smallest load, about 184 N, FoS about 20) moving 13.7% at half the step; M1 failed at aero 0.9 mass 1.05 (both CG), M4 97/100 at those two corners",
+   "result_files": "out/sweep/round6/first-run/",
+   "fix": "v16: the same design at 1/1920 s, where those seeds move 6% at half the step (ROUND6_OPT.dt; round 4's rule: the step at which the peaks converge)"
+  }
+ ]
+}

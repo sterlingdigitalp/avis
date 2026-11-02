@@ -91,6 +91,10 @@ export const LOAD_CHANNELS = ['coupler_R', 'coupler_L', 'slot_R', 'slot_L', 'cra
  * A support names its loads as { ch, k } terms (bearings.js supportLoads); X0/Y0 are set for a rolling bearing (its
  * ISO 76 equivalent is tracked over time), null for a bushing or rod end.
  */
+/** y and z components of r x F (round 6: the inertial root moment about the shoulder, pinned by hand in the tests). */
+export const crossY = (rz, rx, fx, fz) => rz * fx - rx * fz;
+export const crossZ = (rx, ry, fx, fy) => rx * fy - ry * fx;
+
 export function compileSupports(joints) {
   const idx = (c) => {
     const i = LOAD_CHANNELS.indexOf(c);
@@ -106,12 +110,16 @@ export function compileSupports(joints) {
 
 /**
  * Everything physical about a bird, as numbers, from a design file. `perturb` applies the robustness cases:
- * { aero: 1.1, mass: 0.95, cgx: 0.005 (m), servoSpeed: 1 }.
+ * { aero: 1.1, mass: 0.95, cgx: 0.005 (m), servoSpeed: 1 } and, round 6, the eta_s sensitivity { suctionEta } (a
+ * constant for every strip, in place of any table). `suction` (or design.suction: { table, amplitude_rad }) is the
+ * eta_s(effective-angle amplitude) hook of strip.js; without either, eta_s is SUCTION.eta.
  */
-export function buildBird(design, { cal = null, perturb = {}, n = 8, inviscid = false, suctionEta = undefined } = {}) {
+export function buildBird(design, { cal = null, perturb = {}, n = 8, inviscid = false, suctionEta = undefined, suction = undefined } = {}) {
   const wing = makeWing(design.wing);
   const polar = design.wing.airfoil ?? 'e387-film';
-  const strip = createStrip(wing, { n, polar, cal: cal ?? design.calibration?.multipliers ?? null, inviscid, suctionEta });
+  const etaConst = perturb.suctionEta ?? suctionEta;
+  const sModel = etaConst !== undefined ? undefined : suction ?? (design.suction?.table ? { table: design.suction.table, amplitude: design.suction.amplitude_rad } : undefined);
+  const strip = createStrip(wing, { n, polar, cal: cal ?? design.calibration?.multipliers ?? null, inviscid, suctionEta: etaConst, suction: sModel });
   if (perturb.aero) strip.aeroScale = perturb.aero;
   const law = design.drive.kind === 'crank-rocker' ? makeFlapDrive(design.drive) : { kind: 'sine', phiMean: design.drive.phiMean ?? 0 };
   const st = strip.stations;
@@ -239,7 +247,8 @@ export function batteryOcv(batt, soc) {
 }
 
 /**
- * Creates a flight. opts: { dt, wind, cal, perturb, delayed commands provided by the controller }.
+ * Creates a flight. opts: { dt, wind, cal, perturb, delay (control delay of loops closed on the flight controller,
+ * default 0.02 s), delayed commands provided by the controller }.
  * The controller is called at its own rate through opts.controller.update(t, sensorsInput) and returns cmd.
  */
 export function createFlight(design, opts = {}) {
@@ -258,7 +267,8 @@ export function createFlight(design, opts = {}) {
   const servoT = design.servos.twist;
   // Round 5: the crank governor and drive clamp in the flight controller (governor.js), sampled from the encoder and the
   // FC's voltage sense, when the design puts them there (drive.governor.location); otherwise round 4's ESC-side law.
-  const fcGov = design.drive.governor?.location === 'flight controller' ? createFcGovernor(design.drive.governor, { G, kv: motor.kv_rad_per_v_s, R: motor.R, cells: design.battery.cells, kp: motor.govKp ?? 0.5, ki: motor.govKi ?? 1.0 }) : null;
+  // Round 6: the control delay (opts.delay, 20 ms as in the controller) applies to that loop too (SPEC ruling).
+  const fcGov = design.drive.governor?.location === 'flight controller' ? createFcGovernor(design.drive.governor, { G, kv: motor.kv_rad_per_v_s, R: motor.R, cells: design.battery.cells, kp: motor.govKp ?? 0.5, ki: motor.govKi ?? 1.0, delay_s: opts.delay ?? 0.02 }) : null;
   let tEval = 0; // time of the state deriv() is evaluating (the encoder phase is extrapolated to it)
   const servoP = design.servos.tail;
   const servoA = design.servos.stroke ?? null;
@@ -316,7 +326,9 @@ export function createFlight(design, opts = {}) {
   // Round 5: load channels of the drive and the supports of design.structure.joints, compiled to channel indices.
   const rootLoad = new Float64Array(6); // per wing: |F| normal to the hinge axis, |F| along it, |M| normal to it
   const chv = new Float64Array(LOAD_CHANNELS.length);
-  const sup = compileSupports(design.structure?.joints);
+  // Round 6: the loaded members' sections (shafts, pins, seats, fittings, adapters: src/physics/members.js) follow the
+  // joints' supports, combined the same way at every step.
+  const sup = compileSupports([...(design.structure?.joints ?? []), ...(design.structure?.members ?? []).map((m) => ({ name: m.name, supports: m.sections }))]);
   const supLoad = new Float64Array(3 * sup.length);
   // Worst-case tracking for M7, M8
   const peaks = { servoEach: 0, becI: 0, crankDrive: 0, crankBack: 0, rootBend: 0, elbowBend: 0, crankTorque: 0, motorI: 0, battI: 0, servoI: 0, twistTorque: 0, tailTorque: 0, couplerForce: 0, loadFactor: 0, shoulderTorque: 0, crankRate: 0, motorIDrive: 0, motorIBrake: 0, channels: Object.fromEntries(LOAD_CHANNELS.map((c) => [c, 0])), slotPair: 0, supports: sup.map((s) => ({ key: s.key, Fr: 0, Fa: 0, P0: 0 })) };
@@ -718,8 +730,8 @@ export function createFlight(design, opts = {}) {
           if (st.s[i] >= elbowS) elbow += (totY * W.e[j + 2] - totZ * W.e[j + 1]) * (st.s[i] - elbowS) * side;
           const armX = rx - hx;
           rFx += totX; rFy += totY; rFz += totZ;
-          rMy += armZ * fix - armX * fiz;
-          rMz += armX * fiy - armY * fix;
+          rMy += crossY(armZ, armX, fix, fiz);
+          rMz += crossZ(armX, armY, fix, fiy);
         }
         if (w === 0) { bendR = bend; elbowR = elbow; chordR = chord; } else { bendL = bend; elbowL = elbow; chordL = chord; }
         rootLoad[3 * w] = Math.hypot(rFy, rFz);

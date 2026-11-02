@@ -99,8 +99,58 @@ function buildInducedMatrix(wing, st, offsetFrac) {
 }
 
 /**
+ * Round 6 design hook: eta_s as a function of a strip's effective-angle amplitude (the half range of its effective
+ * angle over a flap cycle). table: [[amplitude_rad, eta], ...] in any order; linear between points, clamped at the
+ * ends to the nearest measured value. Not used unless a caller passes a table: the default stays SUCTION.eta.
+ */
+export function suctionEtaAt(table, amplitude) {
+  const t = [...table].sort((a, b) => a[0] - b[0]);
+  if (!t.length) throw new Error('suction table is empty');
+  if (!(amplitude > t[0][0])) return t[0][1];
+  for (let i = 1; i < t.length; i++) {
+    if (amplitude <= t[i][0]) {
+      const [a0, e0] = t[i - 1], [a1, e1] = t[i];
+      return a1 > a0 ? e0 + ((e1 - e0) * (amplitude - a0)) / (a1 - a0) : e1;
+    }
+  }
+  return t[t.length - 1][1];
+}
+
+/**
+ * The eta_s table from data/calibration/suction.json (parsed; the cfd workstream's file, read only): every complete
+ * point's eta_s_strip (the form strip.js uses) against its effective-angle amplitude. The amplitude is the point's own
+ * alpha_eff_amplitude_deg when it states one; a pure-plunge point (k, h_over_c and no pitch or twist field) has the
+ * plunge-induced amplitude atan(2 k h/c) (k = omega b / U, so hdot_max / U = 2 k h / c). Points with equal amplitudes
+ * are averaged. Returns { table: [[amplitude_rad, eta]], used: [names], skipped: [{ name, why }] }.
+ */
+export function suctionTableFrom(json) {
+  const byAmp = new Map();
+  const used = [], skipped = [];
+  for (const p of json?.points ?? []) {
+    const eta = p.eta_s_strip;
+    if (!p.complete || !Number.isFinite(eta)) { skipped.push({ name: p.name, why: 'incomplete or no eta_s_strip' }); continue; }
+    let amp = Number.isFinite(p.alpha_eff_amplitude_deg) ? (p.alpha_eff_amplitude_deg * Math.PI) / 180 : null;
+    if (amp === null) {
+      const moving = Object.keys(p).some((k) => /pitch|twist/i.test(k));
+      if (!moving && Number.isFinite(p.k) && Number.isFinite(p.h_over_c)) amp = Math.atan(2 * p.k * p.h_over_c);
+    }
+    if (amp === null) { skipped.push({ name: p.name, why: 'no effective-angle amplitude stated and not a pure plunge' }); continue; }
+    const key = amp.toFixed(9);
+    const e = byAmp.get(key) ?? { amp, sum: 0, n: 0 };
+    e.sum += eta;
+    e.n += 1;
+    byAmp.set(key, e);
+    used.push(p.name);
+  }
+  const table = [...byAmp.values()].map((e) => [e.amp, e.sum / e.n]).sort((a, b) => a[0] - b[0]);
+  return { table, used, skipped };
+}
+
+/**
  * Create a model for one bird's wing pair.
- *  wing: makeWing() result. opts: { n, polar: name|object, inviscid, cal, x14 }.
+ *  wing: makeWing() result. opts: { n, polar: name|object, inviscid, cal, x14, suctionEta,
+ *  suction: { table, amplitude } }: suction.table as for suctionEtaAt and suction.amplitude each strip's effective-angle
+ *  amplitude (rad; n values for both wings alike, or 2n, right then left) give each strip its own eta_s.
  * Inputs each evaluation are in the body frame.
  */
 export function createStrip(wing, opts = {}) {
@@ -109,6 +159,14 @@ export function createStrip(wing, opts = {}) {
   const polar = typeof opts.polar === 'string' ? POLARS[opts.polar] : opts.polar ?? POLARS['e387-film'];
   const inviscid = !!opts.inviscid;
   const suctionEta = inviscid ? 1 : (opts.suctionEta ?? SUCTION.eta);
+  // Round 6 hook: eta_s per strip from its effective-angle amplitude (suctionEtaAt), when a table is given.
+  let etaQ = null;
+  if (!inviscid && opts.suction?.table) {
+    const amp = opts.suction.amplitude;
+    if (!amp || (amp.length !== n && amp.length !== 2 * n)) throw new Error(`suction.amplitude needs ${n} or ${2 * n} values`);
+    etaQ = new Float64Array(2 * n);
+    for (let q = 0; q < 2 * n; q++) etaQ[q] = suctionEtaAt(opts.suction.table, amp.length === n ? amp[q % n] : amp[q]);
+  }
   let cal = clampCalibration(opts.cal);
   // The lattice it is compared with uses the wing's own mean line, so the inviscid section does too (round 1 used
   // the parabolic -2f, which is 10% off for a NACA-type line with camber at 40%: 0.4 deg on E387).
@@ -304,8 +362,9 @@ export function createStrip(wing, opts = {}) {
         // lower of the measured-polar form and eta_s of the ideal suction less friction drag (see SUCTION).
         const sIdeal = kS0 * (Lp * sa);
         let fT = sIdeal - Dp * ca;
-        if (suctionEta < 1 && sIdeal > 0) {
-          const fEta = suctionEta * sIdeal - qdyn * c * pol[4] * ca;
+        const eta = etaQ ? etaQ[q] : suctionEta;
+        if (eta < 1 && sIdeal > 0) {
+          const fEta = eta * sIdeal - qdyn * c * pol[4] * ca;
           if (fEta < fT) fT = fEta;
         }
         // Apparent mass acts along the normal at mid chord (Theodorsen's L_nc), with c/2 = b
@@ -462,6 +521,8 @@ export function createStrip(wing, opts = {}) {
   return {
     evaluate,
     reset,
+    /** eta_s of strip q (0..2n-1, right then left) as this model applies it. */
+    suctionEtaOf: (q) => (etaQ ? etaQ[q] : suctionEta),
     prime,
     out,
     stations: st,
