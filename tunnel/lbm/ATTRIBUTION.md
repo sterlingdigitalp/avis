@@ -18,3 +18,4 @@ Methods used, for the record:
 - Mei, Yu, Shyy & Luo 2002 momentum exchange. Wen, Zhang, Tu, Wang & Fang 2014, Galilean-invariant form.
 - Aidun, Lu & Ding 1998, cover and uncover impulses. Caiazzo 2008, refill.
 - Skordos 1993 style shifted populations (store f - w) for single-precision round-off.
+- Neumaier 1974 compensated summation, for the f64 mass audit on the CPU reference (`src/cpu.mjs`, `tools/mass-audit.mjs`).

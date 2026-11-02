@@ -106,32 +106,31 @@ export async function agree({ variant = 'thin', bouzidi = true, nx = 48, ny = 32
   return out;
 }
 
-/** Closed periodic box with a body oscillating through it for many cycles, tracking total mass. */
-export async function massBox({ kind = 'thin', bouzidi = true, massFix = false, withBody = true, nx = 160, ny = 160, nz = 4, c = 40, h0 = 8, alphaMean = 0, period = 1000, cycles = 50, tau0 = 0.53, U = 0.03, name, maxSeconds }) {
-  const { device, errors } = await gpu();
+/** Closed periodic box with a body oscillating through it: the setup shared by the GPU job and the CPU audit. */
+export function massBoxCase({ kind = 'thin', withBody = true, nx = 160, ny = 160, nz = 4, c = 40, h0 = 8, alphaMean = 0, period = 1000, tau0 = 0.53, U = 0.03 }) {
   const grid = { nx, ny, nz, xMode: AXIS.periodic, yLowMode: AXIS.periodic, yHighMode: AXIS.periodic, zLowMode: AXIS.periodic, zHighMode: AXIS.periodic };
   const omega = (2 * Math.PI) / period;
   const m = harmonic({ h0, omega, alphaMean, rampSteps: period / 4 });
   const surfaces = withBody ? [rigidPlateSurface({ part: 0, kind, thickness: 2, chord: c, zMin: -3, zMax: nz + 2, x0: nx / 2 + 0.27, y0: ny / 2 + 0.37, nChord: 4, nSpan: 1, m })] : [];
-  const cfg = { ...grid, tau0, csSmag: 0, u0: [-U, 0, 0] };
-  const r = await runSeries(device, { name: name ?? `mass-${kind}-${bouzidi}-${massFix}-${withBody}`, grid, cfg, surfaces, bouzidi, relink: 1, totalSteps: cycles * period, sampleEvery: massFix ? 1 : 10, parts: [0], massEvery: period, massFix, maxSeconds: maxSeconds ?? 1e9 });
+  return { grid, surfaces, cfg: { ...grid, tau0, csSmag: 0, u0: [-U, 0, 0] } };
+}
+
+/** runSeries options and the description of one closed-box run. Pure. */
+export function massBoxRun(o) {
+  const { kind = 'thin', bouzidi = true, massFix = false, withBody = true, ny = 160, c = 40, h0 = 8, period = 1000, cycles = 50, tau0 = 0.53, U = 0.03, name, maxSeconds } = o;
+  const { grid, cfg, surfaces } = massBoxCase(o);
+  const series = { name: name ?? `mass-${kind}-${bouzidi}-${massFix}-${withBody}`, grid, cfg, surfaces, bouzidi, relink: 1, totalSteps: cycles * period, sampleEvery: massFix ? 1 : 10, parts: [0], massEvery: period, massFix, maxSeconds: maxSeconds ?? 1e9 };
+  return { meta: { kind, bouzidi, massFix, withBody, cycles, peakBodyU: h0 * ((2 * Math.PI) / period), U, blockage: c / ny, tau0 }, series };
+}
+
+/** Closed periodic box with a body oscillating through it for many cycles, tracking total mass. */
+export async function massBox(o) {
+  const { device, errors } = await gpu();
+  const run = massBoxRun(o);
+  const r = await runSeries(device, run.series);
   if (!r.done) return { done: false, n: r.n, errors: errors.splice(0) };
   const pts = r.series.mass;
-  const peakU = h0 * omega + U;
-  const n0 = pts[0]?.cells ?? r.cells;
-  const rel = pts.map((p) => p.deltaMass / p.cells);
-  // Least-squares slope over all whole cycles: an endpoint difference is dominated by the oscillation
-  // of the instantaneous mass within a cycle. With the correction on, the budget is applied every step:
-  // the correction lags its budget by one sample, and swept-node refill makes single-sample budgets
-  // swing by about 1 in total mass, so a ten-step lag alone shows up as noise in this slope.
-  const N = rel.length, xm = (N - 1) / 2, ym = rel.reduce((p, v) => p + v, 0) / N;
-  let sxy = 0, sxx = 0;
-  rel.forEach((v, i) => { sxy += (i - xm) * (v - ym); sxx += (i - xm) ** 2; });
-  return { done: true, kind, bouzidi, massFix, withBody, cells: r.cells, cycles, peakBodyU: h0 * omega, U, blockage: c / ny, tau0,
-    meanDrhoFirst: rel[0], meanDrhoEnd: rel[N - 1], slopePerCycle: sxy / sxx,
-    // Bookkeeping check: change in total mass against the accumulated link and refill budget plus
-    // any correction applied. They should agree to accumulator resolution.
-    budgetCheck: pts.length > 1 ? { massChange: pts[N - 1].deltaMass - pts[0].deltaMass, budget: pts[N - 1].budget - pts[0].budget, fixApplied: pts[N - 1].fixApplied - pts[0].fixApplied } : null, series: rel.filter((_, i) => i % 5 === 0), fluidCellsEnd: n0, errors: errors.splice(0) };
+  return { done: true, ...run.meta, cells: r.cells, ...massSeries(pts), fluidCellsEnd: pts[0]?.cells ?? r.cells, errors: errors.splice(0) };
 }
 
 /** Checkpoint and restart against an uninterrupted run. Must match bit for bit. */
@@ -212,7 +211,9 @@ export async function runInclined(o) {
   return { done: true, c, alphaDeg, St, UT, Re, tau0, cells: r.cells, steps: total, seconds: se.ms / 1000, segments: se.segments, mlups: r.mlups, frameMsPerStep: se.frameMs / total, links: se.maxLinks, clMean, cdMean, clMax, perCycleCl: lastCycles, h0c: h0 / c, adapterInfo, errors: errors.splice(0) };
 }
 
-import { theodorsenLift, fitHarmonic } from './theodorsen.mjs';
+import { theodorsenLift } from './theodorsen.mjs';
+import { liftHarmonic } from './plateforces.mjs';
+import { massSeries } from './mass.mjs';
 import { runSeries } from './run.mjs';
 
 /** 2D oscillating plate: one cell periodic span, free-slip walls, inlet at +x, outlet at -x. */
@@ -224,50 +225,61 @@ export function plateCase(o) {
   const omega = (2 * k * U) / c;
   const period = (2 * Math.PI) / omega;
   const grid = { nx, ny, nz, xMode: AXIS.inflow, yLowMode: AXIS.freeslip, yHighMode: AXIS.freeslip, zLowMode: AXIS.periodic, zHighMode: AXIS.periodic };
-  // Fractional offsets keep the plate off lattice planes and consistent across grid levels.
-  const x0 = xPlate * c + 0.27, y0 = ny / 2 - 0.5 + 0.37;
+  // Fractional offsets keep the plate off lattice planes. By default they fix the mid-chord, which
+  // puts the edges 0.27 cells past a node when c/2 is a whole number and 0.77 when it is not, so an
+  // odd chord is not geometrically similar to an even one. edgeFrac fixes the edges' sub-cell
+  // position instead, the same at every chord: use it for grid studies that mix odd and even chords.
+  const midFrac = o.edgeFrac === undefined ? 0.27 : o.edgeFrac - (c / 2 - Math.floor(c / 2));
+  const x0 = xPlate * c + midFrac, y0 = ny / 2 - 0.5 + 0.37;
   const m = harmonic({ h0: h0c * c, alpha0, alphaMean, omega, rampSteps: Math.round(period / 4) });
   const surf = rigidPlateSurface({ part: 0, kind, thickness, chord: c, zMin: -3, zMax: nz + 2, x0, y0, axis, nChord: Math.max(4, Math.round(c / 8)), nSpan: 1, m });
   const sponge = o.sponge ?? { strength: 0.05, xLow: Math.round(2 * c) };
-  return { grid, surf, omega, period, tau0, cfg: { ...grid, tau0, csSmag, inletU: [-U, 0, 0], u0: [-U, 0, 0], sponge, giTerm: o.giTerm ?? true, localRho: o.localRho ?? true }, bouzidi, relink, nx, ny, nz, U, c };
+  return { grid, surf, omega, period, tau0, cfg: { ...grid, tau0, csSmag, inletU: [-U, 0, 0], u0: [-U, 0, 0], sponge, giTerm: o.giTerm ?? true, localRho: o.localRho ?? true }, bouzidi, relink, nx, ny, nz, U, c,
+    edgeFrac: +((x0 + c / 2) % 1).toFixed(6) };
 }
 
-/** Oscillating plate case, resumable. Returns done:false if its time budget ran out. */
-export async function runPlate(o) {
-  const { device, errors, adapterInfo } = await gpu();
+/** runSeries options and sampling of one plate run. Pure. */
+export function plateRun(o) {
   const pc = plateCase(o);
-  const { period, omega, relink, U, c } = pc;
-  const cycles = o.cycles ?? 6;
-  const total = Math.round(cycles * period);
+  const { period, relink, c } = pc;
+  const total = Math.round((o.cycles ?? 6) * period);
   const M = Math.max(1, Math.round(period / (o.samplesPerCycle ?? 96)));
-  const r = await runSeries(device, {
+  const series = {
     name: o.name ?? `plate-${c}-${o.Re}-${o.k}-${o.h0c ?? 0}-${o.alpha0 ?? 0}-${o.kind ?? 'thin'}-${pc.bouzidi}-${relink}`,
     grid: pc.grid, cfg: pc.cfg, surfaces: [pc.surf], bouzidi: pc.bouzidi, relink, totalSteps: total, sampleEvery: M, parts: [0],
-    maxSeconds: o.maxSeconds ?? 1e9, resume: o.resume ?? true, massEvery: o.massEveryCycle ? Math.round(period) : 0,
-  });
-  if (!r.done) return { done: false, n: r.n, total, errors: errors.splice(0) };
+    maxSeconds: o.maxSeconds ?? 1e9, resume: o.resume ?? true, massEvery: o.massEveryCycle ? Math.round(period) : 0, massFix: o.massFix ?? false,
+  };
+  return { o, pc, total, M, series };
+}
+
+/** Result of a finished plate run from its force series, against Theodorsen. Pure. */
+export function plateSummary({ o, pc, total, M }, r) {
+  const { period, omega, relink, U, c } = pc;
   const se = r.series, t = se.t;
   const q = 0.5 * U * U * c * pc.nz;
   const cl = se.F[0].map((v) => v[1] / q), cd = se.F[0].map((v) => -v[0] / q), cm = se.M[0].map((v) => v[2] / (q * c));
-  const nFit = Math.round((2 * period) / M);
-  const fit = fitHarmonic(t.slice(-nFit), cl.slice(-nFit), omega);
-  const prev = fitHarmonic(t.slice(-2 * nFit, -nFit), cl.slice(-2 * nFit, -nFit), omega);
+  const lift = liftHarmonic({ t, cl, cd }, { omega, period, M });
   const th = theodorsenLift({ k: o.k, chord: 1, U: 1, h0: o.h0c ?? 0, alpha0: o.alpha0 ?? 0, axisC: o.axis ?? 0 });
-  // A window average attenuates the fit by sinc(w M/2); undo it so the amplitude is instantaneous.
-  const atten = Math.sin((omega * M) / 2) / ((omega * M) / 2);
   const res = {
     done: true, c, Re: o.Re, k: o.k, h0c: o.h0c ?? 0, alpha0: o.alpha0 ?? 0, axis: o.axis ?? 0, kind: o.kind ?? 'thin', thickness: o.kind === 'slab' ? o.thickness ?? 2 : 0, bouzidi: pc.bouzidi, relink,
+    edgeFrac: pc.edgeFrac, massFix: o.massFix ?? false, massFixApplied: se.fixApplied ?? 0,
     tau0: pc.cfg.tau0, cells: r.cells, steps: total, seconds: se.ms / 1000, segments: se.segments, mlups: r.mlups, frameMsPerStep: se.frameMs / total, links: se.maxLinks,
-    cl: { amp: fit.amp / atten, phaseDeg: (fit.phaseRad * 180) / Math.PI, mean: fit.mean, prevAmp: prev.amp / atten, prevPhaseDeg: (prev.phaseRad * 180) / Math.PI },
-    theo: { amp: th.amp, phaseDeg: (th.phaseRad * 180) / Math.PI },
-    meanCd: cd.slice(-nFit).reduce((p, v) => p + v, 0) / nFit,
-    adapterInfo, errors: errors.splice(0),
+    cl: lift.cl, theo: { amp: th.amp, phaseDeg: (th.phaseRad * 180) / Math.PI }, meanCd: lift.meanCd,
   };
   res.ampErrPct = (100 * (res.cl.amp - th.amp)) / th.amp;
   res.phaseErrDeg = ((res.cl.phaseDeg - res.theo.phaseDeg + 540) % 360) - 180;
   if (o.massEveryCycle) res.meanDrhoByCycle = se.mass.map((p) => p.deltaMass / p.cells);
   if (o.keepHistory) res.history = { t, cl, cd, cm };
   return res;
+}
+
+/** Oscillating plate case, resumable. Returns done:false if its time budget ran out. */
+export async function runPlate(o) {
+  const { device, errors, adapterInfo } = await gpu();
+  const run = plateRun(o);
+  const r = await runSeries(device, run.series);
+  if (!r.done) return { done: false, n: r.n, total: run.total, errors: errors.splice(0) };
+  return { ...plateSummary(run, r), adapterInfo, errors: errors.splice(0) };
 }
 
 

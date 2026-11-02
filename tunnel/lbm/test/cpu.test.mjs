@@ -2,7 +2,7 @@
 // expected values come from this code's own output.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CpuLbm } from '../src/cpu.mjs';
+import { CpuLbm, CompensatedSum } from '../src/cpu.mjs';
 import { BoundaryEngine } from '../src/geometry.mjs';
 import { AXIS, FLUID, Q } from '../src/lattice.mjs';
 import { rigidPlateSurface, harmonic, noMotion } from '../src/motion.mjs';
@@ -112,6 +112,61 @@ test('Moving sheet in a closed box: momentum balance is exact and the mass budge
   }
   const dM = s.massDelta().deltaMass - m0;
   assert.ok(Math.abs(dM - budget) < 1e-4, `mass change ${dM} vs budget ${budget}`);
+});
+
+test('Exact mass audit: in f64 links and cell changes account for every change, for Bouzidi sheets and slabs', () => {
+  // Collision conserves mass exactly in exact arithmetic, and streaming in a periodic box is a
+  // permutation, so the whole change in fluid mass must come from link exchange and cell changes.
+  // In f64 the collision term is round-off only; in f32 it is not, and the three terms together
+  // still close because each is taken from the stored values.
+  const run = (kind, bouzidi, precision) => {
+    const nx = 40, ny = 40, nz = 4;
+    const cfg = periodicBox(nx, ny, nz, 0.53, { precision, massAudit: true, u0: [-0.03, 0, 0] });
+    const m = harmonic({ h0: 3, alpha0: 0.1, omega: 0.03, rampSteps: 50 });
+    const surf = rigidPlateSurface({ kind, thickness: 2, chord: 16, zMin: -3, zMax: nz + 2, x0: 20.27, y0: 20.37, nChord: 4, nSpan: 1, m });
+    const eng = new BoundaryEngine(gridOf(cfg), [surf], { bouzidi });
+    const s = new CpuLbm({ ...cfg, mask: eng.mask ?? undefined });
+    s.setFrame(eng.init(0.5));
+    const m0 = s.massDelta().deltaMass;
+    for (let n = 0; n < 400; n++) { s.setFrame(eng.frame(n + 0.5)); s.step(1); }
+    const a = s.audit;
+    return { dM: s.massDelta().deltaMass - m0, link: a.link.value, cell: a.cell.value, collide: a.collide.value };
+  };
+  for (const [kind, bouzidi] of [['thin', true], ['slab', false], ['slab', true]]) {
+    const r = run(kind, bouzidi, 'f64');
+    const budget = r.link + r.cell;
+    assert.ok(Math.abs(budget) > 1e-3, `${kind}: the case must move mass (${budget})`);
+    assert.ok(Math.abs(r.collide) < 1e-11, `${kind} f64 collision term ${r.collide}`);
+    assert.ok(Math.abs(r.dM - budget) < 1e-11 * Math.max(1, Math.abs(budget)), `${kind} f64: mass change ${r.dM} vs links + cells ${budget}`);
+  }
+  const f = run('thin', true, 'f32');
+  assert.ok(Math.abs(f.dM - (f.link + f.cell + f.collide)) < 1e-9, `f32: ${f.dM} vs ${f.link + f.cell + f.collide}`);
+});
+
+test('The mass audit only observes: with it off the state is bit for bit the same, cells are counted', () => {
+  const nx = 24, ny = 24, nz = 2;
+  const states = [false, true].map((massAudit) => {
+    const cfg = periodicBox(nx, ny, nz, 0.6, { precision: 'f32', massAudit, u0: [-0.03, 0, 0] });
+    const surf = rigidPlateSurface({ kind: 'slab', thickness: 2, chord: 10, zMin: -3, zMax: nz + 2, x0: 12.27, y0: 12.37, nChord: 4, nSpan: 1, m: harmonic({ h0: 2, omega: 0.05 }) });
+    const eng = new BoundaryEngine(gridOf(cfg), [surf], { bouzidi: true });
+    const s = new CpuLbm({ ...cfg, mask: eng.mask });
+    s.setFrame(eng.init(0.5));
+    for (let n = 0; n < 60; n++) { s.setFrame(eng.frame(n + 0.5)); s.step(1); }
+    const fluid = eng.mask.reduce((a, v) => a + (v === FLUID ? 1 : 0), 0);
+    assert.equal(s.massDelta().cells, fluid);
+    return s.src;
+  });
+  assert.deepEqual(states[0], states[1]);
+});
+
+test('Compensated sum keeps what plain addition rounds away', () => {
+  const s = new CompensatedSum();
+  s.add(1);
+  for (let i = 0; i < 1e5; i++) s.add(1e-17);
+  assert.equal(s.value, 1 + 1e-12);
+  const t = new CompensatedSum();
+  for (const x of [1e-17, 1, -1]) t.add(x);
+  assert.equal(t.value, 1e-17);
 });
 
 test('Mass correction from the budget holds total mass to round-off', () => {

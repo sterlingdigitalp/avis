@@ -17,6 +17,19 @@ export function roundEven(x) {
   return Math.abs(x % 1) === 0.5 && r % 2 !== 0 ? r - 1 : r;
 }
 
+/** Neumaier compensated sum: error independent of the number of terms, to first order. */
+export class CompensatedSum {
+  constructor() { this.s = 0; this.c = 0; }
+  add(x) {
+    const t = this.s + x;
+    this.c += Math.abs(this.s) >= Math.abs(x) ? (this.s - t) + x : (x - t) + this.s;
+    this.s = t;
+  }
+  get value() { return this.s + this.c; }
+}
+
+const sumOf = (a, base) => { let s = 0; for (let i = 0; i < Q; i++) s += a[base + i]; return s; };
+
 export class CpuLbm {
   constructor(cfg) {
     this.cfg = cfg;
@@ -44,6 +57,10 @@ export class CpuLbm {
     this.zHighMode = cfg.zHighMode ?? AXIS.freeslip;
     this.U = this.inletU();
     this.fillEquilibrium(cfg.u0 ?? [0, 0, 0]);
+    // Optional mass audit: what links, cell changes and collision each did to the total, taken from
+    // the stored values in f64 with compensated sums, so neither the fixed-point accumulators nor the
+    // working precision limit it. The link and cell terms are the same quantities the budget counts.
+    this.audit = cfg.massAudit ? { link: new CompensatedSum(), cell: new CompensatedSum(), collide: new CompensatedSum() } : null;
   }
 
   inletU() {
@@ -124,6 +141,7 @@ export class CpuLbm {
       const ux = fr(F[o + 4]), uy = fr(F[o + 5]), uz = fr(F[o + 6]);
       const rx = fr(F[o + 7]), ry = fr(F[o + 8]), rz = fr(F[o + 9]);
       const base = c * Q;
+      const oldExact = this.audit && kind !== CELL_FRESH ? sumOf(src, base) : 0;
       let oldDrho = 0, oldPx = 0, oldPy = 0, oldPz = 0;
       if (kind !== CELL_FRESH) {
         for (let i = 0; i < Q; i++) {
@@ -137,6 +155,7 @@ export class CpuLbm {
       if (kind === CELL_COVERED) {
         this.addForceMoment(part, oldPx, oldPy, oldPz, rx, ry, rz);
         this.addAcc(part, 6, -oldDrho, SCALE_F);
+        this.audit?.cell.add(-oldExact);
         continue;
       }
       let count = 0, sumRho = 0, Sxx = 0, Syy = 0, Szz = 0, Sxy = 0, Sxz = 0, Syz = 0;
@@ -185,6 +204,7 @@ export class CpuLbm {
       }
       this.addForceMoment(part, fr(oldPx - newPx), fr(oldPy - newPy), fr(oldPz - newPz), rx, ry, rz);
       this.addAcc(part, 6, fr(newDrho - oldDrho), SCALE_F);
+      this.audit?.cell.add(sumOf(src, base) - oldExact);
     }
   }
 
@@ -237,6 +257,7 @@ export class CpuLbm {
       }
       this.addForceMoment(part, Fx, Fy, Fz, F[o + 10], F[o + 11], F[o + 12]);
       this.addAcc(part, 6, dm, SCALE_F);
+      this.audit?.link.add(out - fA);
     }
     for (let l = 0; l < this.linkCount; l++) src[I[l * LINK_WORDS]] = val[l];
   }
@@ -300,6 +321,7 @@ export class CpuLbm {
     const nxy = nx * ny;
     const drhoFix = fr(this.drhoFix ?? 0);
     this.drhoFix = 0;
+    const collide = this.audit?.collide;
     let c = -1;
     for (let iz = 0; iz < nz; iz++) for (let iy = 0; iy < ny; iy++) for (let ix = 0; ix < nx; ix++) {
       c++;
@@ -360,6 +382,7 @@ export class CpuLbm {
         if (sp > 0) v = fr(fr(v * fr(1 - sp)) + fr(sp * this.feqShifted(i, 0, 1, targetUx, targetUy, targetUz, targetUU)));
         dst[base + i] = v;
       }
+      if (collide) collide.add(sumOf(dst, base) - sumOf(ff, 0));
     }
     this.src = dst;
     this.dst = src;
@@ -368,13 +391,14 @@ export class CpuLbm {
 
   /** Fluid mass excluding the constant 1 per cell, and the number of fluid cells. */
   massDelta() {
-    let m = 0, cells = 0;
+    const m = new CompensatedSum();
+    let cells = 0;
     for (let c = 0; c < this.n; c++) {
       if (this.mask && this.mask[c] !== FLUID) continue;
       cells++;
-      for (let i = 0; i < Q; i++) m += this.src[c * Q + i];
+      m.add(sumOf(this.src, c * Q));
     }
-    return { deltaMass: m, cells };
+    return { deltaMass: m.value, cells };
   }
 
   momentum() {

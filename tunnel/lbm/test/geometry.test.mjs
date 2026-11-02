@@ -96,3 +96,21 @@ test('design reader takes cruise speed and the trim table at that speed', () => 
   assert.equal(trimAt(d, 0).freq, d.control.trim[0].freq);
   assert.throws(() => readDesign({ name: 'x' }, kin), /wing\.segments/);
 });
+
+test('edgeFrac puts both plate edges at the same sub-cell position for odd and even chords', async () => {
+  const { plateCase } = await import('../src/jobs.mjs');
+  const frac = (x) => x - Math.floor(x);
+  for (const c of [80, 113, 160, 226]) {
+    const p = plateCase({ c, Re: 5000, k: 0.5, alpha0: 0, axis: -0.25, edgeFrac: 0.27 });
+    const pos = p.surf.pose(0).pos;
+    let lo = Infinity, hi = -Infinity;
+    for (let v = 0; v < pos.length; v += 3) { lo = Math.min(lo, pos[v]); hi = Math.max(hi, pos[v]); }
+    assert.ok(Math.abs(hi - lo - c) < 1e-9, `c${c}: chord ${hi - lo}`);
+    assert.ok(Math.abs(frac(hi) - 0.27) < 1e-9 && Math.abs(frac(lo) - 0.27) < 1e-9, `c${c}: edges at ${frac(lo)}, ${frac(hi)}`);
+  }
+  // For a chord with a whole-number half, edgeFrac 0.27 is the default placement, so earlier runs stand.
+  const a = plateCase({ c: 80, Re: 5000, k: 0.5 }), b = plateCase({ c: 80, Re: 5000, k: 0.5, edgeFrac: 0.27 });
+  assert.deepEqual(Array.from(a.surf.pose(0).pos), Array.from(b.surf.pose(0).pos));
+  const odd = plateCase({ c: 113, Re: 5000, k: 0.5 });
+  assert.ok(Math.abs(odd.edgeFrac - 0.77) < 1e-9, `default odd-chord edges at ${odd.edgeFrac}`);
+});
