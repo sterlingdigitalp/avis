@@ -6744,11 +6744,35 @@
    "fatigue_strength_mpa": 96.5,
    "value_type": "Tensile, yield and shear are 'AA; Typical' (sheet: NOT FOR DESIGN). Bearing values carry no AA note; quoted at edge distance/pin diameter = 2.0.",
    "design_values": {
-    "yield_MPa": 138,
-    "shear_yield_MPa": 103.5,
-    "bearing_yield_MPa": 386,
+    "yield_MPa": 240,
+    "shear_yield_MPa": 138.6,
+    "bearing_yield_MPa": 193,
     "bearing_e_over_d_min": 2.0,
-    "basis": "tensile yield 276 and shear 207 MPa are AA typical values the sheet marks NOT FOR DESIGN: counted at half (SPEC ruling after catalogue round 2 on disclaimed strengths, applied by analogy); bearing yield 386 MPa carries no AA note and counts in full where edge distance / hole diameter >= 2.0, the condition it is quoted at"
+    "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0"
+   },
+   "standard_minimums": {
+    "EN 754-2 drawn bar T6 (D <= 80 mm)": {
+     "Rp0.2_MPa": 240,
+     "Rm_MPa": 260
+    },
+    "EN 755-2 extruded bar T6 (D <= 200 mm)": {
+     "Rp0.2_MPa": 240,
+     "Rm_MPa": 260
+    },
+    "EN 485-2 sheet/plate T6 (0.4-12.5 mm)": {
+     "Rp0.2_MPa": 240,
+     "Rm_MPa": 290
+    },
+    "AA Table 11.1 (ASTM B221 extruded rod/bar T6)": {
+     "yield_ksi": 35.0,
+     "ultimate_ksi": 38.0
+    },
+    "sources": [
+     "https://www.aalco.co.uk/datasheets/ (Aluminium Alloy 6061-T6 extrusion, BS EN 755-2:2008)",
+     "bikar.com EN 754-2 / 755-2 / 485-2 tables",
+     "https://www.aluminum.org/sites/default/files/2022-12/ (Table 11.1)"
+    ],
+    "retrieved": "2026-11-02"
    }
   },
   "price_usd": null,
@@ -6773,10 +6797,18 @@
    "fatigue_strength_mpa": 159,
    "value_type": "AA; Typical (NOT FOR DESIGN). No bearing strength on this sheet.",
    "design_values": {
-    "yield_MPa": 251.5,
-    "shear_yield_MPa": 165.5,
+    "yield_MPa": 485,
+    "shear_yield_MPa": 280.0,
     "bearing_yield_MPa": null,
-    "basis": "tensile yield 503 and shear 331 MPa are AA typical values marked NOT FOR DESIGN: counted at half; no bearing strength published (a seat in this material is judged against the half tensile yield, a lower bound)"
+    "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)"
+   },
+   "standard_minimums": {
+    "EN 754-2:2016 drawn bar T6 (<= 80 mm)": {
+     "Rp0.2_MPa": 485,
+     "Rm_MPa": 540
+    },
+    "source": "https://color-metal.ro/en/mechanical-properties-drawn-round- (EN 754-2:2016 table)",
+    "retrieved": "2026-11-02"
    }
   },
   "price_usd": null,
@@ -6811,8 +6843,9 @@
    "design_values": {
     "yield_MPa": 827,
     "shear_yield_MPa": 477.5,
-    "bearing_yield_MPa": null,
-    "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound)"
+    "bearing_yield_MPa": 740,
+    "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
+    "bearing_e_over_d_min": 2.0
    }
   },
   "price_usd": null,
@@ -6949,5 +6982,81 @@
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-hubless-spur-gears-ssag/ssag1-40",
   "retrieved": "2026-11-02",
   "verified": "manufacturer-page"
+ },
+ {
+  "id": "metal-khk-s45c",
+  "category": "metal_bar",
+  "manufacturer": "KHK (JIS S45C)",
+  "name": "S45C carbon steel as KHK states it (gear material)",
+  "mass_g": 7850,
+  "specs": {
+   "mass_basis": "per_litre (not used for mass)",
+   "tensile_strength_mpa": 690,
+   "design_values": {
+    "yield_MPa": 690,
+    "basis": "KHK Table 9.1 tensile strength 690 N/mm2 (JIS S45C, heat treatment not stated); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (less conservative than a yield; disclosed)"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "metal-khk-scm415",
+  "category": "metal_bar",
+  "manufacturer": "KHK (JIS SCM415)",
+  "name": "SCM415 alloy steel as KHK states it (gear material)",
+  "mass_g": 7850,
+  "specs": {
+   "mass_basis": "per_litre (not used for mass)",
+   "tensile_strength_mpa": 830,
+   "design_values": {
+    "yield_MPa": 830,
+    "basis": "KHK Table 9.1 tensile strength 830 N/mm2 (JIS SCM415); no minimum yield published in what was read, so the tensile strength is the allowable with FoS 1.5 (disclosed)"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "composite-rockwest-t-rnd-393-transverse",
+  "category": "material_property",
+  "manufacturer": "Rock West Composites",
+  "name": "T-RND-393 pultruded tube, transverse (Y) compressive yield, CLT estimate",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not a part (property record)",
+   "transverse_compressive_yield_psi": 38600,
+   "design_values": {
+    "yield_MPa": 133.1,
+    "basis": "38,600 psi (266 MPa) transverse compressive yield, a classical-lamination-theory estimate on the product page (typical): counted at half, 133 MPa"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://www.rockwestcomposites.com/t-rnd-393.html",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "adhesive-araldite-2011",
+  "category": "adhesive",
+  "manufacturer": "Huntsman",
+  "name": "Araldite 2011 epoxy, lap shear on CFRP (ISO 4587)",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not counted (in the 15% margin with glue)",
+   "lap_shear_cfrp_psi": 2770,
+   "design_values": {
+    "shear_MPa": 9.55,
+    "basis": "2770 psi (19.1 MPa) on CFRP, ISO 4587, typical: counted at half, 9.55 MPa"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://www.freemansupply.com/datasheets/Araldite/2011.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "retailer-page"
  }
 ]

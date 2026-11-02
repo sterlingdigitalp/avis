@@ -16,15 +16,18 @@ const base = () => JSON.parse(readFileSync(join(ROOT, 'data/designs/larus-gl-2.j
 const near = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol, `${msg ?? ''} ${a} vs ${b}`);
 const built = (() => { let d = null; return () => (d ??= buildDesign(round6Params(base(), {}, catalog), catalog)); })();
 
-test('round 6 materials: design values under the SPEC rules (minimums in full, disclaimed typical values at half)', () => {
+test('materials (round 7 ruling): standard minimums in full, values without a stated basis at half', () => {
   const ti = materialOf(catalog, 'metal-ti-6al-4v-annealed-bar');
   near(ti.yield_MPa, 827, 0.5, 'ASTM B348 Gr 5 minimum 120 ksi');
   const al6 = materialOf(catalog, 'metal-al-6061-t6');
-  near(al6.yield_MPa, 276 / 2, 1e-9, '6061-T6 AA typical, NOT FOR DESIGN');
-  near(al6.bearing_yield_MPa, 386, 1e-9);
+  near(al6.yield_MPa, 240, 1e-9, '6061-T6 Rp0.2 minimum, EN 754-2 / 755-2 / 485-2');
+  near(al6.bearing_yield_MPa, 386 / 2, 1e-9, 'ASM sheet bearing yield, no basis stated');
+  near(materialOf(catalog, 'metal-ti-6al-4v-annealed-bar').bearing_yield_MPa, 1480 / 2, 1e-9);
+  near(materialOf(catalog, 'composite-rockwest-t-rnd-393-transverse').yield_MPa, 38600 * 0.00689476 / 2, 0.1);
+  near(materialOf(catalog, 'adhesive-araldite-2011').shear_MPa, 2770 * 0.00689476 / 2, 0.01);
   assert.equal(al6.bearing_e_over_d_min, 2);
   const al7 = materialOf(catalog, 'metal-al-7075-t6');
-  near(al7.yield_MPa, 503 / 2, 1e-9);
+  near(al7.yield_MPa, 485, 1e-9, '7075-T6 Rp0.2 minimum, EN 754-2 drawn bar');
   assert.equal(al7.bearing_yield_MPa, null);
   assert.throws(() => materialOf(catalog, 'plate-ec-2mm'), /no design yield/);
 });
@@ -34,12 +37,13 @@ test('round 6 linkage: every loaded member in the BOM by mass, on known load cha
   const members = d.structure.members;
   assert.ok(members.length >= 30);
   for (const m of members) {
-    assert.ok(Number.isFinite(m.material.yield_MPa) && m.material.source_url, `${m.name} material`);
+    if (m.check === 'unrated') { assert.ok(m.why, `${m.name} says why it is unrated`); continue; }
+    assert.ok(Number.isFinite(m.material.yield_MPa ?? m.material.shear_MPa), `${m.name} material`);
     for (const s of m.sections) for (const t of s.radial) assert.ok(LOAD_CHANNELS.includes(t.ch) && t.k >= 0, `${m.name}/${s.name} ${t.ch}`);
     for (const names of Object.values(m.uses)) for (const n of [].concat(names)) assert.ok(m.sections.some((s) => s.name === n), `${m.name} uses ${n}`);
   }
   // The parts the ruling names are all there: shafts, pins, plate seats, end fittings (coupler eyes), keys.
-  for (const re of [/^crank shaft$/, /^crank pin$/, /^gear shaft 1$/, /^gear shaft 3$/, /^shoulder pin right$/, /^horn pin left$/, /^plate seat crank shaft aft$/, /^coupler eye right$/, /^key, crank wheel/, /^shoulder housing left aft$/]) assert.ok(members.some((m) => re.test(m.name)), String(re));
+  for (const re of [/^spar root socket left$/, /^rocker arm right$/, /gear side$/, /^gearbox plates between seats$/, /ds1-64 on gear shaft 2, fixing/, /^crank shaft$/, /^crank pin$/, /^gear shaft 1$/, /^gear shaft 3$/, /^shoulder pin right$/, /^horn pin left$/, /^plate seat crank shaft aft$/, /^coupler eye right$/, /^key, crank wheel/, /^shoulder housing left aft$/]) assert.ok(members.some((m) => re.test(m.name)), String(re));
   // Each mass item is in the structure list with its material's source; carbon crank, rockers, plates and couplers gone.
   const names = d.bom.structure.map((s) => s.name);
   for (const n of ['crank: shaft, web and pin in one piece', 'gear shaft 1', 'rocker right', 'coupler links, 2 off', 'gearbox plates, 2 off']) assert.ok(names.includes(n), n);
@@ -52,7 +56,7 @@ test('round 6 linkage: every loaded member in the BOM by mass, on known load cha
   assert.ok(d.structure.joints.some((j) => j.name === 'motor shaft outboard'));
   // The coupler is the metal link, judged at its material's design yield and full modulus.
   assert.equal(d.structure.coupler.kind, 'metal link');
-  near(d.structure.coupler.allowable_MPa, 138, 1e-9);
+  near(d.structure.coupler.allowable_MPa, 240, 1e-9);
   near(d.structure.coupler.E_GPa, 68.9, 1e-9);
   // The FC line carries the corrected-PDB requirement.
   assert.match(d.bom.parts.find((p) => p.id === 'fc-matek-f405-wmo').hardware, /not marked "3m0"/i);
@@ -154,4 +158,16 @@ test('cruise effective-angle amplitudes: every strip of both wings, half the ran
   // A fresh flight's strip model is the module's own evaluate (nothing left patched).
   const { sim } = setupFlight(d, { init: { y: 0 } });
   assert.equal(sim.bird.strip.evaluate.name, 'evaluate');
+});
+
+test('round 7 keyways, gear side: depth from the gear maker\'s keyway, KHK\'s steel, a finite rating', () => {
+  const d = built();
+  const ks = d.structure.members.filter((m) => /gear side$/.test(m.name));
+  assert.equal(ks.length, 4);
+  const depth = Object.fromEntries(ks.map((k) => [k.name, k.dims.h_mm]));
+  assert.equal(depth['key, crank wheel gear-khk-msgb1-40, gear side'], 2.3);
+  assert.equal(depth['key, pinion gear-khk-msga1-18 on gear shaft 2, gear side'], 1.4);
+  assert.equal(depth['key, wheel gear-khk-ssag1-40j10 on gear shaft 1, gear side'], 1.8);
+  assert.equal(ks.find((k) => /msgb1-40/.test(k.name)).side_material.id, 'metal-khk-scm415');
+  assert.equal(ks.find((k) => /ssag1-40j10/.test(k.name)).side_material.id, 'metal-khk-s45c');
 });

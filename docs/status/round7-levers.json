@@ -1,0 +1,70 @@
+{
+ "note": "Round 7 (Larus GL-2) exploration and diagnosis. Not gate files; the gate table is docs/status/round7-gates-larus.txt.",
+ "rows": [
+  {
+   "tag": "inputs (ruling 2a)",
+   "what": "every M4 input at 1/1920 and 1/3840 s compared at shared instants (src/physics/gates/inputs-check.mjs)",
+   "found": [
+    "wind: the Dryden filters, rotary terms and gust durations used the bird's airspeed from the flight model's last evaluation (step-dependent; up to 6.2 m/s difference over 30 s with a varying airspeed); fixed by convecting at the rough-air speed",
+    "controller: ticked by counting steps (one step early, at step-dependent instants) at 100 Hz, which divides neither step; fixed: ticks at t0 + k/rate, rate 240 Hz (5 periods = 20.8 ms delay)",
+    "gust onsets: drawn as times per seed, not read from the state (no change)",
+    "sensor-noise RNG and GPS timer: per controller tick (identical once ticks are)",
+    "governor and its 20 ms line: identical (960 Hz divides both steps)"
+   ],
+   "result": "all identical (max difference 0) on v17: out/verification/evidence/M7-inputs-larus-gl-2.json"
+  },
+  {
+   "tag": "half step after the fix (v16 at 240 Hz, M4 seeds)",
+   "median_per_seed_pct": {
+    "tailTorque": 2.89,
+    "crankTorque": 0.53,
+    "rootBend": 1.35,
+    "couplerForce": 1.51
+   },
+   "population_max_change_pct": {
+    "tailTorque": 19.56
+   },
+   "population_p90_change_pct": {
+    "tailTorque": -13.31
+   },
+   "file": "out/sweep/round7/v16-240Hz-halfstep.json"
+  },
+  {
+   "tag": "1e-9 m perturbation (ruling 2b)",
+   "median_per_seed_pct": {
+    "tailTorque": 0.8,
+    "crankTorque": 0.22,
+    "rootBend": 0.48
+   },
+   "verdict": "tail torque: 0.80% < half of 2.89%: the ruling's condition does not hold, the population clause does not apply (and its p90 change, -13.3%, would fail it anyway)",
+   "file": "out/sweep/round7/v16-240Hz-perturb1e-9.json"
+  },
+  {
+   "tag": "metal re-sizing (ruling 1)",
+   "what": "6061-T6 at 240 MPa and 7075-T6 at 485 MPa (EN 754-2/755-2/485-2 minimums, AA Table 11.1 agrees for 6061 extrusions); 386 MPa bearing yield halved (no basis on its sheet); Ti bearing 1480 halved",
+   "resized": "gear shaft 1 and shoulder/horn pins Ti -> 7075; coupler body 5 -> 4.5 mm, eyes 15 -> 13 mm; housings 12 -> 11 mm; plate boss wall 3 -> 2 mm; rocker arm 8 -> 11 mm wide (failed at FoS 0.99 once checked)",
+   "mass_g": {
+    "v16": 1168.4,
+    "v17": 1148.0,
+    "change": -20.4
+   }
+  },
+  {
+   "tag": "newly rated paths",
+   "rated": [
+    "gear side of every keyway (KHK Table 9.1 tensile minimum, no yield published: disclosed)",
+    "spar root sockets (Rock West CLT transverse compressive, reference only: half; Araldite 2011 on CFRP, typical: half)",
+    "rocker arms in bending"
+   ],
+   "unrated_fail": [
+    "DS1-18, DS1-32, DS1-20, DS1-64 fixing to their shafts (no published method or strength; steel-hub alternatives start at 30 teeth and weigh 46-230 g)",
+    "gearbox plates between seats (no mounts to the airframe in the drive layout)"
+   ]
+  },
+  {
+   "tag": "eta_s table",
+   "what": "round7.mjs wires every complete point of data/calibration/suction.json, held at the end values, at the design's own cruise effective-angle amplitudes, then re-trims",
+   "status": "not flown: the cfd design-kinematics points have not landed; v17 is built with --no-suction (0.6 default)"
+  }
+ ]
+}

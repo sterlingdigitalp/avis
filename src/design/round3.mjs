@@ -69,6 +69,8 @@ export function applyRound4Options(d, opt = {}) {
     d.control.dt = opt.dt;
     d.control.dtRule = 'round 4: the step at which M4 peaks converge (half step changes them < 10%), not the 60-steps-per-cycle rule';
   }
+  // Round 7: the flight controller's loop rate (default 100 Hz), set before the trim and envelope flights.
+  if (opt.ctlRate_Hz) d.control.rate_Hz = opt.ctlRate_Hz;
   if (opt.motorCurrentLimit) d.control.motorCurrentLimit = limiterConfig(d, opt.motorCurrentLimit);
   if (opt.gla) d.control.gla = opt.gla;
   return d.control;

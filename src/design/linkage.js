@@ -23,8 +23,8 @@ export function materialOf(catalog, id) {
   const m = byId(catalog, id);
   const s = m.specs ?? {};
   const dv = s.design_values ?? {};
-  if (!Number.isFinite(dv.yield_MPa)) throw new Error(`${id}: no design yield stated in the catalogue`);
-  return { id: m.id, name: m.name, density_g_cm3: s.density_g_cm3, yield_MPa: dv.yield_MPa, shear_yield_MPa: dv.shear_yield_MPa ?? null, bearing_yield_MPa: dv.bearing_yield_MPa ?? null, bearing_e_over_d_min: dv.bearing_e_over_d_min ?? null, basis: dv.basis, source_url: m.source_url, E_GPa: s.elastic_modulus_gpa ?? null };
+  if (!Number.isFinite(dv.yield_MPa) && !Number.isFinite(dv.shear_MPa)) throw new Error(`${id}: no design yield stated in the catalogue`);
+  return { id: m.id, name: m.name, density_g_cm3: s.density_g_cm3, yield_MPa: dv.yield_MPa ?? null, shear_MPa: dv.shear_MPa ?? null, shear_yield_MPa: dv.shear_yield_MPa ?? null, bearing_yield_MPa: dv.bearing_yield_MPa ?? null, bearing_e_over_d_min: dv.bearing_e_over_d_min ?? null, basis: dv.basis, source_url: m.source_url, E_GPa: s.elastic_modulus_gpa ?? null };
 }
 
 const gOf = (mat, v) => v * 1e6 * mat.density_g_cm3; // m^3 -> g
@@ -69,11 +69,12 @@ export function driveMembers(d, catalog, L, lay, joints) {
   for (let j = 1; j < lay.n; j++) gearShaftMembers(cx, j);
   const s0 = lay.train.stages[0];
   // The first pinion on the motor shaft: its fixing is the same Duracon question.
-  cx.unchecked.push({ name: `${s0.pinion.id} on the motor shaft`, why: 'Duracon pinion on the 4.98 mm motor shaft: no published fixing for DS gears (as above).', torque_per_crank_Nm: +(1 / lay.below(0) / (s0.wheel.z / s0.pinion.z)).toFixed(5) });
+  cx.members.push(unrated(`${s0.pinion.id} on the motor shaft, fixing`, 'gear fixing', DS_WHY, [{ ch: 'crank_torque', k: +(1 / lay.below(0) / (s0.wheel.z / s0.pinion.z)).toFixed(8) }]));
   for (const [side, w] of [['right', 'R'], ['left', 'L']]) wingSideMembers(cx, side, w);
   const coupler = couplerLinks(cx);
   plateSeats(cx);
-  cx.unchecked.push({ name: 'gearbox plates between seats, rocker arms in bending, spar root sockets', why: 'the plates and rocker arms are sized by the seats and bosses only; the carbon spar in its socket has no published bearing or bond strength to rate the joint (the spar tube itself is checked at the root moment)' });
+  // Round 7 (SPEC ruling after round 6: a load path that cannot be rated fails): the plates between their seats.
+  cx.members.push(unrated('gearbox plates between seats', 'plate', 'the drive layout (model.js) gives the two plates no mounts to the airframe, so the path from the seats to the keel cannot be sized or rated', [{ ch: 'crank_torque', k: 1 }]));
   return { members: cx.members, items: cx.items, coupler, unchecked: cx.unchecked };
 }
 
@@ -104,6 +105,7 @@ function crankMembers(cx) {
     members.push({ name: 'crank pin', kind: 'pin', check: 'round', material: m, dims: { d_mm: +(dp * 1000).toFixed(3) }, sections: [sect('M root', Mpin), sect('V root', [{ ch: 'coupler_R', k: 1 }, { ch: 'coupler_L', k: 1 }])], uses: { M: 'M root', V: 'V root' }, note: 'cantilevered from the web\'s aft face, both coupler eyes at their planes' });
     members.push({ name: 'crank web', kind: 'web', check: 'web', material: m, dims: { b_mm: c.web_b_mm, h_mm: c.web_t_mm, lever_mm: +(d.drive.a * 1000).toFixed(3) }, sections: [sect('M out of plane', Mpin), sect('F in plane', [{ ch: 'coupler_R', k: 1 }, { ch: 'coupler_L', k: 1 }])], uses: { M: 'M out of plane', F: 'F in plane' }, note: 'at the shaft root: the pin moment out of the web plane plus the coupler forces at the full throw in it' });
     if (c.key) members.push(keyMember(`key, crank wheel ${wheel.id}`, catalog, c.key, m, c.seat_od_mm, [{ ch: 'crank_torque', k: 1 }], items));
+    if (c.key) members.push(keyHubSide(`key, crank wheel ${wheel.id}, gear side`, catalog, c.key, wheel.id, c.seat_od_mm, [{ ch: 'crank_torque', k: 1 }]));
   }
 }
 
@@ -127,9 +129,11 @@ function gearShaftMembers(cx, j) {
     members.push({ name: `gear shaft ${j}`, kind: 'shaft', check: 'round', material: m, dims: { d_mm: g.d_mm }, sections: [...ms.map((q) => sect(q.name, q.radial)), sect('T', [{ ch: 'crank_torque', k: +Tk.toFixed(8) }]), ...jt.supports.map((sp) => sect(`V ${sp.name}`, sp.radial.map((t) => ({ ch: t.ch, k: t.k }))))], uses: { M: ms.map((q) => q.name), T: 'T', V: jt.supports.map((sp) => `V ${sp.name}`) }, note: `wheel ${wheel.id} and pinion ${train.stages[kp].pinion.id}; checked at ${g.d_mm} mm everywhere` });
     if (g.wheelKey) members.push(keyMember(`key, wheel ${wheel.id} on gear shaft ${j}`, catalog, g.wheelKey, m, g.seat_od_mm, [{ ch: 'crank_torque', k: +Tk.toFixed(8) }], items));
     if (g.pinionKey) members.push(keyMember(`key, pinion ${train.stages[kp].pinion.id} on gear shaft ${j}`, catalog, g.pinionKey, m, g.d_mm, [{ ch: 'crank_torque', k: +Tk.toFixed(8) }], items));
+    if (g.wheelKey) members.push(keyHubSide(`key, wheel ${wheel.id} on gear shaft ${j}, gear side`, catalog, g.wheelKey, wheel.id, g.seat_od_mm, [{ ch: 'crank_torque', k: +Tk.toFixed(8) }]));
+    if (g.pinionKey) members.push(keyHubSide(`key, pinion ${train.stages[kp].pinion.id} on gear shaft ${j}, gear side`, catalog, g.pinionKey, train.stages[kp].pinion.id, g.d_mm, [{ ch: 'crank_torque', k: +Tk.toFixed(8) }]));
     for (const k of [kw, kp]) {
       const gid = k === kw ? wheel.id : train.stages[kp].pinion.id;
-      if (!/keyway/.test(byId(catalog, gid).specs?.fastening ?? '')) unchecked.push({ name: `${gid} on gear shaft ${j}`, why: 'Duracon gear: KHK advises against secondary operations on DS gears and publishes no keyway, set screw or adhesive fixing for them; Loctite 638 is not recommended on plastics. Its torque to the shaft has no published rating.', torque_per_crank_Nm: +Tk.toFixed(5) });
+      if (!/keyway/.test(byId(catalog, gid).specs?.fastening ?? '')) members.push(unrated(`${gid} on gear shaft ${j}, fixing`, 'gear fixing', DS_WHY, [{ ch: 'crank_torque', k: +Tk.toFixed(8) }]));
     }
 }
 
@@ -148,6 +152,14 @@ function wingSideMembers(cx, side, w) {
     const sparOD = (r.spar_od_mm ?? 10) / 1000;
     const vR = ringV(r.hub_od_mm / 1000, shD.d, hubL) + c * (r.arm_w_mm / 1000) * (r.arm_t_mm / 1000) + ringV(r.boss_od_mm / 1000, eyeD.d, r.boss_len_mm / 1000) + ringV(sparOD + 2 * r.socket_wall_mm / 1000, sparOD, r.socket_len_mm / 1000);
     item(`rocker ${side}`, mr, vR, `hub ${r.hub_od_mm}/${(shD.d * 1000).toFixed(0)} x ${(hubL * 1000).toFixed(0)} mm, horn arm ${(c * 1000).toFixed(1)} x ${r.arm_w_mm} x ${r.arm_t_mm} mm, horn boss ${r.boss_od_mm}/${(eyeD.d * 1000).toFixed(0)} x ${r.boss_len_mm} mm, spar socket ${r.socket_wall_mm} mm wall x ${r.socket_len_mm} mm; ${mr.density_g_cm3} g/cm3 (replaces the carbon-plate rocker)`);
+    // Round 7: the rocker's horn arm in bending (the coupler force at the rocker length) and the carbon spar in its
+    // socket: the root flap moment (the coupler force times c) and the lead-lag moment as edge pressure on the tube,
+    // judged at Rock West's transverse compressive strength (reference only: half), and the axial root force on the
+    // Araldite 2011 bond (CFRP lap shear, typical: half).
+    members.push({ name: `rocker arm ${side}`, kind: 'web', check: 'web', material: mr, dims: { b_mm: r.arm_w_mm, h_mm: r.arm_t_mm, lever_mm: +(c * 1000).toFixed(3) }, sections: [sect('F', [{ ch: `coupler_${w}`, k: 1 }])], uses: { F: 'F' }, note: 'in-plane bending at the hub, the coupler force at the full rocker length' });
+    const cf = materialOf(cx.catalog, 'composite-rockwest-t-rnd-393-transverse');
+    members.push({ name: `spar root socket ${side}`, kind: 'seat', check: 'seat', material: cf, dims: { d_mm: r.spar_od_mm ?? 10, t_mm: r.socket_len_mm }, sections: [sect('F', [{ ch: `root_yz_${w}`, k: 1 }]), sect('M', [{ ch: `coupler_${w}`, k: +c.toFixed(6) }, { ch: `root_mperp_${w}`, k: 1 }])], uses: { F: 'F', M: 'M' }, note: 'carbon tube bearing on the socket: Rock West calls these tubes not good for crush resistance and publishes CLT estimates only (counted at half)' });
+    members.push({ name: `spar root bond ${side}`, kind: 'bond', check: 'bond', material: { id: 'adhesive-araldite-2011', shear_MPa: materialOf(cx.catalog, 'adhesive-araldite-2011').shear_MPa }, dims: { d_mm: r.spar_od_mm ?? 10, L_mm: r.socket_len_mm }, sections: [sect('F', [{ ch: `root_x_${w}`, k: 1 }])], uses: { F: 'F' } });
     members.push({ name: `rocker hub ${side}`, kind: 'seat', check: 'seat', material: mr, dims: { d_mm: +(shD.d * 1000).toFixed(3), t_mm: +(hubL * 1000).toFixed(3) }, sections: [sect('F', [{ ch: `root_yz_${w}`, k: 1 }, { ch: `coupler_${w}`, k: 1 }]), sect('M', [{ ch: `root_mperp_${w}`, k: 1 }])], uses: { F: 'F', M: 'M' }, note: 'the wing root force and moment and the coupler force into the shoulder pin over the hub length' });
     // Horn pin: pressed in the horn boss, the coupler eye cantilevered beside it.
     const mh = mat(L.hornPin.material);
@@ -199,6 +211,20 @@ function plateSeats(cx) {
     }
   }
   if (bossV > 0) item('gearbox plate bosses', pm, bossV, `bosses ${L.plates.boss_wall_mm} mm wall round the seats ${[...bossed].join(', ')}, as long as the bushing, beyond the plate; ${pm.density_g_cm3} g/cm3`);
+}
+
+const DS_WHY = 'Duracon gear on a plain bore: KHK advises against secondary operations on DS gears and publishes no keyway, set screw or adhesive fixing; Polyplastics M90-44 data could not be read; KHK DSF clamp hubs publish a reference slipping torque without a basis; Loctite 638 is not for plastics. No published rating for its torque to the shaft.';
+/** A load path without a published rating: it fails M7 (SPEC ruling after round 6). */
+function unrated(name, kind, why, terms) {
+  return { name, kind, check: 'unrated', why, material: null, dims: {}, sections: [sect('T', terms)], uses: { T: 'T' } };
+}
+/** The gear's keyway side of a key: its depth from the catalogue fastening text, its material as KHK states it. */
+function keyHubSide(name, catalog, k, gearId, dSeat_mm, torqueTerms) {
+  const g = byId(catalog, gearId);
+  const depth = +(/x\s*(\d+(?:\.\d+)?)/.exec(g.specs?.fastening ?? '')?.[1] ?? NaN);
+  const mid = /SCM/.test(g.specs?.material ?? '') ? 'metal-khk-scm415' : 'metal-khk-s45c';
+  const gm = materialOf(catalog, mid);
+  return { name, kind: 'key', check: 'key', material: materialOf(catalog, k.material), side_material: gm, dims: { d_mm: dSeat_mm, b_mm: k.b_mm, h_mm: depth, L_mm: k.L_mm }, sections: [sect('T', torqueTerms)], uses: { T: 'T' }, note: `bearing on the ${gearId} keyway (${depth} mm deep), ${gm.basis}` };
 }
 
 /** A parallel key between a gear's keyway and a shaft or seat of diameter dSeat_mm, of the shaft's material side. */

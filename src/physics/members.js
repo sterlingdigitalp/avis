@@ -175,6 +175,7 @@ export function checkMembers(members, peaks) {
     else if (m.check === 'web') r = webCheck(m.dims, m.material, { M: load.M, F: load.F });
     else if (m.check === 'bond') r = bondCheck(m.dims, m.material, { T: load.T, F: load.F });
     else if (m.check === 'key') r = keyCheck(m.dims, m.material, m.side_material, load.T);
+    else if (m.check === 'unrated') r = { fos: null, ok: false, why: m.why ?? 'no published rating' };
     else r = { fos: null, ok: false, why: `no check for ${m.check}` };
     rows.push({ name: m.name, kind: m.kind, check: m.check, material: m.material?.id ?? null, dims: m.dims, load, ...r, ...(m.note ? { note: m.note } : {}) });
   }

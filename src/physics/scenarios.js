@@ -92,7 +92,9 @@ export function setupFlight(design, { seed = 1, perturb = {}, wind = null, delay
     // Round 5: a pack charged to a limited voltage (battery.charge_fraction < 1) starts the flight below full.
     charge: init.charge ?? (1 - (design.battery.charge_fraction ?? 1)) * design.battery.capacity_Ah * 3600,
   });
-  const c = createController(design, { seed, delay, sensorNoise });
+  // Round 7: the controller at the design's own rate (control.rate_Hz; 100 Hz before round 7). A rate that divides
+  // the flight step rate ticks at the same instants at every step (half-step check).
+  const c = createController(design, { seed, delay, sensorNoise, rate: design.control?.rate_Hz });
   const truth0 = sensorTruth(sim);
   c.guidance.speed = Vc;
   c.guidance.altitude = init.y ?? 0;
@@ -236,16 +238,20 @@ export function m4Wind(design, seed, { agl = 30, Hforce = null } = {}) {
   const span = design.geometry?.span_m ?? 1.5;
   const T = 60;
   const gusts = randomGusts(rng, { t0: 8, t1: T - 4, count: 4, amp: 4, H: Hforce });
-  return { spec: { mean: [6 * Math.cos(dir), 0, 6 * Math.sin(dir)], uRms: 2, vRms: 2, wRms: 2 * low.ratioW, Lu: low.Lu_m, Lv: low.Lu_m, Lw: low.Lw_m, wingspan: span, gusts, agl }, H: gusts[0].H, dir, T };
+  // Round 7: the turbulence and gusts convected at the rough-air speed (wind.js convection_m_s), not the bird's
+  // instantaneous airspeed, so the air is the same function of time at every flight step.
+  return { spec: { mean: [6 * Math.cos(dir), 0, 6 * Math.sin(dir)], uRms: 2, vRms: 2, wRms: 2 * low.ratioW, Lu: low.Lu_m, Lv: low.Lu_m, Lw: low.Lw_m, wingspan: span, gusts, agl, convection_m_s: design.control?.Vrough ?? design.control?.Vcruise }, H: gusts[0].H, dir, T };
 }
 
-export function runM4Seed(design, seed, { perturb = {}, sensorNoise = true, delay = 0.02, log = false, Hforce = null, servoSpeedScale, dt = null } = {}) {
+// initDy: a start height offset (m) for the SPEC round-6 chaos test (a 1e-9 m perturbation of the initial state).
+export function runM4Seed(design, seed, { perturb = {}, sensorNoise = true, delay = 0.02, log = false, Hforce = null, servoSpeedScale, dt = null, initDy = 0 } = {}) {
   dt = dt ?? design.control?.dt ?? 1 / 240;
   const HZ = Math.round(1 / dt);
   const w = m4Wind(design, seed, { Hforce });
   const wind = createWind(w.spec, seed);
-  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, wind, sensorNoise, delay, servoSpeedScale, dt, init: { y: 0, chi: 0, V: design.control.Vrough ?? design.control.Vcruise } });
+  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, wind, sensorNoise, delay, servoSpeedScale, dt, init: { y: initDy, chi: 0, V: design.control.Vrough ?? design.control.Vcruise } });
   ctl.guidance.holdHeading = true;
+  ctl.guidance.altitude = 0; // the target stays at 0 when the start is perturbed (initDy)
   // Rough-air technique: wings-level priority, gentle heading hold, penetration speed from the design.
   ctl.guidance.maxBank = design.control.roughMaxBank ?? 15 * DEG;
   ctl.guidance.kChi = 0.6;

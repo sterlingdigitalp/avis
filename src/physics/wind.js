@@ -102,9 +102,14 @@ export function createWind(spec, seed = 1) {
     cur[0] = u1; cur[1] = v2; cur[2] = w2; cur[3] = pg; cur[4] = qg; cur[5] = rg;
   }
 
-  /** Wind at time t in world axes, plus rotary terms, for a bird at airspeed V (m/s). dt is not used. */
+  /**
+   * Wind at time t in world axes, plus rotary terms, for a bird at airspeed V (m/s). dt is not used. Round 6 ruling
+   * (half-step check): with spec.convection_m_s the frozen field is convected at that fixed speed (the scenario's
+   * airspeed), so the filters, rotary terms and gust durations are one function of time and seed at any step; without
+   * it, at the bird's current airspeed, which the flight model reports from its last evaluation (step-dependent).
+   */
   function step(t, dt, V) {
-    const v = Math.max(V, 2);
+    const v = Number.isFinite(spec.convection_m_s) ? spec.convection_m_s : Math.max(V, 2);
     let tu = 0, tvv = 0, tww = 0, tp = 0, tq = 0, tr = 0;
     if (turb) {
       if (tGrid === null) {

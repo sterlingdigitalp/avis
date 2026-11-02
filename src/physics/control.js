@@ -98,7 +98,8 @@ export function createController(design, opts = {}) {
   const fs = opts.rate ?? 100;
   const dt = 1 / fs;
   const delay = opts.delay ?? 0.02;
-  const delaySteps = Math.max(0, Math.round(delay * fs));
+  // At least the stated delay in whole controller periods (round 7: ceil; at 100 Hz, 20 ms is exactly 2 either way).
+  const delaySteps = Math.max(0, Math.ceil(delay * fs - 1e-9));
   const rng = makeRng((opts.seed ?? 1) * 7919 + 17);
   const noise = { ...SENSOR_DEFAULTS, ...(opts.noise ?? {}) };
   const noisy = opts.sensorNoise !== false;
@@ -144,7 +145,7 @@ export function createController(design, opts = {}) {
   let iTheta = 0;
   let iFreq = 0;
   let iPhi = 0;
-  let timer = 0;
+  let nextTick = null; // the controller's next tick instant (s)
   // Command delay line
   const blank = () => ({ freq: 0, amp: cfg.ampNominal, sym: 0, diff: 0, dyn: 0, lead: cfg.lead ?? 0, tailPitch: 0, tailYaw: 0, parkPhase: null, throttleOff: false });
   const line = [];
@@ -450,9 +451,12 @@ export function createController(design, opts = {}) {
 
   /** Called from the flight loop. truth is the sensor inputs; returns the commands to apply now. */
   function update(truth, tNow) {
-    timer += truth.dt;
-    if (timer + 1e-9 >= dt) {
-      timer -= dt;
+    // Round 7 (half-step check): ticks at fixed instants t0 + k / rate from the first call, so the controller samples,
+    // draws its sensor noise and moves its delay line at the same times whatever the flight step (round 6 counted
+    // steps, which ticked one step early and at step-dependent instants).
+    if (nextTick === null) nextTick = tNow;
+    if (tNow + 1e-9 >= nextTick) {
+      nextTick += dt;
       const s = sense(truth);
       const e = estimate(s, truth.crank / TWO_PI);
       this.estimate = e;
