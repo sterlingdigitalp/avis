@@ -80,6 +80,44 @@ export function sectionTable(wing, nc = 28) {
 }
 
 /**
+ * Sine coefficients b_n (n = 1..N) of a profile f(xi) on [0, 1] less the straight line through its two ends:
+ * f - line = sum b_n sin(n pi xi). f is the piecewise-linear curve through (xs, fs); trapezoid rule on M panels.
+ */
+export function sineSeries(xs, fs, N = 48, M = 2048) {
+  const f0 = fs[0], f1 = fs[fs.length - 1];
+  const g = new Float64Array(M + 1);
+  for (let j = 0, k = 1; j <= M; j++) {
+    const x = j / M;
+    while (k < xs.length - 1 && xs[k] < x) k++;
+    const t = Math.min(Math.max((x - xs[k - 1]) / (xs[k] - xs[k - 1]), 0), 1);
+    g[j] = fs[k - 1] * (1 - t) + fs[k] * t - (f0 + (f1 - f0) * x);
+  }
+  const b = new Float64Array(N);
+  for (let n = 1; n <= N; n++) {
+    let s = 0;
+    for (let j = 1; j < M; j++) s += g[j] * Math.sin((n * Math.PI * j) / M);
+    b[n - 1] = (2 * s) / M; // g(0) = g(1) = 0, so the end panels add nothing
+  }
+  return b;
+}
+
+/**
+ * How far a taut film between two ribs lies inside the rib profile, per chord, at chordwise xi and bay fraction u
+ * (0 and 1 on the ribs); sigma = rib gap / chord. With equal tension both ways and no air load the film is a
+ * minimal surface, which at these slopes solves Laplace's equation over the bay, held to the rib profile on the
+ * ribs and to the edge rods at xi = 0 and 1. Harmonic n of the profile (coefficients from sineSeries) falls
+ * between the ribs to cosh(n pi sigma (u - 1/2)) / cosh(n pi sigma / 2) of itself; the dip is what it loses.
+ */
+export function membraneDip(b, xi, u, sigma) {
+  let d = 0;
+  for (let k = 0; k < b.length; k++) {
+    const a = (k + 1) * Math.PI;
+    d += b[k] * Math.sin(a * xi) * (1 - Math.cosh(a * sigma * (u - 0.5)) / Math.cosh((a * sigma) / 2));
+  }
+  return d;
+}
+
+/**
  * Pose of a wing at given stations: spar point A, chord vector t (towards the LE), up-normal b, spanwise e, twist.
  * joint = { phi, theta } (stroke angle at the shoulder, commanded twist). Same sectionStates() as the flight model.
  */
@@ -369,8 +407,35 @@ function placeBox(loft, name, at, size, others, { rotate = true } = {}) {
   return { name, box: bx, orient: orients[best.o], shift: [bx.cx - at[0], bx.cy - at[1], bx.cz - at[2]], protrusion: Math.max(0, best.sc > 0.5 ? best.sc - 1 : best.sc), clash: best.sc > 0.5 };
 }
 
+/**
+ * The stroke servo, if the design has a mass lump for one, and the two tail servos side by side. Both servo kinds are
+ * sized from the stroke servo's catalogue entry (or a 33 x 10 x 35 mm default without one), as they always were:
+ * src/design/fit.js packs with this function and passes a massless 'stroke servo' lump for a fixed-stroke drive, so
+ * these boxes must not change under it. The raw design of a fixed-stroke drive has no such lump, and the bird no
+ * stroke servo.
+ */
+export const SERVO_DEFAULT_DIMS = [0.033, 0.01, 0.035];
+
+function placeServos(design, put, spec) {
+  const dims = (role) => parseDims(spec(role)?.dimensions_text_mm)?.values;
+  const sv = dims('stroke amplitude servo') ?? SERVO_DEFAULT_DIMS;
+  const st = lump(design, 'stroke servo');
+  if (st) put('servo_stroke', 'stroke amplitude servo', [sv[0], sv[2], sv[1]], st.pos, 'drive');
+  // Tail servos are sized from their own catalogue entry; the stroke servo's is only a fallback.
+  const tv = dims('tail servo') ?? sv;
+  const ts = lump(design, 'tail servos');
+  put('servo_tail_L', 'tail servo', [tv[0], tv[2], tv[1]], [ts.pos[0], ts.pos[1], ts.pos[2] - tv[1] * 0.55], 'avionics');
+  put('servo_tail_R', 'tail servo', [tv[0], tv[2], tv[1]], [ts.pos[0], ts.pos[1], ts.pos[2] + tv[1] * 0.55], 'avionics');
+}
+
+/** The BOM role of the flight controller. An ESC role may mention the flight controller, so ESC roles never match. */
+export function flightControllerRole(bom) {
+  const roles = bom.parts.map((p) => p.role);
+  return roles.find((r) => /^flight controller/.test(r)) ?? roles.find((r) => /flight controller/.test(r) && !/\bESC\b/.test(r));
+}
+
 /** Sizes from catalogue text: a box [x, y, z]. Unknown third dimensions come from mass at a stated density. */
-function sizeOf(spec, mass_g, order, assumeDensity, assumptions, label) {
+export function sizeOf(spec, mass_g, order, assumeDensity, assumptions, label) {
   const d = parseDims(spec?.dimensions_text_mm);
   if (d && d.values.length >= 3) return order(d.values);
   const known = [];
@@ -432,7 +497,7 @@ export function layoutParts(design, parts, train, fourBar) {
   put('esc', escRole, sizeOf(spec(escRole), P(escRole).unit_mass_g, (v) => [v[0], v[2], v[1]], FR4, assumptions, 'ESC'), esc.pos, 'power');
   // Flight controller flat.
   const fc = lump(design, 'flight controller');
-  const fcRole = design.bom.parts.find((p) => /flight controller/.test(p.role)).role;
+  const fcRole = flightControllerRole(design.bom);
   put('fc', fcRole, sizeOf(spec(fcRole), P(fcRole).unit_mass_g, (v) => [v[0], v[2], v[1]], FR4, assumptions, 'flight controller'), fc.pos, 'avionics');
   // GPS on top.
   const gps = lump(design, 'GPS');
@@ -441,13 +506,7 @@ export function layoutParts(design, parts, train, fourBar) {
   const rx = lump(design, 'receiver and airspeed');
   put('receiver', 'receiver', sizeOf(spec('receiver'), P('receiver').unit_mass_g, (v) => [v[0], v[2], v[1]], FR4, assumptions, 'receiver'), [rx.pos[0], rx.pos[1] + 0.008, rx.pos[2]], 'avionics');
   put('airspeed', 'airspeed sensor', sizeOf(spec('airspeed sensor'), P('airspeed sensor').unit_mass_g, (v) => [v[0], v[2], v[1]], FR4, assumptions, 'airspeed sensor'), [rx.pos[0], rx.pos[1] - 0.008, rx.pos[2]], 'avionics');
-  // Servos: the stroke servo, and the two tail servos side by side.
-  const sv = parseDims(spec('stroke amplitude servo')?.dimensions_text_mm)?.values ?? [0.033, 0.01, 0.035];
-  const st = lump(design, 'stroke servo');
-  put('servo_stroke', 'stroke amplitude servo', [sv[0], sv[2], sv[1]], st.pos, 'drive');
-  const ts = lump(design, 'tail servos');
-  put('servo_tail_L', 'tail servo', [sv[0], sv[2], sv[1]], [ts.pos[0], ts.pos[1], ts.pos[2] - sv[1] * 0.55], 'avionics');
-  put('servo_tail_R', 'tail servo', [sv[0], sv[2], sv[1]], [ts.pos[0], ts.pos[1], ts.pos[2] + sv[1] * 0.55], 'avionics');
+  placeServos(design, put, spec);
   // Gears: report how far each tip circle leaves the loft at its plane.
   const gearFit = [];
   for (let j = 0; j < (train.links?.length ?? 0); j++) {
@@ -487,6 +546,41 @@ export function ribStations(design, wing) {
   const total = +(ribItem?.name.match(/(\d+)\s*off/)?.[1] ?? 18);
   const per = Math.max(2, Math.round(total / 2));
   return Array.from({ length: per }, (_, k) => (k / (per - 1)) * wing.L);
+}
+
+/**
+ * Where the BOM's bearings and bushings go. The design names the joint each one carries: a role written
+ * "bushing: shoulder pivots, two per side (4), coupler eyes, two per coupler (4)" or "bearing: gear shaft 3 (2)"
+ * gives one entry per place, `{ id, kind, place, shaft, count }`, place one of shoulder, coupler, crank, shaft (gear
+ * shaft `shaft`, numbered from the crank), elbow. A bare "bearing" role (older designs) is one entry with place
+ * 'pooled': two per shoulder hinge, then two per gearbox shaft, then the elbows, as those designs were drawn.
+ */
+export function journals(design) {
+  const out = [];
+  for (const p of design.bom.parts) {
+    const m = p.role.match(/^(bearing|bushing)\b:?\s*(.*)$/);
+    if (!m) continue;
+    if (!m[2]) {
+      out.push({ id: p.id, kind: m[1], place: 'pooled', shaft: null, count: p.count });
+      continue;
+    }
+    for (const where of m[2].split(/\),\s*/)) {
+      const shaft = where.match(/gear shaft\s*(\d+)/);
+      const place = /shoulder/.test(where) ? 'shoulder' : /coupler/.test(where) ? 'coupler' : /crank/.test(where) ? 'crank' : shaft ? 'shaft' : /elbow/.test(where) ? 'elbow' : 'other';
+      out.push({ id: p.id, kind: m[1], place, shaft: shaft ? +shaft[1] : null, count: +(where.match(/\((\d+)\)?\s*$/)?.[1] ?? 0) });
+    }
+  }
+  return out;
+}
+
+/** Bore, outside diameter and width (m) of a bearing ("d x D x B") or a flanged bushing (d1, d2, b1; flange d3, b2). */
+export function journalDims(specs) {
+  if (specs?.dimensions_mm_d_D_B) {
+    const [d, D, B] = specs.dimensions_mm_d_D_B.split('x').map((v) => +v / 1000);
+    return { d, D, B, flangeD: 0, flangeB: 0 };
+  }
+  if (specs?.d1_mm) return { d: specs.d1_mm / 1000, D: specs.d2_mm / 1000, B: specs.b1_mm / 1000, flangeD: (specs.d3_mm ?? 0) / 1000, flangeB: (specs.b2_mm ?? 0) / 1000 };
+  return { d: 0.004, D: 0.009, B: 0.0025, flangeD: 0, flangeB: 0 };
 }
 
 export function prepare(design, parts) {

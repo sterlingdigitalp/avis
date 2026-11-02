@@ -14,7 +14,45 @@ const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
 const easeOut = (x) => 1 - (1 - clamp(x)) ** 3;
 const span = (u, a, b) => clamp((u - a) / (b - a));
+/** The flight shots' readout from the log at plate frame j of segment data d (render.mjs writeSegData): airspeed,
+ * flap-cycle mean power and climb, battery. Empty without data. */
+export function flightHud(d, j) {
+  if (!d || j < 0) return '';
+  const climb = d.climb_m_s ? `<div>climb<b>${signed(d.climb_m_s[j], 1)} m/s</b></div>` : '';
+  return `<div class="fhud"><div>airspeed<b>${fmt(d.airspeed[j], 1)} m/s</b></div><div>electrical power, flap-cycle mean<b>${fmt(d.power_w[j], 0)} W</b></div>${climb}<div>battery<b>${fmt(d.battery_pct[j], 0)}%</b></div></div>`;
+}
+
+/** A caption's design numbers, written in edit.json as {altitude_m} and {temperature_C}, filled from the design. */
+export function fillDesign(text, design) {
+  const atm = design?.atmosphere ?? {};
+  return text.replace(/\{altitude_m\}/g, fmt(atm.altitude_m, 0)).replace(/\{temperature_C\}/g, fmt(atm.temperature_C, 0));
+}
+
+/**
+ * The drive sequence's words that depend on the design: the crank wheel's teeth, and the part the second callout
+ * points at, the stroke servo's sliding pin, or on a fixed-stroke drive the crank angle encoder its governor reads.
+ */
+export function driveLabels(model) {
+  const { ampMin, ampMax } = model.law;
+  const fixed = !(ampMax - ampMin > 1e-6);
+  return {
+    crankWheel: `Crank wheel ${model.train.stages[model.train.stages.length - 1].wheel.z}T`,
+    // where each label's end sits on screen (a label left of its part ends there): clear ground left of the gears (the
+    // encoder, low on the crank shaft) or above them (the pin swings through the gears), off the Coupler and Motor labels
+    late: fixed ? { node: 'encoder_readhead', text: 'Crank angle encoder', at: [450, 640] } : { node: 'slot_pin_R', text: 'Stroke servo slides the pin', at: [700, 195] },
+  };
+}
+
+/** The twist sequence's orbit: aim point, azimuth sweep (deg), elevation (deg), distance (m), lens fov (deg). */
+export const TWIST_CAM = { target: [-0.06, 0.06, 0], az0: 10, azSpan: 24, el: 12, dist0: 3.6, distSpan: -0.1, fov: 33, shift: 260 };
+
 const fmt = (v, d = 0) => (v == null || Number.isNaN(v) ? '—' : v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }));
+/** Signed with a true minus, so a climb and a sink line up in tabular figures. */
+export const signed = (v, d = 0) => {
+  if (v == null || Number.isNaN(v)) return '—';
+  const r = Math.round(v * 10 ** d) / 10 ** d; // no "−0.0"
+  return `${r < 0 ? '\u2212' : '+'}${fmt(Math.abs(r), d)}`;
+};
 
 const CSS = `
 #film{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;background:#0b0e12;font-family:Inter,system-ui,sans-serif;color:#e9eef3;text-align:left}
@@ -163,14 +201,27 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
       orbit(target, 205 - 30 * ease(u), -6 + 8 * u, 0.36 - 0.04 * ease(u), 30);
       const speed = 0.25;
       const st = flap(t, speed);
-      // the stroke servo walks the amplitude through its range in the second half
+      // a stroke servo walks the amplitude through its range in the second half; a fixed-stroke drive holds it
       const s = span(u, 0.5, 0.95);
       const { ampMin, ampMax } = model.law;
+      const labels = driveLabels(model);
       const nom = st.amp;
       let amp = nom;
       if (s > 0) amp = s < 1 / 3 ? nom + (ampMax - nom) * ease(s * 3) : s < 2 / 3 ? ampMax + (ampMin - ampMax) * ease(s * 3 - 1) : ampMin + (nom - ampMin) * ease(s * 3 - 2);
       const dp = drivePose(model, st.phase, amp);
       const a = easeOut(span(u, 0.04, 0.2));
+      const pinNode = node(labels.late.node);
+      const pinAlpha = easeOut(span(u, 0.5, 0.6));
+      // the pin callout's label is pinned to a fixed clear patch of background (between the caption and the gear
+      // train, left of the panel) rather than a fixed offset from the pin: the pin itself swings through the gear
+      // cluster over the walk, so a constant dx/dy would drag the label back and forth across the gears with it.
+      // Computed inside html() (not here) so the camera's matrixWorld is current for this frame (set after the
+      // caller's bird.update()/cam.updateMatrixWorld(), not before, same as every other callout's lazy screenOf()).
+      const pinCallout = () => {
+        if (!pinNode || pinAlpha <= 0.01) return '';
+        const [px, py] = screenOf(pinNode, V(0, 0, 0));
+        return callout(labels.late.text, pinNode, V(0, 0, 0), labels.late.at[0] - px, labels.late.at[1] - py, pinAlpha);
+      };
       return {
         shift: 280,
         state: { ...st, amp, focus: 'drive', accents: true },
@@ -178,20 +229,23 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
           <div class="panel" style="opacity:${a}"><h3>${fmt(N.ratio, 2)} : 1</h3><div class="sub">${['one', 'two', 'three', 'four'][N.stages.length - 1] ?? N.stages.length} spur stages, ${N.stages.join(' × ')} teeth</div>
           ${row('motor', `${fmt(N.motorRpm, 0)} rpm`)}${row('crank', `${fmt(N.flapHz, 2)} Hz`)}${row('stroke angle', `${fmt(dp.right.phi * DEG, 1)}°`, 'acc')}${row('amplitude', `±${fmt(amp * DEG, 1)}°`)}${row('transmission angle', `${fmt(dp.right.mu * DEG, 0)}°`)}</div>
           ${callout('Motor', node('motor'), V(0, 0.018, 0), -240, 40, a)}
-          ${callout('Crank wheel 40T', node('gear_crank'), V(0, -0.021, 0), -200, 80, a)}
+          ${callout(labels.crankWheel, node('gear_crank'), V(0, -0.021, 0), -200, 80, a)}
           ${callout('Coupler', node('coupler_R'), V(0, 0.045, 0), 200, -170, a)}
-          ${s > 0 ? callout('Stroke servo slides the pin', node('slot_pin_R'), V(0, 0, 0), 140, 300, easeOut(span(u, 0.5, 0.6))) : ''}${honest()}`,
+          ${pinCallout()}${honest()}`,
       };
     },
     twist(u, t) {
-      const target = V(-0.06, 0.12, 0.5);
-      orbit(target, 22 + 26 * ease(u), 12, 1.8 - 0.15 * ease(u), 32);
+      // target and orbit chosen so both wings (the twist focus draws both wings' ribs and film), root to tip, stay
+      // inside the frame and off the caption, the panel and the claim over a full stroke cycle at any point in the
+      // sequence: film/test/twist-camera.test.mjs pins this against the wingStations()/sectionPoint() geometry.
+      const c = TWIST_CAM;
+      orbit(V(...c.target), c.az0 + c.azSpan * ease(u), c.el, c.dist0 + c.distSpan * ease(u), c.fov);
       const st = flap(t, 0.25);
       const dp = drivePose(model, st.phase, st.amp);
       const tip = st.twistR * DEG;
       const a = easeOut(span(u, 0.05, 0.2));
       return {
-        shift: 260,
+        shift: TWIST_CAM.shift,
         state: { ...st, focus: 'twist', accents: true },
         html: () => `<div class="fcap">Active twist<small>¼ speed · nose down on the downstroke, up on the upstroke</small></div>
           <div class="panel" style="opacity:${a}"><h3>${tip >= 0 ? '+' : '−'}${fmt(Math.abs(tip), 1)}°</h3><div class="sub">commanded twist at the tip, ±${fmt(N.twistDynDeg, 0)}° per stroke</div>
@@ -208,7 +262,7 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
       return {
         shift: 280,
         state: { ...st, focus: 'power', accents: true },
-        html: () => `<div class="fcap">Power<small>${N.batteryCells}S ${fmt(N.batteryMah, 0)} mAh LiPo, ${fmt(N.batteryWh, 1)} Wh</small></div>
+        html: () => `<div class="fcap">Power<small>${N.batteryCells}S ${fmt(N.batteryMah, 0)} mAh ${model.design.battery.chemistry ?? ''}, ${fmt(N.batteryWh, 1)} Wh${model.design.battery.charge_limit_V_per_cell ? ` · charged to ${fmt(model.design.battery.charge_limit_V_per_cell, 2)} V a cell` : ''}</small></div>
           <div class="panel" style="opacity:${a}"><h3>${fmt(N.cruisePowerW, 1)} W</h3><div class="sub">electrical power in cruise at ${fmt(N.cruiseV, 1)} m/s (M2)</div>
           ${row('endurance', `${fmt(N.enduranceMin, 1)} min`)}${row('power available / required', `${fmt(N.powerRatio, 1)}`)}${row('gate M2', m2 ? (m2.passed ? 'pass' : 'FAIL') : 'not run', m2 && !m2.passed ? 'bad' : '')}</div>
           ${callout('Battery', node('part_battery'), V(0, 0, 0), -170, 110, a)}${callout('ESC', node('part_esc'), V(0, 0, 0), -120, 170, a)}${honest()}`,
@@ -260,8 +314,8 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
     const idx = p.i0 + k;
     const d = segData[seg.id];
     const j = d ? Math.min(d.t.length - 1, k) : -1;
-    const hud = d && j >= 0 ? `<div class="fhud"><div>airspeed<b>${fmt(d.airspeed[j], 1)} m/s</b></div><div>electrical power, flap-cycle mean<b>${fmt(d.power_w[j], 0)} W</b></div><div>battery<b>${fmt(d.battery_pct[j], 0)}%</b></div></div>` : '';
-    const cap = `<div class="fcap">${seg.caption ?? ''}<small>${seg.sub ?? ''}${p.slow > 1 ? ` · ${p.slow}× slow motion` : ''}</small></div>`;
+    const hud = flightHud(d, j);
+    const cap = `<div class="fcap">${fillDesign(seg.caption ?? '', model.design)}<small>${fillDesign(seg.sub ?? '', model.design)}${p.slow > 1 ? ` · ${p.slow}× slow motion` : ''}</small></div>`;
     const scrim = '<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,9,13,.55) 0%,rgba(6,9,13,0) 22%,rgba(6,9,13,0) 70%,rgba(6,9,13,.6) 100%)"></div>';
     return { src: `${plateBase}/${p.dir}/f_${String(idx).padStart(5, '0')}.png`, html: scrim + cap + (seg.hud === false ? '' : hud) + honest() };
   }

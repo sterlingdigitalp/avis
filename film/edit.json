@@ -53,8 +53,8 @@
    "shot": "wide_valley",
    "start_s": 20,
    "dur": 5.0,
-   "caption": "Bow Valley, 1,800 m",
-   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
+   "caption": "Bow Valley, Banff",
+   "sub": "Flown in the air of {altitude_m} m and {temperature_C} \u00b0C \u00b7 flight log larus-gl-2-corridor",
    "fadeIn": 0.4,
    "hud": false
   },
@@ -121,9 +121,9 @@
    "kind": "bl",
    "scenario": "larus-gl-2-corridor",
    "shot": "treetop_pass",
-   "start_s": 36,
+   "start_s": 112,
    "dur": 4.0,
-   "caption": "Over the bench",
+   "caption": "Over the forest",
    "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor"
   },
   {
@@ -131,7 +131,7 @@
    "kind": "bl",
    "scenario": "larus-gl-2-corridor",
    "shot": "top_down",
-   "start_s": 28,
+   "start_s": 36,
    "dur": 3.5,
    "caption": "From above",
    "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor"
@@ -150,10 +150,10 @@
    "id": "river",
    "kind": "bl",
    "scenario": "larus-gl-2-corridor",
-   "shot": "river_low",
-   "start_s": 14,
+   "shot": "river_pass",
+   "start_s": 24,
    "dur": 4.0,
-   "caption": "Bow River",
+   "caption": "Over the Bow",
    "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
    "fadeOut": 0.4
   },

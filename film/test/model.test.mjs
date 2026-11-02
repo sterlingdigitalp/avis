@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadModel } from '../../sims/avis-shared/node-load.js';
 import { syntheticLog } from './fixture.mjs';
-import { drivePose, gearAngles, meshAngle, stationsAt, wingStations, sectionPoint, halfThickness, parseDims, boxProtrusion, linkageAt, leftRightAsymmetry } from '../../sims/avis-shared/model.js';
+import { drivePose, gearAngles, meshAngle, stationsAt, wingStations, sectionPoint, halfThickness, parseDims, boxProtrusion, linkageAt, leftRightAsymmetry, sineSeries, membraneDip } from '../../sims/avis-shared/model.js';
 import { strokeAngle, makeLatticeSpec, wingGrid } from '../../src/physics/kinematics.js';
 import { sampleLog } from '../bake_pose.mjs';
 
@@ -262,4 +262,104 @@ test('rib stations: the BOM count split between the wings, evenly root to tip', 
   assert.ok(Math.abs(model.ribs.at(-1) - model.wing.L) < 1e-12);
   const d = model.ribs[1] - model.ribs[0];
   for (let i = 2; i < model.ribs.length; i++) assert.ok(Math.abs(model.ribs[i] - model.ribs[i - 1] - d) < 1e-12);
+});
+
+test('sine series of a profile: recovers known harmonics after removing the line through its ends', () => {
+  const xs = Array.from({ length: 801 }, (_, i) => i / 800);
+  const b = sineSeries(xs, xs.map((x) => 0.2 + 0.1 * x + Math.sin(Math.PI * x) + 0.3 * Math.sin(3 * Math.PI * x) + 0.05 * Math.sin(8 * Math.PI * x)), 8);
+  assert.ok(Math.abs(b[0] - 1) < 1e-4 && Math.abs(b[2] - 0.3) < 1e-4 && Math.abs(b[7] - 0.05) < 1e-4, `${b[0]} ${b[2]} ${b[7]}`);
+  for (const k of [1, 3, 4, 5, 6]) assert.ok(Math.abs(b[k]) < 1e-4, `b${k + 1} = ${b[k]}`);
+});
+
+test('taut film between ribs: the Laplace membrane, zero on the ribs and the edge rods, analytic for one harmonic', () => {
+  // f = sin(pi xi) over a bay of gap/chord sigma: z = sin(pi xi) cosh(pi sigma (u - 1/2)) / cosh(pi sigma / 2)
+  for (const sigma of [0.3, 0.5, 0.8]) {
+    const want = 1 - 1 / Math.cosh((Math.PI * sigma) / 2);
+    assert.ok(Math.abs(membraneDip([1], 0.5, 0.5, sigma) - want) < 1e-12);
+  }
+  const xs = model.section.map((q) => q.xi);
+  const b = sineSeries(xs, model.section.map((q) => q.cam + q.half));
+  for (const x of [0.1, 0.4, 0.8]) for (const u of [0, 1]) assert.ok(Math.abs(membraneDip(b, x, u, 0.4)) < 1e-12);
+  for (const x of [0, 1]) assert.ok(Math.abs(membraneDip(b, x, 0.37, 0.4)) < 1e-12);
+  // the film surface f - dip solves z_xx / c^2 + z_yy / g^2 = 0 (finite differences, chord c, rib gap g = sigma c)
+  const sigma = 0.4, h = 2e-4;
+  const z = (x, u) => b.reduce((s, bn, k) => s + bn * Math.sin((k + 1) * Math.PI * x), 0) - membraneDip(b, x, u, sigma);
+  for (const [x, u] of [[0.3, 0.5], [0.5, 0.3], [0.7, 0.6]]) {
+    const zxx = (z(x + h, u) - 2 * z(x, u) + z(x - h, u)) / (h * h);
+    const zuu = (z(x, u + h) - 2 * z(x, u) + z(x, u - h)) / (h * h) / (sigma * sigma);
+    assert.ok(Math.abs(zxx + zuu) < 0.02 * Math.abs(zxx) + 1e-3, `xi ${x} u ${u}: ${zxx} + ${zuu}`);
+  }
+  // the real section dips a little at mid bay: under 3% of the chord, inward on both faces near the nose
+  const bl = sineSeries(xs, model.section.map((q) => q.cam - q.half));
+  let worst = 0;
+  for (let i = 1; i < 100; i++) worst = Math.max(worst, membraneDip(b, i / 100, 0.5, 0.45));
+  assert.ok(worst > 0.005 && worst < 0.03, `upper mid-bay dip ${worst}`);
+  assert.ok(membraneDip(bl, 0.05, 0.5, 0.45) < 0);
+});
+
+test('journals: each bearing and bushing line split by the joints its role names; a bare "bearing" line is pooled', async () => {
+  const { journals, journalDims } = await import('../../sims/avis-shared/model.js');
+  const parts = [
+    { role: 'bushing: shoulder pivots, two per side (4), coupler eyes, two per coupler (4)', id: 'b1', count: 8 },
+    { role: 'bushing: crank shaft (2)', id: 'b2', count: 2 },
+    { role: 'bushing: gear shaft 1 (2), gear shaft 12 (2)', id: 'b3', count: 4 },
+    { role: 'bearing: elbow knuckles (4)', id: 'b4', count: 4 },
+    { role: 'bearing', id: 'b5', count: 6 },
+    { role: 'gear', id: 'g', count: 2 },
+  ];
+  assert.deepEqual(journals({ bom: { parts } }), [
+    { id: 'b1', kind: 'bushing', place: 'shoulder', shaft: null, count: 4 },
+    { id: 'b1', kind: 'bushing', place: 'coupler', shaft: null, count: 4 },
+    { id: 'b2', kind: 'bushing', place: 'crank', shaft: null, count: 2 },
+    { id: 'b3', kind: 'bushing', place: 'shaft', shaft: 1, count: 2 },
+    { id: 'b3', kind: 'bushing', place: 'shaft', shaft: 12, count: 2 },
+    { id: 'b4', kind: 'bearing', place: 'elbow', shaft: null, count: 4 },
+    { id: 'b5', kind: 'bearing', place: 'pooled', shaft: null, count: 6 },
+  ]);
+  // every line of today's design is fully placed
+  for (const p of design.bom.parts.filter((x) => /^(bearing|bushing)\b/.test(x.role))) {
+    assert.equal(journals(design).filter((j) => j.id === p.id).reduce((a, j) => a + j.count, 0) >= p.count, true, p.role);
+  }
+  assert.deepEqual(journalDims({ dimensions_mm_d_D_B: '5x13x4' }), { d: 0.005, D: 0.013, B: 0.004, flangeD: 0, flangeB: 0 });
+  assert.deepEqual(journalDims({ d1_mm: 6, d2_mm: 8, b1_mm: 6, d3_mm: 12, b2_mm: 1 }), { d: 0.006, D: 0.008, B: 0.006, flangeD: 0.012, flangeB: 0.001 });
+  assert.deepEqual(journalDims({ d1_mm: 6, d2_mm: 8, b1_mm: 6 }), { d: 0.006, D: 0.008, B: 0.006, flangeD: 0, flangeB: 0 });
+  assert.deepEqual(journalDims({}), { d: 0.004, D: 0.009, B: 0.0025, flangeD: 0, flangeB: 0 });
+});
+
+test('servos: tail servos either side of their lump; a stroke servo exactly when the design has a lump for one', async () => {
+  const { prepare, parseDims } = await import('../../sims/avis-shared/model.js');
+  const box = (m, n) => m.layout.parts.find((p) => p.name === n)?.box;
+  const tl = box(model, 'servo_tail_L'), tr = box(model, 'servo_tail_R');
+  const lump = design.mass.lumps.find((l) => l.name === 'tail servos').pos;
+  // sized as layoutParts always sized them (src/design/fit.js packs with it): the stroke servo's entry, or a default
+  const strokeId = design.bom.parts.find((p) => p.role === 'stroke amplitude servo')?.id;
+  const sv = parseDims(model.parts[strokeId]?.specs?.dimensions_text_mm)?.values ?? [0.033, 0.01, 0.035];
+  assert.ok(Math.abs(tr.cz - tl.cz - 2 * 0.55 * sv[1]) < 1e-9 && Math.abs((tl.cz + tr.cz) / 2 - lump[2]) < 1e-9);
+  for (const b of [tl, tr]) assert.ok(Math.abs(b.cx - lump[0]) < 0.005 && Math.abs(b.cy - lump[1]) < 0.005, 'at the tail-servo lump');
+  const hasLump = design.mass.lumps.some((l) => l.name === 'stroke servo');
+  assert.equal(!!box(model, 'servo_stroke'), hasLump);
+  // fit.js's packing view adds a massless lump for a fixed stroke: the box is kept free there, as before
+  const withLump = { ...design, mass: { ...design.mass, lumps: [...design.mass.lumps.filter((l) => l.name !== 'stroke servo'), { name: 'stroke servo', mass_kg: 0, pos: [-0.03, 0, 0] }] } };
+  const s = box(prepare(withLump, model.parts), 'servo_stroke');
+  assert.ok(s && Math.abs(s.cx + 0.03) < 0.03, 'stroke servo placed at its lump');
+  assert.deepEqual([s.sx, s.sy, s.sz].sort().map((v) => +v.toFixed(6)), [...sv].sort().map((v) => +v.toFixed(6)));
+});
+
+// Packing finds each part by its own role: an ESC role that mentions the flight controller must not stand in for it,
+// and tail servos are sized from their own catalogue entry.
+test('layoutParts places the flight controller and tail servos as their own catalogue parts', async () => {
+  const { flightControllerRole } = await import('../../sims/avis-shared/model.js');
+  const bom = { parts: [{ role: 'flap ESC (no BEC; the flight controller\'s 5 V BEC supplies the avionics)' }, { role: 'flight controller with IMU and baro' }] };
+  assert.equal(flightControllerRole(bom), 'flight controller with IMU and baro');
+  assert.equal(flightControllerRole({ parts: [{ role: 'ESC for the flight controller' }, { role: 'main flight controller' }] }), 'main flight controller');
+  const fc = model.layout.parts.find((p) => p.name === 'fc');
+  assert.equal(fc.id, design.bom.parts.find((p) => p.role === flightControllerRole(design.bom)).id);
+  assert.doesNotMatch(fc.id, /esc/i);
+  const tail = model.layout.parts.find((p) => p.name === 'servo_tail_L');
+  const tailSpec = model.parts?.[tail.id]?.specs;
+  const dims = parseDims(tailSpec?.dimensions_text_mm)?.values;
+  if (dims) {
+    const b = tail.box, size = [b.x1 - b.x0, b.y1 - b.y0, b.z1 - b.z0].sort((a, c) => a - c);
+    assert.deepEqual(size.map((v) => +v.toFixed(5)), [...dims].sort((a, c) => a - c).map((v) => +v.toFixed(5)));
+  }
 });

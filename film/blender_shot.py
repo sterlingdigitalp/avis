@@ -57,6 +57,8 @@ def main():
     s = blib.setup_cycles(samples=int(kw["samples"]), res=(W, H), adaptive=0.015, denoise=kw["denoise"] == "1")
     blib.set_look(kw["look"])
     s.view_settings.exposure = float(kw["exposure"])
+    # the clear film is a transparent surface: a ray through both wings, the pod and the tail crosses up to a dozen
+    s.cycles.transparent_max_bounces = 16
     scene.setup_world(world_gain=float(kw["world"]), sun_gain=float(kw["sun"]))
     scene.build_terrain()
     if float(kw["haze"]) > 0:

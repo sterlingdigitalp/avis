@@ -10,7 +10,7 @@
 // state = { phase, amp, twistL, twistR, tailL, tailR, explode: {wing, drive, ...} 0..1, focus: name|null,
 //           shell: 0..1 opacity scale }
 import * as THREE from 'three';
-import { stationsAt, wingStations, sectionPoint, drivePose, gearAngles } from './model.js';
+import { stationsAt, wingStations, sectionPoint, drivePose, gearAngles, sineSeries, membraneDip, journals, journalDims, sizeOf } from './model.js';
 import { segmentAngles } from '../../src/physics/kinematics.js';
 import { ACCENT } from './materials.js';
 
@@ -209,7 +209,7 @@ function setLocal(obj, bodyMatrix, parentBody) {
 // ---- the bird --------------------------------------------------------------------------------------------------
 
 /** Shared state and helpers for the builders below. */
-function makeCtx(model, mats, { filmRows = 3 } = {}) {
+function makeCtx(model, mats, { filmRows = 4 } = {}) {
   const D = model.design;
   const W = model.wing;
   const P = model.planes;
@@ -256,7 +256,39 @@ function makeCtx(model, mats, { filmRows = 3 } = {}) {
   const bomPart = (role) => D.bom.parts.find((p) => p.role === role);
   const structItem = (re) => D.bom.structure.find((s) => re.test(s.name));
   const spec = (id) => model.parts[id]?.specs ?? {};
-  return { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows };
+  // the BOM's bearings and bushings by the joint each carries (model.journals), with their catalogue dimensions
+  const jl = journals(D);
+  const nShafts = Math.max(0, (train.shafts?.length ?? 1) - 1);
+  const journal = (place, shaft = null) => {
+    const j = jl.find((x) => x.place === place && (shaft == null || x.shaft === shaft)) ?? pooledShare(jl, place, shaft, nShafts);
+    return j && j.count > 0 ? { ...j, dims: journalDims(model.parts[j.id]?.specs) } : null;
+  };
+  // one ring per journal, flanged when the part is, along x; bearings in steel, polymer bushings in plastic
+  const journalMesh = (name, j, parent, sub) => mesh(name, journalGeometry(j.dims), j.kind === 'bushing' ? 'acetal' : 'steel_ground', parent, sub, j.id);
+  return { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows, journal, journalMesh };
+}
+
+/**
+ * Older designs list their bearings as one pooled "bearing" line; they were drawn two per shoulder hinge, then two per
+ * gearbox shaft from the crank's (shaft 0) up, then the rest at the elbows. This is that split, for one place.
+ */
+function pooledShare(jl, place, shaft, nShafts) {
+  const pool = jl.find((x) => x.place === 'pooled');
+  if (!pool) return null;
+  const N = pool.count;
+  const k = place === 'crank' ? 0 : shaft ?? 0;
+  const count = place === 'shoulder' ? Math.min(4, N)
+    : place === 'crank' || place === 'shaft' ? Math.min(2, Math.max(0, N - 4 - 2 * k))
+      : place === 'elbow' ? 2 * Math.min(2, Math.floor(Math.max(0, N - 4 - 2 * nShafts) / 2)) : 0;
+  return { ...pool, place, shaft, count };
+}
+
+function journalGeometry(dims) {
+  const ring = ringX(dims.D / 2, dims.d / 2, dims.B);
+  if (!dims.flangeD) return ring;
+  const flange = ringX(dims.flangeD / 2, dims.d / 2, dims.flangeB);
+  flange.translate(dims.B / 2 - dims.flangeB / 2, 0, 0);
+  return mergeGeos([ring, flange]);
 }
 
 /** Fuselage: film shell, formers, keel and boom. */
@@ -393,21 +425,17 @@ function wingElbow(ctx, tag, side, segs) {
   const [seg0, seg1] = segs;
   const sp0 = spec(sIn?.material_id), sp1 = spec(sOut?.material_id);
   const L0 = W.segments[0].length, L1 = W.segments[1].length;
-  // elbow knuckle: a pin through the joint; bearings only if the BOM's count has any left after the shoulder
-  // hinges (2 each) and the gearbox shafts (2 each)
-  const bearing = bomPart('bearing');
-  const bd = (spec(bearing?.id).dimensions_mm_d_D_B ?? '4x9x2.5').split('x').map((v) => +v / 1000);
-  const gearboxShafts = Math.max(0, (train.shafts?.length ?? 1) - 1);
-  const elbowEach = Math.min(2, Math.floor(Math.max(0, (bearing?.count ?? 0) - 4 - 2 * gearboxShafts) / 2));
+  // elbow knuckle: a pin through the joint, in bearings or bushings only if the BOM puts any there
+  const je = ctx.journal('elbow');
   const elbow = [];
-  for (const dx of [-0.007, 0.007].slice(0, elbowEach)) {
-    const b = mesh(`elbow_bearing_${tag}_${dx > 0 ? 'f' : 'a'}`, ringX(bd[1] / 2, bd[0] / 2, bd[2]), 'steel_ground', seg1, 'wing', bearing?.id);
+  for (const dx of [-0.007, 0.007].slice(0, (je?.count ?? 0) / 2)) {
+    const b = ctx.journalMesh(`elbow_${je.kind}_${tag}_${dx > 0 ? 'f' : 'a'}`, je, seg1, 'wing');
     b.position.set(W.spar_x + dx, 0, 0);
     elbow.push(b);
   }
-  const pin = mesh(`elbow_pin_${tag}`, cylX(bd[0] / 2, 0.02, 12), 'steel_shaft', seg1, 'wing');
+  const pin = mesh(`elbow_pin_${tag}`, cylX((je?.dims.d ?? 0.004) / 2, 0.02, 12), 'steel_shaft', seg1, 'wing');
   pin.position.set(W.spar_x, 0, 0);
-  if (elbow.length) register(`elbow bearings ${tag}`, bearing?.id, 'bearing', 'wing', elbow);
+  if (elbow.length) register(`elbow ${je.kind}s ${tag}`, je.id, je.kind, 'wing', elbow);
 }
 
 /** Twist torque rod inside the outer spar, and its input arm. */
@@ -501,6 +529,52 @@ function wingFilm(ctx, tag, side, segs, filmStations, ringN) {
   return films;
 }
 
+/**
+ * Per film station and section point, how far the taut film lies inside the rib profile, per chord (subtracted from
+ * the section height, upper and lower face): zero on the ribs, the membrane dip between them (model.membraneDip).
+ * Where the dip would carry the film into a spar the film rests on the spar instead, and the faces never close to
+ * less than the edge rods' diameter.
+ */
+function filmDips(ctx, st) {
+  const { model, W, structItem, spec } = ctx;
+  const sec = model.section, nSec = sec.length, ribs = model.ribs;
+  const xs = sec.map((q) => q.xi);
+  const bUp = sineSeries(xs, sec.map((q) => q.cam + q.half));
+  const bLo = sineSeries(xs, sec.map((q) => q.cam - q.half));
+  const sparR = [/inner spar/, /outer spar/].map((re) => (spec(structItem(re)?.material_id).od_mm ?? 8) / 2000);
+  const dipUp = new Float64Array(st.n * nSec), dipLo = new Float64Array(st.n * nSec);
+  for (let i = 0; i < st.n; i++) {
+    let k = 0;
+    while (k < ribs.length - 2 && st.s[i] > ribs[k + 1] + 1e-9) k++;
+    const gap = ribs[k + 1] - ribs[k];
+    const u = gap > 0 ? (st.s[i] - ribs[k]) / gap : 0;
+    if (u < 1e-6 || u > 1 - 1e-6) continue; // on a rib: the rib holds the profile
+    const c = st.chord[i], sigma = gap / c;
+    const r = sparR[st.seg[i]] / c, xSpar = (st.xle[i] - W.spar_x) / c, minHalf = model._teR / c;
+    for (let j = 0; j < nSec; j++) {
+      const q = sec[j];
+      const half = Math.max(q.half, minHalf);
+      let up = membraneDip(bUp, q.xi, u, sigma);
+      let lo = membraneDip(bLo, q.xi, u, sigma);
+      const dx = q.xi - xSpar;
+      if (Math.abs(dx) < r) {
+        const y = Math.sqrt(r * r - dx * dx);
+        up = Math.min(up, Math.max(q.cam + half - y, 0));
+        lo = Math.max(lo, Math.min(q.cam - half + y, 0));
+      }
+      const room = 2 * (half - minHalf);
+      if (up - lo > room) {
+        const f = room / (up - lo);
+        up *= f;
+        lo *= f;
+      }
+      dipUp[i * nSec + j] = up;
+      dipLo[i * nSec + j] = lo;
+    }
+  }
+  return { dipUp, dipLo };
+}
+
 /** Leading and trailing edge rods as deforming tubes. */
 function wingEdgeRods(ctx, tag, side, segs, filmStations) {
   const { model, D, W, P, train, root, mesh, group, register, accentLine, bomPart, structItem, spec, posed, deform } = ctx;
@@ -574,6 +648,7 @@ function buildWings(ctx) {
     if (k < model.ribs.length - 1) for (let r = 1; r < filmRows; r++) fs.push(s + ((model.ribs[k + 1] - s) * r) / filmRows);
   });
   const filmStations = stationsAt(W, fs);
+  Object.assign(filmStations, filmDips(ctx, filmStations));
   const nSec = model.section.length; // chordwise points per surface, LE..TE
   const ringN = 2 * nSec - 1; // TE upper -> LE -> TE lower
   for (const [tag, side] of [['R', 1], ['L', -1]]) {
@@ -594,6 +669,76 @@ function buildWings(ctx) {
   return { wings, filmSt };
 }
 
+/** Points `half` either side of a polyline (left, right) at each of its vertices, square to the local direction. */
+export function offsetBand(line, half) {
+  return line.map(([z, y], i) => {
+    const [z1, y1] = line[Math.min(i + 1, line.length - 1)], [z0, y0] = line[Math.max(i - 1, 0)];
+    const nx = i < line.length - 1 ? z1 - z : z - z0, ny = i < line.length - 1 ? y1 - y : y - y0;
+    const nl = Math.hypot(nx, ny) || 1;
+    return [[z - (ny / nl) * half, y + (nx / nl) * half], [z + (ny / nl) * half, y - (nx / nl) * half]];
+  });
+}
+
+/**
+ * The rocker's pin track as a hole (shape coordinates, mirrored for the left wing): a closed band `half` either side
+ * of the slot's centreline, or a round hole where the slot has no length (a fixed-stroke drive).
+ */
+export function slotPath(slot, side, half) {
+  const path = new THREE.Path();
+  const [z0, y0] = slot[0], [z1, y1] = slot[slot.length - 1];
+  if (Math.hypot(z1 - z0, y1 - y0) < 2 * half) {
+    path.absarc(-side * z0, y0, half, 0, TWO_PI, true);
+    return path;
+  }
+  const sp = offsetBand(slot, half);
+  const ring = [...sp.map((p) => p[0]), ...sp.reverse().map((p) => p[1])];
+  ring.forEach(([z, y], i) => (i ? path.lineTo(-side * z, y) : path.moveTo(-side * z, y)));
+  path.closePath();
+  return path;
+}
+
+/** The journals in the gearbox plates, aft then forward: the crank shaft (shaft 0) and each gear shaft, as the BOM says. */
+function gearboxJournals(ctx, shaftsN) {
+  const { P, root, register } = ctx;
+  const byId = new Map();
+  for (let j = 0; j < shaftsN.length - 1; j++) {
+    const jj = j === 0 ? ctx.journal('crank') : ctx.journal('shaft', j);
+    for (const [name, x] of [['aft', P.plateAft], ['fwd', P.plateFwd]].slice(0, jj?.count ?? 0)) {
+      const b = ctx.journalMesh(`gearbox_${jj.kind}_${j}_${name}`, jj, root, 'drive');
+      b.position.set(x, shaftsN[j][1], shaftsN[j][0]);
+      if (!byId.has(jj.id)) byId.set(jj.id, { kind: jj.kind, meshes: [] });
+      byId.get(jj.id).meshes.push(b);
+    }
+  }
+  for (const [id, { kind, meshes }] of byId) register(`gearbox ${kind}s`, id, kind, 'drive', meshes);
+}
+
+/**
+ * The crank angle encoder (a ring readhead round the crank shaft) and its magnet actuator, just inside the aft
+ * gearbox plate where the design's mass lump puts them, when the BOM has them. The actuator's bore is its catalogue
+ * figure; neither lists outside dimensions, so each ring is sized from its catalogue mass at an assumed density and
+ * width, and the assumption is recorded with the layout's others.
+ */
+function buildEncoder(ctx, c) {
+  const { model, D, P, root, mesh, register } = ctx;
+  const enc = D.bom.parts.find((p) => /encoder/.test(p.role) && !/magnet/.test(p.role));
+  const mag = D.bom.parts.find((p) => /encoder magnet/.test(p.role));
+  const notes = model.layout?.assumptions;
+  const w = 0.003, x = P.plateAft + 0.0035;
+  const ring = (part, name, rho, ri, mat, what) => {
+    const m = model.parts[part.id];
+    const ro = Math.sqrt((m?.mass_g ?? 5) / 1000 / (rho * w * Math.PI) + ri * ri);
+    notes?.push(`${what}: no outside dimensions in the catalogue; drawn as a ${(2 * ro * 1000).toFixed(0)} mm ring, ${w * 1000} mm wide, from ${m?.mass_g} g at ${rho} kg/m3`);
+    const o = mesh(name, ringX(ro, ri, w), mat, root, 'avionics', part.id);
+    o.position.set(x, c[1], c[0]);
+    register(what, part.id, part.role, 'avionics', o);
+    return ro;
+  };
+  let ri = 0.004;
+  if (mag) ri = ring(mag, 'encoder_magnet', 7500, (model.parts[mag.id]?.specs?.inner_diameter_mm ?? 8) / 2000, 'magnet', 'crank encoder magnet') + 0.0015;
+  if (enc) ring(enc, 'encoder_readhead', 1850, ri, 'pcb', 'crank angle encoder');
+}
+
 /** Rockers on the wing roots and the couplers. */
 function buildLinkage(ctx) {
   const { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows } = ctx;
@@ -602,11 +747,14 @@ function buildLinkage(ctx) {
   const law = model.law;
   const plateI = structItem(/crank, rockers/);
   const coupI = structItem(/couplers/);
-  const bearing = bomPart('bearing');
-  const bd = (spec(bearing?.id).dimensions_mm_d_D_B ?? '4x9x2.5').split('x').map((v) => +v / 1000);
+  const jh = ctx.journal('shoulder'), jc = ctx.journal('coupler');
+  const bd = jh ? [jh.dims.d, jh.dims.D, jh.dims.B] : [0.004, 0.009, 0.0025];
+  // the coupler pins run in the coupler-eye bushings when the BOM has them
+  const pinR = jc ? jc.dims.d / 2 : 0.001;
   const plate = 0.002;
-  // rockers: slotted carbon levers on each wing root; the slot is the locus of the coupler pin over the stroke
-  // servo's range (c and psiMid from the drive table), so the mid-stroke angle stays at phiMean.
+  // rockers: carbon levers on each wing root; with a stroke servo the coupler pin runs in a slot, the locus of the
+  // pin over the servo's range (c and psiMid from the drive table), so the mid-stroke angle stays at phiMean; a
+  // fixed-stroke drive has one pin position, so a plain hole.
   const slot = law.table.map((e) => {
     const delta = fb.alpha + e.psiMid - law.phiMean;
     return [e.c * Math.cos(delta), e.c * Math.sin(delta)];
@@ -615,26 +763,9 @@ function buildLinkage(ctx) {
     const seg0 = wings[tag].segs[0];
     const xr = side > 0 ? P.couplerR : P.couplerL;
     const shp = new THREE.Shape();
-    // outline: hinge boss, band along the slot, spar socket
-    const outline = [];
-    const w = 0.006;
-    for (let i = 0; i < slot.length; i++) {
-      const [z, y] = slot[i];
-      const nx = i < slot.length - 1 ? slot[i + 1][0] - z : z - slot[i - 1][0];
-      const ny = i < slot.length - 1 ? slot[i + 1][1] - y : y - slot[i - 1][1];
-      const nl = Math.hypot(nx, ny) || 1;
-      outline.push([z - (ny / nl) * w, y + (nx / nl) * w]);
-    }
-    const back = [];
-    for (let i = slot.length - 1; i >= 0; i--) {
-      const [z, y] = slot[i];
-      const nx = i < slot.length - 1 ? slot[i + 1][0] - z : z - slot[i - 1][0];
-      const ny = i < slot.length - 1 ? slot[i + 1][1] - y : y - slot[i - 1][1];
-      const nl = Math.hypot(nx, ny) || 1;
-      back.push([z + (ny / nl) * w, y - (nx / nl) * w]);
-    }
-    const sock = [[0.014, -0.006], [0.014, 0.006]];
-    const poly = [...sock, ...outline, ...back];
+    // outline: spar socket, then a band 6 mm either side of the slot
+    const band = offsetBand(slot, 0.006);
+    const poly = [[0.014, -0.006], [0.014, 0.006], ...band.map((p) => p[0]), ...band.reverse().map((p) => p[1])];
     // shape coords (sx, sy) = (z, y) local; mirrored for the left wing
     // shape x = -(local z) so that alongX() maps it back to +local z without mirroring the mesh
     poly.forEach(([z, y], i) => (i ? shp.lineTo(-side * z, y) : shp.moveTo(-side * z, y)));
@@ -642,37 +773,25 @@ function buildLinkage(ctx) {
     const h = new THREE.Path();
     h.absarc(0, 0, bd[1] / 2, 0, TWO_PI, true);
     shp.holes.push(h);
-    // slot: a thin closed band 2 mm wide
-    const sl = new THREE.Path();
-    const half = 0.0011;
-    const sp = slot.map(([z, y], i) => {
-      const nx = i < slot.length - 1 ? slot[i + 1][0] - z : z - slot[i - 1][0];
-      const ny = i < slot.length - 1 ? slot[i + 1][1] - y : y - slot[i - 1][1];
-      const nl = Math.hypot(nx, ny) || 1;
-      return [[z - (ny / nl) * half, y + (nx / nl) * half], [z + (ny / nl) * half, y - (nx / nl) * half]];
-    });
-    const ring = [...sp.map((p) => p[0]), ...sp.reverse().map((p) => p[1])];
-    ring.forEach(([z, y], i) => (i ? sl.lineTo(-side * z, y) : sl.moveTo(-side * z, y)));
-    sl.closePath();
-    shp.holes.push(sl);
+    shp.holes.push(slotPath(slot, side, pinR + 0.0001));
     const g = new THREE.ExtrudeGeometry(shp, { depth: plate, bevelEnabled: false, curveSegments: 16 });
     alongX(g);
     g.translate(xr - plate / 2 - fb.x, 0, 0);
     const rk = mesh(`rocker_${tag}`, g, 'carbon_plate', seg0, 'drive', plateI?.material_id);
     // hinge bearings, aft and forward of the rocker
     const hb = [];
-    for (const dx of [-0.006, 0.006]) {
-      const b = mesh(`hinge_bearing_${tag}_${dx > 0 ? 'f' : 'a'}`, ringX(bd[1] / 2, bd[0] / 2, bd[2]), 'steel_ground', seg0, 'drive', bearing?.id);
+    for (const dx of [-0.006, 0.006].slice(0, (jh?.count ?? 0) / 2)) {
+      const b = ctx.journalMesh(`hinge_${jh.kind}_${tag}_${dx > 0 ? 'f' : 'a'}`, jh, seg0, 'drive');
       b.position.set(dx - fb.x + xr, 0, 0);
       hb.push(b);
     }
     const pin = mesh(`hinge_pin_${tag}`, cylX(bd[0] / 2, 0.022, 12), 'steel_shaft', seg0, 'drive');
     pin.position.set(xr - fb.x, 0, 0);
     // the coupler pin, a small steel pin that slides in the slot
-    const cpin = mesh(`slot_pin_${tag}`, cylX(0.001, 0.008, 10), 'steel_shaft', seg0, 'drive');
+    const cpin = mesh(`slot_pin_${tag}`, cylX(pinR, 0.008, 10), 'steel_shaft', seg0, 'drive');
     posed.push(cpin);
     register(`rocker ${tag}`, plateI?.material_id, 'crank, rockers and gearbox plates', 'drive', [rk]);
-    register(`hinge bearings ${tag}`, bearing?.id, 'bearing', 'drive', hb);
+    if (hb.length) register(`hinge ${jh.kind}s ${tag}`, jh.id, jh.kind, 'drive', hb);
     // coupler: 4 mm rod of length b with an eye at each end
     const cs = spec(coupI?.material_id);
     const cn = group(`coupler_${tag}`, root, 'drive');
@@ -680,14 +799,21 @@ function buildLinkage(ctx) {
     const rod = mesh(`coupler_rod_${tag}`, cylZ(cs.od_mm / 2000, rodLen - 0.008, 16), 'carbon_pultruded', cn, 'drive', coupI?.material_id);
     rod.rotation.x = -Math.PI / 2; // +z -> +y
     rod.position.y = 0.004;
-    const eyes = [];
+    const eyes = [], eyeBush = [];
     for (const y of [0, rodLen]) {
-      const e = mesh(`coupler_eye_${tag}_${y ? 'top' : 'bot'}`, ringX(0.0042, 0.001, 0.003), 'alu_machined', cn, 'drive');
+      const ri = jc ? jc.dims.D / 2 : 0.001;
+      const e = mesh(`coupler_eye_${tag}_${y ? 'top' : 'bot'}`, ringX(ri + 0.0022, ri, Math.max(0.003, jc?.dims.B ?? 0)), 'alu_machined', cn, 'drive');
       e.position.y = y;
       eyes.push(e);
+      if (jc) {
+        const b = ctx.journalMesh(`coupler_${jc.kind}_${tag}_${y ? 'top' : 'bot'}`, jc, cn, 'drive');
+        b.position.y = y;
+        eyeBush.push(b);
+      }
     }
     posed.push(cn);
     register(`coupler ${tag}`, coupI?.material_id, 'couplers', 'drive', [rod, ...eyes]);
+    if (eyeBush.length) register(`coupler eye ${jc.kind}s ${tag}`, jc.id, jc.kind, 'drive', eyeBush);
     accentLine(`coupler_line_${tag}`, [[0, 0, 0], [0, rodLen, 0]], cn, 'drive', false);
     drive[tag] = { rocker: rk, coupler: cn, pin: cpin, x: xr };
   }
@@ -701,8 +827,8 @@ function buildCrank(ctx) {
   const law = model.law;
   const plateI = structItem(/crank, rockers/);
   const coupI = structItem(/couplers/);
-  const bearing = bomPart('bearing');
-  const bd = (spec(bearing?.id).dimensions_mm_d_D_B ?? '4x9x2.5').split('x').map((v) => +v / 1000);
+  const jk = ctx.journal('crank'), jc = ctx.journal('coupler');
+  const bd = jk ? [jk.dims.d, jk.dims.D, jk.dims.B] : [0.004, 0.009, 0.0025];
   const plate = 0.002;
   // crank disc and pin
   const crank = group('crank', root, 'drive');
@@ -717,7 +843,7 @@ function buildCrank(ctx) {
   const crankDisc = mesh('crank_disc', dg, 'carbon_plate', crank, 'drive', plateI?.material_id);
   crankDisc.position.x = P.crankArm;
   const pinLen = P.crankArm - P.couplerL + 0.004;
-  const crankPin = mesh('crank_pin', cylX(0.001, pinLen, 12), 'steel_shaft', crank, 'drive');
+  const crankPin = mesh('crank_pin', cylX(jc ? jc.dims.d / 2 : 0.001, pinLen, 12), 'steel_shaft', crank, 'drive');
   crankPin.position.set(P.crankArm - pinLen / 2 + 0.001, law.a, 0); // pin at +y in the crank frame
   posed.push(crank);
   register('crank', plateI?.material_id, 'crank, rockers and gearbox plates', 'drive', [crankDisc, crankPin]);
@@ -733,8 +859,8 @@ function buildGears(ctx) {
   const law = model.law;
   const plateI = structItem(/crank, rockers/);
   const coupI = structItem(/couplers/);
-  const bearing = bomPart('bearing');
-  const bd = (spec(bearing?.id).dimensions_mm_d_D_B ?? '4x9x2.5').split('x').map((v) => +v / 1000);
+  // each shaft's journal (the crank is shaft 0): bore for the shaft and gears, outside diameter for the plate hole
+  const sj = (k) => (k === 0 ? ctx.journal('crank') : ctx.journal('shaft', k))?.dims ?? { d: 0.004, D: 0.009 };
   const plate = 0.002;
   // gears: one node per gear, named by stage (stage 1 is the motor stage); shafts run plate to plate
   drive.gears = [];
@@ -745,7 +871,7 @@ function buildGears(ctx) {
       node.position.set(x, centre[1], centre[0]);
       const isSteel = /SCM|steel/i.test(gear.material);
       const hub = isSteel && gear.hub && gear.hubW > 0;
-      const bore = gear.bore || (shaftIndex === shaftsN.length - 1 ? (spec(model.design.motor.id).shaft_mm ?? 5) / 1000 : bd[0]);
+      const bore = gear.bore || (shaftIndex === shaftsN.length - 1 ? (spec(model.design.motor.id).shaft_mm ?? 5) / 1000 : sj(shaftIndex).d);
       const key = hub ? (bore >= 0.012 ? 0.005 : 0.003) : 0;
       const g = gearGeometry(gear.z, gear.m, gear.face, bore, { hubR: hub ? gear.hub / 2 : 0, hubW: hub ? gear.hubW : 0, key });
       const o = mesh(`${name}_teeth`, g, isSteel ? 'steel_ground' : 'acetal', node, 'drive', gear.id);
@@ -768,8 +894,8 @@ function buildGears(ctx) {
       o.position.set((x0 + x1) / 2, centre[1], centre[0]);
       return o;
     };
-    shaft('shaft_crank', shaftsN[0], P.crankArm - 0.001, P.plateFwd + 0.002, bd[0] / 2);
-    for (let j = 1; j < shaftsN.length - 1; j++) shaft(`shaft_${j}`, shaftsN[j], P.plateAft - 0.002, P.plateFwd + 0.002, bd[0] / 2);
+    shaft('shaft_crank', shaftsN[0], P.crankArm - 0.001, P.plateFwd + 0.002, sj(0).d / 2);
+    for (let j = 1; j < shaftsN.length - 1; j++) shaft(`shaft_${j}`, shaftsN[j], P.plateAft - 0.002, P.plateFwd + 0.002, sj(j).d / 2);
     // gearbox plates: a rounded hull around every shaft, bearing seats for the crank and intermediate shafts
     const r = 0.0085;
     const ring = [];
@@ -782,15 +908,11 @@ function buildGears(ctx) {
       sh.closePath();
       shaftsN.forEach((c, i) => {
         const h = new THREE.Path();
-        h.absarc(-c[0], c[1], i === shaftsN.length - 1 ? 0.0035 : bd[1] / 2, 0, TWO_PI, true);
+        h.absarc(-c[0], c[1], i === shaftsN.length - 1 ? 0.0035 : sj(i).D / 2, 0, TWO_PI, true);
         sh.holes.push(h);
       });
       return sh;
     };
-    // the BOM's bearings: two per shoulder hinge first, then two per gearbox shaft, then the elbows
-    const nBear = bearing?.count ?? 0;
-    let bearLeft = Math.max(0, nBear - 4);
-    model._elbowBearings = 0;
     const plates = [];
     for (const [name, x] of [['plate_aft', P.plateAft], ['plate_fwd', P.plateFwd]]) {
       const g = new THREE.ExtrudeGeometry(plateShape(), { depth: plate, bevelEnabled: false, curveSegments: 24 });
@@ -800,16 +922,9 @@ function buildGears(ctx) {
       o.position.x = x;
       plates.push(o);
     }
-    for (let j = 0; j < shaftsN.length - 1; j++) for (const [name, x] of [['aft', P.plateAft], ['fwd', P.plateFwd]]) {
-      if (bearLeft <= 0) break;
-      bearLeft--;
-      const b = mesh(`gearbox_bearing_${j}_${name}`, ringX(bd[1] / 2, bd[0] / 2, bd[2]), 'steel_ground', root, 'drive', bearing?.id);
-      b.position.set(x, shaftsN[j][1], shaftsN[j][0]);
-      plates.push(b);
-    }
-    model._elbowBearings = bearLeft;
-    register('gearbox plates', plateI?.material_id, 'crank, rockers and gearbox plates', 'drive', plates.filter((p) => /plate_(aft|fwd)$/.test(p.name)));
-    register('gearbox bearings', bearing?.id, 'bearing', 'drive', plates.filter((p) => /bearing/.test(p.name)));
+    register('gearbox plates', plateI?.material_id, 'crank, rockers and gearbox plates', 'drive', plates);
+    gearboxJournals(ctx, shaftsN);
+    buildEncoder(ctx, shaftsN[0]);
     const standoffs = [];
     const lowest = shaftsN.reduce((m, c) => (c[1] < m[1] ? c : m), shaftsN[0]);
     const highest = shaftsN.reduce((m, c) => (c[1] > m[1] ? c : m), shaftsN[0]);
@@ -836,8 +951,6 @@ function buildMotor(ctx) {
   const law = model.law;
   const plateI = structItem(/crank, rockers/);
   const coupI = structItem(/couplers/);
-  const bearing = bomPart('bearing');
-  const bd = (spec(bearing?.id).dimensions_mm_d_D_B ?? '4x9x2.5').split('x').map((v) => +v / 1000);
   const plate = 0.002;
   // motor: outrunner bell, mount, shaft to the pinion
   const mp = model.layout.parts.find((p) => p.name === 'motor');
@@ -871,8 +984,9 @@ function buildMotor(ctx) {
 function buildBoxParts(ctx) {
   const { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows } = ctx;
   const servos = {};
-  for (const p of model.layout.parts) {
-    if (p.name === 'motor') continue;
+  for (const lp of model.layout.parts) {
+    if (lp.name === 'motor') continue;
+    const p = lp.name === 'fc' ? flightController(model, lp) : lp;
     const b = p.box;
     const node = group(`part_${p.name}`, root, p.subsystem);
     node.position.set(b.cx, b.cy, b.cz);
@@ -907,6 +1021,20 @@ function buildBoxParts(ctx) {
     register(p.name, p.id, p.role, p.subsystem, objs);
   }
   return servos;
+}
+
+/**
+ * The flight controller as its own BOM line. layoutParts (shared with src/design/fit.js, so left as it is) finds the
+ * FC by the first role that mentions "flight controller", which v14's ESC role does ("the flight controller's 5 V
+ * BEC"), and so places the ESC's id and size there. Draw the real FC, sized from its own catalogue entry as
+ * layoutParts sizes boards, at the place the packing gave it.
+ */
+function flightController(model, lp) {
+  const fc = model.design.bom.parts.find((p) => /^flight controller/.test(p.role));
+  if (!fc || fc.id === lp.id) return lp;
+  const [sx, sy, sz] = sizeOf(model.parts[fc.id]?.specs, fc.unit_mass_g ?? model.parts[fc.id]?.mass_g, (v) => [v[0], v[2], v[1]], 1850, [], 'flight controller');
+  const box = { ...lp.box, sx, sy, sz, x0: lp.box.cx - sx / 2, x1: lp.box.cx + sx / 2, y0: lp.box.cy - sy / 2, y1: lp.box.cy + sy / 2, z0: lp.box.cz - sz / 2, z1: lp.box.cz + sz / 2 };
+  return { ...lp, id: fc.id, role: fc.role, box };
 }
 
 /** Wiring (inside the 15% margin). */
@@ -1003,7 +1131,8 @@ function poseWing(ctx, tag, phi, theta, explodeWing) {
         const q = sec[up ? nSec - 1 - c : c - nSec + 1];
         // the film wraps the edge rods, so the section never closes to zero thickness (no degenerate normals)
         const half = Math.max(q.half, edgeR / fst.chord[i]);
-        const hh = up ? q.cam + half : q.cam - half;
+        const d = i * nSec + (up ? nSec - 1 - c : c - nSec + 1);
+        const hh = up ? q.cam + half - fst.dipUp[d] : q.cam - half - fst.dipLo[d];
         sectionPoint(model, fst, fs, i, q.xi, hh, tmp);
         v.set(tmp[0] + lift * fs.b[j], tmp[1] + lift * fs.b[j + 1], tmp[2] + lift * fs.b[j + 2]).applyMatrix4(_inv);
         pos[o++] = v.x;

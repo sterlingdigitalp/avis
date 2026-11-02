@@ -78,6 +78,17 @@ function brushed(g, n, base = 170) {
   }
 }
 
+// Oracover Air Light (film-oracover-air-light, catalogue specs: 12 um, 17 g/m2, no colour recorded): clear,
+// unpigmented polyester (PET) film, IOR about 1.64. A thin slab has two parallel air/PET interfaces; for a single
+// interface the normal-incidence Fresnel reflectance is r = ((n-1)/(n+1))^2, and the two interfaces combine
+// (incoherently, no colour fringing) to about 2r/(1+r) ~ 11%, rising toward a mirror at grazing incidence. Three.js
+// only derives r itself from `ior` (one interface), so `specularIntensity` scales that up to the two-interface
+// figure; the Schlick curve built into the specular BRDF then supplies the grazing-angle rise for free.
+export const FILM_IOR = 1.64;
+const filmR1 = ((FILM_IOR - 1) / (FILM_IOR + 1)) ** 2;
+export const FILM_REFLECTANCE = (2 * filmR1) / (1 + filmR1); // ~0.111 at normal incidence
+const filmSpecularIntensity = FILM_REFLECTANCE / filmR1; // ~1.89, see test/materials.test.mjs
+
 /** All materials, by name. `accent` is the single colour that marks the part working. */
 export function makeMaterials({ textures = true, envIntensity = 0.6 } = {}) {
   const T = textures ? (f, o) => canvasTex(256, f, o) : () => null;
@@ -93,25 +104,32 @@ export function makeMaterials({ textures = true, envIntensity = 0.6 } = {}) {
     m[name] = mat;
     return mat;
   };
-  std('carbon_woven', { color: weaveTex ? 0xffffff : 0x1d1f22, map: weaveTex, roughness: 0.32, metalness: 0.0, clearcoat: 0.9, clearcoatRoughness: 0.12 });
-  std('carbon_pultruded', { color: uniTex ? 0xffffff : 0x15171a, map: uniTex, roughness: 0.28, metalness: 0.0, clearcoat: 0.6, clearcoatRoughness: 0.2 });
+  // woven tube: clear-coated twill, a hard glossy resin coat over the weave
+  std('carbon_woven', { color: weaveTex ? 0xffffff : 0x1d1f22, map: weaveTex, roughness: 0.3, metalness: 0.0, clearcoat: 1.0, clearcoatRoughness: 0.08 });
+  // pultruded rod: satin, unidirectional fibre streaks, no separate coat (just the pultrusion resin's own sheen)
+  std('carbon_pultruded', { color: uniTex ? 0xffffff : 0x15171a, map: uniTex, roughness: 0.42, metalness: 0.0, clearcoat: 0.18, clearcoatRoughness: 0.3 });
   std('carbon_plate', { color: plateTex ? 0xffffff : 0x1b1d20, map: plateTex, roughness: 0.4, metalness: 0.0, clearcoat: 0.5, clearcoatRoughness: 0.25 });
   std('balsa', { color: balsaTex ? 0xffffff : 0xc9a77a, map: balsaTex, roughness: 0.75, metalness: 0.0, sheen: 0.3, sheenColor: new THREE.Color(0xe8d2ad) });
-  std('film_wing', { color: 0xd8e3ec, roughness: 0.22, metalness: 0.0, transmission: 0.0, transparent: true, opacity: 0.26, side: THREE.DoubleSide, depthWrite: false, clearcoat: 0.35, clearcoatRoughness: 0.15, specularIntensity: 0.6 });
-  std('film_shell', { color: 0xdde4ea, roughness: 0.2, metalness: 0.0, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false, clearcoat: 1.0, clearcoatRoughness: 0.1 });
-  std('steel_ground', { color: 0xb9bcc0, map: brushTex, roughness: 0.3, metalness: 1.0 });
-  std('steel_shaft', { color: 0xd0d3d6, roughness: 0.2, metalness: 1.0 });
+  // wing covering, Oracover Air Light: clear film, not glass (transmission 0.97 leaves ~3% diffuse haze), thin-walled
+  // (thickness 0, no interior volume to refract through), smooth but not a mirror (roughness in 0.06-0.08).
+  std('film_wing', { color: 0xffffff, roughness: 0.08, metalness: 0.0, transmission: 0.97, thickness: 0, ior: FILM_IOR, specularIntensity: filmSpecularIntensity, side: THREE.DoubleSide });
+  // fuselage pod covering and tail film: the same Oracover Air Light, so the same optical parameters
+  std('film_shell', { color: 0xffffff, roughness: 0.08, metalness: 0.0, transmission: 0.97, thickness: 0, ior: FILM_IOR, specularIntensity: filmSpecularIntensity, side: THREE.DoubleSide });
+  std('steel_ground', { color: 0xb9bcc0, map: brushTex, roughness: 0.3, metalness: 1.0, anisotropy: 0.65, anisotropyRotation: 0 });
+  // a turned/ground shaft: CylinderGeometry's U wraps the circumference and V runs the length, so the machining
+  // marks (and the anisotropic highlight they cause) run along V -- rotate the default U-aligned anisotropy 90 deg.
+  std('steel_shaft', { color: 0xd0d3d6, roughness: 0.2, metalness: 1.0, anisotropy: 0.7, anisotropyRotation: Math.PI / 2 });
   std('acetal', { color: 0xbdb7aa, roughness: 0.55, metalness: 0.0, sheen: 0.15, sheenColor: new THREE.Color(0xffffff) });
-  std('alu_anodised', { color: 0x3a3f46, map: brushTex, roughness: 0.38, metalness: 0.9 });
-  std('alu_machined', { color: 0xc8ccd1, map: brushTex, roughness: 0.32, metalness: 1.0 });
-  std('servo_case', { color: 0x2b2f35, map: brushTex, roughness: 0.42, metalness: 0.85 });
+  std('alu_anodised', { color: 0x3a3f46, map: brushTex, roughness: 0.38, metalness: 0.9, anisotropy: 0.6, anisotropyRotation: 0 });
+  std('alu_machined', { color: 0xc8ccd1, map: brushTex, roughness: 0.32, metalness: 1.0, anisotropy: 0.6, anisotropyRotation: 0 });
+  std('servo_case', { color: 0x2b2f35, map: brushTex, roughness: 0.42, metalness: 0.85, anisotropy: 0.5, anisotropyRotation: 0 });
   std('battery_wrap', { color: 0x1f2226, roughness: 0.35, metalness: 0.2, clearcoat: 0.8, clearcoatRoughness: 0.3 });
   std('esc_wrap', { color: 0x24272b, roughness: 0.5, metalness: 0.0, clearcoat: 0.6, clearcoatRoughness: 0.35 });
   std('pcb', { color: 0x14301f, roughness: 0.5, metalness: 0.1, clearcoat: 0.7, clearcoatRoughness: 0.2 });
   std('gps_case', { color: 0x2a2d31, roughness: 0.55, metalness: 0.0 });
   std('wire', { color: 0x16181b, roughness: 0.55, metalness: 0.0, sheen: 0.4, sheenColor: new THREE.Color(0x555b63) });
   std('copper', { color: 0xc98a5b, roughness: 0.3, metalness: 1.0 });
-  std('titanium', { color: 0x9a9690, roughness: 0.35, metalness: 1.0 });
+  std('titanium', { color: 0x9a9690, roughness: 0.35, metalness: 1.0, anisotropy: 0.55, anisotropyRotation: Math.PI / 2 });
   std('magnet', { color: 0x6d7177, roughness: 0.4, metalness: 0.9 });
   std('accent', { color: new THREE.Color(ACCENT), emissive: new THREE.Color(ACCENT), emissiveIntensity: 0.6, roughness: 0.4, metalness: 0.0 });
   return m;

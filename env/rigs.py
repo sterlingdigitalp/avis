@@ -59,6 +59,10 @@ class Surface:
         fc, fr = c - c0, r - r0
         return d[r0, c0] * (1 - fc) * (1 - fr) + d[r0, c0 + 1] * fc * (1 - fr) + d[r0 + 1, c0] * (1 - fc) * fr + d[r0 + 1, c0 + 1] * fc * fr
 
+    def canopy(self, bx, by):
+        """Lidar canopy height above the ground at Blender (x, y)."""
+        return self._grid(self.near, np.asarray(bx, float), -np.asarray(by, float), self.can) * 0.25
+
     def top(self, bx, by):
         """Canopy top height at Blender (x, y)."""
         z = -np.asarray(by, float)
@@ -147,6 +151,14 @@ def project(cam, tgt, lens, pts):
     return np.stack([(d * right).sum(-1) / zs * k, (d * up).sum(-1) / zs * k / ASPECT, z], -1)
 
 
+def skyline(ground, cam, az, near=20.0, far=16000.0, n=320):
+    """Elevation angle (rad) of the terrain skyline seen from `cam` on bearing `az` (rad, clockwise from +y): the
+    highest terrain point from `near` to `far` metres out, heights from `ground` (geo.Ground, every terrain level)."""
+    d = np.geomspace(near, far, n)
+    h = ground(cam[0] + d * np.sin(az), cam[1] + d * np.cos(az))
+    return float(np.max(np.where(np.isnan(h), -np.inf, np.arctan2(h - cam[2], d))))
+
+
 # --- the bird's extent, from the design file ---
 
 def load_design(name):
@@ -184,19 +196,36 @@ def stroke_envelope(design, amp):
     return np.vstack([bird_points(design, lim), bird_points(design, -lim), bird_points(design, 0.0)])
 
 
+def wingspan(design):
+    """Tip to tip with the wings level, from the design's hinge and segment lengths."""
+    w = design["wing"]
+    return 2.0 * (w["hinge"][2] + sum(sg["length"] for sg in w["segments"]))
+
+
 def body_centre(design):
     """Midpoint of nose and tail on the body axis, body frame: where the eye puts the bird, wings aside."""
     xs = [sec["x_m"] for sec in design["body"]["loft"]["sections"]]
     return np.array([0.5 * (max(xs) + min(xs)), 0.0, 0.0])
 
 
-def fit_distance(local_pts, offset_dir, lens, fill, centre, axis="max"):
-    """Distance along `offset_dir` (unit, path frame; camera = centre + offset_dir * D, looking at `centre`) at
-    which the points' projection reaches `fill` of the frame: axis 'max' fits the largest excursion from the frame
-    centre on either axis, 'width' sets the full width. Bisection on the real perspective projection."""
+def tilt(cam, tgt, up, lens):
+    """Aim point that puts `tgt` at `up` of the half frame height above the frame centre (negative: below), no roll:
+    the view turns about the camera's horizontal right axis. One camera or one per row."""
+    fwd, _, upv = look_basis(cam, tgt)
+    a = np.arctan(up * (SENSOR_W / 2) * ASPECT / lens)
+    d = np.linalg.norm(np.asarray(tgt, float) - np.asarray(cam, float), axis=-1, keepdims=True)
+    return np.asarray(cam, float) + (fwd * np.cos(a) - upv * np.sin(a)) * d
+
+
+def fit_distance(local_pts, offset_dir, lens, fill, centre, axis="max", up=0.0):
+    """Distance along `offset_dir` (unit, path frame; camera = centre + offset_dir * D, looking at `centre`, tilted
+    so `centre` sits `up` of the half height above the frame centre) at which the points' projection reaches `fill`
+    of the frame: axis 'max' fits the largest excursion from the frame centre on either axis, 'width' sets the full
+    width. Bisection on the real perspective projection."""
 
     def size(D):
-        q = project(centre + offset_dir * D, centre, lens, local_pts)
+        cam = centre + offset_dir * D
+        q = project(cam, tilt(cam, centre, up, lens), lens, local_pts)
         if axis == "width":
             return 0.5 * (q[:, 0].max() - q[:, 0].min())
         return np.abs(q[:, :2]).max()
@@ -247,11 +276,11 @@ def beat_window(fl, a, b):
     return frames_per(fl, float(np.clip(1.0 / max(hz, 1e-3), 0.25, 1.2)))
 
 
-def on_bird(fl, s, span, offset, lens, fits, centre_body, clearance):
+def on_bird(fl, s, span, offset, lens, fits, centre_body, clearance, up=0.0):
     """A camera that rides with the bird: `offset` (path frame forward, right, up; its direction only) from the
     point `centre_body` of the bird, at the distance where the bird's extremities over the span meet every
-    (fill, axis) in `fits` (see fit_distance), looking at that point. Position and attitude are averaged over one
-    wingbeat so the camera glides over it."""
+    (fill, axis) in `fits` (see fit_distance), looking at that point, or tilted to hold it `up` of the half height
+    above the frame centre. Position and attitude are averaged over one wingbeat so the camera glides over it."""
     a, b = span
     win = beat_window(fl, a, b)
     p = smooth(fl["pos"], win)
@@ -263,9 +292,10 @@ def on_bird(fl, s, span, offset, lens, fits, centre_body, clearance):
     local = np.concatenate([body_offset(axes, env, i) @ np.stack([f[i], r[i], u[i]], 1) for i in idx])
     centre = np.mean([body_offset(axes, centre_body, i) @ np.stack([f[i], r[i], u[i]], 1) for i in idx], 0)
     o = offset / np.linalg.norm(offset)
-    D = max(fit_distance(local, o, lens, fill, centre, axis) for fill, axis in fits)
+    D = max(fit_distance(local, o, lens, fill, centre, axis, up) for fill, axis in fits)
     tgt = p + body_offset(axes, centre_body)
-    return dict(frames=span, cam=lift_clear(tgt + to_world(o * D, f, r, u), s, margin=clearance), target=tgt, lens=lens)
+    cam = lift_clear(tgt + to_world(o * D, f, r, u), s, margin=clearance)
+    return dict(frames=span, cam=cam, target=tilt(cam, tgt, up, lens) if up else tgt, lens=lens)
 
 
 # --- water and banks from the 2 m lidar (out/env/terrain, written by build_terrain.py) ---
@@ -318,6 +348,16 @@ class Banks:
         y = self.e0[3] - (rr + rs.start) * self.res
         keep = np.hypot(x - cx, y - cy) <= radius
         return x[keep], y[keep]
+
+
+_GROUND = []
+
+
+def ground():
+    """geo.Ground, loaded once: every terrain level, for skylines."""
+    if not _GROUND:
+        _GROUND.append(geo.Ground())
+    return _GROUND[0]
 
 
 _BANKS = []
@@ -396,15 +436,21 @@ def track_side_long(fl, s, span):
                    body_centre(design), 3.0)
 
 
+TREETOP_LENS = 40.0
+TREETOP_SIDE, TREETOP_ABOVE = 9.0, 7.0  # metres from the bird's path at mid-span, to the sun side and above it
+
+
 def treetop_pass(fl, s, span):
+    """Hovering over the treetops beside the bird's path, locked off, panning as it flies past: nearest at mid-span,
+    TREETOP_SIDE to the sun side of the path and TREETOP_ABOVE above it, so the camera looks down and the forest
+    is the background on every frame."""
     a, b = span
     m = (a + b) // 2
     p = smooth(fl["pos"], 15)
     f, r, u = frames_of(fl)
-    c = p[m] + r[m] * 9.0 - f[m] * 2.0 - u[m] * 3.0
-    c[2] = max(c[2], float(s.top(np.array([c[0]]), np.array([c[1]]))[0]) + 1.5)
-    c = clear_sight(c, p[a:b], s, margin=1.0)
-    return dict(frames=span, cam=np.tile(c, (len(p), 1)), target=p, lens=26.0)
+    c = p[m] + r[m] * sun_side(fl, r) * TREETOP_SIDE + np.array([0.0, 0.0, TREETOP_ABOVE])
+    c[2] = max(c[2], float(s.top(np.array([c[0]]), np.array([c[1]]))[0]) + 3.0)
+    return dict(frames=span, cam=np.tile(c, (len(p), 1)), target=p, lens=TREETOP_LENS)
 
 
 def wide_valley(fl, s, span):
@@ -430,17 +476,21 @@ def under_wing(fl, s, span):
     return dict(frames=span, cam=cam, target=tgt, lens=20.0)
 
 
-UNDER_FULL_LENS = 24.0
-UNDER_FULL_FILL = 0.85  # the stroke envelope's half-extent over the frame's half-extent
+UNDER_FULL_LENS = 20.0
+UNDER_FULL_FILL = 0.9  # the stroke envelope's largest excursion from the frame centre over the frame's half-extent
+UNDER_FULL_UP = 0.35  # the bird held this far above the frame centre, so the horizon and the peaks sit low
+UNDER_FULL_OFFSET = (-0.66, 0.4, -0.56)  # path frame (forward, right to the sun, up): behind, beside, 36 deg below
 
 
 def under_wing_full(fl, s, span):
-    """Below and behind the sun-side wing looking up along the body, close, with both wingtips at either end of the
-    stroke, the nose and the tail inside the frame on a normal lens. Distance from the design's real geometry."""
+    """Below and behind the sun-side wing looking up at the underside, close, with both wingtips at either end of the
+    stroke, the nose and the tail inside the frame; the bird high in the frame and the valley's skyline low in it.
+    Distance from the design's real geometry."""
     side = sun_side(fl, frames_of(fl)[1])
     env = stroke_envelope(load_design(fl["design"]), fl["amplitude"][span[0]:span[1]].max())
-    return on_bird(fl, s, span, np.array([-0.62, 0.38 * side, -0.69]), UNDER_FULL_LENS, [(UNDER_FULL_FILL, "max")],
-                   0.5 * (env.min(0) + env.max(0)), 1.0)
+    o = np.array(UNDER_FULL_OFFSET) * np.array([1.0, side, 1.0])
+    return on_bird(fl, s, span, o, UNDER_FULL_LENS, [(UNDER_FULL_FILL, "max")], 0.5 * (env.min(0) + env.max(0)), 1.0,
+                   up=UNDER_FULL_UP)
 
 
 def lead_front(fl, s, span):
@@ -450,24 +500,110 @@ def lead_front(fl, s, span):
     return dict(frames=span, cam=lift_clear(cam, s), target=p, lens=45.0)
 
 
+RIDGE_LENS = 135.0
+RIDGE_FILL = 0.14  # the bird's span over the frame width, at mid-span
+
+
 def ridge_rise(fl, s, span):
+    """Locked off on the mountainside, panning on a long lens as the bird banks along the crest. The camera stands
+    where the bird's span covers RIDGE_FILL of the frame width at mid-span, on one of 36 bearings and four heights
+    around it: above the canopy, with a clear sight line on every frame, the bird seen against the mountainside
+    (below the terrain skyline) on every frame; of those, the one that sees it against forest (canopy 5 m or taller
+    where the sight line past it lands) on the most frames, then with the sun most behind it."""
     a, b = span
+    m = (a + b) // 2
     p = smooth(fl["pos"], 25)
-    f, r, u = frames_of(fl)
-    end = p[b - 1]
-    # Fixed on the east shoulder of the ridge; the bird climbs along the crest with the wall of Rundle filling the frame.
-    c = end - f[b - 1] * 210.0 - r[b - 1] * 80.0
-    c[2] = float(s.top(np.array([c[0]]), np.array([c[1]]))[0]) + 6.0
-    tgt = p + np.array([0, 0, 2.0])
-    c = clear_sight(c, p[a:b], s)  # nearby crowns on the slope must not wall off the bird
-    return dict(frames=span, cam=np.tile(c, (len(p), 1)), target=tgt, lens=85.0)
+    D = wingspan(load_design(fl["design"])) * (RIDGE_LENS / SENSOR_W) / RIDGE_FILL
+    _, sun_az, _ = geo.sun_vector()
+    birds = p[a:b][:: max(1, (b - a) // 8)]
+    best, best_score = None, -np.inf
+    for k in range(36):
+        az = 2 * math.pi * k / 36
+        for dz in (-12.0, -4.0, 4.0, 12.0):
+            c = p[m] + np.array([D * math.sin(az), D * math.cos(az), dz])
+            if c[2] < float(s.top(np.array([c[0]]), np.array([c[1]]))[0]) + 3.0:
+                continue
+            if clear_sight(c, birds, s)[2] > c[2] + 1e-6:
+                continue
+            score = against_terrain(c, birds)
+            if score <= 0:
+                continue
+            view = np.arctan2(birds[:, 0] - c[0], birds[:, 1] - c[1])
+            hits = sight_hits(c, birds, s)
+            seen = ~np.isnan(hits[:, 0])
+            forest = np.zeros(len(hits), bool)
+            forest[seen] = s.canopy(hits[seen, 0], hits[seen, 1]) >= 5.0
+            score = float(forest.mean()) + float(_angle_deg(view, math.radians(sun_az)).min()) / 1000.0
+            if score > best_score:
+                best, best_score = c, score
+    if best is None:
+        raise ValueError("ridge_rise: no stand %.0f m from the bird sees it against the mountainside over this span" % D)
+    return dict(frames=span, cam=np.tile(best, (len(p), 1)), target=p, lens=RIDGE_LENS)
+
+
+def against_terrain(cam, birds, margin_deg=0.5):
+    """Smallest angle (deg) by which the terrain skyline behind each bird position stands above it, seen from cam:
+    positive when the bird is seen against the land on every sample."""
+    out = np.inf
+    for q in birds:
+        d = q - cam
+        el = math.atan2(d[2], math.hypot(d[0], d[1]))
+        sky = skyline(ground(), cam, math.atan2(d[0], d[1]), near=max(20.0, 1.05 * math.hypot(d[0], d[1])))
+        out = min(out, math.degrees(sky - el) - margin_deg)
+    return out
+
+
+TOP_DOWN_LEAD = 1.0  # metres ahead of the bird the camera aims: room ahead, the bird clear of the readout below
 
 
 def top_down(fl, s, span):
     p = smooth(fl["pos"], 25)
     f, r, u = frames_of(fl)
     cam = p + u * 11.0 - f * 7.0 + r * 1.5
-    return dict(frames=span, cam=cam, target=p + f * 3.0, lens=30.0)
+    return dict(frames=span, cam=cam, target=p + f * TOP_DOWN_LEAD, lens=30.0)
+
+
+RIVER_PASS_LENS = 55.0
+RIVER_PASS_SIDE = 12.0  # metres beside the bird's path at mid-span
+RIVER_PASS_HEIGHTS = (11.0, 13.0, 15.0)  # metres above it: the stands tried
+
+
+def sight_hits(cam, birds, s, step=0.5, reach=900.0):
+    """Ground points (x, y) where each sight line from `cam` past a bird position meets the lidar canopy/ground."""
+    out = []
+    for q in birds:
+        ray = (q - cam) / np.linalg.norm(q - cam)
+        t = np.arange(1.0, reach, step)
+        pts = q[None] + t[:, None] * ray[None]
+        hit = np.nonzero(pts[:, 2] < s.top(pts[:, 0], pts[:, 1]))[0]
+        out.append(pts[hit[0], :2] if len(hit) else np.array([np.nan, np.nan]))
+    return np.array(out)
+
+
+def river_pass(fl, s, span):
+    """Hovering beside the bird's path where it crosses the Bow, locked off, panning as it flies past, looking down
+    so the river is behind it. Of 2 sides x 3 places along the path x 3 heights (RIVER_PASS_SIDE beside the path,
+    RIVER_PASS_HEIGHTS above it: looking down 40-50 degrees as it passes, as the Bow is narrow), the stand whose
+    sight lines past the bird end in water on the most frames; ties go to the sun side."""
+    a, b = span
+    m = (a + b) // 2
+    p = smooth(fl["pos"], 15)
+    f, r, u = frames_of(fl)
+    sun = sun_side(fl, r)
+    birds = p[a:b][:: max(1, (b - a) // 12)]
+    best, best_score = None, -np.inf
+    for side in (sun, -sun):
+        for along in (-8.0, 0.0, 8.0):
+            for above in RIVER_PASS_HEIGHTS:
+                c = p[m] + r[m] * side * RIVER_PASS_SIDE + f[m] * along + np.array([0.0, 0.0, above])
+                c[2] = max(c[2], float(s.top(np.array([c[0]]), np.array([c[1]]))[0]) + 3.0)
+                hits = sight_hits(c, birds, s)
+                ok = ~np.isnan(hits[:, 0])
+                wet = banks().is_water(hits[ok, 0], hits[ok, 1]).sum() if ok.any() else 0
+                score = wet + 0.5 * (side == sun)
+                if score > best_score:
+                    best, best_score = c, score
+    return dict(frames=span, cam=np.tile(best, (len(p), 1)), target=p, lens=RIVER_PASS_LENS)
 
 
 RIVER_LENS = 20.0
@@ -483,9 +619,9 @@ def river_low(fl, s, span):
 
 SHOTS = dict(track_side=track_side, track_side_long=track_side_long, treetop_pass=treetop_pass, wide_valley=wide_valley,
              under_wing=under_wing, under_wing_full=under_wing_full, lead_front=lead_front, ridge_rise=ridge_rise,
-             top_down=top_down, river_low=river_low)
+             top_down=top_down, river_low=river_low, river_pass=river_pass)
 
 # span used when the caller gives none: fractions of the log, for env's own layout stills
 DEFAULT_WINDOW = dict(track_side=(0.05, 0.40), track_side_long=(0.05, 0.40), treetop_pass=(0.10, 0.30), wide_valley=(0.0, 1.0),
                       under_wing=(0.35, 0.55), under_wing_full=(0.35, 0.55), lead_front=(0.25, 0.50), ridge_rise=(0.60, 1.0),
-                      top_down=(0.05, 0.30), river_low=(0.0, 0.28))
+                      top_down=(0.05, 0.30), river_low=(0.0, 0.28), river_pass=(0.18, 0.25))

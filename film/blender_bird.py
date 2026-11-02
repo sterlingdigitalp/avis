@@ -136,8 +136,9 @@ def balsa(name):
     w.inputs["Detail"].default_value = 3.0
     nt.links.new(vec, w.inputs["Vector"])
     ramp = nt.nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].color = (0.62, 0.45, 0.27, 1)
-    ramp.color_ramp.elements[1].color = (0.78, 0.62, 0.42, 1)
+    # grain either side of the page's balsa (#c9a77a, linear 0.58 0.39 0.19), so the wood reads as wood in full sun
+    ramp.color_ramp.elements[0].color = (0.50, 0.33, 0.16, 1)
+    ramp.color_ramp.elements[1].color = (0.66, 0.46, 0.23, 1)
     nt.links.new(w.outputs["Fac"], ramp.inputs["Fac"])
     p = _bsdf(nt, **{"Roughness": 0.72, "Subsurface Weight": 0.15, "Sheen Weight": 0.2})
     p.inputs["Subsurface Radius"].default_value = (0.004, 0.0025, 0.0012)
@@ -146,29 +147,57 @@ def balsa(name):
     return m
 
 
-def film(name, tint=(0.9, 0.94, 0.97), clear=0.82):
-    """Oracover-type 12 um film: mostly see-through, a glossy coat, a little forward-scattered light."""
+PET_IOR = 1.64  # biaxially oriented polyester film, the base of Oracover films
+# The covering's colour: None draws the clear film. The catalogue entry (film-oracover-air-light) records no colour;
+# when it does, set the pigmented film's linear RGB here (or AVIS_FILM_RGB="r,g,b" in the environment).
+COVERING_RGB = tuple(float(v) for v in os.environ["AVIS_FILM_RGB"].split(",")) if os.environ.get("AVIS_FILM_RGB") else None
+
+
+def film(name, haze=0.03, rough=0.07, ior=PET_IOR):
+    """Clear covering film. The BOM's covering is Oracover Air Light, 12 um polyester (catalogue
+    film-oracover-air-light); the catalogue records no colour, so it is drawn as the clear film, an assumption to
+    revisit when the catalogue states one. Optically a thin slab: it reflects 2r/(1+r) of one interface's r
+    (Schlick, from the incidence angle on either side: a film has no total internal reflection), transmits the
+    rest untinted, and scatters `haze` of what it transmits (adhesive, stretch marks). Heat-shrunk film is smooth
+    but never optically flat: a little roughness on the reflection."""
+    if COVERING_RGB is not None:
+        return pigmented_film(name, COVERING_RGB, rough)
     m, nt, out = _nodes(name)
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    dot = nt.nodes.new("ShaderNodeVectorMath")
+    dot.operation = "DOT_PRODUCT"
+    nt.links.new(geo.outputs["Normal"], dot.inputs[0])
+    nt.links.new(geo.outputs["Incoming"], dot.inputs[1])
+
+    def op(kind, a, b=None):
+        n = nt.nodes.new("ShaderNodeMath")
+        n.operation = kind
+        for k, v in enumerate((a, b)):
+            if v is None:
+                continue
+            if isinstance(v, (int, float)):
+                n.inputs[k].default_value = v
+            else:
+                nt.links.new(v, n.inputs[k])
+        return n.outputs[0]
+
+    r0 = ((ior - 1) / (ior + 1)) ** 2
+    cos = op("ABSOLUTE", dot.outputs["Value"])
+    r = op("ADD", op("MULTIPLY", op("POWER", op("SUBTRACT", 1.0, cos), 5.0), 1 - r0), r0)
+    R = op("DIVIDE", op("MULTIPLY", r, 2.0), op("ADD", r, 1.0))
     tr = nt.nodes.new("ShaderNodeBsdfTransparent")
-    tr.inputs["Color"].default_value = (*tint, 1.0)
+    tr.inputs["Color"].default_value = (1, 1, 1, 1)
     tl = nt.nodes.new("ShaderNodeBsdfTranslucent")
-    tl.inputs["Color"].default_value = (0.93, 0.92, 0.88, 1.0)
+    tl.inputs["Color"].default_value = (1, 1, 1, 1)
     gl = nt.nodes.new("ShaderNodeBsdfGlossy")
-    gl.inputs["Roughness"].default_value = 0.1
+    gl.inputs["Roughness"].default_value = rough
     gl.inputs["Color"].default_value = (1, 1, 1, 1)
     m1 = nt.nodes.new("ShaderNodeMixShader")
-    m1.inputs["Fac"].default_value = 1.0 - clear
+    m1.inputs["Fac"].default_value = haze
     nt.links.new(tr.outputs[0], m1.inputs[1])
     nt.links.new(tl.outputs[0], m1.inputs[2])
-    fr = nt.nodes.new("ShaderNodeFresnel")
-    fr.inputs["IOR"].default_value = 1.45
-    # a thin film reflects less than a solid of the same index; keep the sky glint without turning the wing to a mirror
-    k = nt.nodes.new("ShaderNodeMath")
-    k.operation = "MULTIPLY"
-    k.inputs[1].default_value = 0.55
-    nt.links.new(fr.outputs[0], k.inputs[0])
     m2 = nt.nodes.new("ShaderNodeMixShader")
-    nt.links.new(k.outputs[0], m2.inputs["Fac"])
+    nt.links.new(R, m2.inputs["Fac"])
     nt.links.new(m1.outputs[0], m2.inputs[1])
     nt.links.new(gl.outputs[0], m2.inputs[2])
     nt.links.new(m2.outputs[0], out.inputs["Surface"])
@@ -179,14 +208,29 @@ def film(name, tint=(0.9, 0.94, 0.97), clear=0.82):
     return m
 
 
+def pigmented_film(name, rgb, rough):
+    """A coloured covering film: the pigment scatters, so it reads as a thin coloured skin that passes a little
+    light (a sixth, forward-scattered) rather than a window; the same glossy polyester face as the clear film."""
+    m, nt, out = _nodes(name)
+    p = _bsdf(nt, **{"Base Color": (*rgb, 1.0), "Roughness": rough, "IOR": PET_IOR, "Specular IOR Level": 0.5})
+    tl = nt.nodes.new("ShaderNodeBsdfTranslucent")
+    tl.inputs["Color"].default_value = (*rgb, 1.0)
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    mix.inputs["Fac"].default_value = 1.0 / 6.0
+    nt.links.new(p.outputs[0], mix.inputs[1])
+    nt.links.new(tl.outputs[0], mix.inputs[2])
+    nt.links.new(mix.outputs[0], out.inputs["Surface"])
+    return m
+
+
 def build_materials():
     return {
         "carbon_woven": carbon_weave("avis_carbon_woven", (260.0, 260.0, 260.0)),
         "carbon_pultruded": solid("avis_carbon_pultruded", (0.012, 0.013, 0.015), 0.24, coat=0.7, coat_rough=0.08),
         "carbon_plate": carbon_weave("avis_carbon_plate", (900.0, 900.0, 900.0), coat=0.6),
         "balsa": balsa("avis_balsa"),
-        "film_wing": film("avis_film_wing", tint=(0.92, 0.95, 0.97), clear=0.7),
-        "film_shell": film("avis_film_shell", clear=0.88),
+        "film_wing": film("avis_film_wing"),
+        "film_shell": film("avis_film_shell"),
         "steel_ground": brushed("avis_steel_ground", (0.62, 0.63, 0.64), 0.22),
         "steel_shaft": solid("avis_steel_shaft", (0.72, 0.73, 0.74), 0.15, metal=1.0),
         "acetal": solid("avis_acetal", (0.86, 0.84, 0.79), 0.38, sss=0.25),

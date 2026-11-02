@@ -8,9 +8,68 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
 export const STUDIO = { bg: '#0b0e12', floor: '#0f1318', key: '#fff1e0', rim: '#b9d4ff', fill: '#6d7c90' };
+
+/**
+ * A procedural studio light tent for PMREMGenerator.fromScene(): a few large, soft emissive panels (not Room
+ * Environment's small indoor-room light strips), positioned on the same key/rim/fill directions as the stage's own
+ * directional lights, so reflections and the direct lighting agree. Built only from primitives, no downloads.
+ */
+function buildStudioEnvironment() {
+  const env = new THREE.Scene();
+  env.name = 'studioEnvironment';
+  const panel = (w, h, color, intensity, pos) => {
+    const mat = new THREE.MeshLambertMaterial({ color: 0x000000, emissive: new THREE.Color(color), emissiveIntensity: intensity, side: THREE.DoubleSide });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+    m.position.set(...pos);
+    m.lookAt(0, 0, 0);
+    return m;
+  };
+  // a large dim bounce enclosure so metal and clearcoat reflections meet a believable dark studio surround, never
+  // a void: a bit lighter below (floor bounce) than above.
+  const room = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshLambertMaterial({ color: 0x12161d, side: THREE.BackSide }));
+  room.scale.set(24, 18, 24);
+  env.add(room);
+  const floorBounce = new THREE.Mesh(new THREE.CircleGeometry(10, 32), new THREE.MeshLambertMaterial({ color: 0x1b2026, side: THREE.DoubleSide }));
+  floorBounce.rotation.x = -Math.PI / 2;
+  floorBounce.position.y = -6;
+  env.add(floorBounce);
+  // key: one large soft panel, up and front-right -- same direction as the key DirectionalLight (1.2, 2.2, 1.6).
+  // Large and soft on purpose (that is the point), but kept modest in brightness: the wing covering's low
+  // roughness (0.06-0.08) means even a "soft" panel reflects as a wide, bright band across a curved surface at
+  // some point in every stroke, and a too-bright panel turns that band into a flat white sheet with bloom.
+  env.add(panel(9, 7, STUDIO.key, 3, [7, 10, 9]));
+  // rim: a large cool panel behind and to the left -- same direction as the rim light (-1.6, 1.0, -2.0), for the
+  // glint along silhouettes and through the wing film's Fresnel edge
+  env.add(panel(8, 9, STUDIO.rim, 3.5, [-8, 6, -10]));
+  // fill: broad and dim, low and from the front, so the shadowed side never reads as dead black
+  env.add(panel(11, 6, STUDIO.fill, 1.2, [0, -1.5, 10]));
+  // a soft overhead glow: a top highlight on rounded parts without a hard hotspot
+  const top = panel(11, 11, '#dfe8f5', 0.9, [0.001, 15, 0]);
+  env.add(top);
+  return env;
+}
+
+// A fixed-pivot S-curve plus a touch of extra chroma, applied after AgXToneMapping + sRGB encoding, to move three.js's
+// "AgX Base" rendering toward Blender's "AgX - Medium High Contrast" look (see film/edit.json's blender.look and
+// the flight plates it renders, e.g. out/env/review/pass3/after/track_track_side_long_01566.png). Parameters tuned
+// by eye against that plate's shadow depth and highlight roll-off; film/test/materials.test.mjs pins the curve
+// shape (monotonic, fixed point at mid-grey, no clipping) rather than the exact constants.
+export const AGX_CONTRAST = { contrast: 1.1, pivot: 0.46, saturation: 1.06 };
+const AGX_CONTRAST_SHADER = {
+  uniforms: { tDiffuse: { value: null }, uContrast: { value: AGX_CONTRAST.contrast }, uPivot: { value: AGX_CONTRAST.pivot }, uSaturation: { value: AGX_CONTRAST.saturation } },
+  vertexShader: /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: /* glsl */ `uniform sampler2D tDiffuse; uniform float uContrast; uniform float uPivot; uniform float uSaturation; varying vec2 vUv;
+    void main(){
+      vec4 c = texture2D(tDiffuse, vUv);
+      vec3 col = (c.rgb - uPivot) * uContrast + uPivot;
+      float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
+      col = mix(vec3(l), col, uSaturation);
+      gl_FragColor = vec4(clamp(col, 0.0, 1.0), c.a);
+    }`,
+};
 
 const BG_VERT = /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.9999, 1.0); }`;
 const BG_FRAG = /* glsl */ `uniform vec3 uA; uniform vec3 uB; uniform vec2 uC; varying vec2 vUv;
@@ -24,7 +83,7 @@ export function createStage(canvas, { quality = 'high', capture = false, pr = nu
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = 1.15;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.VSMShadowMap; // soft contact shadow, cheap for a single subject (PCFSoftShadowMap is a removed alias of PCFShadowMap as of r186)
   renderer.localClippingEnabled = true;
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.01, 60000);
@@ -41,11 +100,16 @@ export function createStage(canvas, { quality = 'high', capture = false, pr = nu
   bgScene.add(bg);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const room = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
+  const room = pmrem.fromScene(buildStudioEnvironment(), 0.035).texture;
   scene.environment = room;
-  scene.environmentIntensity = 0.55;
+  scene.environmentIntensity = 0.7;
 
-  const key = new THREE.DirectionalLight(STUDIO.key, 3.2);
+  // A DirectionalLight has zero angular size, so its specular reflection on any low-roughness surface (the film
+  // covering, clearcoat, polished metal) is a hard, pin-sharp hotspot no matter how it is tone mapped -- real
+  // studio keys are softboxes, not points. These stay dim and mostly carry shading shape and the cast shadow; the
+  // soft, large panels in buildStudioEnvironment() (reflected via scene.environment) carry the specular highlight's
+  // shape and size instead, the way an area light would.
+  const key = new THREE.DirectionalLight(STUDIO.key, 1.1);
   key.position.set(1.2, 2.2, 1.6);
   key.castShadow = true;
   key.shadow.mapSize.set(quality === 'low' ? 1024 : 2048, quality === 'low' ? 1024 : 2048);
@@ -56,9 +120,9 @@ export function createStage(canvas, { quality = 'high', capture = false, pr = nu
   key.shadow.bias = -0.0004;
   key.shadow.normalBias = 0.002;
   key.shadow.radius = 3;
-  const rim = new THREE.DirectionalLight(STUDIO.rim, 2.4);
+  const rim = new THREE.DirectionalLight(STUDIO.rim, 0.8);
   rim.position.set(-1.6, 1.0, -2.0);
-  const fill = new THREE.HemisphereLight('#c7d6ea', '#0b0d10', 0.35);
+  const fill = new THREE.HemisphereLight('#c7d6ea', '#0b0d10', 0.4);
   scene.add(key, key.target, rim, fill);
 
   // dark floor that fades into the backdrop: no horizon line, the bird floats over its own soft shadow
@@ -108,12 +172,17 @@ export function createStage(canvas, { quality = 'high', capture = false, pr = nu
   const bloom = new UnrealBloomPass(new THREE.Vector2(4, 4), 0.12, 0.35, 0.97);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
+  // three.js's AgXToneMapping is the Blender "AgX Base" curve; the flight plates render with Blender's "AgX -
+  // Medium High Contrast" look, which is Base plus a fixed S-curve lift around middle grey. Reproduced here as a
+  // small post pass (after tonemapping and sRGB encoding, same as Blender applies its look) rather than refitting
+  // the tonemapping curve itself.
+  composer.addPass(new ShaderPass(AGX_CONTRAST_SHADER));
 
   const studioMode = { on: true };
   const setStudio = (on) => {
     studioMode.on = on;
     studio.visible = on;
-    scene.environmentIntensity = on ? 0.55 : 0.35;
+    scene.environmentIntensity = on ? 0.85 : 0.5;
     if (gtao) gtao.enabled = on;
   };
 

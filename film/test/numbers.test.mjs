@@ -96,3 +96,47 @@ test('focus ghosts the rest and shows the accents; explode moves box parts; the 
   bird.update({ phase: 1, amp: model.law.ampNominal });
   assert.ok(node.position.distanceTo(node.userData.home) < 1e-12);
 });
+
+test('HUD climb readout: signed with a true minus, rounded before the sign so a near-level climb never reads −0.0', async () => {
+  const { signed } = await import('../../sims/avis-shared/film.js');
+  assert.equal(signed(1.13, 1), '+1.1');
+  assert.equal(signed(-0.6, 1), '−0.6');
+  assert.equal(signed(-0.04, 1), '+0.0');
+  assert.equal(signed(-0.06, 1), '−0.1');
+  assert.equal(signed(NaN, 1), '—');
+});
+
+test('flight HUD: airspeed, flap-cycle power, climb and battery from the segment data, nothing without it', async () => {
+  const { flightHud } = await import('../../sims/avis-shared/film.js');
+  const d = { airspeed: [12.34], power_w: [95.4], climb_m_s: [1.13], battery_pct: [91.2] };
+  const h = flightHud(d, 0);
+  for (const s of ['12.3 m/s', '95 W', '+1.1 m/s', '91%']) assert.ok(h.includes(s), `${s} in ${h}`);
+  assert.ok(!flightHud({ ...d, climb_m_s: undefined }, 0).includes('climb'));
+  assert.equal(flightHud(null, 0), '');
+  assert.equal(flightHud(d, -1), '');
+});
+
+test('drive callouts follow the design: no stroke servo on a fixed-stroke drive, the crank wheel its own teeth', async () => {
+  const { driveLabels } = await import('../../sims/avis-shared/film.js');
+  const { model } = loadModel('larus-gl-2');
+  const fixed = { ...model, law: { ...model.law, ampMin: 0.6, ampMax: 0.6 } };
+  const ranged = { ...model, law: { ...model.law, ampMin: 0.4, ampMax: 0.7 } };
+  assert.deepEqual(driveLabels(fixed).late, { node: 'encoder_readhead', text: 'Crank angle encoder', at: [450, 640] });
+  assert.deepEqual(driveLabels(ranged).late, { node: 'slot_pin_R', text: 'Stroke servo slides the pin', at: [700, 195] });
+  assert.equal(driveLabels(model).crankWheel, `Crank wheel ${model.train.stages.at(-1).wheel.z}T`);
+  // whichever it is, the node it points at exists in the bird
+  const { bird } = nodeBird('larus-gl-2');
+  assert.ok(bird.root.getObjectByName(driveLabels(model).late.node));
+});
+
+test('captions take their numbers from the design, not from the edit', async () => {
+  const { fillDesign } = await import('../../sims/avis-shared/film.js');
+  const { design } = loadModel('larus-gl-2');
+  const edit = JSON.parse((await import('node:fs')).readFileSync(new URL('../edit.json', import.meta.url), 'utf8'));
+  const wide = edit.segments.find((s) => s.id === 'wide');
+  const text = fillDesign(wide.sub, design);
+  assert.ok(text.includes(`${design.atmosphere.altitude_m.toLocaleString('en-US')} m`) && text.includes(`${design.atmosphere.temperature_C} °C`), text);
+  assert.ok(!/\{/.test(text));
+  // no caption types a number of its own: digits in captions come from the design or name the log
+  for (const s of edit.segments) for (const t of [s.caption, s.sub]) if (t) assert.ok(!/\d/.test(t.replace(/larus-gl-2-corridor|\{\w+\}/g, '')), `${s.id}: "${t}"`);
+});
