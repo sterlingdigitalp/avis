@@ -42,3 +42,14 @@ If either is unacceptable, the `uiuc_lsat_vol5` block and the `.dat` files can s
 ## Claim that must travel with this data
 
 "simulated flight, real parts". No physical bird exists. Catalogue parts were read from listings. None were bought, weighed or tested.
+
+## Environment data (decided 2026-11-02)
+
+The Copernicus licence (free, open, attribution required) is accepted under SPEC's rule, on the same footing as CC-BY. Full source list: `env/DATA_SOURCES.md`.
+
+- **NRCan HRDEM 2 m lidar (AB-Upper_Bow_River) and MRDEM-30.** Open Government Licence – Canada: "Contains information licensed under the Open Government Licence – Canada."
+- **Copernicus GLO-30**, bare rock outside the lidar only: the WorldDEM-30 notice above.
+- **Sentinel-2 L2A, 2022-09-21 and 2023-09-21.** "Contains modified Copernicus Sentinel data 2022, 2023."
+- **Poly Haven** textures and HDRI: CC0, credit given voluntarily.
+
+The film's end card and the README carry all four.
