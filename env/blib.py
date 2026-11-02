@@ -219,26 +219,30 @@ def rgba(r, g, b):
 
 
 NEEDLE = {
-    # base (old-to-mid needle colour), tip (new growth), translucent colour. Linear reflectance, deliberately low:
-    # real conifer foliage is near 4-8 % in the visible, which is why forests read dark and not lawn-green.
-    "engelmann": ((0.021, 0.042, 0.033), (0.050, 0.095, 0.062), (0.11, 0.17, 0.05)),
-    "subalpine": ((0.016, 0.040, 0.026), (0.040, 0.094, 0.050), (0.09, 0.17, 0.04)),
-    "lodgepole": ((0.034, 0.056, 0.019), (0.074, 0.108, 0.030), (0.18, 0.21, 0.04)),
-    "douglas": ((0.020, 0.043, 0.024), (0.054, 0.104, 0.042), (0.11, 0.18, 0.04)),
-    "larch": ((0.36, 0.20, 0.022), (0.55, 0.33, 0.035), (0.75, 0.42, 0.03)),
-    "aspen": ((0.40, 0.27, 0.035), (0.46, 0.34, 0.05), (0.72, 0.50, 0.07)),
-    "grass": ((0.20, 0.155, 0.065), (0.085, 0.11, 0.035), (0.34, 0.30, 0.10)),
-    "shrub": ((0.070, 0.070, 0.022), (0.18, 0.11, 0.024), (0.28, 0.16, 0.03)),
+    # base (old-to-mid needle colour), tip (new growth), translucent colour, wax bloom (sheen weight). Linear
+    # reflectance, deliberately low: real conifer foliage is near 4-8 % in the visible, which is why forests read
+    # dark and not lawn-green. Spruce and fir carry white stomatal wax, which turns them blue-green at a glance.
+    "engelmann": ((0.012, 0.027, 0.024), (0.030, 0.060, 0.055), (0.06, 0.10, 0.03), 0.15),
+    "subalpine": ((0.010, 0.026, 0.019), (0.028, 0.062, 0.046), (0.05, 0.10, 0.025), 0.12),
+    "lodgepole": ((0.022, 0.040, 0.016), (0.050, 0.078, 0.026), (0.10, 0.13, 0.03), 0.1),
+    "douglas": ((0.018, 0.040, 0.023), (0.050, 0.098, 0.040), (0.08, 0.13, 0.03), 0.15),
+    "larch": ((0.36, 0.20, 0.022), (0.55, 0.33, 0.035), (0.75, 0.42, 0.03), 0.0),
+    "aspen": ((0.40, 0.27, 0.035), (0.46, 0.34, 0.05), (0.72, 0.50, 0.07), 0.0),
+    "grass": ((0.20, 0.155, 0.065), (0.085, 0.11, 0.035), (0.34, 0.30, 0.10), 0.0),
+    "shrub": ((0.070, 0.070, 0.022), (0.18, 0.11, 0.024), (0.28, 0.16, 0.03), 0.0),
 }
 BARK = {
-    "engelmann": ("bark_brown_02", (0.42, 0.35, 0.32)),
-    "subalpine": ("tree_bark_03", (0.45, 0.44, 0.44)),
-    "lodgepole": ("pine_bark", (0.40, 0.345, 0.30)),
-    "douglas": ("knotted_pine_bark", (0.36, 0.28, 0.23)),
-    "larch": ("pine_bark", (0.42, 0.28, 0.24)),
-    "snag": ("tree_bark_03", (0.4, 0.4, 0.4)),
-    "aspen": ("tree_bark_03", (0.95, 0.93, 0.82)),
-    "rock": ("gravel_stones", (1.2, 1.18, 1.12)),
+    # texture, target mean linear albedo, saturation kept from the scan, tiles per 0.9 m of trunk, scan mean luminance.
+    # Engelmann spruce: thin loose grey-brown scales. Subalpine fir: smooth ash-grey with resin blisters. Lodgepole
+    # pine: thin, finely scaly grey-brown. Targets are field-guide colours; the scans only supply structure.
+    "engelmann": ("bark_willow_02", (0.042, 0.039, 0.039), 0.25, 1.7, 0.198),
+    "subalpine": ("chinese_hackberry_bark", (0.060, 0.060, 0.059), 0.15, 1.0, 0.0674),
+    "lodgepole": ("pine_bark", (0.050, 0.045, 0.040), 0.30, 2.2, 0.096),
+    "douglas": ("knotted_pine_bark", (0.085, 0.066, 0.052), 0.60, 1.0, 0.059),
+    "larch": ("pine_bark", (0.120, 0.082, 0.062), 0.60, 1.6, 0.096),
+    "snag": ("tree_bark_03", (0.16, 0.16, 0.16), 0.2, 1.0, 0.25),
+    "aspen": ("tree_bark_03", (0.45, 0.44, 0.38), 0.5, 1.0, 0.25),
+    "rock": ("marble_cliff_05", (0.115, 0.113, 0.108), 0.35, 1.0, 0.272),
 }
 
 
@@ -248,7 +252,7 @@ def needle_material(species, lod):
     if m:
         return m
     m, nt = new_mat(name)
-    base, tip, trans = NEEDLE[species]
+    base, tip, trans, bloom = NEEDLE[species]
     age = attr(nt, "age").outputs["Fac"]
     obj = nt.nodes.new("ShaderNodeObjectInfo")
     # per-tree brightness and hue drift; every stand has lighter and darker individuals
@@ -267,14 +271,23 @@ def needle_material(species, lod):
         L(nt, v, combine.inputs[i])
     L(nt, combine.outputs[0], col_gain.inputs[1])
     # waxy needle surface; the glint in low sun matters as much as the albedo
-    p = N(nt, "ShaderNodeBsdfPrincipled", Roughness=0.42 if lod == 0 else 0.62)
-    p.inputs["Specular IOR Level"].default_value = 0.5 if lod == 0 else 0.22
+    # far LODs: fewer, larger blades would turn the same gloss into isolated white glints on backlit crowns
+    p = N(nt, "ShaderNodeBsdfPrincipled", Roughness=0.42 if lod == 0 else 0.7)
+    p.inputs["Specular IOR Level"].default_value = 0.5 if lod == 0 else 0.12
+    if bloom > 0 and lod == 0:
+        # stomatal wax: a pale blue-grey scatter that grows toward grazing angles. Hero range only: on the sparse
+        # enlarged needles of the far LODs it turns backlit crown edges into white flecks that read as snow.
+        p.inputs["Sheen Weight"].default_value = bloom * 0.6
+        p.inputs["Sheen Roughness"].default_value = 0.45
+        p.inputs["Sheen Tint"].default_value = (0.42, 0.60, 0.72, 1.0)
     L(nt, col_gain.outputs[0], p.inputs["Base Color"])
     tr = N(nt, "ShaderNodeBsdfTranslucent")
     trcol = mix_rgb(nt, age, rgba(*trans), (trans[0] * 0.45, trans[1] * 0.45, trans[2] * 0.45, 1))
     L(nt, trcol, tr.inputs["Color"])
     mixs = N(nt, "ShaderNodeMixShader")
-    mixs.inputs[0].default_value = {0: 0.28, 1: 0.28, 2: 0.2, 3: 0.14}[lod]
+    # thick waxy conifer needles pass little light; broad leaves and grass blades pass more
+    thin = species in ("aspen", "larch", "grass", "shrub")
+    mixs.inputs[0].default_value = (0.28 if thin else 0.13) * {0: 1.0, 1: 1.0, 2: 0.75, 3: 0.55}[lod]
     L(nt, p.outputs[0], mixs.inputs[1])
     L(nt, tr.outputs[0], mixs.inputs[2])
     out = nt.nodes.new("ShaderNodeOutputMaterial")
@@ -288,12 +301,17 @@ def bark_material(species):
     if m:
         return m
     m, nt = new_mat(name)
-    tid, tint = BARK[species]
-    uv = attr(nt, "buv").outputs["Vector"]
+    tid, target, sat, rep, lum = BARK[species]
+    mp = N(nt, "ShaderNodeMapping")
+    L(nt, attr(nt, "buv").outputs["Vector"], mp.inputs["Vector"])
+    mp.inputs["Scale"].default_value = (rep, rep, 1.0)
+    uv = mp.outputs[0]
     d = tex(nt, f"{PH}/{tid}/diff.jpg", uv)
     h = tex(nt, f"{PH}/{tid}/disp.jpg" if os.path.exists(f"{PH}/{tid}/disp.jpg") else f"{PH}/{tid}/disp.png", uv, "Non-Color")
     r = tex(nt, f"{PH}/{tid}/rough.jpg", uv, "Non-Color") if os.path.exists(f"{PH}/{tid}/rough.jpg") else None
-    col = mix_rgb(nt, 1.0, d.outputs[0], rgba(*tint), "MULTIPLY")
+    hs = N(nt, "ShaderNodeHueSaturation", Saturation=sat)
+    L(nt, d.outputs[0], hs.inputs["Color"])
+    col = mix_rgb(nt, 1.0, hs.outputs[0], rgba(*(t / lum for t in target)), "MULTIPLY")
     # branches without bark uv (uv is zero there) still sample a real texel; only the trunk gets the fine bump.
     p = N(nt, "ShaderNodeBsdfPrincipled")
     L(nt, col, p.inputs["Base Color"])
@@ -308,30 +326,102 @@ def bark_material(species):
     return m
 
 
-def dead_wood_material():
-    m = bpy.data.materials.get("dead_wood")
+def _grain_wood(name, grain, noise_scale, dark, light, rough, bump_dist):
+    """Weathered wood: noise stretched along the grain (object axes scaled by `grain`) through a two-stop ramp."""
+    m = bpy.data.materials.get(name)
     if m:
         return m
-    m, nt = new_mat("dead_wood")
+    m, nt = new_mat(name)
     co = nt.nodes.new("ShaderNodeTexCoord").outputs["Object"]
     mp = N(nt, "ShaderNodeMapping")
     L(nt, co, mp.inputs["Vector"])
-    mp.inputs["Scale"].default_value = (14, 14, 0.8)
-    n1 = N(nt, "ShaderNodeTexNoise", Scale=2.0, Detail=9.0, Roughness=0.62)
+    mp.inputs["Scale"].default_value = grain
+    n1 = N(nt, "ShaderNodeTexNoise", Scale=noise_scale, Detail=9.0, Roughness=0.62)
     L(nt, mp.outputs[0], n1.inputs["Vector"])
     ramp = nt.nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].position = 0.33
-    ramp.color_ramp.elements[0].color = (0.022, 0.019, 0.016, 1)
-    ramp.color_ramp.elements[1].position = 0.68
-    ramp.color_ramp.elements[1].color = (0.085, 0.078, 0.07, 1)
+    for el, (pos_, col) in zip(ramp.color_ramp.elements, (dark, light)):
+        el.position = pos_
+        el.color = (*col, 1)
     L(nt, n1.outputs[0], ramp.inputs[0])
-    p = N(nt, "ShaderNodeBsdfPrincipled", Roughness=0.8)
+    p = N(nt, "ShaderNodeBsdfPrincipled", Roughness=rough)
     L(nt, ramp.outputs[0], p.inputs["Base Color"])
-    bump = N(nt, "ShaderNodeBump", Strength=0.9, Distance=0.02)
+    bump = N(nt, "ShaderNodeBump", Strength=0.85, Distance=bump_dist)
     L(nt, n1.outputs[0], bump.inputs["Height"])
     L(nt, bump.outputs[0], p.inputs["Normal"])
-    out = nt.nodes.new("ShaderNodeOutputMaterial")
-    L(nt, p.outputs[0], out.inputs["Surface"])
+    L(nt, p.outputs[0], nt.nodes.new("ShaderNodeOutputMaterial").inputs["Surface"])
+    return m
+
+
+def dead_wood_material():
+    """Grey-brown branch wood and snags; the grain runs along object Z."""
+    return _grain_wood("dead_wood", (14, 14, 0.8), 2.0, (0.33, (0.016, 0.014, 0.012)), (0.68, (0.056, 0.051, 0.046)), 0.8, 0.02)
+
+
+def driftwood_material():
+    """Bleached, sun-silvered stranded logs with long checks; the grain runs along object X."""
+    return _grain_wood("driftwood", (0.6, 14, 14), 3.0, (0.30, (0.07, 0.066, 0.06)), (0.55, (0.26, 0.25, 0.235)), 0.85, 0.01)
+
+
+def _shore_wet(nt):
+    """0..1 wetness from the lidar shore distance at the shaded point (world position): the band the river wets."""
+    import config as C
+    ter = os.path.join(OUT, "terrain")
+    if not os.path.exists(f"{ter}/shore_l0.png"):
+        return None
+    e0 = json.load(open(f"{ter}/meta.json"))["l0_ext"]
+    pos = nt.nodes.new("ShaderNodeNewGeometry").outputs["Position"]
+    m0 = N(nt, "ShaderNodeMapping")
+    L(nt, pos, m0.inputs["Vector"])
+    m0.inputs["Scale"].default_value = (1 / (e0[2] - e0[0]), 1 / (e0[3] - e0[1]), 0)
+    m0.inputs["Location"].default_value = (-e0[0] / (e0[2] - e0[0]), -e0[1] / (e0[3] - e0[1]), 0)
+    t = tex(nt, f"{ter}/shore_l0.png", m0.outputs[0], "Non-Color", ext="CLIP", interp="Cubic")
+    d = math_node(nt, "MULTIPLY", mix_float(nt, t.outputs["Alpha"], 1.0, t.outputs["Color"]), C.SHORE_RANGE)
+    return maprange(nt, d, 1.5, 0.5)
+
+
+def cobble_material():
+    """Bow River clasts: mostly grey limestone and dolomite, some buff, pink and maroon quartzite from the main ranges,
+    a few dark siltstones and white quartz. The per-stone random in `age` picks the lithology; stones in the wet band
+    by the waterline go dark and glossy."""
+    m = bpy.data.materials.get("cobble")
+    if m:
+        return m
+    m, nt = new_mat("cobble")
+    pick = attr(nt, "age").outputs["Fac"]
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.interpolation = "CONSTANT"
+    cols = [(0.0, (0.20, 0.20, 0.195)), (0.30, (0.14, 0.14, 0.138)), (0.55, (0.085, 0.085, 0.085)), (0.68, (0.19, 0.165, 0.13)),
+            (0.80, (0.17, 0.12, 0.105)), (0.88, (0.10, 0.065, 0.06)), (0.94, (0.055, 0.058, 0.055)), (0.97, (0.30, 0.295, 0.285))]
+    els = ramp.color_ramp.elements
+    els[0].position, els[0].color = cols[0][0], (*cols[0][1], 1)
+    els[1].position, els[1].color = cols[1][0], (*cols[1][1], 1)
+    for pos_, c in cols[2:]:
+        e = els.new(pos_)
+        e.color = (*c, 1)
+    L(nt, pick, ramp.inputs[0])
+    co = nt.nodes.new("ShaderNodeTexCoord").outputs["Object"]
+    n1 = N(nt, "ShaderNodeTexNoise", Scale=60.0, Detail=6.0, Roughness=0.6)
+    L(nt, co, n1.inputs["Vector"])
+    speck = maprange(nt, n1.outputs[0], 0.3, 0.7, 0.8, 1.15)
+    col = mix_rgb(nt, 1.0, ramp.outputs[0], (1, 1, 1, 1), "MULTIPLY")
+    c3 = nt.nodes.new("ShaderNodeCombineXYZ")
+    for i in range(3):
+        L(nt, speck, c3.inputs[i])
+    cm = N(nt, "ShaderNodeVectorMath", p_operation="MULTIPLY")
+    L(nt, col, cm.inputs[0])
+    L(nt, c3.outputs[0], cm.inputs[1])
+    col = cm.outputs[0]
+    p = N(nt, "ShaderNodeBsdfPrincipled", Roughness=0.6)
+    p.inputs["Specular IOR Level"].default_value = 0.4
+    wet = _shore_wet(nt)
+    if wet is not None:
+        col = mix_rgb(nt, wet, col, mix_rgb(nt, 1.0, col, rgba(0.45, 0.46, 0.42), "MULTIPLY"))
+        L(nt, mix_float(nt, wet, 0.6, 0.15), p.inputs["Roughness"])
+    L(nt, col, p.inputs["Base Color"])
+    bump = N(nt, "ShaderNodeBump", Strength=0.3, Distance=0.004)
+    L(nt, n1.outputs[0], bump.inputs["Height"])
+    L(nt, bump.outputs[0], p.inputs["Normal"])
+    L(nt, p.outputs[0], nt.nodes.new("ShaderNodeOutputMaterial").inputs["Surface"])
     return m
 
 
@@ -342,24 +432,39 @@ def tree_materials(species, lod):
     return [bark, needle_material(species, lod), dead_wood_material()]
 
 
-def build_under_mesh(name, kind, seed):
-    import trees
+def cached_arrays(stem, key, build):
+    """Load out/env/cache/trees/<stem>_<key>.npz or build and save it, dropping stale keys of the same stem."""
+    import glob
     cdir = os.path.join(OUT, "cache/trees")
     os.makedirs(cdir, exist_ok=True)
-    p = os.path.join(cdir, f"{name}.npz")
-    src_time = os.path.getmtime(os.path.join(ENV, "trees.py"))
-    if os.path.exists(p) and os.path.getmtime(p) > src_time:
+    p = os.path.join(cdir, f"{stem}_{key}.npz")
+    if os.path.exists(p):
         z = np.load(p)
-        arr = {k: z[k] for k in z.files}
-    else:
-        arr = trees.build_under(kind, seed)
-        np.savez(p, **arr)
+        return {k: z[k] for k in z.files}
+    arr = build()
+    np.savez(p + ".tmp.npz", **arr)
+    os.replace(p + ".tmp.npz", p)
+    for old in glob.glob(os.path.join(cdir, f"{stem}.npz")) + glob.glob(os.path.join(cdir, f"{stem}_??????????.npz")):
+        if old != p:
+            os.remove(old)
+    return arr
+
+
+def build_under_mesh(name, kind, seed):
+    import ground
+    arr = cached_arrays(name, ground.cache_key(kind), lambda: ground.build_under(kind, seed))
     if kind == "sapling":
         mats = tree_materials("subalpine", 0)
     elif kind == "grass":
         mats = [dead_wood_material(), needle_material("grass", 0), dead_wood_material()]
     elif kind == "shrub":
         mats = [dead_wood_material(), needle_material("shrub", 0), dead_wood_material()]
+    elif kind == "meadow":
+        mats = [dead_wood_material(), needle_material("grass", 0), needle_material("shrub", 0)]
+    elif kind == "cobbles":
+        mats = [cobble_material()] * 3
+    elif kind == "drift":
+        mats = [driftwood_material()] * 3
     elif kind == "rock":
         mats = [bark_material("rock"), dead_wood_material(), dead_wood_material()]
     else:
@@ -372,16 +477,10 @@ def build_under_mesh(name, kind, seed):
 def build_tree_mesh(name, species, H, cr, seed, lod, cache=True):
     """Geometry cached on disk because the hero LOD is several million triangles."""
     import trees
-    cdir = os.path.join(OUT, "cache/trees")
-    os.makedirs(cdir, exist_ok=True)
-    p = os.path.join(cdir, f"{name}_l{lod}.npz")
-    src_time = os.path.getmtime(os.path.join(ENV, "trees.py"))
-    if cache and os.path.exists(p) and os.path.getmtime(p) > src_time:
-        z = np.load(p)
-        arr = {k: z[k] for k in z.files}
+    if cache:
+        arr = cached_arrays(f"{name}_l{lod}", trees.cache_key(species, lod), lambda: trees.build_tree(species, H, cr, seed, lod))
     else:
         arr = trees.build_tree(species, H, cr, seed, lod)
-        np.savez(p, **arr)
     me = make_mesh(f"{name}_l{lod}", arr["verts"], arr["faces"], tree_materials(species, lod), arr["mat"],
                    attrs={"age": ("FLOAT", "POINT", arr["age"]), "buv": ("FLOAT2", "POINT", arr["buv"])},
                    flat_mask=arr["mat"] == 1)

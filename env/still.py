@@ -24,6 +24,8 @@ VIEWS = {
     "wide": ((1900, 1650, 180), (0, -200, 40), 30),
     "bank": ((1112, 652, 1.7), (-1400, -1900, 520), 22),
     "bend": ((1180, 820, 14), (950, 560, 0), 30),
+    # ground close-up: down a gravel bar beside the bank camera, driftwood at 30-50 m
+    "shore": ((1104, 640, 1.5), (1093, 590, 0.0), 28),
 }
 
 

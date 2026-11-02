@@ -12,6 +12,7 @@ HR8_BOX = (604000, 5650000, 636000, 5674000)  # 8 m lidar window
 SUN_DATE = (2022, 9, 21)
 SUN_MDT_HOURS = 8.70
 LAT_LON = (51.123, -115.43)
+SHORE_RANGE = 32.0  # metres: shore_l0.png stores distance on land to the lidar waterline / SHORE_RANGE
 
 
 def utm_to_blender(e, n):

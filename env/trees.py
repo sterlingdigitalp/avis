@@ -15,50 +15,64 @@ import numpy as np
 D2R = np.pi / 180.0
 
 SPECIES = {
-    # lmax: longest primary branch / H. crown: profile exponents. needle lengths in metres.
+    # lmax: longest primary branch / H. crown: profile exponents. Lengths in metres.
+    # fol_depth: only secondaries within this distance of the primary's tip carry foliage; the inner crown of a
+    #   stand-grown conifer is shaded out and holds bare dead twigs.
+    # ndl_prim / ndl_sec / ndl_shoot: metres back from each axis tip that still carry needles. Spruce and fir keep
+    #   needles 7-10 years, so whole sprays are clothed; lodgepole keeps 3-5 years of short shoots, so its foliage
+    #   is a tuft at every branch end with bare wood behind it.
+    # needle_w is the real needle width; geometry widens it (NEEDLE_GAIN) because a flat blade at a random roll shows
+    #   on average 2/pi of the width of a four-sided needle.
     "engelmann": dict(
-        whorl=0.32, whorl_n=(4, 6), inter=5, lmax=0.105, p_exp=0.78, base_shrink=0.30,
-        pitch_top=52, pitch_base=-14, droop=(8, 34), upturn=(6, 40), wobble=0.05,
-        foliage_from=0.06, sec_space=0.058, sec_frac=0.46, sec_max=0.95, sec_spread=58, sec_droop=(4, 52),
-        twig_space=0.030, twig_len=(0.06, 0.14), twig_spread=46, twig_droop=(0, 50),
-        needle_len=0.024, needle_w=0.0033, needle_space=0.0019, needle_theta=52, needle_mode="brush",
+        whorl=0.32, whorl_n=(4, 6), inter=2, lmax=0.105, p_exp=0.78, base_shrink=0.30,
+        pitch_top=52, pitch_base=-18, droop=(8, 38), upturn=(6, 34), wobble=0.03,
+        foliage_from=0.06, sec_space=0.05, sec_frac=0.44, sec_max=0.80, sec_spread=60, sec_droop=(2, 22), sec_updn=0.13,
+        twig_space=0.024, twig_len=(0.04, 0.09), twig_spread=52, twig_droop=(0, 10),
+        needle_len=0.021, needle_w=0.0013, needle_space=0.0017, needle_theta=56, needle_mode="brush",
+        fol_depth=1.35, ndl_prim=1.0, ndl_sec=9.0, ndl_shoot=9.0,
         dbh=(0.0165, 1.0), dead_frac=0.85, dead_len=(0.25, 1.1), lean=0.012),
     "subalpine": dict(
         whorl=0.27, whorl_n=(4, 6), inter=4, lmax=0.082, p_exp=0.86, base_shrink=0.18,
-        pitch_top=58, pitch_base=-22, droop=(6, 26), upturn=(4, 26), wobble=0.035,
-        foliage_from=0.04, sec_space=0.052, sec_frac=0.42, sec_max=0.62, sec_spread=55, sec_droop=(0, 18),
-        twig_space=0.028, twig_len=(0.05, 0.11), twig_spread=50, twig_droop=(0, 8),
-        needle_len=0.026, needle_w=0.0036, needle_space=0.0019, needle_theta=68, needle_mode="flat",
+        pitch_top=58, pitch_base=-22, droop=(6, 26), upturn=(4, 26), wobble=0.025,
+        foliage_from=0.04, sec_space=0.046, sec_frac=0.42, sec_max=0.58, sec_spread=58, sec_droop=(0, 14), sec_updn=0.10,
+        twig_space=0.024, twig_len=(0.04, 0.09), twig_spread=54, twig_droop=(0, 6),
+        needle_len=0.024, needle_w=0.0016, needle_space=0.0016, needle_theta=66, needle_mode="flat",
+        fol_depth=1.1, ndl_prim=0.8, ndl_sec=9.0, ndl_shoot=9.0,
         dbh=(0.0135, 1.0), dead_frac=0.75, dead_len=(0.2, 0.7), lean=0.008),
     "lodgepole": dict(
-        whorl=0.30, whorl_n=(3, 5), inter=1, lmax=0.088, p_exp=0.52, base_shrink=0.42,
-        pitch_top=62, pitch_base=4, droop=(0, 12), upturn=(10, 34), wobble=0.09,
-        foliage_from=0.30, sec_space=0.07, sec_frac=0.42, sec_max=0.5, sec_spread=42, sec_droop=(0, 8),
-        twig_space=0.05, twig_len=(0.10, 0.22), twig_spread=30, twig_droop=(-10, 6),
-        needle_len=0.060, needle_w=0.0028, needle_space=0.0024, needle_theta=32, needle_mode="pair",
+        whorl=0.30, whorl_n=(3, 5), inter=1, lmax=0.072, p_exp=0.52, base_shrink=0.42,
+        pitch_top=62, pitch_base=4, droop=(0, 12), upturn=(10, 34), wobble=0.13,
+        foliage_from=0.30, sec_space=0.07, sec_frac=0.50, sec_max=0.55, sec_spread=44, sec_droop=(0, 10), sec_updn=0.30,
+        twig_space=0.085, twig_len=(0.07, 0.16), twig_spread=36, twig_droop=(-10, 6),
+        needle_len=0.050, needle_w=0.0015, needle_space=0.0012, needle_theta=40, needle_mode="pair",
+        fol_depth=1.0, ndl_prim=0.50, ndl_sec=0.40, ndl_shoot=0.30,
         dbh=(0.0115, 1.0), dead_frac=0.65, dead_len=(0.12, 0.55), lean=0.02),
     "douglas": dict(
         whorl=0.40, whorl_n=(4, 6), inter=5, lmax=0.15, p_exp=0.72, base_shrink=0.20,
-        pitch_top=46, pitch_base=-10, droop=(6, 26), upturn=(4, 30), wobble=0.08,
-        foliage_from=0.12, sec_space=0.07, sec_frac=0.48, sec_max=1.3, sec_spread=55, sec_droop=(10, 60),
-        twig_space=0.034, twig_len=(0.07, 0.17), twig_spread=48, twig_droop=(0, 35),
-        needle_len=0.028, needle_w=0.0027, needle_space=0.0028, needle_theta=58, needle_mode="brush",
+        pitch_top=46, pitch_base=-10, droop=(6, 26), upturn=(4, 30), wobble=0.06,
+        foliage_from=0.12, sec_space=0.07, sec_frac=0.48, sec_max=1.1, sec_spread=55, sec_droop=(10, 50), sec_updn=0.20,
+        twig_space=0.034, twig_len=(0.06, 0.14), twig_spread=50, twig_droop=(0, 26),
+        needle_len=0.026, needle_w=0.0015, needle_space=0.0022, needle_theta=60, needle_mode="brush",
+        fol_depth=1.6, ndl_prim=0.8, ndl_sec=9.0, ndl_shoot=9.0,
         dbh=(0.020, 1.0), dead_frac=0.55, dead_len=(0.3, 1.4), lean=0.015),
     "aspen": dict(
         whorl=0.55, whorl_n=(2, 3), inter=2, lmax=0.17, p_exp=0.42, base_shrink=0.35,
         pitch_top=60, pitch_base=22, droop=(0, 18), upturn=(4, 20), wobble=0.16,
-        foliage_from=0.25, sec_space=0.14, sec_frac=0.5, sec_max=1.0, sec_spread=46, sec_droop=(0, 20),
+        foliage_from=0.25, sec_space=0.14, sec_frac=0.5, sec_max=1.0, sec_spread=46, sec_droop=(0, 20), sec_updn=0.28,
         twig_space=0.07, twig_len=(0.08, 0.2), twig_spread=44, twig_droop=(0, 25),
         needle_len=0.062, needle_w=0.052, needle_space=0.016, needle_theta=55, needle_mode="brush",
+        fol_depth=9.0, ndl_prim=0.0, ndl_sec=0.0, ndl_shoot=9.0,
         dbh=(0.0135, 1.0), dead_frac=0.25, dead_len=(0.2, 0.6), lean=0.03),
     "larch": dict(
         whorl=0.40, whorl_n=(2, 4), inter=2, lmax=0.17, p_exp=0.70, base_shrink=0.25,
         pitch_top=50, pitch_base=-4, droop=(4, 18), upturn=(10, 30), wobble=0.13,
-        foliage_from=0.15, sec_space=0.14, sec_frac=0.40, sec_max=0.8, sec_spread=48, sec_droop=(4, 30),
+        foliage_from=0.15, sec_space=0.14, sec_frac=0.40, sec_max=0.8, sec_spread=48, sec_droop=(4, 30), sec_updn=0.28,
         twig_space=0.05, twig_len=(0.08, 0.2), twig_spread=44, twig_droop=(0, 30),
         needle_len=0.032, needle_w=0.0022, needle_space=0.018, needle_theta=48, needle_mode="tuft",
+        fol_depth=9.0, ndl_prim=0.0, ndl_sec=0.0, ndl_shoot=9.0,
         dbh=(0.024, 1.0), dead_frac=0.4, dead_len=(0.2, 0.8), lean=0.03),
 }
+NEEDLE_GAIN = 1.5
 
 
 # name, species, height m, crown ratio, seed. Size classes span the published ranges.
@@ -79,17 +93,11 @@ VARIANTS = [
     ("asp_a", "aspen", 18.0, 0.46, 71), ("asp_b", "aspen", 12.0, 0.55, 72), ("asp_c", "aspen", 6.5, 0.7, 73),
 ]
 
-# Understorey, ground layer around the corridor only. name, kind, seed.
-UNDER = [
-    ("grass_a", "grass", 81), ("grass_b", "grass", 82), ("grass_c", "grass", 83),
-    ("shrub_a", "shrub", 84), ("shrub_b", "shrub", 85), ("shrub_c", "shrub", 86),
-    ("log_a", "log", 87), ("log_b", "log", 88), ("rock_a", "rock", 89), ("rock_b", "rock", 90), ("rock_c", "rock", 91),
-    ("sap_a", "sapling", 92), ("sap_b", "sapling", 93),
-]
-
 LOD = {
-    0: dict(trunk_k=14, prim_k=6, sec_k=3, twig_k=2, needle_mult=1.0, needle_w=1.0, needle_l=1.0, twig_keep=1.0),
-    1: dict(trunk_k=9, prim_k=4, sec_k=2, twig_k=0, needle_mult=0.16, needle_w=2.6, needle_l=1.35, twig_keep=0.6),
+    # quad: LOD 0 needles are tapered blades (two triangles) that keep a needle's outline from 2 m; LOD 1 needles are
+    # single enlarged triangles carrying the same foliage area at a sixth of the count.
+    0: dict(trunk_k=14, prim_k=6, sec_k=3, twig_k=2, needle_mult=1.0, needle_w=1.0, needle_l=1.0, twig_keep=1.0, quad=True),
+    1: dict(trunk_k=9, prim_k=4, sec_k=2, twig_k=0, needle_mult=0.16, needle_w=4.0, needle_l=1.35, twig_keep=0.6, quad=False),
 }
 
 
@@ -213,7 +221,7 @@ def _leaf_geo(b, base, tdir, side, up, L, W, rng, age):
     d = _norm(tdir * 0.5 + np.cos(az)[:, None] * side + np.sin(az)[:, None] * up + rng.normal(0, 0.3, (N, 3)) + np.array([0, 0, -0.7]))
     s = _norm(np.cross(d, up + rng.normal(0, 0.5, (N, 3))))
     pet = base + d * 0.018
-    size = (L * rng.uniform(0.7, 1.15, N))[:, None]
+    size = (np.ravel(L) * rng.uniform(0.7, 1.15, N))[:, None] if np.size(L) == N else (L * rng.uniform(0.7, 1.15, N))[:, None]
     o = np.array([0.0, 0.36, 0.86, 1.0, 0.86, 0.36])  # along
     w = np.array([0.0, 0.42, 0.40, 0.0, -0.40, -0.42])  # across
     V = pet[:, None, :] + size[:, None] * (o[None, :, None] * d[:, None, :] + w[None, :, None] * s[:, None, :])
@@ -223,31 +231,40 @@ def _leaf_geo(b, base, tdir, side, up, L, W, rng, age):
     b.add(V, F, 1, age=a)
 
 
-def _needle_geo(b, base, tdir, side, up, L, W, th, mode, rng, age):
+def _needle_geo(b, base, tdir, side, up, L, W, th, mode, rng, age, quad=False):
     N = len(base)
     if N == 0:
         return
     if W > 0.02:
         _leaf_geo(b, base, tdir, side, up, L, W, rng, age)
         return
-    t = th * (1 + rng.normal(0, 0.22, N))
+    t = th * (1 + rng.normal(0, 0.18, N))
     if mode == "flat":
         # fir: two-ranked with a strong upward sweep, the brush of the upper shoot
         phi = np.where(rng.random(N) < 0.5, 0.28, np.pi - 0.28) + rng.normal(0, 0.42, N)
     elif mode == "brush":
-        phi = np.pi / 2 + rng.normal(0, 1.15, N)
+        # spruce: spiral all round the shoot, the lower ones twisting up to the sides, so the top is densest
+        phi = np.pi / 2 + rng.normal(0, 1.35, N)
     else:
         phi = rng.uniform(0, 2 * np.pi, N)
     d = np.cos(t)[:, None] * tdir + np.sin(t)[:, None] * (np.cos(phi)[:, None] * side + np.sin(phi)[:, None] * up)
     d = _norm(d + np.array([0, 0, 0.18]) * (mode == "flat"))
-    ll = L * (1 + rng.normal(0, 0.13, N))[:, None]
+    ll = L * (1 + rng.normal(0, 0.12, N))[:, None]
     r = _norm(rng.normal(size=(N, 3)))
     s = _norm(np.cross(d, r))
-    w = W * (1 + rng.normal(0, 0.1, N))[:, None] * 0.5
+    w = W * NEEDLE_GAIN * (1 + rng.normal(0, 0.1, N))[:, None] * 0.5
+    a = np.asarray(age, np.float32)
+    if quad:
+        # tapered blade: full width at the base, a third at the tip; stiff and straight
+        tip = base + ll * d
+        V = np.stack([base + w * s, base - w * s, tip - 0.33 * w * s, tip + 0.33 * w * s], 1)
+        idx = np.arange(N, dtype=np.int64)[:, None] * 4
+        F = np.concatenate([idx + np.array([0, 1, 2]), idx + np.array([0, 2, 3])])
+        b.add(V, F, 1, age=np.repeat(a, 4) if np.size(a) == N else a)
+        return
     V = np.stack([base + w * s, base - w * s, base + ll * d], 1)
     F = np.arange(N * 3, dtype=np.int64).reshape(N, 3)
-    a = np.repeat(np.asarray(age, np.float32), 3) if np.size(age) == N else age
-    b.add(V, F, 1, age=a)
+    b.add(V, F, 1, age=np.repeat(a, 3) if np.size(a) == N else a)
 
 
 def _diamonds(b, start, end, side, width, age, mat=1):
@@ -359,74 +376,114 @@ def _dead_twigs(b, pts, rng):
 
 def _foliage(b, sp, species, pts, L, rl, rng, lod, line, z):
     """Hang secondaries, shoots and needles (or sprays on the low LODs) on one primary branch."""
+    if lod >= 3:
+        _primary_sprays(b, sp, pts, L, rl)
+        return
+    sec = _secondaries(sp, pts, L, rl, rng, lod)
+    if lod == 2:
+        _secondary_sprays(b, sec, rl, rng)
+        return
+    _clothe(b, sp, pts, sec, rl, rng, lod)
+
+
+def _primary_sprays(b, sp, pts, L, rl):
+    """LOD 3: one or two big sprays on the primary, kept in sync with the silhouette."""
+    n = len(pts) - 1
+    p_a = pts[int(n * sp["foliage_from"])]
+    side = _norm(np.cross(pts[-1] - pts[0], np.array([0, 0, 1.0])) + 1e-6)[None]
+    w = np.array([L * sp["sec_frac"] * 1.45])
+    _diamonds(b, p_a[None], pts[-1][None] + np.array([[0, 0, -0.06 * L]]), side, w, np.array([0.5 * rl]))
+    up = np.cross(side, _norm(pts[-1] - pts[0])[None])
+    _diamonds(b, p_a[None], pts[-1][None], up * 0.5 + side * 0.2, w * 0.55, np.array([0.5 * rl + 0.2]))
+
+
+def _secondaries(sp, pts, L, rl, rng, lod):
+    """Where the secondary branches leave the primary, their direction, length and droop."""
     n = len(pts) - 1
     seg = np.diff(pts, axis=0)
-    seglen = np.linalg.norm(seg, axis=1)
-    cum = np.concatenate([[0], np.cumsum(seglen)])
+    cum = np.concatenate([[0], np.cumsum(np.linalg.norm(seg, axis=1))])
     total = cum[-1]
-
-    def along(ts):
-        s = ts * total
-        p = np.stack([np.interp(s, cum, pts[:, i]) for i in range(3)], -1)
-        idx = np.clip(np.searchsorted(cum, s) - 1, 0, n - 1)
-        return p, _norm(seg[idx])
-
     start = sp["foliage_from"]
-    spacing = sp["sec_space"]
-    if lod >= 3:
-        # one or two big sprays on the primary, kept in sync with the silhouette
-        p_a = pts[int(n * start)]
-        side = _norm(np.cross(pts[-1] - pts[0], np.array([0, 0, 1.0])) + 1e-6)[None]
-        w = np.array([L * sp["sec_frac"] * 1.45])
-        _diamonds(b, p_a[None], pts[-1][None] + np.array([[0, 0, -0.06 * L]]), side, w, np.array([0.5 * rl]))
-        up = np.cross(side, _norm(pts[-1] - pts[0])[None])
-        _diamonds(b, p_a[None], pts[-1][None], up * 0.5 + side * 0.2, w * 0.55, np.array([0.5 * rl + 0.2]))
-        return
-    ts = np.arange(start + rng.uniform(0, 0.05), 0.995, spacing / max(total, 1e-3))
+    ts = np.arange(start + rng.uniform(0, 0.05), 0.995, sp["sec_space"] / max(total, 1e-3))
     if len(ts) == 0:
         ts = np.array([0.9])
     if lod == 2:
         ts = ts[rng.integers(0, 3)::3]
         if len(ts) == 0:
             ts = np.array([0.9])
-    P, T = along(ts)
+    s = ts * total
+    P = np.stack([np.interp(s, cum, pts[:, i]) for i in range(3)], -1)
+    T = _norm(seg[np.clip(np.searchsorted(cum, s) - 1, 0, n - 1)])
     S_ = _norm(np.cross(T, np.array([0, 0, 1.0])))
     U_ = np.cross(S_, T)
     sign = np.where(np.arange(len(ts)) % 2 == 0, 1.0, -1.0)
     spread = sp["sec_spread"] * D2R * rng.uniform(0.75, 1.2, len(ts))
     envelope = np.minimum(1.0, (1 - ts) / 0.35 + 0.28) * np.minimum(1.0, (ts - start) / 0.12 + 0.5)
-    Ls = np.minimum(sp["sec_frac"] * L, sp["sec_max"]) * envelope * rng.uniform(0.75, 1.15, len(ts))
-    Ls = np.maximum(Ls, 0.05)
+    Ls = np.maximum(np.minimum(sp["sec_frac"] * L, sp["sec_max"]) * envelope * rng.uniform(0.75, 1.15, len(ts)), 0.05)
     # low branches let their secondaries hang (Engelmann curtains); upper ones hold flat
     drp = _lerp(sp["sec_droop"][0], sp["sec_droop"][1], rl) * D2R * rng.uniform(0.6, 1.3, len(ts))
-    # some secondaries go over and under the branch to thicken the spray
-    updn = rng.normal(0, 0.28, len(ts))
+    # some secondaries go over and under the branch to thicken the spray; spruce and fir sprays stay nearly planar,
+    # which is what separates their branch tiers
+    updn = rng.normal(0, sp["sec_updn"], len(ts))
     d0 = _norm(np.cos(spread)[:, None] * T + np.sin(spread)[:, None] * sign[:, None] * S_ + updn[:, None] * U_)
-    if lod == 2:
-        end = P + d0 * Ls[:, None] * 1.25 + np.array([0, 0, -1.0]) * (np.sin(drp) * Ls)[:, None] * 0.7
-        w = Ls * 0.82
-        side = _norm(np.cross(d0, U_ + rng.normal(0, 0.25, (len(ts), 3))))
-        _diamonds(b, P, end, side, w, 0.6 * (1 - ts) * rl + rng.uniform(0, 0.2, len(ts)))
-        return
-    k_seg = 3
-    t3 = np.linspace(0, 1, k_seg + 1)[None, :, None]
-    down = np.array([0, 0, -1.0])
-    Sec = P[:, None, :] + d0[:, None, :] * Ls[:, None, None] * t3 + down * (np.sin(drp) * Ls)[:, None, None] * t3 ** 2
-    rs = (0.0009 + 0.0035 * Ls)[:, None] * np.linspace(1, 0.35, k_seg + 1)[None, :]
-    tubes(b, Sec, rs, {0: 3, 1: 2}[lod], 2)
-    # shoots along each secondary, both sides, plus the terminal growth
+    return dict(P=P, U=U_, d0=d0, Ls=Ls, drp=drp, ts=ts, total=total)
+
+
+def _secondary_sprays(b, sec, rl, rng):
+    """LOD 2: one leaf-like spray per secondary."""
+    P, d0, Ls, ts = sec["P"], sec["d0"], sec["Ls"], sec["ts"]
+    end = P + d0 * Ls[:, None] * 1.25 + np.array([0, 0, -1.0]) * (np.sin(sec["drp"]) * Ls)[:, None] * 0.7
+    side = _norm(np.cross(d0, sec["U"] + rng.normal(0, 0.25, (len(ts), 3))))
+    _diamonds(b, P, end, side, Ls * 0.82, 0.6 * (1 - ts) * rl + rng.uniform(0, 0.2, len(ts)))
+
+
+DOWN = np.array([0, 0, -1.0])
+
+
+def _clothe(b, sp, pts, sec, rl, rng, lod):
+    """LOD 0-1: secondary wood, dead inner twigs, shoots, and needles on every axis that still holds them."""
+    P, d0, Ls, drp, ts = sec["P"], sec["d0"], sec["Ls"], sec["drp"], sec["ts"]
+    t3 = np.linspace(0, 1, 4)[None, :, None]
+    Sec = P[:, None, :] + d0[:, None, :] * Ls[:, None, None] * t3 + DOWN * (np.sin(drp) * Ls)[:, None, None] * t3 ** 2
+    rs = (0.0009 + 0.0035 * Ls)[:, None] * np.linspace(1, 0.35, 4)[None, :]
+    # the shaded inner crown: secondaries far from the branch tip have lost their foliage and hang on as bare twigs
+    from_tip = (1 - ts) * sec["total"]
+    live = from_tip < sp["fol_depth"] * rng.uniform(0.8, 1.2)
+    if lod == 0 and (~live).any():
+        stub = rng.uniform(0.25, 0.6, (~live).sum())[:, None, None]
+        tubes(b, P[~live][:, None, :] + (Sec[~live] - P[~live][:, None, :]) * stub, rs[~live] * 0.8, 2, 2)
     L_ = LOD[lod]
-    tw = sp["twig_space"]
-    counts = np.maximum((Ls / tw).astype(int), 1)
+    if not live.any():
+        _needles(b, sp, *_tip_segments(pts[None], sp["ndl_prim"]), rng, L_)
+        return
+    live_sec = {k: (v[live] if np.ndim(v) else v) for k, v in sec.items()}
+    Sec, from_tip = Sec[live], from_tip[live]
+    tubes(b, Sec, rs[live], {0: 3, 1: 2}[lod], 2)
+    base, tdir, Lt, sh_from = _shoots(sp, live_sec, Sec, rl, rng, L_)
+    if L_["twig_k"] == 2:
+        tp = np.stack([base, base + tdir * Lt[:, None] * 0.5, base + tdir * Lt[:, None]], 1)
+        tubes(b, tp, np.array([0.0013, 0.001, 0.0005])[None] * np.ones((len(base), 1)), 2, 2)
+    keep = np.minimum(Lt, sp["ndl_shoot"])
+    segs = [
+        _tip_segments(pts[None], sp["ndl_prim"]),
+        _tip_segments(Sec, sp["ndl_sec"], from_tip[:, None] * 0.3),
+        (base + tdir * (Lt - keep)[:, None], tdir, keep, keep + sh_from),
+    ]
+    _needles(b, sp, *(np.concatenate(c) for c in zip(*segs)), rng, L_)
+
+
+def _shoots(sp, sec, Sec, rl, rng, L_):
+    """Shoots along each secondary, both sides, plus its terminal growth. Returns base, direction, length and the
+    path distance from each shoot's base to the secondary's growing tip, which sets needle age."""
+    P, d0, Ls, drp, ts, U_ = sec["P"], sec["d0"], sec["Ls"], sec["drp"], sec["ts"], sec["U"]
+    counts = np.maximum((Ls / sp["twig_space"]).astype(int), 1)
     if L_["twig_keep"] < 1:
         counts = np.maximum((counts * L_["twig_keep"]).astype(int), 1)
     sid = np.repeat(np.arange(len(ts)), counts)
-    u = (np.concatenate([(np.arange(c) + rng.uniform(0.2, 0.8)) / c for c in counts]))
-    u = np.clip(u, 0.03, 1)
-    base = P[sid] + d0[sid] * (Ls[sid] * u)[:, None] + down * (np.sin(drp[sid]) * Ls[sid] * u ** 2)[:, None]
-    tdir0 = _norm(d0[sid] + 2 * u[:, None] * down * np.sin(drp[sid])[:, None])
+    u = np.clip(np.concatenate([(np.arange(c) + rng.uniform(0.2, 0.8)) / c for c in counts]), 0.03, 1)
+    base = P[sid] + d0[sid] * (Ls[sid] * u)[:, None] + DOWN * (np.sin(drp[sid]) * Ls[sid] * u ** 2)[:, None]
+    tdir0 = _norm(d0[sid] + 2 * u[:, None] * DOWN * np.sin(drp[sid])[:, None])
     Sx = _norm(np.cross(tdir0, U_[sid]))
-    Ux = np.cross(Sx, tdir0)
     m = len(sid)
     sgn = np.where(rng.random(m) < 0.5, 1.0, -1.0)
     twsp = sp["twig_spread"] * D2R * rng.uniform(0.7, 1.2, m)
@@ -434,40 +491,37 @@ def _foliage(b, sp, species, pts, L, rl, rng, lod, line, z):
     Lt = rng.uniform(*sp["twig_len"], m) * np.where(u > 0.82, 1.2, 1.0) * np.minimum(1.0, 0.5 + (1 - u) * 1.5)
     tl_drp = _lerp(sp["twig_droop"][0], sp["twig_droop"][1], rl) * D2R * rng.uniform(0.5, 1.3, m)
     tdir = _norm(np.cos(twsp)[:, None] * tdir0 + np.sin(twsp)[:, None] * sgn[:, None] * Sx +
-                 down * np.sin(tl_drp)[:, None] + rng.normal(0, 0.15, (m, 3)))
-    # terminal shoot on each secondary
-    term = Sec[:, -1, :]
-    tterm = _norm(Sec[:, -1, :] - Sec[:, -2, :])
-    base = np.vstack([base, term])
-    tdir = np.vstack([tdir, tterm])
+                 DOWN * np.sin(tl_drp)[:, None] + rng.normal(0, 0.10, (m, 3)))
+    base = np.vstack([base, Sec[:, -1, :]])
+    tdir = np.vstack([tdir, _norm(Sec[:, -1, :] - Sec[:, -2, :])])
     Lt = np.concatenate([Lt, rng.uniform(*sp["twig_len"], len(ts)) * 1.2])
-    tprim = np.concatenate([ts[sid], ts])
-    uu = np.concatenate([u, np.ones(len(ts))])
-    age_tw = np.clip(1.0 - (0.55 * tprim + 0.45 * uu) + rng.normal(0, 0.1, len(base)), 0, 1)
-    if L_["twig_k"] == 2:
-        tp = np.stack([base, base + tdir * Lt[:, None] * 0.5, base + tdir * Lt[:, None]], 1)
-        tr = np.array([0.0013, 0.001, 0.0005])[None] * np.ones((len(base), 1))
-        tubes(b, tp, tr, 2, 2)
-    _shoot_needles(b, sp, base, tdir, Lt, age_tw, rng, L_)
+    # path distance from the nearest growing tip: every branch end carries fresh light growth over an older interior
+    sh_from = np.concatenate([(1 - u) * Ls[sid], np.zeros(len(ts))])
+    return base, tdir, Lt, sh_from
 
 
-def _shoot_sprays(b, sp, base, tdir, Lt, age, rng):
-    """LOD 1: each shoot is two crossed slim diamonds with the same foliage area as its needles."""
-    S, U = _frames(tdir)
-    nl = sp["needle_len"] * np.sin(sp["needle_theta"] * D2R)
-    width = 2.0 * nl + 0.006
-    a = rng.uniform(-0.5, 0.5, len(base))[:, None]
-    side = np.cos(a) * S + np.sin(a) * U
-    end = base + tdir * (1.3 * Lt + sp["needle_len"] * 0.7)[:, None]
-    # three slim crossed blades read as a bottlebrush shoot from any side, not as a broad leaf
-    w = np.full(len(base), width * 0.95)
-    _diamonds(b, base, end, side, w, age)
-    for ang in (2.09, 4.19):
-        _diamonds(b, base, end, np.cos(a + ang) * S + np.sin(a + ang) * U, w, age)
+AGE_M = 0.5  # metres of path back from a growing tip at which needles reach full old-needle colour
 
 
-def _shoot_needles(b, sp, base, tdir, Lt, age, rng, L_):
-    per = np.maximum(Lt / sp["needle_space"] * L_["needle_mult"], 0.0)
+def _tip_segments(P, keep_m, extra=0.0):
+    """Straight pieces of polylines P (m, k+1, 3) lying within keep_m metres of each line's end.
+    Returns base (s,3), unit direction (s,3), length (s,), and path distance from the tip at each base (s,)."""
+    seg = np.diff(P, axis=1)
+    ln = np.linalg.norm(seg, axis=-1)
+    d = seg / np.maximum(ln, 1e-9)[..., None]
+    s0 = np.concatenate([np.zeros((len(P), 1)), np.cumsum(ln, 1)[:, :-1]], 1)
+    tot = ln.sum(1, keepdims=True)
+    a = np.maximum(s0, tot - keep_m)
+    ok = s0 + ln > a + 1e-4
+    base = P[:, :-1] + d * (a - s0)[..., None]
+    dist = tot - a + np.broadcast_to(extra, ln.shape)
+    return base[ok], d[ok], (s0 + ln - a)[ok], dist[ok]
+
+
+def _needles(b, sp, base, tdir, length, dist, rng, L_):
+    """Needles along straight shoot pieces, base to base + tdir * length; dist is the path distance from the
+    growing tip at each base, which sets needle age."""
+    per = np.maximum(length / sp["needle_space"] * L_["needle_mult"], 0.0)
     cnt = np.floor(per + rng.random(len(per))).astype(int)
     mode = sp["needle_mode"]
     if mode == "tuft":
@@ -477,16 +531,17 @@ def _shoot_needles(b, sp, base, tdir, Lt, age, rng, L_):
     if len(tid) == 0:
         return
     u = rng.random(len(tid))
-    if mode == "pair":
-        u = u ** 0.55  # pine foliage crowds toward the shoot tip
     if mode == "tuft":
         spur = rng.integers(0, 6, len(tid)) / 6.0
         u = spur + rng.uniform(0, 0.012, len(tid))
     d = tdir[tid]
     S, U = _frames(d)
-    _needle_geo(b, base[tid] + d * (u * Lt[tid])[:, None], d, S, U,
-                sp["needle_len"] * L_["needle_l"], sp["needle_w"] * L_["needle_w"],
-                sp["needle_theta"] * D2R, mode, rng, np.clip(age[tid] + 0.1 * (1 - u) + rng.normal(0, 0.05, len(tid)), 0, 1))
+    age = np.clip((dist[tid] - u * length[tid]) / AGE_M + rng.normal(0, 0.08, len(tid)), 0, 1)
+    # needles shorten into the bud at each growing tip
+    tipd = np.clip(dist[tid] - u * length[tid], 0, None)
+    ln = sp["needle_len"] * L_["needle_l"] * (0.55 + 0.45 * np.clip(tipd / 0.04, 0, 1))[:, None]
+    _needle_geo(b, base[tid] + d * (u * length[tid])[:, None], d, S, U, ln, sp["needle_w"] * L_["needle_w"],
+                sp["needle_theta"] * D2R, mode, rng, age, quad=L_.get("quad", False))
 
 
 def _leader_shoots(b, sp, line, H, rng, lod):
@@ -498,11 +553,11 @@ def _leader_shoots(b, sp, line, H, rng, lod):
     a = rng.uniform(0, 6.28, m)
     tdir = _norm(np.stack([np.cos(a), np.sin(a), np.full(m, 1.6)], -1))
     Lt = rng.uniform(0.05, 0.13, m)
-    _shoot_needles(b, sp, base, tdir, Lt, np.zeros(m), rng, L_)
+    _needles(b, sp, base, tdir, Lt, Lt, rng, L_)
     if lod == 0:
         z2 = np.linspace(H - 0.5, H, 24)
         base2 = np.stack([_at(line, zz) for zz in z2])
-        _shoot_needles(b, sp, base2, np.tile([0, 0, 1.0], (24, 1)), np.full(24, 0.03), np.zeros(24), rng, L_)
+        _needles(b, sp, base2, np.tile([0, 0, 1.0], (24, 1)), np.full(24, 0.03), H - z2, rng, L_)
 
 
 def build_snag(H, seed, lod):
@@ -531,97 +586,23 @@ def build_snag(H, seed, lod):
     return b.arrays()
 
 
-def build_under(kind, seed):
-    """Ground-layer plants and debris, in the same array format as a tree. Single LOD."""
-    rng = np.random.default_rng(seed)
-    b = Builder()
-    if kind == "grass":
-        n = 70
-        a = rng.uniform(0, 2 * np.pi, n)
-        r0 = rng.uniform(0, 0.16, n)
-        base = np.stack([r0 * np.cos(a), r0 * np.sin(a), np.zeros(n)], -1)
-        lean = rng.uniform(0.25, 1.1, n)
-        h = rng.uniform(0.22, 0.62, n)
-        t = np.linspace(0, 1, 5)[None, :, None]
-        d = np.stack([np.cos(a), np.sin(a), np.zeros(n)], -1)[:, None, :]
-        P = base[:, None, :] + d * (lean * h)[:, None, None] * t ** 2 + np.array([0, 0, 1.0]) * h[:, None, None] * (t - 0.35 * lean[:, None, None] * t ** 3)
-        R = 0.0035 * (1 - t[..., 0] ** 2) + 0.0006
-        age = np.where(rng.random(n) < 0.72, 1.0, 0.0)
-        # flat ribbon blade, shaded with the needle slot
-        tubes(b, P, np.broadcast_to(R, (n, 5)), 2, 1, age=age)
-    elif kind in ("shrub", "sapling"):
-        sp = dict(SPECIES["aspen"])
-        sp.update(needle_len=0.042, needle_w=0.034, needle_space=0.018) if kind == "shrub" else None
-        if kind == "sapling":
-            arr = build_tree("subalpine", rng.uniform(1.4, 2.6), 1.0, seed, 0)
-            return arr
-        stems = rng.integers(5, 9)
-        for i in range(stems):
-            az = rng.uniform(0, 2 * np.pi)
-            H_ = rng.uniform(0.55, 1.25)
-            pts = branch_line(np.array([rng.uniform(-0.15, 0.15), rng.uniform(-0.15, 0.15), 0.0]), az, rng.uniform(55, 80) * D2R, rng.uniform(5, 35) * D2R, 0, H_, 6, rng, 0.12)
-            tubes(b, pts[None], (np.linspace(0.008, 0.002, 7))[None], 3, 2)
-            m = rng.integers(7, 14)
-            ts = rng.uniform(0.25, 1.0, m)
-            idx = (ts * 6).astype(int)
-            base = pts[idx]
-            a2 = rng.uniform(0, 2 * np.pi, m)
-            d = _norm(np.stack([np.cos(a2), np.sin(a2), rng.uniform(0.0, 0.9, m)], -1))
-            L = rng.uniform(0.12, 0.34, m)
-            P = np.stack([base, base + d * L[:, None] * 0.5, base + d * L[:, None]], 1)
-            tubes(b, P, np.array([0.002, 0.0015, 0.0007])[None] * np.ones((m, 1)), 2, 2)
-            nl = (L / sp["needle_space"]).astype(int)
-            tid = np.repeat(np.arange(m), nl)
-            u = rng.random(len(tid))
-            S, U = _frames(d[tid])
-            _needle_geo(b, base[tid] + d[tid] * (u * L[tid])[:, None], d[tid], S, U, sp["needle_len"], sp["needle_w"], 58 * D2R, "brush", rng, rng.random(len(tid)))
-    elif kind == "log":
-        L = rng.uniform(5.0, 11.0)
-        rad = rng.uniform(0.09, 0.22)
-        n = 10
-        x = np.linspace(-L / 2, L / 2, n)
-        P = np.stack([x, rng.normal(0, 0.03, n).cumsum(), rad * 0.6 + rng.normal(0, 0.01, n)], -1)[None]
-        R = np.linspace(rad, rad * 0.45, n)[None]
-        tubes(b, P, R, 9, 2)
-        for _ in range(rng.integers(5, 12)):
-            i = rng.integers(1, n - 1)
-            pts = branch_line(P[0, i], rng.uniform(0, 6.28), rng.uniform(-30, 45) * D2R, 0, 0, rng.uniform(0.12, 0.6), 2, rng, 0.2)
-            tubes(b, pts[None], np.array([0.016, 0.012, 0.004])[None], 3, 2)
-    elif kind == "rock":
-        # displaced subdivided octahedron; low relief so it shades correctly under the rock material
-        v = np.array([[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]], float)
-        f = np.array([[0, 2, 4], [2, 1, 4], [1, 3, 4], [3, 0, 4], [2, 0, 5], [1, 2, 5], [3, 1, 5], [0, 3, 5]])
-        for _ in range(4):
-            mids = {}
-            nf = []
-            vv = list(v)
-
-            def mid(a, c):
-                k = (min(a, c), max(a, c))
-                if k not in mids:
-                    mids[k] = len(vv)
-                    vv.append((vv[a] + vv[c]) * 0.5)
-                return mids[k]
-
-            for t in f:
-                ab, bc, ca = mid(t[0], t[1]), mid(t[1], t[2]), mid(t[2], t[0])
-                nf += [[t[0], ab, ca], [t[1], bc, ab], [t[2], ca, bc], [ab, bc, ca]]
-            v, f = np.array(vv), np.array(nf)
-        v = v / np.linalg.norm(v, axis=1, keepdims=True)
-        rs = rng.normal(size=(9, 3))
-        rs /= np.linalg.norm(rs, axis=1, keepdims=True)
-        amp = 1.0 + 0.0
-        disp = np.zeros(len(v))
-        for i, q in enumerate(rs):
-            disp += np.clip(v @ q - 0.25, 0, 1) * rng.uniform(-0.75, -0.2)  # flat fracture planes
-        v = v * (1 + disp)[:, None] * np.array([1.0, rng.uniform(0.6, 1.0), rng.uniform(0.45, 0.8)])
-        v[:, 2] -= 0.1
-        b.add(v, f, 0, uv=v[:, :2] * 0.5)
-    return b.arrays()
-
-
 def info(arr):
     return dict(verts=len(arr["verts"]), tris=len(arr["faces"]))
+
+
+def cache_key(species, lod):
+    """Content key for a cached mesh: this file's code (without the species table) plus the one species entry and
+    LOD entry it uses, so tuning one species does not throw away every other species' multi-GB hero meshes."""
+    import hashlib
+    import re
+    with open(__file__) as fh:
+        src = re.sub(r"\nSPECIES = \{.*?\n\}\n", "\n", fh.read(), flags=re.S)
+    h = hashlib.sha1(src.encode())
+    used = [species] if species in SPECIES else list(SPECIES)  # snags and the ground layer borrow other species
+    for nm in used:
+        h.update(repr(sorted(SPECIES[nm].items())).encode())
+    h.update(repr(LOD.get(lod)).encode())
+    return h.hexdigest()[:10]
 
 
 if __name__ == "__main__":

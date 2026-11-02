@@ -18,6 +18,9 @@ TEX = {
     "lichen_rock": "2k", "gray_rocks": "2k",
     "forest_ground_04": "2k", "rocky_gravel": "2k", "gravel_stones": "2k", "aerial_grass_rock": "4k", "snow_02": "2k", "snow_field_aerial": "4k",
     "brown_mud_leaves_01": "2k", "dry_riverbed_rock": "2k",
+    # second pass: grey scaly spruce and pine bark, smooth blistered fir bark, grey limestone, river cobble, talus
+    "bark_willow_02": "2k", "chinese_hackberry_bark": "2k", "marble_cliff_05": "4k", "ganges_river_pebbles": "2k",
+    "pebble_ground_01": "2k", "rocks_ground_02": "2k", "dry_river_pebbles": "2k",
 }
 MAPS = {"Diffuse": "diff", "nor_gl": "nor", "Rough": "rough", "Displacement": "disp"}
 HDRI = ["kloppenheim_06_puresky", "qwantani_dusk_2_puresky", "belfast_sunset_puresky", "kiara_1_dawn"]

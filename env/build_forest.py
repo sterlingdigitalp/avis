@@ -13,6 +13,7 @@ import numpy as np
 from scipy import ndimage as ndi
 
 import config as C
+import ground
 import trees
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -98,6 +99,20 @@ def lidar_valid_map():
     return np.isfinite(np.array(dtm[::5, ::5]))  # 10 m
 
 
+def cover_at(x, y):
+    """Crisp cover (0-1) from cover_l1.png at Blender (x, y); NaN outside its extent."""
+    from PIL import Image
+    import json
+    cm = json.load(open(f"{OUT}/cover_l1.json"))
+    img = np.asarray(Image.open(f"{OUT}/cover_l1.png"), np.float32) / 255.0
+    ext, res = cm["ext"], cm["res"]
+    c = (x - ext[0]) / res - 0.5
+    r = (ext[3] - y) / res - 0.5
+    v = ndi.map_coordinates(img, [r, c], order=1, mode="nearest")
+    inside = (x > ext[0]) & (x < ext[2]) & (y > ext[1]) & (y < ext[3])
+    return np.where(inside, v, np.nan)
+
+
 def noise_field(e, n, wl, seed):
     """Smooth stand-scale noise at scattered points, from a coarse random lattice."""
     r = np.random.default_rng(seed)
@@ -130,6 +145,10 @@ def scatter(valid_lidar):
     # expected stems per 10 m cell: closed forest is roughly 1000 stems/ha at this altitude = 10 per cell;
     # only canopy-forming stems matter at these ranges, so use a third
     lam = 3.2 * np.clip((veg - 0.15) / 0.55, 0, 1) ** 1.2
+    # inside the L1 area use the crisp cover map the terrain shader paints, so stems stop where the forest colour
+    # stops: a hard edge at the foot of scree and cliff, not a thinning fringe
+    cov = cover_at(e - OE, n - ON)
+    lam = np.where(np.isfinite(cov), 3.2 * np.clip((cov - 0.4) / 0.2, 0, 1) * np.clip((veg - 0.1) / 0.3, 0.6, 1), lam)
     lam[excl] = 0
     lam[dist > RADIUS] = 0
     # thin with distance: beyond 6 km single stems are sub-pixel and clusters suffice
@@ -174,7 +193,10 @@ def build_under(te, tn, th):
     from PIL import Image
     wl = np.asarray(Image.open(f"{OUT}/water_l0.png"))[..., 0].astype(np.float32) / 255.0
     wl = wl[: water.shape[0], : water.shape[1]]
-    water = np.maximum(water, np.pad(wl, ((0, water.shape[0] - wl.shape[0]), (0, water.shape[1] - wl.shape[1]))))
+    wl = np.pad(wl, ((0, water.shape[0] - wl.shape[0]), (0, water.shape[1] - wl.shape[1])))
+    water = np.maximum(water, wl)
+    # cobble and driftwood run right to the 2 m lidar waterline
+    c_dist = ndi.distance_transform_edt(wl < 0.4) * 2.0
     water = ndi.maximum_filter(water, size=3)  # keep a metre or two of clear bank
     w_dist = ndi.distance_transform_edt(water < 0.3) * 2.0
     land = (water < 0.3) & (slope < 1.1)
@@ -195,12 +217,23 @@ def build_under(te, tn, th):
         sc = rng.uniform(*zscale, rep.sum()).astype(np.float32)
         groups.append((px, py, kind, sc))
 
-    un = {v[0]: i for i, v in enumerate(trees.UNDER)}
+    un = {v[0]: i for i, v in enumerate(ground.UNDER)}
     gi = [un["grass_a"], un["grass_b"], un["grass_c"]]
     si = [un["shrub_a"], un["shrub_b"], un["shrub_c"]]
     ri = [un["rock_a"], un["rock_b"], un["rock_c"]]
-    # Cured late-September grass on the open flats, sparse in the forest
-    emit((16.0 * open_ ** 1.5 * np.clip(veg + 0.25, 0, 1) + 0.8) * patch * land * ~gravel, gi, (0.6, 1.25))
+    mi = [un["meadow_a"], un["meadow_b"], un["meadow_c"]]
+    ci = [un["cobble_a"], un["cobble_b"], un["cobble_c"]]
+    di = [un["drift_a"], un["drift_b"], un["drift_c"]]
+    meadow = np.clip(open_ * 1.4 - 0.25, 0, 1) * np.clip((veg - 0.12) / 0.2, 0, 1) * land * ~gravel * (slope < 0.35)
+    # Cured late-September grass: overlapping carpet tiles on the open flats (one per ~2.6 m2 gives full cover),
+    # single tufts in the forest openings and at the meadow edges
+    emit(meadow * 4.0 / 2.6, mi, (0.8, 1.2))
+    emit((3.0 * open_ ** 1.5 * np.clip(veg + 0.25, 0, 1) * (1 - meadow) + 0.8) * patch * land * ~gravel, gi, (0.6, 1.25))
+    # river cobble over the bars and banks, densest near the water; bleached driftwood stranded near the waterline
+    bar = (veg < 0.22) & (c_dist > 0) & (c_dist < 60) & (slope < 0.6)
+    near_w = np.clip((45 - c_dist) / 30, 0, 1)
+    emit((bar * 4.0 / 2.2 + (~bar & (c_dist > 0)) * 1.2 * np.clip((8 - c_dist) / 6, 0, 1)) * near_w * (slope < 0.6), ci, (0.7, 1.15))
+    emit(bar * np.clip((18 - c_dist) / 14, 0, 1) * 0.014 * (slope < 0.3), di, (0.6, 1.15))
     emit((0.035 + 0.11 * cover * patch) * land, si, (0.6, 1.2))
     emit(0.006 * (0.1 + cover) * land, [un["log_a"], un["log_b"]], (0.7, 1.15))
     emit(0.02 * cover * land, [un["sap_a"], un["sap_b"]], (0.8, 1.8))
@@ -215,7 +248,7 @@ def build_under(te, tn, th):
     np.savez(f"{OUT}/under.tmp.npz", x=px.astype(np.float32), y=py.astype(np.float32), z=pz.astype(np.float32), kind=kind, scale=sc,
              rot=rng.uniform(0, 2 * np.pi, len(px)).astype(np.float32))
     os.replace(f"{OUT}/under.tmp.npz", f"{OUT}/under.npz")
-    print("understorey instances", len(px), {v[0]: int((kind == i).sum()) for i, v in enumerate(trees.UNDER)}, flush=True)
+    print("understorey instances", len(px), {v[0]: int((kind == i).sum()) for i, v in enumerate(ground.UNDER)}, flush=True)
 
 
 def main():

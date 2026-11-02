@@ -98,16 +98,81 @@ def stream_power(z, res, mask, iters=12, k=0.12, max_delta=38.0):
     return z.astype(np.float32)
 
 
-def rock_strata(xx, yy, z, rockmask, amp, period, seed):
-    """Tilted limestone bedding: terraces along a plane striking NW-SE, dipping SW like the Rundle thrust sheets."""
-    # bedding normal: strike 315 deg, dip 45 deg to the SW
-    nx, ny, nz = -0.5, -0.5, 0.707
-    warp = fractal(z.shape, abs(xx[0, 1] - xx[0, 0]), [(180, 6.0), (60, 2.0)], seed)
-    coord = (nx * xx + ny * yy + nz * z + warp) / period
-    frac = coord - np.floor(coord)
-    # asymmetric ledge profile: long bench, short riser
-    ledge = np.where(frac < 0.78, frac / 0.78, (1 - frac) / 0.22) - 0.5
-    return z + amp * ledge * rockmask
+def rock_bands(xx, yy, z, mask, layers, dip=55.0, dipdir=225.0, seed=6):
+    """Cliff bands where tilted limestone beds crop out on an escarpment, like the Rundle thrust sheet (beds dipping
+    about 55 degrees to the south-west). Each layer (period m, amplitude m, riser fraction) turns every bed into a
+    steep riser and a gentler bench; bed hardness varies along strike so bands pinch out. Zero mean."""
+    a, d = np.radians(dipdir), np.radians(dip)
+    n = (np.sin(d) * np.sin(a), np.sin(d) * np.cos(a), np.cos(d))
+    res = abs(xx[0, 1] - xx[0, 0])
+    c = n[0] * xx + n[1] * yy + n[2] * z + fractal(z.shape, res, [(700, 22.0), (180, 6.0)], seed)
+    out = z.copy()
+    for i, (period, amp, riser) in enumerate(layers):
+        hard = np.clip(0.75 + 0.45 * fractal(z.shape, res, [(400, 1.0)], seed + 10 + i), 0.25, 1.4)
+        t = (c / period) % 1.0
+        u = np.clip(t / riser, 0, 1)
+        out += amp * (u * u * (3 - 2 * u) - t - (0.5 - riser / 2)) * hard * mask
+    return out
+
+
+def shore_map(wmask, valid, res):
+    """Distance on land to the lidar waterline, for the wet band, cobble and bank shading."""
+    d = ndi.distance_transform_edt(~wmask) * res
+    la = np.dstack([(np.clip(d / C.SHORE_RANGE, 0, 1) * 255 + 0.5).astype(np.uint8), np.where(valid, 255, 0).astype(np.uint8)])
+    Image.fromarray(la, "LA").save(f"{OUT}/shore_l0.png")
+
+
+def fall_line_flutes(z, res, mask, amp, length, seed):
+    """Ribs and couloirs down steep rock: white noise smeared along the local fall line (line-integral
+    convolution), so relief at 10-40 m runs downslope the way a weathered limestone face is fluted."""
+    zs = ndi.gaussian_filter(z, 24.0 / res)
+    gy, gx = np.gradient(zs, res)
+    g = np.hypot(gx, gy) + 1e-6
+    dr, dc = gy / g, gx / g  # unit fall direction in (row, col)
+    rng = np.random.default_rng(seed)
+    n = ndi.gaussian_filter(rng.standard_normal(z.shape).astype(np.float32), 0.8)
+    rr, cc = np.mgrid[0:z.shape[0], 0:z.shape[1]].astype(np.float32)
+    steps = int(length / res / 2)
+    acc = np.zeros_like(n)
+    for k in range(-steps, steps + 1):
+        acc += ndi.map_coordinates(n, [rr + k * dr, cc + k * dc], order=1, mode="nearest")
+    acc /= acc.std() + 1e-9
+    return z + amp * acc * mask
+
+
+def sharpen(z, res, mask, sigma_m, gain):
+    """Unsharp mask on heights: crests and gully floors move apart, cliffs steepen."""
+    return z + gain * (z - ndi.gaussian_filter(z, sigma_m / res)) * mask
+
+
+COVER_RES = 5.0  # m, cover_l1.png
+
+
+def cover_map():
+    """Crisp forest/vegetation cover over the L1 area at 5 m: a noisy threshold on the 10 m Sentinel-2 cover gives a
+    hard, ragged rock-forest edge (tongues up gullies, 5-40 m irregularity) instead of a 10 m blur, and nothing grows
+    on cliffs steeper than about 52 degrees. The terrain shader and build_forest.py both read it, so the painted edge
+    and the tree stems agree."""
+    L1 = np.load(f"{OUT}/level_l1.npz")
+    ext, res, z1 = L1["ext"], float(L1["res"]), L1["z"]
+    masks = np.load(f"{OUT}/masks.npy", mmap_mode="r")
+    xs = np.arange(ext[0] + COVER_RES / 2, ext[2], COVER_RES)
+    ys = np.arange(ext[3] - COVER_RES / 2, ext[1], -COVER_RES)
+    xx, yy = np.meshgrid(xs, ys)
+    col = (xx + OE - W0) / 10 - 0.5
+    row = (N0 - (yy + ON)) / 10 - 0.5
+    veg = ndi.map_coordinates(np.array(masks[..., 1], np.float32) / 255.0, [row, col], order=3, mode="nearest")
+    thr = 0.21 + 0.05 * fractal(veg.shape, COVER_RES, [(35, 1.0)], 21) + 0.02 * fractal(veg.shape, COVER_RES, [(7, 1.0)], 22)
+    cov = np.clip((veg - thr) / 0.04 + 0.5, 0, 1)
+    gy, gx = np.gradient(z1.astype(np.float32), res)
+    slope = ndi.map_coordinates(np.hypot(gx, gy), [(ext[3] - yy) / res, (xx - ext[0]) / res], order=1, mode="nearest")
+    cov *= np.clip((1.28 - slope) / 0.3, 0, 1)  # tan 52 deg = 1.28
+    hard = ndi.binary_opening(cov > 0.5, iterations=1)
+    cov = np.where(hard, np.maximum(cov, 0.5), np.minimum(cov, 0.49))
+    Image.fromarray((cov * 255 + 0.5).astype(np.uint8)).save(f"{OUT}/cover_l1.png")
+    json.dump({"ext": [float(xs[0] - COVER_RES / 2), float(ys[-1] - COVER_RES / 2), float(xs[-1] + COVER_RES / 2), float(ys[0] + COVER_RES / 2)],
+               "res": COVER_RES}, open(f"{OUT}/cover_l1.json", "w"))
+    print("cover map", cov.shape, "covered %.3f" % (cov > 0.5).mean(), flush=True)
 
 
 def build_dem():
@@ -216,7 +281,7 @@ def build_levels(z30, hr8, valid8, l0_center, l0_half, masks):
     rock = rockmask_at(xx, yy)
     rock_s = ndi.gaussian_filter(rock, 2.0)
     slope = np.hypot(*np.gradient(z, 8.0))
-    det = fractal(z.shape, 8.0, [(300, 8.0), (120, 5.0), (55, 2.6), (26, 1.3)], 5)
+    det = fractal(z.shape, 8.0, [(300, 5.0), (120, 3.5), (55, 2.0), (26, 1.0)], 5)
     z_syn = z + det * (0.2 + 0.8 * rock_s) * np.clip(slope / 0.35, 0.2, 1.2)
     # Incise only outside lidar. Inside it the real 8 m surface already has its gullies.
     bw_, bs_, be_, bn_ = C.HR8_BOX
@@ -224,18 +289,20 @@ def build_levels(z30, hr8, valid8, l0_center, l0_half, masks):
     row_ = (bn_ - (yy + ON)) / 8 - 0.5
     lidar_w = feather(ndi.map_coordinates(valid8.astype(np.float32), [row_, col_], order=1, mode="constant") > 0.99, 8.0, 260.0)
     erode_mask = (rock_s * np.clip(slope / 0.45, 0, 1) * (1 - lidar_w)).astype(np.float32)
-    # coarse pass carves the big couloirs, fine pass adds their tributaries
+    # A light coarse pass deepens the couloirs the 30 m data already holds. Strong incision (the first pass) carved
+    # smooth dendritic spurs that read as eroded clay; limestone walls are shaped by their bedding instead.
     co = z_syn[::2, ::2]
-    co_e = stream_power(co, 16.0, erode_mask[::2, ::2], iters=10, k=0.16)
+    co_e = stream_power(co, 16.0, erode_mask[::2, ::2], iters=5, k=0.07)
     delta = ndi.zoom(co_e - co, 2, order=1)[: z_syn.shape[0], : z_syn.shape[1]]
     pad_h, pad_w = z_syn.shape[0] - delta.shape[0], z_syn.shape[1] - delta.shape[1]
     delta = np.pad(delta, ((0, pad_h), (0, pad_w)), mode="edge")
     z_syn = z_syn + delta
-    z_syn = stream_power(z_syn, 8.0, erode_mask, iters=4, k=0.08, max_delta=10.0)
-    # Cliff bands: strong enough to read at 6 km on the Rundle wall; then a finer set.
-    mask_b = rock_s * np.clip(slope / 0.5, 0, 1) * (1 - lidar_w)
-    z_syn = rock_strata(xx, yy, z_syn, mask_b, 15.0, 92.0, 6)
-    z_syn = rock_strata(xx, yy, z_syn, mask_b, 4.0, 23.0, 7)
+    # Cliff bands strong enough to read at 3-8 km; finer beds are left to the shader (env/scene.py BED_N, same dip).
+    mask_b = rock_s * np.clip((slope - 0.25) / 0.45, 0, 1) * (1 - lidar_w)
+    z_syn = sharpen(z_syn, 8.0, mask_b, 40.0, 1.1)
+    z_syn = fall_line_flutes(z_syn, 8.0, mask_b, 6.0, 110.0, 8)
+    # beds: a few massive cliff-forming units and thinner sets with short, steep risers
+    z_syn = rock_bands(xx, yy, z_syn, mask_b, [(95.0, 30.0, 0.45), (31.0, 13.0, 0.35)])
     fin = np.nan_to_num(hr8, nan=0.0)
     bw, bs, be, bn = C.HR8_BOX
     col = (xx + OE - bw) / 8 - 0.5
@@ -289,6 +356,7 @@ def build_levels(z30, hr8, valid8, l0_center, l0_half, masks):
     wsoft = ndi.gaussian_filter(wmask.astype(np.float32), 1.0)
     la = np.dstack([(wsoft * 255).astype(np.uint8), np.full(wsoft.shape, 255, np.uint8)])
     Image.fromarray(la, "LA").save(f"{OUT}/water_l0.png")
+    shore_map(wmask, vl, 2.0)
     print("L0 lidar water fraction %.4f" % wmask.mean(), flush=True)
     z0 = flatten_water(xx, yy, z0, 2.0, wsoft)
     levels.append(("l0", ext0, 2.0, z0 - origin_z))
@@ -411,6 +479,9 @@ def build_maps(z30):
 
 
 def main():
+    if "--cover" in sys.argv:
+        cover_map()
+        return
     l0c = tuple(float(v) for v in sys.argv[1:3]) if len(sys.argv) > 2 else (-500.0, -300.0)
     l0h = tuple(float(v) for v in sys.argv[3:5]) if len(sys.argv) > 4 else (1500.0, 1500.0)
     z30, hr8, valid8 = build_dem()
@@ -419,6 +490,7 @@ def main():
     else:
         masks = build_maps(z30)
     build_levels(z30, hr8, valid8, l0c, l0h, masks)
+    cover_map()
 
 
 if __name__ == "__main__":
