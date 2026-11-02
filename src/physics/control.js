@@ -69,8 +69,26 @@ function interpTable(tab, v) {
 }
 
 /**
+ * Twist amplitude for a stroke (round 3, cfg.dynSchedule = { rRef_m, gain, min, max }): the trim's twist plus `gain`
+ * times the change in plunge angle atan(2 pi f A r / V) at the reference radius from the trim's, so the outer wing's
+ * angle of attack swing stays near the trim's as stroke speed or airspeed change. Without a schedule: the trim's twist.
+ */
+export function twistSchedule(cfg, tr, freq, amp, V) {
+  const s = cfg.dynSchedule;
+  if (!s) return tr.dyn;
+  const r = s.rRef_m;
+  const plunge = (f, a, v) => Math.atan((TWO_PI * Math.max(f, 0) * a * r) / Math.max(v, 3));
+  const d = tr.dyn + s.gain * (plunge(freq, amp, V) - plunge(tr.freq, tr.amp, tr.V));
+  return Math.max(s.min, Math.min(s.max, d));
+}
+
+/**
  * ctl config (design.control): { trim: [{V, theta, freq, tail, amp, sym, dyn}], Iz, Ix, Iy, Md, Ld, Nd, Vcruise,
  *   Vmin, freqMax, freqMin, ampMax, climbMax, sinkMax, maxBank, lead }.
+ * Round 3 options: dynSchedule (twistSchedule above) and tecs = { Vfloor, Vmax, kV, wV, kGammaE, kIE, band }: total
+ * energy control. Stroke (thrust) closes the total energy rate error, pitch closes the balance between height and
+ * speed, and below Vfloor + band the balance moves to speed only, so the bird never trades its speed into the back
+ * side of the power curve when the stroke is at its envelope.
  */
 export function createController(design, opts = {}) {
   const cfg = design.control;
@@ -111,6 +129,8 @@ export function createController(design, opts = {}) {
   let pF = 0, qF = 0, rF = 0;
   let phiF = 0, thF = 0;
   let VFilt = cfg.Vcruise;
+  let vdotF = 0;
+  let vPrevF = null;
 
   // Control integrators
   let iTheta = 0;
@@ -264,7 +284,12 @@ export function createController(design, opts = {}) {
       hF = hEst;
       VF2 = VasEst;
     }
-    return { wx: pF, wy: qF, wz: rF, phi: phiF, theta: thF, V: Math.max(VF2, 2), h: hF, vy: vyF, amps: ampsF };
+    // Airspeed rate for energy control: derivative of the notched airspeed through a 0.4 s low-pass.
+    const vNow = Math.max(VF2, 2);
+    if (vPrevF === null) vPrevF = vNow;
+    vdotF += (dt / 0.4) * ((vNow - vPrevF) / dt - vdotF);
+    vPrevF = vNow;
+    return { wx: pF, wy: qF, wz: rF, phi: phiF, theta: thF, V: vNow, h: hF, vy: vyF, amps: ampsF, vdot: vdotF };
   }
 
   function law(e) {
@@ -275,9 +300,27 @@ export function createController(design, opts = {}) {
     // Longitudinal
     let thetaC;
     let climbC = 0;
+    let steErr = null; // total energy rate error (m/s), when tecs is on
     const glideRow = cfg.glide && cfg.glide.length ? interpTable(cfg.glide, Math.max(g.speed, cfg.glide[0].V)) : null;
     if (g.mode === 'glide' || g.mode === 'flare') {
       thetaC = g.pitchCmd ?? (glideRow ? glideRow.theta : tr.theta - 0.1);
+    } else if (cfg.tecs && g.mode !== 'launch') {
+      // Total energy control. Pitch closes the energy balance rate: wH (climb error) against wV (speed rate error).
+      // Balanced (1, 1) above Vfloor + band; speed only (0, 2) at Vfloor and below.
+      const T = cfg.tecs;
+      const hErr = g.altitude - e.h;
+      climbC = g.climb ?? Math.max(-cfg.sinkMax, Math.min(cfg.climbMax, cfg.kH * hErr));
+      const Vc = Math.max(T.Vfloor, Math.min(T.Vmax, g.speed));
+      const vdC = T.kV * (Vc - e.V);
+      const x = Math.max(0, Math.min(1, (e.V - T.Vfloor) / T.band));
+      const wH = x, wV = 2 - x;
+      const sebErr = wH * (climbC - e.vy) - wV * (e.V / G0) * (vdC - vdotF);
+      thetaC = tr.theta + (cfg.kGamma * sebErr) / Math.max(e.V, 4) + iTheta;
+      iTheta += (dt * cfg.kIGamma * sebErr) / Math.max(e.V, 4);
+      iTheta = Math.max(-0.3, Math.min(0.3, iTheta));
+      const cb = Math.cos(Math.max(-1.2, Math.min(1.2, e.phi)));
+      thetaC += (cfg.dThetaPerG ?? 0) * (1 / cb - 1);
+      steErr = (climbC - e.vy) + (e.V / G0) * (vdC - vdotF);
     } else {
       const hErr = g.altitude - e.h;
       climbC = g.climb ?? Math.max(-cfg.sinkMax, Math.min(cfg.climbMax, cfg.kH * hErr));
@@ -305,9 +348,16 @@ export function createController(design, opts = {}) {
     // Speed via flap frequency: total energy rate
     let freq = 0;
     if (g.flapping) {
-      const energyErr = (g.speed - e.V) * cfg.kFv + (climbC - e.vy) * cfg.kFc + climbC * cfg.kFcFf;
-      freq = tr.freq + energyErr + iFreq;
-      iFreq += dt * cfg.kIF * ((g.speed - e.V) + 0.5 * (climbC - e.vy));
+      if (steErr !== null) {
+        // Total energy rate error, in metres per second of climb, on the stroke.
+        const kTE = cfg.tecs.kTE ?? 1;
+        freq = tr.freq + kTE * cfg.kFc * steErr + climbC * cfg.kFcFf + iFreq;
+        iFreq += dt * cfg.kIF * 2 * steErr;
+      } else {
+        const energyErr = (g.speed - e.V) * cfg.kFv + (climbC - e.vy) * cfg.kFc + climbC * cfg.kFcFf;
+        freq = tr.freq + energyErr + iFreq;
+        iFreq += dt * cfg.kIF * ((g.speed - e.V) + 0.5 * (climbC - e.vy));
+      }
       iFreq = Math.max(-1.5, Math.min(2.5, iFreq));
       // Thrust demand beyond trim is shared between frequency and stroke amplitude: stroke speed goes as f*amp.
       // Both are bounded by the stroke envelope built from component ratings (gear, motor, servo, spar).
@@ -332,7 +382,7 @@ export function createController(design, opts = {}) {
         freq = Math.max(cfg.freqMin, freq * (1 - 0.4 * iLimit));
         c.amp = Math.max(tr.amp * 0.8, c.amp * (1 - 0.3 * iLimit));
       }
-      c.dyn = tr.dyn;
+      c.dyn = twistSchedule(cfg, tr, freq, c.amp, e.V);
       c.sym = tr.sym;
     } else {
       c.amp = cfg.ampNominal * 0.8;
@@ -403,6 +453,8 @@ export function createController(design, opts = {}) {
     thF = thCmdFilt;
     // Pre-load the notch filters' state with the current attitude, and the command delay with trim.
     vyF = vyEst; hF = hEst; VF2 = VasEst;
+    vdotF = 0;
+    vPrevF = null;
     for (const [f, v] of [[nPhi, phiF], [nTh, thF], [nA, vyEst], [nH, hEst], [nV, VasEst]]) {
       f.x1 = f.x2 = f.y1 = f.y2 = v;
     }

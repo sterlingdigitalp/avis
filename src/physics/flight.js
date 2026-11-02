@@ -254,7 +254,7 @@ export function createFlight(design, opts = {}) {
   const rhoOverride = opts.rho ?? design.rho_override ?? null;
   const gAcc = opts.gravity ?? G0;
   const thddPrev = [0];
-  const bodyAcc = { a: aBody, wd: wDot, thdd: thddPrev, dph: 0 };
+  const bodyAcc = { a: aBody, wd: wDot, thdd: thddPrev, dph: 0, crank: 0 };
   const A = new Float64Array(36);
   const b = new Float64Array(6);
   const sol = new Float64Array(6);
@@ -331,6 +331,7 @@ export function createFlight(design, opts = {}) {
     const jL = { phi: sa.phi, dphi: dphi0, ddphi: ddphi0, theta: S[17], dtheta: rateL, ddtheta: accL };
     // Wing aero (fills section states)
     bodyAcc.dph = sa.dphi;
+    bodyAcc.crank = crank;
     const aero = strip.evaluate([ub, vb, wb], omAir, [wub, wvb, wwb], jR, jL, rho, mu, advanceDt, frozen.body ? null : bodyAcc);
     let Fx = aero.F[0], Fy = aero.F[1], Fz = aero.F[2];
     let Mx = aero.M[0], My = aero.M[1], Mz = aero.M[2];

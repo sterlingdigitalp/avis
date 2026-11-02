@@ -139,10 +139,18 @@ export function buildDesign(params, catalog) {
   const bellArea = 4 * (p.crank_mm ?? 12) * 25e-6 + 2 * 0.03 * 0.03;
   const crankPlateG = (plate.specs.areal_density_kg_m2 * 1000) * bellArea;
   addStruct('crank, rockers and gearbox plates', plate, crankPlateG + (p.gearboxPlate_g ?? 8), `${plate.specs.areal_density_kg_m2} kg/m2 x ${bellArea.toExponential(2)} m2, plus gearbox cheek allowance`);
-  // Couplers: pultruded rod, two
+  // Couplers: pultruded rod or carbon tube, two
   const couplerRod = byId(catalog, parts.coupler ?? 'rod-ec-3mm');
   const bMm = p.coupler_mm ?? 70;
   addStruct('couplers, 2 off', couplerRod, (2 * couplerRod.mass_g * bMm) / 1000, `${couplerRod.mass_g} g/m x ${bMm} mm x 2`);
+  // Twist drive. Legacy (round 2): the servo sits on the hand wing at 65% of its length, no linkage counted. Round 3
+  // option: the servo sits at the elbow on the arm wing and turns the hand wing through a torque rod running out to
+  // the tip; the rod's mass is on the wing. A horn linkage ratio k (wing twist per servo turn) trades the servo's
+  // published torque for speed: stall torque / k and no-load speed x k at the wing.
+  const twistAtElbow = p.twistServoAt === 'elbow';
+  const twistRod = twistAtElbow && parts.twistRod ? byId(catalog, parts.twistRod) : null;
+  const twistRodLen = twistRod ? semi - elbow : 0;
+  if (twistRod) addStruct('twist torque rods, 2 off', twistRod, 2 * twistRod.mass_g * twistRodLen, `${twistRod.mass_g} g/m x ${twistRodLen.toFixed(3)} m x 2`);
   // ---- Parts
   const motorP = byId(catalog, parts.motor);
   const escP = byId(catalog, parts.esc);
@@ -176,14 +184,19 @@ export function buildDesign(params, catalog) {
   const skinKgM2 = ((filmG + ribCount * ribMassEach) / 1000) / Sact;
   const sparKgPerM = (innerMass * elbow + outerMass * outer) / semi / semi / 1000 * 1; // length-weighted, kg/m
   const massWingOne = (innerMass + outerMass + leMass + teMass + filmG / 2 + (ribCount * ribMassEach) / 2) / 1000;
-  const twistS = wing.segments[0].length + 0.65 * outer;
+  const twistS = twistAtElbow ? wing.segments[0].length : wing.segments[0].length + 0.65 * outer;
   // Distribution for the flight model: spar + edges along the span by length, skin by area. Margin share on top.
   const marginFrac = 1 + MARGIN;
+  const rodKg = twistRod ? (twistRod.mass_g * twistRodLen) / 1000 : 0;
   const wingMass = {
     spar_kg_per_m: (((innerMass + outerMass + leMass + teMass) / semi) / 1000) * marginFrac,
     skin_kg_per_m2: skinKgM2 * marginFrac,
-    point: [{ name: 'twist servo', s_m: twistS, mass_kg: (twistP.mass_g / 1000) * marginFrac, d_m: 0 }],
-    one_wing_kg: massWingOne * marginFrac + (twistP.mass_g / 1000) * marginFrac,
+    point: [
+      { name: 'twist servo', s_m: twistS, mass_kg: (twistP.mass_g / 1000) * marginFrac, d_m: 0 },
+      // The torque rod as two halves at the quarter points of its run.
+      ...(twistRod ? [0.25, 0.75].map((q) => ({ name: 'twist torque rod', s_m: elbow + q * twistRodLen, mass_kg: 0.5 * rodKg * marginFrac, d_m: 0 })) : []),
+    ],
+    one_wing_kg: massWingOne * marginFrac + (twistP.mass_g / 1000) * marginFrac + rodKg * marginFrac,
   };
   // Neutral point (x forward) and CG target. Wing AC near c/4 of MAC; tail adds a share by its volume.
   const xAcWing = xleRoot - 0.25 * macv - 0.05 * macv;
@@ -248,8 +261,14 @@ export function buildDesign(params, catalog) {
     if (!Number.isFinite(s.stall_A)) throw new Error(`servo ${part.id} has no published stall current (SPEC M8)`);
     return { id: part.id, stall_Nm: s.stall_Nm, speed_rad_s: s.speed_rad_s, stall_A: s.stall_A, tau_s: 0.02, idle_A: part.specs.idle_current_a ?? 0, volts: s.volts, mass_kg: part.mass_g / 1000 };
   };
+  // Twist linkage ratio k: the wing sees the servo's published torque / k and its no-load speed x k. Current is from
+  // the torque at the servo (wing torque x k), which stall_A x (wing torque / (stall / k)) gives unchanged.
+  const kTw = p.twistLinkageRatio ?? 1;
+  if (!(kTw > 0)) throw new Error('twistLinkageRatio must be positive');
+  const twistSpec = servoSpec(twistP, supplyV);
+  const twistAtWing = kTw === 1 ? twistSpec : { ...twistSpec, stall_Nm: twistSpec.stall_Nm / kTw, speed_rad_s: twistSpec.speed_rad_s * kTw, linkage_ratio: kTw, servo_stall_Nm: twistSpec.stall_Nm, servo_speed_rad_s: twistSpec.speed_rad_s, linkage_note: `horn linkage ${kTw}:1 (wing twist per servo turn); torque, speed and stall current at the wing, from the servo's published row` };
   const servos = {
-    twist: servoSpec(twistP, supplyV),
+    twist: twistAtWing,
     tail: servoSpec(tailP, supplyV),
     stroke: { ...servoSpec(strokeP, supplyV), amp_rate_rad_s: 0.5 },
   };
@@ -299,7 +318,7 @@ export function buildDesign(params, catalog) {
       x_battery_m: xBattery,
     },
     motor, esc, battery: batt, servos,
-    structure: { items: structure, spar_inner: sparInner, spar_outer: sparOuter, gear_stages: gearStages, coupler: { id: couplerRod.id, od_m: couplerRod.specs.od_mm / 1000, length_m: bMm / 1000, E_GPa: couplerRod.specs.tensile_modulus_lengthways_gpa_range?.[0] ?? null, compressive_MPa: couplerRod.specs.compressive_strength_lengthways_mpa_range?.[0] ?? null } },
+    structure: { items: structure, spar_inner: sparInner, spar_outer: sparOuter, gear_stages: gearStages, coupler: couplerSpec(couplerRod, bMm) },
     bom: { parts: bom, structure, parts_g: partsG, structure_g: structG, margin_g: marginG, total_g: totalG },
     electrical: { avionics_A_5V: 0.35, avionics_note: 'FC, GPS, receiver at 5 V, assumed; catalogue lists no current draw', servo_supply_V: supplyV, bec: { part: escP.id, volts: bec.volts, amps: bec.amps, kind: bec.kind, published: bec.text, note: 'built into the flap ESC; its mass is in the BOM with the ESC' } },
     cruise: {},
@@ -313,6 +332,18 @@ export function buildDesign(params, catalog) {
     ],
   };
   return d;
+}
+
+/**
+ * Coupler section for the M7 check. A rod (round 2) keeps its fields: modulus and compressive strength at the lower
+ * of the published ranges. A tube adds its bore, and its published strength by the SPEC M7 rules (tubeAllowable).
+ */
+export function couplerSpec(part, lengthMm) {
+  const s = part.specs;
+  const base = { id: part.id, od_m: s.od_mm / 1000, length_m: lengthMm / 1000 };
+  if (part.category === 'carbon_rod') return { ...base, E_GPa: s.tensile_modulus_lengthways_gpa_range?.[0] ?? null, compressive_MPa: s.compressive_strength_lengthways_mpa_range?.[0] ?? null };
+  const a = tubeAllowable(part);
+  return { ...base, id_m: (s.id_mm ?? 0) / 1000, E_GPa: s.tensile_modulus_lengthways_gpa ?? a.E_GPa ?? null, allowable_MPa: a.sigma_MPa, allowable_basis: a.basis };
 }
 
 function parseBec(s) {

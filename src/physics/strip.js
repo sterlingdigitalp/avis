@@ -144,6 +144,10 @@ export function createStrip(wing, opts = {}) {
   const vn1 = new Float64Array(N); // previous mid-chord normal velocity
   const vn2 = new Float64Array(N);
   const vnDot = new Float64Array(N);
+  // Crank-rate coefficient gc of each section's normal velocity and its history (moving-body apparent mass).
+  const gc1 = new Float64Array(N);
+  const gc2 = new Float64Array(N);
+  const gcDot = new Float64Array(N);
   let histCount = 0;
   let primeNext = false; // start the Wagner states at their quasi-steady value on the next advancing step
 
@@ -186,6 +190,9 @@ export function createStrip(wing, opts = {}) {
     vn1.fill(0);
     vn2.fill(0);
     vnDot.fill(0);
+    gc1.fill(0);
+    gc2.fill(0);
+    gcDot.fill(0);
     histCount = 0;
   }
 
@@ -214,7 +221,7 @@ export function createStrip(wing, opts = {}) {
     let power = 0;
     const Ma = out.Ma;
     Ma.fill(0);
-    const thPrev = bodyAcc ? bodyAcc.thdd[0] : 0;
+    const crankNow = bodyAcc ? bodyAcc.crank ?? 0 : 0;
     const dphNow = bodyAcc ? bodyAcc.dph : 0;
     let rm0x = 0, rm0y = 0, rm0z = 0, rm1x = 0, rm1y = 0, rm1z = 0;
     const kAm = cal.apparentMass * aeroScale;
@@ -316,18 +323,30 @@ export function createStrip(wing, opts = {}) {
           // terms that mix body velocity with the moving section are written out:
           //   dVn/dt = d(q1)/dt + (w x vb).b - (w x pdot).b - (vb + w x p).bdot  - (a + wdot x p).b - gc thdd
           const pdx = adx + d12 * tdx, pdy = ady + d12 * tdy, pdz = adz + d12 * tdz;
-          const q1 = (wind[0] - pdx) * bx + (wind[1] - pdy) * by + (wind[2] - pdz) * bz;
+          // q1 = q1a - gc crank: the crank-rate part is split off before differencing, so that the difference never
+          // carries the crank's acceleration (gc thdd, implicit through Ma). d(q1)/dt + gc thdd = d(q1a)/dt - crank
+          // d(gc)/dt, both differenced from states alone. (Differencing q1 and cancelling the last step's gc thdd
+          // left a lagged explicit apparent mass on the crank, unstable step to step when the stroke slowed hard
+          // against a light wing: round 3, M4.)
+          const q1a = (wind[0] - pdx) * bx + (wind[1] - pdy) * by + (wind[2] - pdz) * bz + gc * crankNow;
           if (dt > 0) {
-            if (histCount >= 2) vnDot[q] = (3 * q1 - 4 * vn1[q] + vn2[q]) / (2 * dt);
-            else if (histCount === 1) vnDot[q] = (q1 - vn1[q]) / dt;
+            if (histCount >= 2) {
+              vnDot[q] = (3 * q1a - 4 * vn1[q] + vn2[q]) / (2 * dt);
+              gcDot[q] = (3 * gc - 4 * gc1[q] + gc2[q]) / (2 * dt);
+            } else if (histCount === 1) {
+              vnDot[q] = (q1a - vn1[q]) / dt;
+              gcDot[q] = (gc - gc1[q]) / dt;
+            }
             vn2[q] = vn1[q];
-            vn1[q] = q1;
+            vn1[q] = q1a;
+            gc2[q] = gc1[q];
+            gc1[q] = gc;
           }
           const wvx = om[1] * vb[2] - om[2] * vb[1], wvy = om[2] * vb[0] - om[0] * vb[2], wvz = om[0] * vb[1] - om[1] * vb[0];
           const wpx = om[1] * pdz - om[2] * pdy, wpy = om[2] * pdx - om[0] * pdz, wpz = om[0] * pdy - om[1] * pdx;
           const ux = vb[0] + om[1] * pmz - om[2] * pmy, uy = vb[1] + om[2] * pmx - om[0] * pmz, uz = vb[2] + om[0] * pmy - om[1] * pmx;
           const bdx = W.bd[j3], bdy = W.bd[j3 + 1], bdz = W.bd[j3 + 2];
-          vnDotNow = vnDot[q] + gc * thPrev + (wvx - wpx) * bx + (wvy - wpy) * by + (wvz - wpz) * bz - (ux * bdx + uy * bdy + uz * bdz);
+          vnDotNow = vnDot[q] - crankNow * gcDot[q] + (wvx - wpx) * bx + (wvy - wpy) * by + (wvz - wpz) * bz - (ux * bdx + uy * bdy + uz * bdz);
         } else {
           if (dt > 0) {
             if (histCount >= 2) vnDot[q] = (3 * vnMid - 4 * vn1[q] + vn2[q]) / (2 * dt);

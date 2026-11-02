@@ -1,6 +1,7 @@
 // Level-flight trim of a bird, cycle-averaged, and the control table the flight controller carries.
 import { buildBird, createFlight, quatFromEuler } from '../physics/flight.js';
 import { designAtmosphere, G0 } from '../physics/atmosphere.js';
+import { couplerCheck } from '../physics/structure.js';
 
 const TWO_PI = 2 * Math.PI;
 const DEG = Math.PI / 180;
@@ -333,6 +334,129 @@ export function strokeEnvelope(design, bird, rows, { nAmp = 5, fCap = null } = {
       if (a < fmax) { fmax = a; limitedBy = lim; at = row.V; }
     }
     out.push({ amp, freqMax: fmax, limitedBy, atV: at });
+  }
+  return out;
+}
+
+/**
+ * Component ratings a measured set of free-flight peaks respects (round 3 envelope). Each ratio <= 1 passes.
+ * peaks: { crankTorque, rootBend, elbowBend, couplerForce, twistTorque, motorRms, battMean, crankFreqRatio }.
+ * allowance: fraction of each rating the calm-air envelope may use, so rough-air load increments stay inside the
+ * rating (gear, spar, coupler, servo); 1 when not given.
+ */
+export function flightRatios(design, pk, allowance = {}) {
+  const st = design.structure;
+  const al = (k) => allowance[k] ?? 1;
+  const sIn = st.spar_inner, sOut = st.spar_outer;
+  const cp = couplerCheck(st.coupler, Math.max(pk.couplerForce, 1e-9));
+  const r = {
+    gear: pk.crankTorque / (trainCrankRating(st.gear_stages) * al('gear')),
+    inner_spar: (pk.rootBend * sIn.c) / sIn.I / 1e6 / ((sIn.allowable_MPa / 1.5) * al('spar')),
+    outer_spar: (pk.elbowBend * sOut.c) / sOut.I / 1e6 / ((sOut.allowable_MPa / 1.5) * al('spar')),
+    coupler: Math.max(1.5 / cp.fos_buckling, 1.5 / cp.fos_stress) / al('coupler'),
+    twist_servo_torque: pk.twistTorque / (design.servos.twist.stall_Nm * al('servo')),
+    motor_current: pk.motorRms / (design.motor.I_cont ?? Infinity),
+    battery_esc_current: pk.battMean / Math.min(design.esc.I_cont ?? Infinity, design.battery.I_cont ?? Infinity),
+    // The motor cannot hold the stroke: the governor's duty saturates (its voltage limit at 20% charge). A crank
+    // running a few percent behind the command with duty to spare is the governor's own lag, not a limit, and the
+    // peaks above are those of the stroke actually flown.
+    motor_speed: pk.dutySat > 0.1 ? 2 : 0,
+    diverged: [pk.crankTorque, pk.rootBend, pk.couplerForce].every(Number.isFinite) && pk.loadFactor < 20 ? 0 : 2,
+  };
+  let worst = 'gear';
+  for (const k of Object.keys(r)) if (r[k] > r[worst]) worst = k;
+  return { ok: r[worst] <= 1, worst, ratio: r[worst], ratios: r };
+}
+
+/**
+ * One stroke held in free flight (round 3): the bird flies closed loop with its pitch holding airspeed V while the
+ * stroke is ramped to (freq, amp) and held; twist from the controller's schedule. Battery at 20% charge, so the
+ * motor's voltage limit is the end-of-flight one. Peaks over the hold window.
+ */
+export async function strokeFlightTest(design, { V, freq, amp, ramp = 2, settle = 1, hold = 3 }) {
+  const { setupFlight } = await import('../physics/scenarios.js');
+  const { sensorTruth, twistSchedule } = await import('../physics/control.js');
+  const { sim, ctl } = setupFlight(design, { sensorNoise: false, init: { V, y: 0 } });
+  const bt = design.battery;
+  sim.x[20] = 0.8 * bt.capacity_Ah * 3600;
+  ctl.guidance.mode = 'glide';
+  ctl.guidance.speed = V;
+  const cfg = design.control;
+  const tr0 = cfg.trim.reduce((a, b) => (Math.abs(b.V - V) < Math.abs(a.V - V) ? b : a));
+  const HZ = Math.round(1 / sim.dt);
+  let iV = 0;
+  const N = Math.round((ramp + settle + hold) * HZ);
+  const w0 = Math.round((ramp + settle) * HZ);
+  let I2 = 0, Ib = 0, n = 0, crankSum = 0, Vsum = 0, sat = 0;
+  for (let k = 0; k < N; k++) {
+    const err = sim.tel.airspeed - V;
+    iV += (0.02 * err) / HZ;
+    ctl.guidance.pitchCmd = tr0.theta + 0.06 * err + iV;
+    const cmd = ctl.update(sensorTruth(sim), sim.t);
+    Object.assign(sim.cmd, cmd);
+    const g = Math.min(1, k / (ramp * HZ));
+    sim.cmd.freq = tr0.freq + g * (freq - tr0.freq);
+    sim.cmd.amp = tr0.amp + g * (amp - tr0.amp);
+    sim.cmd.dyn = twistSchedule(cfg, tr0, sim.cmd.freq, sim.cmd.amp, ctl.estimate?.V ?? V);
+    sim.cmd.throttleOff = false;
+    sim.cmd.parkPhase = null;
+    sim.step();
+    if (k === w0) for (const kk of Object.keys(sim.peaks)) sim.peaks[kk] = 0;
+    if (k > w0) {
+      I2 += sim.tel.motor_I ** 2;
+      Ib += sim.tel.batt_I;
+      crankSum += sim.snapshot().crank;
+      Vsum += sim.tel.airspeed;
+      if (sim.tel.duty >= 0.999) sat++;
+      n++;
+    }
+  }
+  return {
+    crankTorque: sim.peaks.crankTorque, rootBend: sim.peaks.rootBend, elbowBend: sim.peaks.elbowBend, couplerForce: sim.peaks.couplerForce,
+    twistTorque: sim.peaks.twistTorque, loadFactor: sim.peaks.loadFactor, motorRms: Math.sqrt(I2 / n), battMean: Ib / n,
+    crankFreqRatio: crankSum / n / (TWO_PI * freq), airspeed: Vsum / n, dutySat: sat / n,
+  };
+}
+
+/**
+ * Stroke envelope by flight test (round 3, SPEC ruling: limits from component ratings). For amplitudes across the
+ * drive's range, the highest frequency whose free-flight peaks respect every rating in flightRatios, at each of the
+ * given speeds. The frozen-body envelope (strokeEnvelope) under-reads free-flight loads: the body's recoil against
+ * the wings raises crank torque and root bending at the same stroke.
+ */
+export async function flightEnvelope(design, { speeds, nAmp = 5, allowance = {}, fTop = null, iters = 8, tester = null } = {}) {
+  // tester(V, f, amp) -> { ok, worst, pk }: the flight test by default; injectable so the search can be tested alone.
+  const fly = tester ?? (async (V, f, amp) => {
+    const pk = await strokeFlightTest(design, { V, freq: f, amp });
+    return { ...flightRatios(design, pk, allowance), pk };
+  });
+  const lo = design.drive.ampMin, hi = design.drive.ampMax;
+  const trims = design.control.trim;
+  const fT = fTop ?? 2.5 * Math.max(...trims.map((t) => t.freq));
+  const out = [];
+  for (let i = 0; i < nAmp; i++) {
+    const amp = lo + ((hi - lo) * i) / (nAmp - 1);
+    let fmax = Infinity, limitedBy = null, at = null, edge = null;
+    for (const V of speeds) {
+      const tr0 = trims.reduce((a, b) => (Math.abs(b.V - V) < Math.abs(a.V - V) ? b : a));
+      const test = (f) => fly(V, f, amp);
+      // Start from the trim's stroke speed at this amplitude, which the trim itself flies.
+      let a = Math.max(0.8, (tr0.freq * tr0.amp) / amp), b = fT;
+      const qa = await test(a);
+      if (!qa.ok) { fmax = 0; limitedBy = qa.worst; at = V; edge = qa.pk; break; }
+      let lim = 'search cap', pkA = qa.pk;
+      const qb = await test(b);
+      if (qb.ok) { a = b; pkA = qb.pk; } else {
+        lim = qb.worst;
+        for (let it = 0; it < iters; it++) {
+          const m = 0.5 * (a + b);
+          const q = await test(m);
+          if (q.ok) { a = m; pkA = q.pk; } else { b = m; lim = q.worst; }
+        }
+      }
+      if (a < fmax) { fmax = a; limitedBy = lim; at = V; edge = pkA; }
+    }
+    out.push({ amp, freqMax: fmax, limitedBy, atV: at, method: 'flight test', edge_peaks: edge && Object.fromEntries(Object.entries(edge).map(([k, v]) => [k, +v.toFixed(4)])) });
   }
   return out;
 }

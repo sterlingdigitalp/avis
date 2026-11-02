@@ -8,6 +8,7 @@ import { runPool } from './pool.js';
 import { writeGate, writeJson, ROOT } from './common.js';
 import { LIMITS, robustnessCorners, runM1, runM2, runM3, runM4Seed, runM5, runCorridor } from '../scenarios.js';
 import { createWind } from '../wind.js';
+import { couplerCheck } from '../structure.js';
 
 const path = resolve(process.argv[2]);
 const design = JSON.parse(readFileSync(path, 'utf8'));
@@ -46,6 +47,9 @@ const passingSeeds = m4.map((r, i) => (r && !r.error && r.passed ? i + 1 : null)
 const halfSeeds = passingSeeds.length ? passingSeeds : m4.map((r, i) => i + 1).slice(0, 20);
 const m4half = await runPool(halfSeeds.map((s) => ({ task: 'M4', args: { design: path, seed: s, opts: half } })));
 const m4ok = m4.filter((r) => r && !r.error && r.passed).length;
+// Flight logs of two passing seeds for the film and page (round 3), rerun in this process with the log on.
+const loggedPassing = passingSeeds.slice(0, 2);
+for (const s of loggedPassing) logOut(`M4-seed${s}`, runM4Seed(design, s, { log: true }));
 const byH = {};
 for (const r of m4) {
   if (!r || r.error) continue;
@@ -120,11 +124,11 @@ const gearUse = gears.map((g, i) => {
 });
 const cp = st.coupler;
 const Fc = worst('couplerForce');
-const Irod = (Math.PI * cp.od_m ** 4) / 64;
-const Pcr = (Math.PI ** 2 * cp.E_GPa * 1e9 * Irod) / cp.length_m ** 2;
-const sigRod = Fc / ((Math.PI * cp.od_m ** 2) / 4) / 1e6;
-const fosRodBuckle = Pcr / Fc;
-const fosRodStress = 400 / sigRod;
+const cpc = couplerCheck(cp, Fc);
+const Pcr = cpc.buckling_N;
+const sigRod = cpc.stress_MPa;
+const fosRodBuckle = cpc.fos_buckling;
+const fosRodStress = cpc.fos_stress;
 const twistT = worst('twistTorque');
 const tailT = worst('tailTorque');
 const servoOk = twistT <= design.servos.twist.stall_Nm && tailT <= design.servos.tail.stall_Nm;
@@ -134,7 +138,7 @@ writeGate({
   measured: {
     spar_inner: { id: sIn.id, moment_Nm: worst('rootBend'), stress_MPa: sigIn, allowable_MPa: sIn.allowable_MPa, fos: fosIn },
     spar_outer: { id: sOut.id, moment_Nm: worst('elbowBend'), stress_MPa: sigOut, allowable_MPa: sOut.allowable_MPa, fos: fosOut },
-    coupler: { id: cp.id, force_N: Fc, buckling_N: Pcr, fos_buckling: fosRodBuckle, stress_MPa: sigRod, fos_stress: fosRodStress, E_GPa: cp.E_GPa },
+    coupler: { id: cp.id, force_N: Fc, buckling_N: Pcr, fos_buckling: fosRodBuckle, stress_MPa: sigRod, fos_stress: fosRodStress, allowable_MPa: cpc.allowable_MPa, E_GPa: cp.E_GPa, section: cpc.section },
     crank_torque_Nm: crankT, gears: gearUse, gears_within_rating: gearOk,
     twist_servo: { torque_Nm: twistT, rated_stall_Nm: design.servos.twist.stall_Nm }, tail_servo: { torque_Nm: tailT, rated_stall_Nm: design.servos.tail.stall_Nm },
     peak_load_factor_at_cg: worst('loadFactor'), fos_min: fosMin,
