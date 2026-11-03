@@ -4,7 +4,6 @@
 // Called by bird.js buildBird with its build context. A design with no structure.airframe (an older design) draws
 // nothing: this is the only generic contract this module keeps.
 import * as THREE from 'three';
-import { lockFlangeCircles } from '../../src/design/airframe.js';
 
 const TWO_PI = 2 * Math.PI;
 export const toM = (mm) => mm / 1000;
@@ -15,7 +14,13 @@ export const offCount = (item) => +(item?.name.match(/,\s*(\d+)\s*off/)?.[1] ?? 
 // real design that happens to have every field this module can read.
 export const parseTube = (basis) => { const m = basis.match(/([\d.]+)\/([\d.]+)\s*mm tube x\s*([\d.]+)\s*mm/); return m && { od: +m[1], id: +m[2], len: +m[3] }; };
 export const parseRing = (basis) => { const m = basis.match(/ring\s*([\d.]+)\/([\d.]+)\s*x\s*([\d.]+)\s*mm/); return m && { od: +m[1], id: +m[2], t: +m[3] }; };
-export const parseBlocks = (basis) => { const m = basis.match(/([\d.]+)\s*x\s*([\d.]+)\s*mm blocks x\s*([\d.]+)\s*mm/); return m && { a: +m[1], b: +m[2], len: +m[3] }; };
+/** Clamp blocks: "A x B mm blocks x L mm", or (v24) "each a A mm square collar bored D mm and a W x H mm screw flange ..., x L mm". */
+export const parseBlocks = (basis) => {
+  const m = basis.match(/([\d.]+)\s*x\s*([\d.]+)\s*mm blocks x\s*([\d.]+)\s*mm/);
+  if (m) return { a: +m[1], b: +m[2], len: +m[3] };
+  const c = basis.match(/([\d.]+)\s*mm square collar.*?([\d.]+)\s*x\s*([\d.]+)\s*mm screw flange.*x\s*([\d.]+)\s*mm/);
+  return c && { a: +c[1], b: +c[1], len: +c[4], flange: { w: +c[2], h: +c[3] } };
+};
 export const parsePlate = (basis) => { const m = basis.match(/([\d.]+)\s*mm x\s*([\d.]+)\s*mm/); return m && { w: +m[1], t: +m[2] }; };
 export function parseBracket(basis) {
   const s = basis.match(/two sleeves\s*([\d.]+)\/([\d.]+)\s*x\s*([\d.]+)\s*mm/);
@@ -23,13 +28,17 @@ export function parseBracket(basis) {
   return s && a ? { sOd: +s[1], sId: +s[2], sLen: +s[3], aB: +a[1], aH: +a[2], aLen: +a[3] } : null;
 }
 export function parseChannel(basis) {
-  const m = basis.match(/channel\s*([\d.]+)\s*x\s*([\d.]+)\s*x\s*([\d.]+)\s*mm sheet.*?x\s*([\d.]+)\s*mm/);
+  // v22 "channel W x H x T mm sheet ... x L mm"; v23 on "channel W x H x T mm x L mm"
+  const m = basis.match(/channel\s*([\d.]+)\s*x\s*([\d.]+)\s*x\s*([\d.]+)\s*mm(?: sheet.*?)?\s*x\s*([\d.]+)\s*mm/);
   return m && { w: +m[1], flangeH: +m[2], t: +m[3], len: +m[4] };
 }
 export function parsePanel(basis, name) {
   const m = basis.match(new RegExp(`${name}\\s+([\\d.]+)\\s*x\\s*([\\d.]+)\\s*mm`));
   const g = basis.match(/each\s*([\d.]+)\s*mm plus two\s*([\d.]+)\s*mm flanges/);
-  return m && g ? { a: +m[1], t: +m[2], gap: +g[1], flange: +g[2] } : null;
+  if (m && g) return { a: +m[1], t: +m[2], gap: +g[1], flange: +g[2] };
+  // v24: each sheet between the plates' inner faces, its flanges stated by area
+  const v = basis.match(/between the plates' inner faces \(([\d.]+)\s*mm\)/);
+  return m && v ? { a: +m[1], t: +m[2], gap: +v[1], flange: 0 } : null;
 }
 export function screwGeo(ctx, item) {
   const h = item.basis.match(/head\s*([\d.]+)\s*mm x\s*([\d.]+)\s*mm/);
@@ -65,16 +74,13 @@ export function scatter(center, n, r, arr) {
 function fastenerJoints(fx) {
   const { ctx, A, railX, clampX, trayX, xA } = fx;
   const flat = {};
-  // a rail's lock screws at its lock flange (v22: on the forward plate's aft face), else at the aft plate
-  for (const side of ['right', 'left']) if (railX[side] && A.rails?.[side]) flat[`rail ${side}`] = [fx.lockX ?? xA, A.rails[side][1], A.rails[side][0]];
+  // a rail's lock screws at the aft plate
+  for (const side of ['right', 'left']) if (railX[side] && A.rails?.[side]) flat[`rail ${side}`] = [xA, A.rails[side][1], A.rails[side][0]];
   if (clampX) { flat['boom aft'] = [clampX.aft, A.boom_y_m, 0]; flat['boom fwd'] = [clampX.fwd, A.boom_y_m, 0]; }
   if (trayX.forward) flat['tray fwd'] = [trayX.forward.face, trayX.forward.y ?? A.trays.forward.y_m, 0];
   if (trayX.aft) flat['tray aft'] = [trayX.aft.face, trayX.aft.y ?? A.trays.aft.y_m, 0];
   const mp = ctx.model.layout.parts.find((p) => p.name === 'motor');
-  if (mp && !fx.v23) flat.motor = fx.motorAt ?? [mp.box.cx, mp.box.cy, mp.box.cz];
-  // v23: the motor hangs by its back face on the bracket (its screws into the motor's own threads), the riser's foot
-  // on the forward tray and its tab under the nose tray
-  if (fx.v23) Object.assign(flat, fx.v23);
+  if (mp) flat.motor = [mp.box.cx, mp.box.cy, mp.box.cz];
   return flat;
 }
 
@@ -232,19 +238,11 @@ function frameScrewsAndNuts(fx, screwItem, nutItem) {
   const lock = given ?? 2, railN = 2 * lock;
   if (given == null) assumptions.push(`${screwItem.name}: assumed ${lock} shoulder rail lock screws per side (the design gives only the total screw count).`);
   const joints = fastenerJoints(fx);
-  const holes = fx.bracketHoles ?? [];
-  const keys = fx.v23 ? ['rail right', 'rail left', 'motor bracket', 'boom aft', 'boom fwd', 'tray fwd', 'tray aft', 'riser foot', 'riser tab'] : ['rail right', 'rail left', 'boom aft', 'boom fwd', 'tray fwd', 'tray aft', 'motor'];
-  const screwN = fx.v23 ? [lock, lock, holes.length, ...splitEven(nScrew - railN - holes.length, 6)] : [lock, lock, ...splitEven(nScrew - railN, 5)];
-  const nutN = fx.v23 ? [lock, lock, 0, ...splitEven(nNut - railN, 6)] : [lock, lock, ...splitEven(nNut - railN, 4), 0];
+  const keys = ['rail right', 'rail left', 'boom aft', 'boom fwd', 'tray fwd', 'tray aft', 'motor'];
+  const screwN = [lock, lock, ...splitEven(nScrew - railN, 5)];
+  const nutN = [lock, lock, ...splitEven(nNut - railN, 4), 0];
   const screws = [], nuts = [], at = { screw: [], nut: [] };
   keys.forEach((key, i) => {
-    // a rail's lock screws on its flange's lands where the physics states them (v22: lock_arc_deg), else on a circle
-    const lands = key === 'motor bracket' ? holes : fx.lockLands?.[key.replace(/^rail /, '')];
-    if (lands && screwN[i] === lands.length) {
-      if (key === 'motor bracket') { for (const c of lands) screws.push([joints[key][0], c[1], c[0]]); return; }
-      for (const c of lands) { screws.push([joints[key][0], c[1], c[0]]); nuts.push([joints[key][0], c[1], c[0]]); }
-      return;
-    }
     scatter(joints[key], screwN[i], 0.01, screws);
     scatter(joints[key], nutN[i], 0.012, nuts);
   });
@@ -330,87 +328,17 @@ function loopGeo(ctx, w, h, t, wx) {
 }
 
 /**
- * A design the physics lays out (ctx.phys): the rails, brackets, panels, boom, clamps and trays are its solids
- * (drive-solids.js). Here only the BOM lines the physics' check has no solid for: the rails' aft seat bosses, the two
- * doublers, the M3 screws and nuts and the cable ties, at the joints those solids put them.
+ * A design the physics lays out (ctx.phys): every frame part is its own solids, the fixings, ties and doublers too
+ * (round 16: every BOM line that is a physical object has solids, each tagged with its line). drive-solids.js draws
+ * the rails, brackets, panels, boom, clamps and trays; drawRest every other solid, under the BOM line its tag names.
+ * The film places nothing of its own here.
  */
 function physicsFrame(fx) {
-  const { ctx, A } = fx;
-  physicsJoints(fx);
-  for (const side of ['right', 'left']) if (fx.railX[side]) frameRailBoss(fx, side, A.rails[side]);
-  if (fx.trayX.forward) frameDoubler(fx, 'forward tray flange doubler', fx.trayX.forward.face, A.trays.forward.y_m, 0);
-  motorDoubler(fx);
-  frameFasteners(fx);
-  fx.assumptions.push("frame (v22 on): shoulder rails, brackets, panels, boom, clamps and trays are the physics' own solids (drive-solids.js); the rails' aft seat bosses, the doublers, the screws, nuts and ties are not in the physics' clearance check and are placed by the film.");
+  const { ctx } = fx;
+  const fixings = ctx.D.bom.structure.filter((s) => ctx.model.parts[s.material_id]?.category === 'fastener').map((s) => s.name);
+  fx.assumptions.push(`frame (v24 on): every frame part (the shoulder rails, brackets, panels, boom, clamps, trays and doublers) and every fixing (${fixings.join('; ')}) is the physics' own solids, each drawn under the BOM line it is tagged with (drive-solids.js); the film places none of them.`);
   ctx.model.layout?.assumptions?.push(...fx.assumptions);
   return { assumptions: fx.assumptions };
-}
-
-/** The joints the fasteners and doublers sit at, from the physics' solids: rails, lock lands, clamps, trays, motor. */
-function physicsJoints(fx) {
-  const { ctx, A } = fx;
-  const ph = ctx.phys, mid = (v) => (v[0] + v[1]) / 2;
-  for (const side of ['right', 'left']) {
-    const t = ph.solid(`shoulder rail ${side}`, 'tube');
-    if (t && A.rails?.[side]) fx.railX[side] = { x0: t.x[0], x1: t.x[1] };
-  }
-  const lock = ph.solid('shoulder rail right', 'lock flange');
-  if (lock) fx.lockX = mid(lock.x);
-  fx.lockLands = lockLands(ctx.D.params?.linkage?.airframe?.rail, A.rails);
-  const ca = ph.solid('boom clamp aft', 'block'), cf = ph.solid('boom clamp forward', 'block');
-  if (ca && cf) fx.clampX = { aft: mid(ca.x), fwd: mid(cf.x) };
-  const tf = ph.solid('forward tray', 'base'), ta = ph.solid('aft tray', 'base');
-  if (tf) fx.trayX.forward = { face: tf.x[0], y: tf.shape.a[1] };
-  if (ta) fx.trayX.aft = { face: ta.x[1], y: ta.shape.a[1] };
-  // the motor's flange screws: through the forward plate into its face (v22: the motor inside the box on that plate)
-  const can = ph.solid('motor', 'can');
-  if (can) fx.motorAt = [ctx.P.stage1 === 'overhung' ? fx.xF : can.x[0], can.shape.c[1], can.shape.c[0]];
-  // v23: the motor bracket's screws at its holes (into the motor's back face), the riser's foot and tab
-  const mb = A.motor_bracket, ri = A.carriers?.riser;
-  if (mb && ri) {
-    fx.bracketHoles = mb.holes;
-    const xr = (ri.x[0] + ri.x[1]) / 2;
-    fx.v23 = { 'motor bracket': [(mb.x[0] + mb.x[1]) / 2, 0, 0], 'riser foot': [xr, ri.y[0], 0], 'riser tab': [xr, ri.y[1], 0] };
-  }
-}
-
-/** Each rail's lock-screw lands as the physics states them (src/design/airframe.js lockFlangeCircles), or null. */
-export function lockLands(R, rails) {
-  if (!R?.lock_arc_deg || !R.lock_screws || !rails) return null;
-  const out = {};
-  for (const side of ['right', 'left']) if (rails[side]) out[side] = lockFlangeCircles(R, rails[side], side === 'right' ? 1 : -1).slice(1).map((q) => q.c);
-  return out;
-}
-
-/** The motor doubler: on the forward plate's outer face round the motor's shaft, bored clear of its outboard bearing. */
-function motorDoubler(fx) {
-  const { ctx } = fx;
-  const item = ctx.structItem(/^motor doubler$/), d = item && parsePlate(item.basis);
-  if (!d || !fx.motorAt) return;
-  const ob = ctx.phys.parts.find((p) => /^motor shaft outboard journal/.test(p.id))?.solids[0];
-  const r = (ob ? ob.shape.ro : 0.004) + 0.0005, t = toM(d.t);
-  const PL = ctx.D.params.linkage.plates, xf = ctx.P.plateFwd + toM(PL.t_fwd_mm ?? PL.t_mm) / 2;
-  const m = ctx.mesh('frame_motor_doubler', squareWithHole(ctx, toM(d.w), t, r), 'alu_machined', ctx.root, 'structure', item.material_id);
-  m.userData.joint = 'motor';
-  m.position.set(ctx.P.stage1 === 'overhung' ? xf + t / 2 : fx.motorAt[0] - t / 2, fx.motorAt[1], fx.motorAt[2]);
-  ctx.register(item.name, item.material_id, item.name, 'structure', m);
-  fx.assumptions.push(`${item.name}: a ${d.w} mm square, ${d.t} mm, on the forward plate's outer face round the motor's shaft (the physics has no solid for it).`);
-}
-
-/** A square plate w x w, t thick along x, with a round hole of radius r at its centre. */
-function squareWithHole(ctx, w, t, r) {
-  const s = new THREE.Shape();
-  s.moveTo(-w / 2, -w / 2);
-  s.lineTo(w / 2, -w / 2);
-  s.lineTo(w / 2, w / 2);
-  s.lineTo(-w / 2, w / 2);
-  s.closePath();
-  const h = new THREE.Path();
-  h.absarc(0, 0, r, 0, TWO_PI, true);
-  s.holes.push(h);
-  const g = new THREE.ExtrudeGeometry(s, { depth: t, bevelEnabled: false, curveSegments: 32 });
-  g.translate(0, 0, -t / 2);
-  return ctx.geo.alongX(g);
 }
 
 /** Draws and registers the frame parts of the design's BOM; returns the placement assumptions it had to make. */

@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { nodeBird } from '../lib/bird-node.mjs';
 import { prepare } from '../../sims/avis-shared/model.js';
+import { drawnBox, poseOf } from './drawn.mjs';
 
 const { bird, design, model } = nodeBird('larus-gl-2');
 const P = model.planes;
@@ -40,13 +41,22 @@ function xSpan(name) {
   const b = new THREE.Box3().setFromObject(o);
   return span(b.min.x, b.max.x);
 }
+/** World x extent of what is drawn of physics solids (v24 on, the couplers' eyes and the crank are drawn from them). */
+function drawnSpan(q, ...tags) {
+  const b = new THREE.Box3();
+  for (const t of tags) b.union(drawnBox(bird, t, q));
+  assert.ok(!b.isEmpty(), tags.join(', '));
+  return span(b.min.x, b.max.x);
+}
+const eyes = (tag, q) => ['crank', 'horn'].map((e) => drawnSpan(q, `coupler ${tag}/${e} eye`, `coupler ${tag}/${e} eye counterbore`));
 
 test('over a whole crank turn the drawn couplers, crank web and rocker bosses and arms never share an x range', () => {
   for (let i = 0; i < 24; i++) {
-    bird.update({ phase: (i / 24) * 2 * Math.PI, amp: model.law.ampNominal });
+    const phase = (i / 24) * 2 * Math.PI, q = poseOf(bird, phase, model.law.ampNominal);
+    bird.update({ phase, amp: model.law.ampNominal });
     bird.root.updateMatrixWorld(true);
-    const c = { R: ['coupler_eye_R_bot', 'coupler_eye_R_top', 'coupler_rod_R'].map(xSpan), L: ['coupler_eye_L_bot', 'coupler_eye_L_top', 'coupler_rod_L'].map(xSpan) };
-    const web = xSpan('crank_web');
+    const c = { R: [...eyes('R', q), xSpan('coupler_rod_R')], L: [...eyes('L', q), xSpan('coupler_rod_L')] };
+    const web = drawnSpan(q, 'crank web/web');
     for (const a of c.R) for (const b of c.L) assert.ok(apart(a, b), `couplers meet at phase ${i}/24`);
     for (const a of [...c.R, ...c.L]) assert.ok(apart(a, web), `a coupler meets the crank web at phase ${i}/24`);
     for (const tag of ['R', 'L']) {
@@ -59,7 +69,8 @@ test('over a whole crank turn the drawn couplers, crank web and rocker bosses an
 });
 
 test('the crank pin carries both eyes; the horn pin carries its boss and its eye', () => {
-  const pin = xSpan('crank_pin');
+  bird.update({ phase: 0, amp: model.law.ampNominal });
+  const pin = drawnSpan(poseOf(bird, 0, model.law.ampNominal), 'crank web/pin');
   assert.ok(pin.lo <= P.couplerL - eyeB / 2 && Math.abs(pin.hi - (P.crankArm - webT / 2)) < 1e-9);
   const r = design.params.linkage.rocker;
   for (const [tag, x] of [['R', P.couplerR], ['L', P.couplerL]]) {

@@ -86,7 +86,7 @@ test('focus ghosts the rest and shows the accents; explode moves box parts; the 
   const { bird } = nodeBird('larus-gl-2');
   bird.update({ phase: 1, amp: model.law.ampNominal, focus: 'power', accents: true, explode: { power: 1, structure: 1 } });
   const batt = bird.parts.find((p) => p.role === 'battery').objects[0];
-  const rib = bird.root.getObjectByName('rib_R_03');
+  const rib = bird.meshes.find((o) => o.userData.physics?.[0] === 'rib R 4/rib');
   assert.equal(batt.material.name, 'battery_wrap');
   assert.notEqual(rib.material.name, 'balsa');
   const node = bird.root.getObjectByName('part_battery');

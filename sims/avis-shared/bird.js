@@ -14,8 +14,9 @@ import { stationsAt, wingStations, sectionPoint, drivePose, gearAngles, sineSeri
 import { segmentAngles } from '../../src/physics/kinematics.js';
 import { ACCENT } from './materials.js';
 import { buildFrame } from './frame.js';
-import { physicsAssembly, assemblyPlan, stepOf, stepFractions } from './solids.js';
-import { buildFixedFromPhysics, drawRest } from './drive-solids.js';
+import { physicsAssembly, screenBeats, stepTimes, stepFractions } from './solids.js';
+import { buildFixedFromPhysics, drawRest, drawPosed } from './drive-solids.js';
+import { wingRibStations } from '../../src/design/wing-solids.js';
 
 export const SUBSYSTEMS = ['wing', 'drive', 'twist', 'power', 'avionics', 'structure'];
 const TWO_PI = 2 * Math.PI;
@@ -253,7 +254,12 @@ function makeCtx(model, mats, { filmRows = 4 } = {}) {
     parent.add(g);
     return g;
   };
-  const register = (name, id, role, subsystem, objects) => parts.push({ name, id, role, subsystem, objects: [].concat(objects) });
+  // one entry per BOM line as the film draws it: a line registered again (one mesh per item) adds its objects
+  const register = (name, id, role, subsystem, objects) => {
+    const e = parts.find((p) => p.name === name && p.id === id && p.subsystem === subsystem);
+    if (e) e.objects.push(...[].concat(objects));
+    else parts.push({ name, id, role, subsystem, objects: [].concat(objects) });
+  };
   const accentLine = (name, pts, parent, sub, closed = true) => {
     const g = new THREE.BufferGeometry().setFromPoints(pts.map((p) => new V3(...p)));
     const l = closed ? new THREE.LineLoop(g, new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.7, depthTest: false })) : new THREE.Line(g, new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.7, depthTest: false }));
@@ -282,8 +288,20 @@ function makeCtx(model, mats, { filmRows = 4 } = {}) {
   const geo = { cylX, cylZ, tubeZ, ringX, roundedBox, mergeGeos, alongX, wire, convexHull };
   // the physics' own solids (v22 on: a design laid out under the clearance rule), which the fixed parts are drawn from
   const phys = physicsAssembly(D, model.parts);
+  // round 16: the ribs where the physics builds them (params.wingStructure: the root rib outside the pod, evenly to
+  // the tip), so the covering's stations, its dips and the ribs drawn from the physics' solids agree
+  if (phys && D.params?.wingStructure) {
+    model.ribs = wingRibStations(D);
+    model.ribSt = stationsAt(W, model.ribs);
+  }
   return { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows, journal, journalMesh, geo, phys };
 }
+
+/** BOM line words for the film's own drawings of things the margin covers (wires and leads, pushrods, servo horns). */
+const LEADS = /\b(lead|leads|wire|wiring)\b|\bcables?\b(?! ties?\b)/i, PUSHRODS = /\bpushrods?\b/i, HORNS = /\b(servo|control|output) (horns?|arms?)\b|\bhorns?\b(?!\s+(pins?|boss|bosses)\b)/i;
+
+/** Whether the physics has solids for a BOM line (its key matching re): the film then draws that line from them. */
+const physHas = (ctx, re) => !!ctx.phys?.parts.some((p) => p.solids.some((s) => re.test(ctx.phys.line(s.bom)?.key ?? '')));
 
 /**
  * Older designs list their bearings as one pooled "bearing" line; they were drawn two per shoulder hinge, then two per
@@ -327,6 +345,8 @@ function buildFuselage(ctx) {
   shell.castShadow = false;
   shell.renderOrder = 10;
   register('fuselage film shell', structItem(/fuselage film/)?.material_id, 'fuselage film shell', 'structure', shell);
+  // round 16: the physics' formers (drive-solids.js drawRest), else the film's
+  if (physHas(ctx, /formers/)) return buildKeel(ctx);
   // formers: the BOM's count, evenly through the pod, 2 mm balsa rings lightened by half their area
   const fItem = structItem(/formers/);
   const nF = +(fItem?.basis.match(/(\d+)\s*off/)?.[1] ?? 5);
@@ -383,7 +403,9 @@ function buildKeel(ctx) {
 function buildTail(ctx) {
   const { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows } = ctx;
   const tailNodes = [];
-  const tItem = structItem(/tail surfaces/);
+  const tItem = structItem(/^tail film/) ?? structItem(/tail surfaces/);
+  // round 16: the tail's rods and ribs are the physics' solids (drive-solids.js drawRest); the film draws the covering
+  const ownRods = !physHas(ctx, /^tail (rods|ribs)/);
   for (const panel of model.tail) {
     const side = panel.side === 'right' ? 1 : -1;
     const [leR, leT, teT, teR] = panel.corners;
@@ -413,11 +435,13 @@ function buildTail(ctx) {
       rods.push(o);
     };
     const tag = side > 0 ? 'R' : 'L';
-    rodBetween(`tail_spar_${tag}`, qr, qt, 0.001);
-    rodBetween(`tail_le_${tag}`, leR, leT, 0.00075);
-    rodBetween(`tail_te_${tag}`, teR, teT, 0.00075);
-    rodBetween(`tail_root_${tag}`, leR, teR, 0.00075);
-    rodBetween(`tail_tip_${tag}`, leT, teT, 0.00075);
+    if (ownRods) {
+      rodBetween(`tail_spar_${tag}`, qr, qt, 0.001);
+      rodBetween(`tail_le_${tag}`, leR, leT, 0.00075);
+      rodBetween(`tail_te_${tag}`, teR, teT, 0.00075);
+      rodBetween(`tail_root_${tag}`, leR, teR, 0.00075);
+      rodBetween(`tail_tip_${tag}`, leT, teT, 0.00075);
+    }
     tailNodes.push({ node: pivot, side, axis, origin: new V3(...qr) });
     posed.push(pivot);
     register(`tail surface ${tag}`, tItem?.material_id, 'tail surfaces, film, spar and ribs', 'structure', [film, ...rods]);
@@ -550,6 +574,7 @@ function wingFilm(ctx, tag, side, segs, filmStations, ringN) {
     f.renderOrder = 11;
     f.castShadow = true;
     f.userData.rows = rows;
+    f.userData.s = rows.map((i) => filmStations.s[i]);
     f.frustumCulled = false;
     films.push(f);
     deform.push(f);
@@ -676,23 +701,38 @@ function buildWings(ctx) {
     fs.push(s);
     if (k < model.ribs.length - 1) for (let r = 1; r < filmRows; r++) fs.push(s + ((model.ribs[k + 1] - s) * r) / filmRows);
   });
+  // and a row where the segments meet (the elbow), which both segments' films share, so no bay is left uncovered:
+  // the nearest row between ribs moved onto it (the rows per bay kept), or one more row if it is a rib's
+  let s0 = 0;
+  for (const g of W.segments.slice(0, -1)) {
+    s0 += g.length;
+    if (!(s0 > fs[0] && s0 < fs.at(-1)) || fs.some((v) => Math.abs(v - s0) < 1e-9)) continue;
+    const k = fs.reduce((b, v, i) => (!model.ribs.includes(v) && (b < 0 || Math.abs(v - s0) < Math.abs(fs[b] - s0)) ? i : b), -1);
+    if (k >= 0) fs[k] = s0;
+    else fs.push(s0);
+  }
+  fs.sort((x, y) => x - y);
   const filmStations = stationsAt(W, fs);
   Object.assign(filmStations, filmDips(ctx, filmStations));
   const nSec = model.section.length; // chordwise points per surface, LE..TE
   const ringN = 2 * nSec - 1; // TE upper -> LE -> TE lower
+  const own = !physHas(ctx, /^(ribs|inner spar|outer spar|leading edge rod|trailing edge rod)\b/);
   for (const [tag, side] of [['R', 1], ['L', -1]]) {
     const seg0 = group(`wing_${tag}_0`, root, 'wing');
     const seg1 = group(`wing_${tag}_1`, seg0, 'wing');
     posed.push(seg0, seg1);
     const segs = [seg0, seg1];
-    wingSpars(ctx, tag, side, segs);
     wingElbow(ctx, tag, side, segs);
-    wingTorqueRod(ctx, tag, side, segs);
-    const ribs = wingRibs(ctx, tag, side, segs);
     const films = wingFilm(ctx, tag, side, segs, filmStations, ringN);
-    const { le, te } = wingEdgeRods(ctx, tag, side, segs, filmStations);
-    const tsv = wingTwistServo(ctx, tag, side, segs);
-    wings[tag] = { side, segs, ribs, films, le, te, tsv };
+    // round 16: the wing's structure is the physics' solids (drive-solids.js drawPosed, carried by these segments)
+    if (own) {
+      wingSpars(ctx, tag, side, segs);
+      wingTorqueRod(ctx, tag, side, segs);
+      const ribs = wingRibs(ctx, tag, side, segs);
+      const { le, te } = wingEdgeRods(ctx, tag, side, segs, filmStations);
+      const tsv = wingTwistServo(ctx, tag, side, segs);
+      wings[tag] = { side, segs, ribs, films, le, te, tsv };
+    } else wings[tag] = { side, segs, ribs: [], films, le: null, te: null, tsv: null };
   }
   filmSt.push(filmStations);
   return { wings, filmSt };
@@ -982,7 +1022,9 @@ function metalCoupler(ctx, L, tag) {
   body.position.y = eo - 0.001;
   tagMesh(body, `coupler ${tag}/body`);
   const eyes = [], bush = [];
-  for (const y of [0, b]) {
+  // round 16: the eyes (counterbored for the bushings' flanges) and the bushings are the physics' solids, drawn in this
+  // node by drawPosed; else the film's
+  for (const y of ctx.phys?.part(`coupler ${tag} crank bushing`) ? [] : [0, b]) {
     const end = y ? 'horn' : 'crank';
     const o = tagMesh(mesh(`coupler_eye_${tag}_${y ? 'top' : 'bot'}`, ringX(eo, eye.D / 2, eye.B), 'alu_machined', cn, 'drive', cp.material), `coupler ${tag}/${end} eye`);
     o.position.y = y;
@@ -1008,6 +1050,15 @@ function metalCoupler(ctx, L, tag) {
 function buildMetalCrank(ctx, C) {
   const { model, P, train, root, mesh, group, register, accentLine, drive } = ctx;
   const a = model.law.a, tw = mm(C.web_t_mm), bw = mm(C.web_b_mm);
+  if (ctx.phys?.part('crank')) {
+    // the physics' crank, whatever its pieces (round 16: the shaft, and the web and pin keyed on its stub): the
+    // fixed ones drawn by drawRest, the turning ones by drawPosed in this node, which turns with the crank
+    const crank = group('crank', root, 'drive');
+    ctx.posed.push(crank);
+    accentLine('crank_circle', Array.from({ length: 48 }, (_, i) => [P.crankArm, a * Math.cos((i / 48) * TWO_PI), a * Math.sin((i / 48) * TWO_PI)]), crank, 'drive');
+    drive.crank = crank;
+    return;
+  }
   const pinD = ctx.journal('coupler')?.dims.d ?? 0.008;
   const crank = group('crank', root, 'drive');
   const s = new THREE.Shape();
@@ -1195,7 +1246,8 @@ function gearMeshes(ctx, shaftsN) {
     const key = hub ? (bore >= 0.012 ? 0.005 : 0.003) : 0;
     const g = gearGeometry(gear.z, gear.m, gear.face, bore, { hubR: hub ? gear.hub / 2 : 0, hubW: hub ? gear.hubW : 0, key, ro: gear.ro });
     const o = tagMesh(mesh(`${name}_teeth`, g, isSteel ? 'steel_ground' : 'acetal', node, 'drive', gear.id), physId);
-    gearKey(ctx, name, node, bore, gear, shaftIndex, /wheel|crank/.test(name));
+    // round 16: the keys are the physics' own solids (drive-solids.js drawRest), else the film's in the gear
+    if (!physHas(ctx, /^key,/)) gearKey(ctx, name, node, bore, gear, shaftIndex, /wheel|crank/.test(name));
     const keyMesh = node.getObjectByName(`${name}_key`);
     // a key sits half in the gear's keyway, half in its shaft's keyseat
     if (keyMesh) tagMesh(keyMesh, physId, shaftPart(shaftIndex));
@@ -1344,8 +1396,8 @@ function buildBoxParts(ctx) {
     let objs = [];
     if (p.name === 'battery') {
       objs.push(mesh('battery_pack', roundedBox(b.sx, b.sy, b.sz, 0.003), 'battery_wrap', node, 'power', p.id));
-      const lead = mesh('battery_lead', wire([[b.sx / 2 - 0.004, b.sy / 2, 0.004], [b.sx / 2 - 0.02, b.sy / 2 + 0.004, 0.006], [-b.sx / 2 - 0.01, b.sy / 2 + 0.002, 0.004]], 0.0012), 'wire', node, 'power');
-      objs.push(lead);
+      // its lead, until the physics draws the leads as BOM lines (then they are its solids)
+      if (!physHas(ctx, LEADS)) objs.push(mesh('battery_lead', wire([[b.sx / 2 - 0.004, b.sy / 2, 0.004], [b.sx / 2 - 0.02, b.sy / 2 + 0.004, 0.006], [-b.sx / 2 - 0.01, b.sy / 2 + 0.002, 0.004]], 0.0012), 'wire', node, 'power'));
     } else if (p.name === 'esc') {
       objs.push(mesh('esc_body', roundedBox(b.sx, b.sy, b.sz, Math.min(b.sy, b.sz) * 0.45), 'esc_wrap', node, 'power', p.id));
     } else if (p.name.startsWith('servo')) {
@@ -1358,9 +1410,13 @@ function buildBoxParts(ctx) {
       axis[thin] = 1;
       horn.position.set(axis[0] * (b.sx / 2 + 0.0015), axis[1] * (b.sy / 2 + 0.0015), axis[2] * (b.sz / 2 + 0.0015));
       horn.userData.axis = new V3(...axis);
-      const arm = mesh(`${p.name}_horn_arm`, new THREE.BoxGeometry(thin === 0 ? 0.002 : 0.004, thin === 1 ? 0.002 : 0.016, thin === 2 ? 0.002 : 0.004), 'alu_machined', horn, p.subsystem, p.id);
-      arm.position.set(thin === 0 ? 0 : 0, thin === 1 ? 0 : 0.006, 0);
-      objs.push(caseO, arm);
+      objs.push(caseO);
+      // its horn's arm, until the physics draws the horns as BOM lines
+      if (!physHas(ctx, HORNS)) {
+        const arm = mesh(`${p.name}_horn_arm`, new THREE.BoxGeometry(thin === 0 ? 0.002 : 0.004, thin === 1 ? 0.002 : 0.016, thin === 2 ? 0.002 : 0.004), 'alu_machined', horn, p.subsystem, p.id);
+        arm.position.set(thin === 0 ? 0 : 0, thin === 1 ? 0 : 0.006, 0);
+        objs.push(arm);
+      }
       servos[p.name] = { node, horn, box: b };
       posed.push(horn);
       if (p.name === 'servo_stroke') accentLine('stroke_horn_line', [[0, 0, 0], [0, 0.012, 0]], horn, 'drive', false);
@@ -1369,6 +1425,8 @@ function buildBoxParts(ctx) {
     } else {
       objs.push(mesh(`${p.name}_board`, roundedBox(b.sx, b.sy, b.sz, Math.min(b.sx, b.sy, b.sz) * 0.4), 'pcb', node, p.subsystem, p.id));
     }
+    // the body is the physics' packed solid (clearance.js packedParts: the same layout box), its tag the BOM's
+    if (ctx.phys?.part(`packed ${p.name}`)) tagMesh(objs[0], `packed ${p.name}/box`);
     register(p.name, p.id, p.role, p.subsystem, objs);
   }
   return servos;
@@ -1391,6 +1449,8 @@ function flightController(model, lp) {
 /** Wiring (inside the 15% margin). */
 function buildWiring(ctx) {
   const { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows } = ctx;
+  // until the physics draws the leads as BOM lines (then they are its solids)
+  if (physHas(ctx, LEADS)) return;
   const L = Object.fromEntries(model.layout.parts.map((p) => [p.name, p.box]));
   const W_ = [];
   const route = (name, pts, r, sub) => W_.push(mesh(name, wire(pts, r), 'wire', root, sub));
@@ -1414,6 +1474,8 @@ function buildPushrods(ctx) {
   const { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows } = ctx;
   const { tailNodes, servos } = ctx;
   const pushrods = [];
+  // until the physics draws the pushrods as BOM lines (then they are its solids)
+  if (physHas(ctx, PUSHRODS)) return pushrods;
   for (const t of tailNodes) {
     const sv = servos[t.side > 0 ? 'servo_tail_R' : 'servo_tail_L'];
     if (!sv) continue;
@@ -1467,8 +1529,8 @@ function poseWing(ctx, tag, phi, theta, explodeWing) {
     lePts.push(a);
     tePts.push(b);
   }
-  w.le.geometry.userData.update(lePts);
-  w.te.geometry.userData.update(tePts);
+  w.le?.geometry.userData.update(lePts);
+  w.te?.geometry.userData.update(tePts);
   for (let k = 0; k < 2; k++) {
     const f = w.films[k];
     const pos = f.geometry.attributes.position.array;
@@ -1595,14 +1657,16 @@ function poseServos({ model, servos }, state, amp) {
 }
 
 /**
- * The assembly: each step's exploded fraction (ctx.stepF), one after another at build progress state.build, else by
- * subsystem; and the pod's and the wings' fractions the poses read. A design without steps explodes by subsystem.
+ * The assembly: each step's exploded fraction (ctx.stepF), the physics' steps beat by beat at build progress
+ * state.build (solids.js stepTimes), else by subsystem; the pod covering's (ctx.exS). The steps move the tail and the
+ * wings along their own lines, so the poses' own offsets for them are 0. A design without steps explodes by
+ * subsystem, the poses offsetting the tail and the wings.
  */
 function stepState(ctx, state, ex) {
   if (!ctx.steps) return { exS: (ctx.exS = ex.structure ?? 0), exW: ex.wing ?? 0 };
-  ctx.stepF = typeof state.build === 'number' ? stepFractions(ctx.steps.length, state.build) : ctx.steps.map((s) => ex[s.sub] ?? 0);
+  ctx.stepF = typeof state.build === 'number' ? stepFractions(ctx.times, state.build) : ctx.steps.map((s) => ex[s.sub] ?? 0);
   ctx.exS = ctx.stepF[ctx.steps.findIndex((s) => s.pod)];
-  return { exS: ctx.exS, exW: ctx.stepF[ctx.steps.findIndex((s) => s.wing)] };
+  return { exS: 0, exW: 0 };
 }
 
 function poseHorn(sv, angle) {
@@ -1638,12 +1702,17 @@ function applyLook(ctx, state) {
       o.position.y = 0.11 * (ctx.exS ?? ex.structure ?? 0);
     }
   }
+  // the structure under a drawn, pigmented covering is not drawn (markUnder)
+  if (ctx.opaque) for (const o of meshes) if (o.userData.under?.some((c) => c.visible)) o.visible = false;
   for (const l of accents) l.visible = !!state.accents && (!focus || l.userData.subsystem === focus);
-  if (ctx.steps) {
-    applySteps(ctx);
-    exState.last = state;
-    return;
-  }
+  if (ctx.steps) applySteps(ctx);
+  else explodeBySubsystem(ctx, ex);
+  exState.last = state;
+}
+
+/** A design without the physics' steps: each subsystem's parts out along their own lines by its fraction. */
+function explodeBySubsystem(ctx, ex) {
+  const { root, drive } = ctx;
   for (const node of root.children) {
     if (!node.name.startsWith('part_')) continue;
     const sub = node.userData.subsystem;
@@ -1664,63 +1733,89 @@ function applyLook(ctx, state) {
       node.matrix.elements[13] += dy * fd;
     }
   }
-  exState.last = state;
 }
 
 /**
- * The assembly order: the physics' steps (solids.js assemblyPlan) with the top node of every mesh they name, then the
- * packed parts onto their trays (power, then avionics), the pod (formers, tail, covering) and the wings. A design
- * without the physics' solids has none (applyLook explodes it by subsystem).
+ * The assembly order: the physics' own sequence (solids.js physicsAssembly steps: params.layout.sequence on the
+ * physics' solids), each step moving the top node of every mesh that draws one of its solids along its stated line,
+ * from its stated distance out; a threaded tie does not slide, it is drawn from its step on. A film-only part (a wire,
+ * a pushrod, the tail's covering) goes on with the last step whose parts it touches; the pod's covering, which the
+ * sequence exempts, is a last beat of its own. The steps are grouped into beats for the screen (solids.js
+ * screenBeats) and timed beat by beat (stepTimes), in the physics' order. A design without the physics' sequence has
+ * none (applyLook explodes it by subsystem).
  */
 function buildSteps(ctx) {
-  if (!ctx.phys) return null;
-  const plan = assemblyPlan(ctx.phys);
-  const steps = plan.map((s) => ({ name: s.name, sub: s.sub, nodes: new Map() }));
+  const ph = ctx.phys;
+  if (!ph?.steps) return null;
   const top = (o) => {
     while (o.parent && o.parent !== ctx.root) o = o.parent;
     return o;
   };
+  const stepOf = new Map();
+  ph.steps.forEach((st, k) => st.solids.forEach((t) => stepOf.set(t, k)));
+  const firstStep = (tags) => {
+    for (const t of tags) {
+      const k = stepOf.get(t) ?? stepOf.get(`${t}/${ph.part(t)?.solids[0]?.name}`);
+      if (k != null) return k;
+    }
+    return -1;
+  };
+  const steps = ph.steps.map((st) => ({ name: st.name, threaded: !!st.threaded, line: st.dir ? new V3(...st.dir).multiplyScalar(st.dist) : new V3(), nodes: new Map(), subs: {} }));
+  const nodeStep = new Map();
   for (const o of ctx.meshes) {
-    const t = o.userData.physics?.[0];
-    const k = t ? stepOf(plan, t) : -1;
+    const k = firstStep(o.userData.physics ?? []);
     if (k < 0) continue;
     const n = top(o);
-    if (!steps[k].nodes.has(n)) steps[k].nodes.set(n, new V3(...plan[k].dirOf(t.split('/')[0])));
+    if (!nodeStep.has(n)) nodeStep.set(n, k);
+    steps[k].subs[o.userData.subsystem] = (steps[k].subs[o.userData.subsystem] ?? 0) + 1;
   }
-  // the frame's film-only parts (fasteners, ties, seat bosses, doublers: no physics solid) with the step making their joint
-  const JOINT_STEP = { 'rail right': 'rails', 'rail left': 'rails', 'boom aft': 'boom clamps', 'boom fwd': 'boom clamps', 'tray fwd': 'trays', 'tray aft': 'trays', motor: 'forward plate', 'aft plate': 'aft plate', 'motor bracket': 'rails', 'riser foot': 'trays', 'riser tab': 'trays' };
-  for (const o of ctx.meshes) {
-    const k = plan.findIndex((s) => s.name === JOINT_STEP[o.userData.joint]);
-    if (k >= 0) steps[k].nodes.set(o, new V3(...plan[k].dirOf(o.userData.joint)));
+  // film-only nodes: with the last step whose parts they touch (their boxes at rest overlap); the pod's covering apart
+  ctx.root.updateMatrixWorld(true);
+  const box = (n) => new THREE.Box3().setFromObject(n);
+  const boxes = [...nodeStep].map(([n, k]) => [box(n), k]);
+  const shell = ctx.root.getObjectByName('shell');
+  for (const n of ctx.root.children) {
+    if (nodeStep.has(n) || n === shell || !(n.isMesh || n.children.some((c) => c.isMesh))) continue;
+    const b = box(n);
+    if (b.isEmpty()) continue;
+    const k = Math.max(-1, ...boxes.filter(([bb]) => bb.intersectsBox(b)).map(([, kk]) => kk));
+    if (k >= 0) nodeStep.set(n, k);
   }
-  const packed = ctx.root.children.filter((n) => n.name.startsWith('part_'));
-  const subs = [...new Set(['power', 'avionics', ...packed.map((n) => n.userData.subsystem)])];
-  for (const sub of subs) {
-    const nodes = packed.filter((n) => n.userData.subsystem === sub);
-    if (nodes.length) steps.push({ name: `packed ${sub}`, sub, nodes: new Map(nodes.map((n) => [n, new V3(...explodeDir(n.name))])) });
-  }
-  // the cable ties hold the packed parts: they go on with the first of them
-  const firstPacked = steps.find((s) => /^packed /.test(s.name));
-  if (firstPacked) for (const o of ctx.meshes) if (o.userData.joint === 'ties') firstPacked.nodes.set(o, new V3(0, 0.04, 0));
-  steps.push({ name: 'pod', sub: 'structure', pod: true, nodes: new Map(ctx.root.children.filter((n) => /^former_/.test(n.name)).map((n) => [n, new V3(0, 0.11, 0)])) });
-  steps.push({ name: 'wings', sub: 'wing', wing: true, nodes: new Map() });
+  for (const [n, k] of nodeStep) steps[k].nodes.set(n, steps[k].line);
+  for (const st of steps) st.sub = Object.entries(st.subs).sort((x, y) => y[1] - x[1])[0]?.[0] ?? 'structure';
+  steps.push({ name: 'pod covering', sub: 'structure', pod: true, line: new V3(0, 0.11, 0), nodes: new Map() });
+  ctx.beats = [...screenBeats(ph, ctx.model.parts), { name: 'pod covering', steps: [steps.length - 1], film: true }];
+  ctx.times = stepTimes(ctx.beats.slice(0, -1), 1);
   ctx.meshStep = meshSteps(ctx, steps);
   return steps;
 }
 
-/** Every mesh's assembly step: under its step's nodes; the tail with the pod; the wings', the twist's and the rods' with the wings. */
+/**
+ * The structure under the covering (round 16: the wings' and the tail's rods and ribs, the formers): every physics
+ * mesh of a step that carries a covering (a surface arrives covered), and the formers under the pod's. Where the
+ * covering is a pigmented film (a livery) and drawn, they are not drawn (userData.under: the coverings over them), so
+ * they show only where the covering is cut away or not yet on, and never through it.
+ */
+function markUnder(ctx) {
+  const covering = (o) => /^film_(wing|shell)$/.test(o.userData.matName) && !o.userData.physics?.length;
+  const byStep = new Map();
+  for (const [o, k] of ctx.meshStep) if (covering(o)) byStep.set(k, [...(byStep.get(k) ?? []), o]);
+  const shell = ctx.root.getObjectByName('shell');
+  for (const [o, k] of ctx.meshStep) {
+    if (!o.userData.physics?.length) continue;
+    if (byStep.has(k)) o.userData.under = byStep.get(k);
+    else if (shell && ctx.parts.some((p) => /formers/.test(p.name) && p.objects.includes(o))) o.userData.under = [shell];
+  }
+}
+
+/** Every mesh's assembly step: the step its top node goes on in; the covering's with the pod's covering beat. */
 function meshSteps(ctx, steps) {
   const map = new Map();
   steps.forEach((s, k) => {
     for (const n of s.nodes.keys()) n.traverse((o) => o.isMesh && map.set(o, k));
   });
-  const pod = steps.findIndex((s) => s.pod), wing = steps.findIndex((s) => s.wing);
-  for (const t of ctx.tailNodes ?? []) t.node.traverse((o) => o.isMesh && map.set(o, pod));
-  // the pushrods run to the tail: they go in with it; the wiring with the power parts it joins
-  for (const pr of ctx.pushrods ?? []) map.set(pr.mesh, pod);
-  const power = steps.findIndex((s) => s.sub === 'power' && !s.members);
-  for (const o of ctx.meshes) if (/^wire_|_lead$|^wiring/.test(o.name) && power >= 0) map.set(o, power);
-  for (const o of ctx.meshes) if (!map.has(o) && (/^(wing|twist)$/.test(o.userData.subsystem) || /^(le_rod|te_rod|film_)/.test(o.name))) map.set(o, wing);
+  const shell = ctx.root.getObjectByName('shell');
+  if (shell) map.set(shell, steps.findIndex((s) => s.pod));
   return map;
 }
 
@@ -1755,7 +1850,7 @@ function applySteps(ctx) {
 /** Each subsystem's exploded fraction at build progress p: the mean of its steps' (the assembly panel's mass rows). */
 function buildExplode(ctx, p) {
   if (!ctx.steps) return null;
-  const f = stepFractions(ctx.steps.length, p), out = {};
+  const f = stepFractions(ctx.times, p), out = {};
   ctx.steps.forEach((s, k) => (out[s.sub] ??= []).push(f[k]));
   return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.reduce((a, b) => a + b, 0) / v.length]));
 }
@@ -1788,8 +1883,6 @@ export function buildBird(model, mats, opts = {}) {
   ctx.servos = buildBoxParts(ctx);
   buildWiring(ctx);
   ctx.pushrods = buildPushrods(ctx);
-  if (ctx.phys) drawRest(ctx);
-  ctx.steps = buildSteps(ctx);
   Object.assign(ctx, {
     ss: { R: null, L: null },
     segBody: { R: [new THREE.Matrix4(), new THREE.Matrix4()], L: [new THREE.Matrix4(), new THREE.Matrix4()] },
@@ -1797,11 +1890,25 @@ export function buildBird(model, mats, opts = {}) {
     ghost: new THREE.MeshBasicMaterial({ color: 0x6f7a87, transparent: true, opacity: 0.03, depthWrite: false }),
     exState: {},
   });
+  if (ctx.phys) {
+    // every physics solid no builder drew: the fixed ones in place, the moving ones in the node they move with, found
+    // by posing the bird (the physics' drive pose at the same phase is what they are drawn against)
+    drawRest(ctx);
+    const amp0 = model.design.cruise?.amp ?? model.law.ampNominal;
+    drawPosed(ctx, (phase) => {
+      updateBird(ctx, { phase, amp: amp0 });
+      return drivePose({ law: ctx.phys.lay.law, fourBar: ctx.phys.lay.fb }, phase, amp0);
+    });
+  }
+  ctx.steps = buildSteps(ctx);
+  ctx.opaque = !!opts.livery;
+  if (ctx.steps) markUnder(ctx);
   const update = (state) => updateBird(ctx, state);
   update({ phase: 0, amp: model.design.cruise?.amp ?? model.law.ampNominal });
   const { root, parts, meshes, posed, deform, accents, servos, drive, wings, phys } = ctx;
-  const steps = ctx.steps?.map((s) => ({ name: s.name, sub: s.sub })) ?? null;
-  return { root, update, parts, meshes, posed, deform, accents, model, servos, drive, wings, phys, steps, buildExplode: (p) => buildExplode(ctx, p) };
+  const steps = ctx.steps?.map((s) => ({ name: s.name, sub: s.sub, threaded: !!s.threaded, pod: !!s.pod, line: s.line.toArray(), nodes: [...s.nodes.keys()] })) ?? null;
+  const assembly = ctx.steps ? { beats: ctx.beats, times: ctx.times } : null;
+  return { root, update, parts, meshes, posed, deform, accents, model, servos, drive, wings, phys, steps, assembly, meshStep: ctx.meshStep, buildExplode: (p) => buildExplode(ctx, p) };
 }
 
 

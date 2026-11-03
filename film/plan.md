@@ -44,7 +44,7 @@ workstream asked. Blender occasionally aborts while Metal loads its kernels (cra
 | 11 | topdown | Blender | `top_down`, from 36 s | 3.5 | From above over the bench: planform and the wing's stroke. |
 | 12 | ridge | Blender | `ridge_rise`, from 104 s, 200 mm | 5.0 | The bank near the end of the corridor, from a stand on the slope solved from the terrain for a 135 mm lens, filmed on 200 mm so the bird spans 250-340 px: the bird against forest. |
 | 13 | river | Blender | `river_pass`, from 24 s, 80 mm | 4.0 | Hovering beside the bird where it crosses the Bow, the river behind it; 80 mm on the rig's stand (200-400 px). |
-| 14 | gates | studio | `gates` | 6.0 | Every gate as written in `out/verification`, failures in their own words and numbers. A mission gate whose run at the published η_s 0.6 (`out/verification/eta0.6/`) differs is NOT FINAL, with both runs' numbers, never a pass (`numbers.js` gateVerdict: `tools/verify.mjs`'s rule, pinned gate by gate against it). |
+| 14 | gates | studio | `gates` | 6.0 | Every gate as written in `out/verification`, failures in their own words and numbers. A mission gate whose run at the published η_s 0.6 (`out/verification/eta0.6/`) differs is NOT FINAL, with both runs' numbers, never a pass (`numbers.js` gateVerdict: `tools/verify.mjs`'s rule, pinned gate by gate against it). A pass that rests on a fixing no one rates is NOT COUNTED, never a pass (`notCounted`: the record's own `counted` / `not_counted_because`, else an RC-practice fixing with no published figure in `measured.members.rc_practice`; v24: M7, the crank web's LOCTITE 638 on titanium). |
 | 15 | credits | studio | `credits` | 7.0 | Data and software credits from `data/references/credits.md`, the claim, the parts statement. |
 
 Changes of segment cut, or dip to black for at most 0.45 s (0.2 s out, 0.25 s in; `film/test/edit.test.mjs` holds every
@@ -74,22 +74,25 @@ film-only module that imports the physics and changes nothing in it): `drive-sol
 solids' own prisms (plates with their posts, pads and bosses, every plate journal, gear shafts, the encoder, shoulder
 bushings and brackets, rails and lock flanges, panels, boom, clamps, trays), and `bird.js` details the rest at the
 solids' planes (gear teeth to the catalogue's tip circle, the crank, couplers, rockers with the hub relief and collar,
-the horn stacks, the motor inside the box). A part the physics adds that no builder names is drawn from its solids
-(`drawRest`), so v23's new parts appear with no film work. `film/test/physics-solids.test.mjs` holds the drawing to the
-check: every vertex of every drawn part inside the solids it names at every crank angle sampled, every solid drawn to
-its own x range and outer section, within 0.01 mm (fifty times finer than the 0.5 mm rule). BOM lines the physics has
-no solid for (rail aft seat bosses, the two doublers, M3 screws and nuts, cable ties) and the formers are placed by
-the film and listed there; the formers keep out of the drive's x range but cross the trays, which have no cutout.
+the horn stacks, the motor inside the box). Since v24 every solid carries its BOM tag, and every part no film builder details is drawn from its solids by
+that tag (`drawRest` for the fixed ones, `drawPosed` for the moving ones, carried by the posed node they move with):
+one mesh per part, BOM line and item, registered under the line the tag names (`completeness.js` resolveTag), its
+material and look from the line's catalogue entry (`materialOf`, `lookOf`: hexagon nuts, round fasteners across x,
+tubes along the span as round tubes). The screws, nuts, ties, keys, doubler, formers, crank web, couplers' eyes and
+bushings, and the wings' and tail's structure all come this way, so a later design's new parts and BOM lines draw with
+no film work. `film/test/physics-solids.test.mjs` holds the drawing to the check: every vertex of every drawn part
+inside the solids it names at every crank angle sampled, every solid drawn to its own x range and outer section,
+within 0.01 mm (fifty times finer than the 0.5 mm rule). The structure under the covering (wing and tail ribs and
+rods, formers) is not drawn where a pigmented covering is drawn over it (`markUnder`).
 
-**The order of assembly** (`solids.js` assemblyPlan): aft plate, crank from aft, the motor (inside the box), then the
-gear train inside the box, both from forward, each side's coupler onto the crank pin, shoulder brackets, rocker,
-shoulder pin and horn pin, the rails through the brackets and the aft plate, the forward plate, stage 1 (overhung) and
-the encoder, panels, boom, clamps, the trays up onto the plates' pads; then the packed parts, the pod and its covering,
-the wings. A part the physics adds goes on with the earliest step of a part it is joined to (its fixing, bracket or
-carrier: `joinedParts`, from the assembly's own joints), so v23's new parts take their place with no film work. Each part is
-drawn once its step begins and slides in along its own line. `film/test/assembly-order.test.mjs` slides every step in
-against everything already in place on the physics' solids; the one conflict no order avoids is reported: v22's
-one-piece crank cannot pass the aft plate's crank seat or its bushing (the 14 mm web aft, the 15 mm wheel seat inside).
+**The order of assembly** is the physics' own (`params.layout.sequence`, SPEC "The film's assembly sequence is this
+one"), resolved on its solids (`sequence.js` resolveSteps through `solids.js` physicsAssembly): 83 steps on v24, each
+moving the meshes that draw its solids along its stated line, a threaded tie drawn in place from its step on, then
+the pod's covering (which the sequence exempts) as a last beat. For the screen the steps are grouped into beats
+(`screenBeats`: a part with the fixings that fix it, a run of one kind, one side's linkage, the bought parts onto one
+carrier; 31 beats on v24), timed beat by beat with the steps of a beat staggered so they land in order (`stepTimes`);
+the panel names the step going on. `film/test/assembly-order.test.mjs` holds the film to the sequence and re-runs the
+physics' check of it on the drawn solids, and sweeps every step along x again exactly.
 
 ## The bird's covering
 

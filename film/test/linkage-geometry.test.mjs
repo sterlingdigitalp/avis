@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { nodeBird } from '../lib/bird-node.mjs';
 import { linkageAt, journalDims } from '../../sims/avis-shared/model.js';
+import { drawnBox, drawnRadii, poseOf, meshesOf } from './drawn.mjs';
 
 const { bird, design, model } = nodeBird('larus-gl-2');
 const L = design.params.linkage;
@@ -45,14 +46,20 @@ const jd = (role) => journalDims(model.parts[design.bom.parts.find((p) => role.t
 const sh = jd(/shoulder pivots/), eye = jd(/coupler eyes/);
 const span = design.params.joints.shoulderSpan_mm / 1000;
 const item = (re) => design.bom.structure.find((s) => re.test(s.name));
+// v24 on, the crank, the couplers' eyes and bushings and the keys are drawn from the physics' solids: what is drawn of
+// one solid (drawn.mjs) at the pose the bird is in
+const amp = model.law.ampNominal;
+const dcentre = (tag, q) => drawnBox(bird, tag, q).getCenter(new THREE.Vector3());
+const dsize = (tag, q) => drawnBox(bird, tag, q).getSize(new THREE.Vector3());
 
 test('over a whole crank turn each coupler\'s eyes sit on the crank pin and on its rocker\'s horn pin', () => {
   for (let i = 0; i < 24; i++) {
-    bird.update({ phase: (i / 24) * 2 * Math.PI, amp: model.law.ampNominal });
+    const phase = (i / 24) * 2 * Math.PI, q = poseOf(bird, phase, amp);
+    bird.update({ phase, amp });
     bird.root.updateMatrixWorld(true);
-    const pin = centre('crank_pin');
+    const pin = dcentre('crank web/pin', q);
     for (const tag of ['R', 'L']) {
-      const bot = centre(`coupler_eye_${tag}_bot`), top = centre(`coupler_eye_${tag}_top`), horn = centre(`horn_pin_${tag}`);
+      const bot = dcentre(`coupler ${tag}/crank eye`, q), top = dcentre(`coupler ${tag}/horn eye`, q), horn = centre(`horn_pin_${tag}`);
       assert.ok(near(bot.y, pin.y) && near(bot.z, pin.z), `${tag} bottom eye off the crank pin at ${i}/24`);
       assert.ok(near(top.y, horn.y, 1e-5) && near(top.z, horn.z, 1e-5), `${tag} top eye off the horn pin at ${i}/24: ${top.y - horn.y}, ${top.z - horn.z}`);
       assert.ok(near(top.distanceTo(bot) ** 2 - (top.x - bot.x) ** 2, model.law.b ** 2, 1e-8), `${tag} coupler length`);
@@ -100,30 +107,50 @@ test('rockers, pins and housings at the design\'s and the BOM\'s sizes', () => {
       const b = ringAbout(`hinge_bushing_${tag}_${end}`, at);
       assert.ok(near(b.x0, h.x0) && near(b.x1, h.x1) && near(b.ri, sh.d / 2, 1e-5) && near(b.ro, sh.flangeD / 2, 1e-5), 'bushing in its housing');
     }
-    const e = dims(`coupler_eye_${tag}_bot`), rod = dims(`coupler_rod_${tag}`);
-    assert.ok(near(e.y, mm(L.coupler.eye_od_mm), 2e-4) && near(e.x, eye.B) && near(e.ri, eye.D / 2, 1e-5), 'coupler eye');
+    // the eye (v24: counterbored for its bushing's flange) round its bushing, as long as the bushing
+    const q = poseOf(bird, 0, amp), ce = `coupler ${tag}/crank eye`, eb = drawnBox(bird, ce, q).union(drawnBox(bird, `${ce} counterbore`, q));
+    const ec = bird.phys.solid(`coupler ${tag}`, 'crank eye').at(q).c, er = drawnRadii(bird, ce, q, ec);
+    assert.ok(near(dsize(ce, q).y, mm(L.coupler.eye_od_mm), 2e-4) && near(eb.max.x - eb.min.x, eye.B) && near(er.ri, eye.D / 2, 1e-5), 'coupler eye');
+    const rod = dims(`coupler_rod_${tag}`);
     assert.ok(near(rod.x, mm(L.coupler.body_d_mm), 2e-4), 'coupler body');
   }
 });
 
 test('the crank, shafts, keys, plates and bosses at the design\'s sizes; the crank pin and shafts as long as the BOM says', () => {
   const C = L.crank;
-  const pinBOM = +item(/^crank:/).basis.match(/([\d.]+) mm pin x ([\d.]+) mm/)[2] / 1000;
-  const pin = dims('crank_pin'), web = dims('crank_web'), shaft = dims('crank_shaft');
-  assert.ok(near(pin.x, pinBOM) && near(pin.y, eye.d, 2e-4), `crank pin ${pin.x} vs the BOM's ${pinBOM}`);
-  assert.ok(near(web.x, mm(C.web_t_mm)) && near(web.z, mm(C.web_b_mm), 2e-4) && near(web.y, model.law.a + mm(C.web_b_mm), 2e-4), 'web');
-  assert.ok(near(shaft.y, mm(C.shaft_od_mm), 2e-4) && near(shaft.ri, mm(C.shaft_id_mm) / 2, 1e-4), 'crank shaft');
-  // the crank shaft from the web as long as the BOM says (v22: to the end of the encoder's stub forward of stage 1)
-  const shaftBOM = +item(/^crank:/).basis.match(/shaft x ([\d.]+) mm/)[1] / 1000;
-  assert.ok(near(shaft.x, shaftBOM), `crank shaft ${shaft.x} vs the BOM's ${shaftBOM}`);
+  // v24: the crank in two parts, the shaft (with its stub and wheel seat) and the web and pin keyed on the stub, each
+  // its own BOM line; at phase 0, where the crank's throw points at the pin
+  bird.update({ phase: 0, amp });
+  const q = poseOf(bird, 0, amp), O2 = model.train.shafts[0];
+  const webBOM = item(/^crank web and pin$/).basis, shaftBOM = item(/^crank shaft$/).basis;
+  const pinL = +webBOM.match(/([\d.]+) mm pin x ([\d.]+) mm/)[2] / 1000;
+  const pin = dsize('crank web/pin', q), web = drawnBox(bird, 'crank web/web', q), shaft = dsize('crank/shaft', q);
+  assert.ok(near(pin.x, pinL) && near(pin.y, eye.d, 2e-4), `crank pin ${pin.x} vs the BOM's ${pinL}`);
+  // the web: its thickness along x, its width across the throw, its length the throw plus its width
+  const [, wb, throwMm, wt] = webBOM.match(/web ([\d.]+) mm wide round the ([\d.]+) mm throw x ([\d.]+) mm/).map(Number);
+  const ws = web.getSize(new THREE.Vector3());
+  assert.ok(near(ws.x, mm(wt)) && near(mm(wt), mm(C.web_t_mm)) && near(mm(throwMm), model.law.a, 1e-9), 'web thickness and throw');
+  const p = bird.phys.solid('crank web', 'pin').at(q).c, u = [(p[0] - O2[0]) / model.law.a, (p[1] - O2[1]) / model.law.a];
+  const r = drawnRadii(bird, 'crank web/web', q, O2);
+  assert.ok(near(r.ri, mm(C.shaft_od_mm) / 2, 1e-5), 'bored on the stub');
+  const ext = (dir) => { let m = -Infinity; const v = new THREE.Vector3(); for (const o of meshesOf(bird, 'crank web/web')) { const pos = o.geometry.attributes.position; for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld); m = Math.max(m, (v.z - O2[0]) * dir[0] + (v.y - O2[1]) * dir[1]); } } return m; };
+  assert.ok(near(ext(u) + ext([-u[0], -u[1]]), model.law.a + mm(wb), 2e-4) && near(ext([-u[1], u[0]]) + ext([u[1], -u[0]]), mm(wb), 2e-4), 'web as long as the throw and its width, as wide as its width');
+  const sr = drawnRadii(bird, 'crank/shaft', q, O2);
+  assert.ok(near(shaft.y, mm(C.shaft_od_mm), 2e-4) && near(sr.ri, mm(C.shaft_id_mm) / 2, 1e-4), 'crank shaft');
+  // the crank shaft as long as the BOM says (to the end of the encoder's stub forward of stage 1)
+  const shaftLen = +shaftBOM.match(/shaft x ([\d.]+) mm/)[1] / 1000;
+  assert.ok(near(shaft.x, shaftLen), `crank shaft ${shaft.x} vs the BOM's ${shaftLen}`);
   L.gearShafts.forEach((g, k) => {
     const s = dims(`shaft_${k + 1}`);
     const len = +item(new RegExp(`^gear shaft ${k + 1}$`)).basis.match(/x ([\d.]+) mm/)[1] / 1000;
     assert.ok(near(s.y, mm(g.d_mm), 2e-4) && near(s.x, len), `gear shaft ${k + 1}: ${s.x} vs ${len}`);
     if (g.seat_od_mm) assert.ok(near(dims(`shaft_${k + 1}_wheel_seat`).y, mm(g.seat_od_mm), 2e-4), 'seat');
   });
-  const key = dims('gear_crank_key');
-  assert.ok(near(key.y, mm(C.key.h_mm)) && near(key.z, mm(C.key.b_mm)), 'crank wheel key');
+  // the crank wheel's key, the BOM's b x h x L
+  const wheelKey = bird.phys.parts.find((x) => /^key, crank wheel /.test(x.id));
+  const [kb, kh, kl] = item(new RegExp(`^${wheelKey.id}$`)).basis.match(/([\d.]+) x ([\d.]+) x ([\d.]+) mm/).slice(1).map(Number);
+  const ks = dsize(`${wheelKey.id}/key`, q);
+  assert.ok(near(ks.x, mm(kl)) && [ks.y, ks.z].sort().every((v, i) => near(v, [mm(kb), mm(kh)].sort()[i])) && near(mm(kb), mm(C.key.b_mm)) && near(mm(kh), mm(C.key.h_mm)), 'crank wheel key');
   const P = L.plates;
   assert.ok(near(dims('plate_aft').x, mm(P.t_mm)) && near(dims('plate_fwd').x, mm(P.t_fwd_mm)), 'plates');
   const crankJ = jd(/^bushing: crank shaft/);
@@ -141,18 +168,21 @@ test('a focus shows its subsystem and the parts named with it, and ghosts the re
   const ghost = node('part_battery').children[0].material.constructor === THREE.MeshBasicMaterial;
   assert.equal(ghost, false, 'the battery is drawn as itself');
   const mat = (n) => node(n).material;
-  assert.ok(mat('servo_tail_L_case') !== mat('crank_web') && mat('crank_web').transparent && mat('crank_web').opacity < 0.1, 'the crank is ghosted, a tail servo is not');
+  const web = meshesOf(bird, 'crank web/web')[0];
+  assert.ok(mat('servo_tail_L_case') !== web.material && web.material.transparent && web.material.opacity < 0.1, 'the crank is ghosted, a tail servo is not');
   bird.update({ phase: 0, amp: model.law.ampNominal, focus: 'twist' });
   assert.ok(!mat('servo_tail_L_case').opacity || mat('servo_tail_L_case').opacity < 0.1, 'without also, a tail servo is ghosted');
   bird.update({ phase: 0, amp: model.law.ampNominal });
-  assert.ok(!(mat('crank_web').transparent && mat('crank_web').opacity < 0.1), 'no focus: all drawn');
+  assert.ok(!(web.material.transparent && web.material.opacity < 0.1), 'no focus: all drawn');
 });
 
 test('keys in their keyways, bosses on the plates\' inner faces, the motor bearing in the forward plate', () => {
   bird.update({ phase: 0, amp: model.law.ampNominal });
   bird.root.updateMatrixWorld(true);
-  const k = L.crank.key, bore = model.train.stages.at(-1).wheel.bore;
-  assert.ok(near(node('gear_crank_key').position.y, bore / 2 - mm(k.shaft_depth_mm) + mm(k.h_mm) / 2), 'crank wheel key half in the shaft');
+  const k = L.crank.key, bore = model.train.stages.at(-1).wheel.bore, O2 = model.train.shafts[0];
+  const wheelKey = bird.phys.parts.find((x) => /^key, crank wheel /.test(x.id));
+  const kc = dcentre(`${wheelKey.id}/key`, poseOf(bird, 0, amp));
+  assert.ok(near(Math.hypot(kc.z - O2[0], kc.y - O2[1]), bore / 2 - mm(k.shaft_depth_mm) + mm(k.h_mm) / 2), 'crank wheel key half in the shaft');
   const P = model.planes, PL = L.plates;
   const box = (n) => new THREE.Box3().setFromObject(node(n));
   for (const key of PL.bossed) {
@@ -175,13 +205,22 @@ test('keys in their keyways, bosses on the plates\' inner faces, the motor beari
 test('a symmetric pose (as a flight log flies it): the left wing at the right stroke, its coupler still on the crank pin', () => {
   // The flight model strokes both wings alike; one shared crank pin cannot (6.6 deg apart at v21's amplitude). The
   // left coupler stays on the pin and aims at the mirrored rocker pin, so its far eye misses that pin by a few mm.
-  bird.update({ phase: 1.1, amp: model.law.ampNominal, symmetric: true });
+  // the coupler's eyes are drawn in its node (drive-solids.js drawPosed), at its origin and at the coupler's length
+  // along its y: first, that the drawn eyes are there
+  const eyeAt = (tag, y) => node(`coupler_${tag}`).localToWorld(new THREE.Vector3(0, y, 0));
+  bird.update({ phase: 1.1, amp });
+  const q = poseOf(bird, 1.1, amp);
+  for (const [e, y] of [['crank', 0], ['horn', model.law.b]]) {
+    const d = dcentre(`coupler L/${e} eye`, q), a = eyeAt('L', y);
+    assert.ok(near(d.y, a.y) && near(d.z, a.z), `the ${e} eye at its node's ${y}`);
+  }
+  bird.update({ phase: 1.1, amp, symmetric: true });
   bird.root.updateMatrixWorld(true);
-  const pin = centre('crank_pin'), bot = centre('coupler_eye_L_bot');
+  const pin = dcentre('crank web/pin', q), bot = eyeAt('L', 0);
   assert.ok(near(bot.y, pin.y) && near(bot.z, pin.z), 'on the crank pin');
   const r = centre('horn_pin_R'), l = centre('horn_pin_L');
   assert.ok(near(l.y, r.y) && near(l.z, -r.z), 'the left rocker mirrors the right one');
-  const top = centre('coupler_eye_L_top');
+  const top = eyeAt('L', model.law.b);
   assert.ok(Math.hypot(top.y - l.y, top.z - l.z) < 0.003, `left eye ${Math.hypot(top.y - l.y, top.z - l.z) * 1000} mm off its horn pin`);
   bird.update({ phase: 1.1, amp: model.law.ampNominal });
 });

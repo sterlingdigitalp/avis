@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadModel, loadVerification } from '../../sims/avis-shared/node-load.js';
 import { driveStages, powerParts, gateOrder, shortName, subsystemOf, subsystemMass, gatesCardItems, stageRows, massRows } from '../../sims/avis-shared/film.js';
-import { gateLine, gateFailures } from '../../sims/avis-shared/numbers.js';
+import { gateLine, gateFailures, gateVerdict, notCounted } from '../../sims/avis-shared/numbers.js';
 
 const { model, design } = loadModel('larus-gl-2');
 const gates = loadVerification('larus-gl-2');
@@ -97,6 +97,7 @@ test('the card: one row per gate, a failure (or a verdict not final) across the 
     assert.ok(h, g);
     if (!r) assert.ok(h.includes('not run'), g);
     else if (gateVerdict(r) === 'NOT FINAL') assert.ok(h.startsWith(' wide') && h.includes('NOT FINAL') && !h.includes('v ok'), g);
+    else if (gateVerdict(r) === 'NOT COUNTED') assert.ok(h.startsWith(' wide') && h.includes('NOT COUNTED') && !h.includes('v ok') && !/>pass</.test(h), g);
     else if (r.passed) assert.ok(!h.startsWith(' wide') && h.includes('pass'), g);
     else {
       assert.ok(h.startsWith(' wide') && h.includes('FAIL'), g);
@@ -135,8 +136,11 @@ test('gate failures, each kind in the file\'s own words', () => {
   assert.deepEqual(F({ robustness: { a: true }, robustness_passed: false }), ['fails its robustness check']);
   assert.deepEqual(F({ robustness_passed: true, nominal_passed: true, gears_within_rating: false, ok: true }), ['gears within rating: no']);
   assert.deepEqual(F({ nominal_passed: false }), ['nominal case fails']);
-  assert.deepEqual(F({ max_error_pct: 3, height_lost_m: 1.6, endurance_min: 5 }, { max_error_pct: 3, height_lost_m: 1.5, endurance_min: 10, note: 'x' }), ['height lost m 1.6 against a limit of 1.5']);
-  assert.deepEqual(F({ max_error_pct: 4.281 }, { error_pct: 3 }), ['max error pct 4.28 against a limit of 3']);
+  assert.deepEqual(F({ max_error_pct: 3, height_lost_m: 1.6, endurance_min: 5 }, { max_error_pct: 3, height_lost_m: 1.5, endurance_min: 10, note: 'x' }), ['the height lost is 1.60 m, over its 1.5 m limit']);
+  assert.deepEqual(F({ max_error_pct: 4.281 }, { error_pct: 3 }), ['the worst error is 4.3%, over its 3% limit']);
+  assert.deepEqual(F({ max_error_pct: 4.281, worst_AR: 8 }, { error_pct: 3 }), ['the worst error is 4.3% at AR 8, over its 3% limit']);
+  assert.deepEqual(F({ height_lost_m: 2.104 }, { height_lost_m: 1.5 }), ['the height lost is 2.10 m, over its 1.5 m limit']);
+  assert.deepEqual(F({ max_error_pct: 4.281, worst_case: 'gust', worst_AR: 8, worst_lift_err_pct: 9, worst: { a: 1 } }, { error_pct: 3 }), ['the worst error is 4.3% at case gust, AR 8, over its 3% limit'], 'where: its worst_ words, not its worst_ measures');
   assert.deepEqual(F({ failures: ['seal', { case: 2 }] }), ['seal', '{"case":2}']);
   assert.deepEqual(F({ points: 26, points_passed: 13, points_unconverged: 8 }), ['13 of 26 points fail, 8 of them unconverged']);
   assert.deepEqual(F({ points: 26, points_passed: 20 }), ['6 of 26 points fail']);
@@ -170,5 +174,47 @@ test('the card\'s verdicts are tools/verify.mjs\'s, gate by gate, from the same 
   const theirs = Object.fromEntries([...out.matchAll(/^([MV]\d)\s+(NOT FINAL|pass\?|pass|FAIL|MISSING)/gm)].map((m) => [m[1], m[2]]));
   assert.ok(Object.keys(theirs).length >= 15, out.slice(0, 200));
   const gates = loadVerification('larus-gl-2');
-  for (const [gate, v] of Object.entries(theirs)) assert.equal(gateVerdict(gates.find((x) => x.gate === gate) ?? null), v, gate);
+  // the same verdict, gate by gate; a pass the card withholds only where the record itself shows the pass resting on
+  // a fixing no one rates (numbers.js notCounted: SPEC v24 result, M7 on the crank web's bond), which verify.mjs does
+  // not read yet
+  for (const [gate, v] of Object.entries(theirs)) {
+    const r = gates.find((x) => x.gate === gate) ?? null, mine = gateVerdict(r);
+    if (mine === 'NOT COUNTED') assert.ok(/^pass\??$/.test(v) && notCounted(r).length > 0, `${gate}: ${v} there, not counted here`);
+    else assert.equal(mine, v, gate);
+  }
+});
+
+test('a pass that rests on a fixing no one rates is never drawn as a pass: NOT COUNTED, with what it rests on', async () => {
+  const { gatesCardItems } = await import('../../sims/avis-shared/film.js');
+  const { loadVerification } = await import('../../sims/avis-shared/node-load.js');
+  const m7 = (rc, extra = {}) => ({ gate: 'M7', passed: true, ran_at: '2026-11-03T15:00', measured: { fos_min: 1.59, members: { rc_practice: rc } }, limit: { factor_of_safety: 1.5 }, at06: { gate: 'M7', passed: true, ran_at: '2026-11-03T15:10' }, ...extra });
+  const unrated = { name: 'crank web on the crank shaft, axial fixing', status: 'unrated, RC practice', published_Nm: null };
+  const rated = { name: 'gear on its shaft, fixing', status: 'unrated, RC practice', published_Nm: 8.4, within_published: true };
+  assert.equal(gateVerdict(m7([rated])), 'pass', 'a fixing with a published figure binds at it: counted');
+  assert.equal(gateVerdict(m7([rated, unrated])), 'NOT COUNTED');
+  assert.deepEqual(notCounted(m7([unrated])), ['the crank web on the crank shaft, axial fixing (unrated, RC practice: no published rating)']);
+  assert.equal(gateVerdict(m7([unrated], { counted: true })), 'pass', 'the record\'s own ruling clears it');
+  assert.equal(gateVerdict(m7([rated], { counted: false, not_counted_because: 'the bond' })), 'NOT COUNTED', 'or withholds it');
+  assert.equal(gateVerdict({ ...m7([unrated]), passed: false, at06: { gate: 'M7', passed: false, ran_at: '2026-11-03T15:10' } }), 'FAIL', 'a failure stays a failure');
+  assert.equal(gateVerdict({ ...m7([unrated]), at06: undefined }), 'NOT COUNTED', 'with no comparison too');
+  const row = gatesCardItems([m7([unrated])]).split('<div class="g').find((x) => x.includes('<em>M7</em>'));
+  assert.ok(/NOT COUNTED/.test(row) && !/v ok/.test(row) && !/>pass\??</.test(row) && row.includes('crank web'), row);
+  // as the page carries the records (film/gen_data.mjs pageGate): every verdict the same as from the full record
+  const { pageGate } = await import('../../sims/avis-shared/numbers.js');
+  for (const g of loadVerification('larus-gl-2')) assert.equal(gateVerdict(pageGate(g)), gateVerdict(g), g.gate);
+  assert.equal(gateVerdict(pageGate(m7([unrated]))), 'NOT COUNTED');
+  // what the page keeps: the scalars measured, not the lists; the record's own counted flag only when it states one
+  const pg = pageGate({ ...m7([unrated]), file: 'M7.json', at06: { gate: 'M7', passed: true, ran_at: 'z', file: 'M7.json', measured: {} } });
+  assert.deepEqual(pg.measured, { fos_min: 1.59 });
+  assert.deepEqual(pageGate({ gate: 'V9', passed: true, measured: { a: 1, b: true, c: 'x', d: [1], e: { f: 1 }, g: null } }).measured, { a: 1, b: true, c: 'x' });
+  assert.ok(!('counted' in pg) && pageGate(m7([unrated], { counted: false })).counted === false && pageGate(m7([unrated], { counted: true })).counted === true);
+  assert.equal(pg.at06.file, 'eta0.6/M7.json');
+  assert.equal(pg.file, 'M7.json');
+  assert.deepEqual(pg.not_counted, notCounted(m7([unrated])));
+  assert.ok(pg.line.startsWith('Structure') && Array.isArray(pg.failures) && pg.gate === 'M7' && pg.passed === true && pg.ran_at === m7([]).ran_at);
+  assert.equal(pageGate({ gate: 'V9', passed: true, measured: {} }).at06, undefined);
+  assert.equal(gateVerdict(pageGate(m7([unrated], { counted: true }))), 'pass');
+  // v24's own M7 record: the crank web's bond, so not counted (the SPEC v24 result)
+  const v24 = loadVerification('larus-gl-2').find((g) => g.gate === 'M7');
+  if (v24?.measured?.members?.rc_practice?.some((x) => x.published_Nm == null && v24.passed)) assert.equal(gateVerdict(v24), 'NOT COUNTED');
 });

@@ -57,14 +57,35 @@ export const MISSION = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'];
  * A gate's verdict by tools/verify.mjs's rule (SPEC "Final verdicts"): a mission gate is final only if it is the same
  * flown with eta_s at the published 0.6 everywhere (out/verification/eta0.6/, carried here as g.at06, the newest such
  * file, counted only when no older than the official run). 'NOT FINAL' when the two differ (a pass that is not final is
- * not a pass), 'pass?' when a mission gate has no comparison on record, else 'pass' or 'FAIL'.
+ * not a pass), 'pass?' when a mission gate has no comparison on record, else 'pass' or 'FAIL'. A pass that rests on
+ * something no rating covers (notCounted) is 'NOT COUNTED': it is not a pass either.
  */
 export function gateVerdict(g) {
   if (!g) return 'MISSING';
   const alt = g.at06 && String(g.at06.ran_at) >= String(g.ran_at) ? g.at06 : null;
-  if (MISSION.includes(g.gate) && !alt) return g.passed ? 'pass?' : 'FAIL';
+  if (MISSION.includes(g.gate) && !alt) return g.passed ? (notCounted(g).length ? 'NOT COUNTED' : 'pass?') : 'FAIL';
   if (alt && alt.passed !== g.passed) return 'NOT FINAL';
+  if (g.passed && notCounted(g).length) return 'NOT COUNTED';
   return g.passed ? 'pass' : 'FAIL';
+}
+
+/**
+ * Why a gate's pass is not counted, in its record's own words (SPEC "Completeness and assembly order", v24 result: a
+ * pass that rests on a fixing no rating covers is not counted until a rated fixing replaces it):
+ *  - the record's own ruling, when it states one: counted false, with not_counted_because (a string or a list);
+ *    counted true clears it;
+ *  - else every RC-practice fixing the record lists (measured.members.rc_practice) with no published figure: its pass
+ *    rests on that fixing, rated by no one. The SPEC's RC-practice ruling may still cover one (a gear, pulley or
+ *    coupling held to its shaft); only the record's counted flag can say so, so until it does, the card does not
+ *    count it.
+ * -> [reasons], empty when counted
+ */
+export function notCounted(g) {
+  if (!g || g.counted === true) return [];
+  if (g.counted === false) return [].concat(g.not_counted_because ?? 'not counted (the record says so)');
+  if (Array.isArray(g.not_counted)) return g.not_counted; // carried by pageGate, which drops the record's lists
+  const rc = g.measured?.members?.rc_practice;
+  return (Array.isArray(rc) ? rc : []).filter((x) => x && x.published_Nm == null).map((x) => `the ${x.name} (${x.status ?? 'unrated'}: no published rating)`);
 }
 
 export function gateLine(g) {
@@ -132,9 +153,23 @@ function limitFailures(m, limit) {
   const out = [];
   for (const [k, v] of Object.entries(limit ?? {})) {
     const mk = [k, `max_${k}`].find((x) => typeof m[x] === 'number');
-    if (typeof v === 'number' && mk && /error|err|lost/.test(k) && m[mk] > v) out.push(`${mk.replace(/_/g, ' ')} ${+m[mk].toFixed(2)} against a limit of ${v}`);
+    if (typeof v === 'number' && mk && /error|err|lost/.test(k) && m[mk] > v) out.push(limitSentence(mk, m[mk], v, m));
   }
   return out;
+}
+
+/** The units a measured key ends in, as shown. */
+const UNITS = [[/_pct$/, '%', 1], [/_deg$/, '°', 1], [/_m_s$/, ' m/s', 2], [/_m$/, ' m', 2], [/_s$/, ' s', 2], [/_w$/, ' W', 1]];
+
+/**
+ * A measured value over its limit as a sentence, from the key's own words: 'max_error_pct' 4.281 against 3 with
+ * worst_AR 8 -> "the worst error is 4.3% at AR 8, over its 3% limit".
+ */
+export function limitSentence(key, value, limit, m = {}) {
+  const [re, unit, d] = UNITS.find(([r]) => r.test(key)) ?? [/$/, '', 2];
+  const words = key.replace(re, '').replace(/^max_/, 'worst_').replace(/_/g, ' ');
+  const where = Object.entries(m).filter(([k, x]) => /^worst_/.test(k) && (typeof x === 'number' || typeof x === 'string') && !UNITS.some(([r]) => r.test(k))).map(([k, x]) => `${k.replace(/^worst_/, '').replace(/_/g, ' ')} ${x}`);
+  return `the ${words} is ${value.toFixed(d)}${unit}${where.length ? ` at ${where.join(', ')}` : ''}, over its ${limit}${unit} limit`;
 }
 
 /** Failures the file lists itself, and points that did not pass. */
@@ -142,4 +177,15 @@ function listedFailures(m) {
   const out = Array.isArray(m.failures) ? m.failures.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))) : [];
   if (typeof m.points === 'number' && typeof m.points_passed === 'number' && m.points_passed < m.points) out.push(`${m.points - m.points_passed} of ${m.points} points fail${typeof m.points_unconverged === 'number' ? `, ${m.points_unconverged} of them unconverged` : ''}`);
   return out;
+}
+
+/**
+ * A gate record as the page carries it (film/gen_data.mjs): its verdict's inputs, one line in its own numbers, what a
+ * failure failed, why a pass is not counted, and the top-level scalar measurements; the uniform eta_s 0.6 comparison
+ * the same way. gateVerdict reads it as it reads the full record.
+ */
+export function pageGate(g) {
+  const scalars = (o) => Object.fromEntries(Object.entries(o ?? {}).filter(([, v]) => typeof v === 'number' || typeof v === 'boolean' || typeof v === 'string'));
+  const one = (r) => ({ gate: r.gate, design: r.design, passed: r.passed, line: gateLine(r), failures: gateFailures(r), not_counted: notCounted(r), ...(typeof r.counted === 'boolean' ? { counted: r.counted } : {}), measured: scalars(r.measured), ran_at: r.ran_at, file: r.file });
+  return { ...one(g), ...(g.at06 ? { at06: { ...one(g.at06), file: `eta0.6/${g.at06.file}` } } : {}) };
 }

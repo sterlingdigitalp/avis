@@ -40,12 +40,12 @@ test('gears, bearings, bushings and servos appear exactly as often as the BOM li
 });
 
 test('ribs: the BOM count, shared between the wings', () => {
-  let n = 0;
-  bird.root.traverse((o) => {
-    if (/^rib_[LR]_\d+$/.test(o.name)) n++;
-  });
-  const listed = +design.bom.structure.find((s) => /^ribs/.test(s.name)).name.match(/(\d+)\s*off/)[1];
-  assert.equal(n, listed);
+  // v24 on, the ribs are the physics' solids, each drawn as its own mesh under the BOM's rib line, on its wing's segment
+  const line = design.bom.structure.find((s) => /^ribs/.test(s.name));
+  const ribs = bird.parts.filter((p) => p.name === line.name).flatMap((p) => p.objects);
+  const listed = +line.name.match(/(\d+)\s*off/)[1];
+  assert.equal(ribs.length, listed);
+  for (const tag of ['R', 'L']) assert.equal(ribs.filter((o) => o.parent.name === `wing_${tag}_0`).length, listed / 2, tag);
 });
 
 test('a pose from the log leaves every matrix and vertex finite', () => {
@@ -70,8 +70,10 @@ test('the right wing tip rises with the stroke angle and the left mirrors it', (
   const tipY = (phase) => {
     const dp = bird.update({ phase, amp: model.law.ampNominal });
     bird.root.updateMatrixWorld(true);
-    const r = bird.root.getObjectByName('rib_R_08').getWorldPosition(new bird.root.position.constructor());
-    const l = bird.root.getObjectByName('rib_L_08').getWorldPosition(new bird.root.position.constructor());
+    // the rib nearest the tip on each wing (v24: drawn from the physics' solids, so its geometry is where it is)
+    const tipRib = (tag) => bird.meshes.filter((o) => o.userData.physics?.[0]?.startsWith(`rib ${tag} `)).sort((a, b) => +b.userData.physics[0].match(/rib \w (\d+)/)[1] - +a.userData.physics[0].match(/rib \w (\d+)/)[1])[1];
+    const at = (o) => new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3());
+    const r = at(tipRib('R')), l = at(tipRib('L'));
     return { r, l, dp };
   };
   const top = tipY(0), bottom = tipY(Math.PI);
@@ -115,15 +117,15 @@ test('wing film between ribs: model.membraneDip at the bay midpoint, never insid
   const bLo = sineSeries(xs, sec.map((q) => q.cam - q.half));
   const teR = model._teR;
   const sparR = [/inner spar/, /outer spar/].map((re) => model.parts[design.bom.structure.find((x) => re.test(x.name)).material_id].specs.od_mm / 2000);
-  const fsList = ribs.flatMap((s, k) => (k < ribs.length - 1 ? [0, 1, 2, 3].map((r) => s + ((ribs[k + 1] - s) * r) / 4) : [s]));
   let checked = 0;
   for (const tag of ['R', 'L']) for (const k of [0, 1]) {
     const f = bird.root.getObjectByName(`film_${tag}_${k}`);
     const pos = f.geometry.attributes.position.array;
     const P = (r, c) => [pos[3 * (r * (2 * nSec - 1) + c)], pos[3 * (r * (2 * nSec - 1) + c) + 1], pos[3 * (r * (2 * nSec - 1) + c) + 2]];
     const fromSpar = (v) => Math.hypot(v[0] - W.spar_x, v[1]); // the segment frame: the spar runs along z at (spar_x, 0)
+    // the film's own stations (a row moved onto the elbow, so both segments' films meet there)
     f.userData.rows.forEach((i, r) => {
-      const s = fsList[i];
+      const s = f.userData.s[r];
       const b = Math.max(0, ribs.findIndex((x) => x > s + 1e-9) - 1);
       const gap = ribs[b + 1] - ribs[b], u = (s - ribs[b]) / gap;
       const st = stationsAt(W, [s]);

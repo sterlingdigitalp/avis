@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { makeMaterials, ACCENT, livery as liveryOf, liveryInBom, defaultLivery } from './materials.js';
 import { buildBird } from './bird.js';
 import { createStage } from './stage.js';
-import { numbers, gateLine, gateFailures, gateVerdict } from './numbers.js';
+import { numbers, gateLine, gateFailures, gateVerdict, notCounted } from './numbers.js';
 import { drivePose } from './model.js';
 
 const DEG = 180 / Math.PI;
@@ -160,6 +160,7 @@ const CSS = `
 .panel{position:absolute;right:72px;top:96px;width:560px;padding:34px 38px;border-radius:24px;background:rgba(14,18,24,.97);backdrop-filter:blur(20px) saturate(1.4);box-shadow:0 30px 60px #0007,inset 0 1px 0 rgba(255,255,255,.06)}
 .panel h3{margin:0 0 6px;font-size:40px;font-weight:700;letter-spacing:-.02em}
 .panel .sub{font-size:28px;color:#a9b5c1;margin-bottom:22px;line-height:1.3}
+.panel .sub.step{font-size:24px;margin:14px 0 0;color:#c9d3dc;font-variant-numeric:tabular-nums}
 .frow{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;border-top:1px solid rgba(255,255,255,.07)}
 .frow span{font-size:30px;color:#b9c4cf}
 .frow b{font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:600;color:#f3f6f9}
@@ -229,6 +230,9 @@ export function driveStages(model) {
   }));
 }
 
+/** The right twist servo's node: the physics' own (a design with a wing structure, round 16), else the film's. */
+export const twistServoNode = (model) => (model.design.params?.wingStructure ? 'phys_twist_servo_R_case' : 'twist_servo_R');
+
 /** The power sequence's parts, from the BOM by role: battery, ESC, servo regulator and the servos it feeds, with masses. */
 export function powerParts(model) {
   const D = model.design;
@@ -244,7 +248,8 @@ export function powerParts(model) {
   add('ESC', /\bESC\b/, 'part_esc');
   add('regulator', /regulator/, 'part_regulator');
   add('tail servos', /^tail servo$/, 'part_servo_tail_R');
-  add('twist servos', /twist servo$/, 'twist_servo_R');
+  // v24 on, the twist servo is the physics' solid (drive-solids.js drawPosed names it for its part and solid)
+  add('twist servos', /twist servo$/, twistServoNode(model));
   return rows;
 }
 
@@ -304,6 +309,8 @@ export function gatesCardItems(gates) {
     if (!r) return `<div class="g"><em>${g}</em><span>no result yet</span><span class="v" style="color:#8d99a6">not run</span></div>`;
     const v = gateVerdict(r);
     if (v === 'pass' || v === 'pass?') return `<div class="g"><em>${g}</em><span>${gateLine(r)}</span><span class="v ok">${v}</span></div>`;
+    // not counted: its numbers, and what its pass rests on that no rating covers (numbers.js notCounted)
+    if (v === 'NOT COUNTED') return `<div class="g wide"><em>${g}</em><span>${gateLine(r)}<span class="why">not counted, so not a pass: it rests on ${notCounted(r).join('; ')}</span></span><span class="v nf">NOT COUNTED</span></div>`;
     // not final: both runs' own numbers, and why it is not a pass
     if (v === 'NOT FINAL') return `<div class="g wide"><em>${g}</em><span>${gateLine(r)} on the CFD suction table; ${gateLine(r.at06).replace(/^[^:]*:\s*/, '')} at the published η<sub>s</sub> 0.6<span class="why">not final, so not a pass: the verdict differs at η<sub>s</sub> 0.6${(r.passed ? r.at06.failures ?? gateFailures(r.at06) : r.failures ?? gateFailures(r)).length ? ` (${(r.passed ? r.at06.failures ?? gateFailures(r.at06) : r.failures ?? gateFailures(r)).join('; ')})` : ''}</span></span><span class="v nf">NOT FINAL</span></div>`;
     return `<div class="g wide"><em>${g}</em><span>${gateLine(r)}<span class="why">${(r.failures ?? gateFailures(r)).join('; ')}</span></span><span class="v no">FAIL</span></div>`;
@@ -325,12 +332,52 @@ export function assemblyExplode(bird, u) {
   return { build: null, ex: Object.fromEntries(Object.entries(w).map(([k, [a, b]]) => [k, 1 - ease(span(u, a, b))])) };
 }
 
+/** The close-up's target on the gearbox (between the plates, about the crank's height) and how far it reaches (m). */
+const CLOSE = { target: [0.045, -0.025, 0], reach: 0.3 };
+
+/**
+ * When the assembly camera goes out (u): as the first step begins whose parts, in place, reach beyond the close-up on
+ * the gearbox (v24: the tail boom), the steps timed as the bird plays them (bird.assembly); 0.68 for a bird without.
+ */
+export function assemblyWide(bird) {
+  if (!bird?.assembly) return 0.68;
+  const c = new THREE.Vector3(...CLOSE.target);
+  bird.update({ phase: 0, amp: bird.model.law.ampNominal });
+  bird.root.updateMatrixWorld(true);
+  const far = (n) => {
+    const b = new THREE.Box3().setFromObject(n);
+    return !b.isEmpty() && Math.max(...[b.min, b.max].flatMap((v) => [Math.abs(v.x - c.x), Math.abs(v.y - c.y), Math.abs(v.z - c.z)])) > CLOSE.reach;
+  };
+  const k = bird.steps.findIndex((s) => s.nodes.some(far));
+  return k < 0 ? 0.68 : 0.86 * bird.assembly.times[k][0];
+}
+
+/** The drive's pose while the bird goes together: the one the physics' sequence states, else the right wing level. */
+export const assemblyHold = (bird, levelPhase, amp) => (bird.phys?.pose ? { phase: bird.phys.pose.phase_rad, amp: bird.phys.pose.amp ?? bird.model.law.ampNominal } : { phase: levelPhase, amp });
+
+/** The panel's line naming the step going on (assemblyStep), or nothing. */
+export const stepLine = (step) => (step ? `<div class="sub step">step ${step.k} of ${step.n} · ${step.name}</div>` : '');
+
+/**
+ * The physics' step going on at build progress p (the latest that has begun), for the panel: { k (1-based), n, name },
+ * or null before the first, after the last (the film's covering beat) or without steps.
+ */
+export function assemblyStep(bird, p) {
+  const a = bird?.assembly;
+  if (!a || typeof p !== 'number') return null;
+  const n = bird.steps.filter((s) => !s.pod).length;
+  let k = -1;
+  for (let i = 0; i < n; i++) if (a.times[i][0] <= p) k = i;
+  return k < 0 || p >= a.times[n - 1][1] ? null : { k: k + 1, n, name: bird.steps[k].name };
+}
+
 /** The assembly camera at u: [target, azimuth deg, elevation deg, distance m, fov deg]; on the gearbox (between
- * the plates, about the crank axis) while it and its frame go together, out to the whole bird from u 0.68 to 0.84. */
-export function assemblyOrbit(u) {
+ * the plates, about the crank axis) while it and its frame go together, out to the whole bird over 0.16 of the
+ * sequence from `wide` (assemblyWide). */
+export function assemblyOrbit(u, wide = 0.68) {
   // from the right side, in the key light, so the slides along x read across the frame; then round to the old path
-  const out = ease(span(u, 0.68, 0.84));
-  return [new THREE.Vector3(0.045 - 0.195 * out, -0.025 * (1 - out), 0), 75 + (75 + 45 * ease(u)) * out, 24 - 6 * u, 0.6 + 1.85 * out - 0.25 * u, 30];
+  const out = ease(span(u, wide, wide + 0.16));
+  return [new THREE.Vector3(CLOSE.target[0] - 0.195 * out, CLOSE.target[1] * (1 - out), 0), 75 + (75 + 45 * ease(u)) * out, 24 - 6 * u, 0.6 + 1.85 * out - 0.25 * u, 30];
 }
 
 /** The assembly panel's subsystem rows: each subsystem's BOM mass, dimmed until it is in place. */
@@ -370,6 +417,7 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
   const bird = buildBird(model, mats, { livery: liv });
   stage.scene.add(bird.root);
   const massBy = subsystemMass(model.design);
+  const wide = assemblyWide(bird);
   const stages = driveStages(model), power = powerParts(model);
   // each studio shot is framed on the parts it shows, as built from this design, so a new design re-frames itself
   const servoIds = new Set(model.design.bom.parts.filter((p) => /servo$/.test(p.role)).map((p) => p.id));
@@ -426,15 +474,15 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
       };
     },
     assembly(u, t) {
-      // the parts go together one step after another in an order a person could follow with them (bird.js steps:
-      // the physics' layout through solids.js assemblyPlan, then the packed parts, the pod and the wings); each
-      // subsystem's row lights when its last step is in. A design without the physics' solids explodes by subsystem.
+      // the parts go together in the physics' own sequence (params.layout.sequence; bird.js steps, grouped into
+      // beats for the screen, every step in its order), the drive held at the pose the sequence states; each
+      // subsystem's row lights when its last step is in. A design without the physics' sequence explodes by subsystem.
       const { build, ex } = assemblyExplode(bird, u);
-      // close on the gearbox while it goes together (the steps up to the trays), then out to the whole bird for the
-      // packed parts, the pod and the wings
-      orbit(...assemblyOrbit(u));
+      // close on the gearbox while it goes together, then out to the whole bird as the first part reaching beyond it
+      // goes on (assemblyWide)
+      orbit(...assemblyOrbit(u, wide));
       const fl = span(u, 0.88, 1);
-      const st = fl > 0 ? flap(t - 0.88 * this._dur) : { phase: this._level, amp: N.ampDeg / DEG };
+      const st = fl > 0 ? flap(t - 0.88 * this._dur) : assemblyHold(bird, this._level, N.ampDeg / DEG);
       let g = 0;
       for (const k of Object.keys(ex)) g += massBy[k] * (1 - ex[k]);
       g += N.margin_g * span(u, 0.86, 0.95);
@@ -443,7 +491,7 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
         state: { ...st, explode: ex, build, shell: 1 },
         html: () => `<div class="fcap">Every part from a catalogue<small>${N.bomLines} BOM lines, ${N.partCount} bought parts, each with a source</small></div>
           <div class="panel" style="top:auto;bottom:120px"><h3>${fmt(g, 0)} g</h3><div class="sub">parts ${fmt(N.parts_g, 0)} g · structure ${fmt(N.structure_g, 0)} g · 15% margin ${fmt(N.margin_g, 0)} g</div>
-          ${massRows(ex, massBy)}${row('span', `${fmt(N.span_m, 2)} m`)}</div>${honest()}`,
+          ${massRows(ex, massBy)}${row('span', `${fmt(N.span_m, 2)} m`)}${stepLine(assemblyStep(bird, build))}</div>${honest()}`,
       };
     },
     drive(u, t) {
@@ -501,7 +549,7 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
         html: () => `<div class="fcap">Active twist<small>¼ speed · nose down on the downstroke, up on the upstroke</small></div>
           <div class="panel" style="opacity:${a}"><h3>${tip >= 0 ? '+' : '−'}${fmt(Math.abs(tip), 1)}°</h3><div class="sub">commanded twist at the tip, ±${fmt(N.twistDynDeg, 0)}° per stroke</div>
           ${row('stroke angle', `${fmt(dp.right.phi * DEG, 1)}°`, 'acc')}${row('twist servo', model.parts[model.design.servos.twist.id]?.name?.split(' ')[0] ?? 'servo')}${row('ribs per wing', `${model.ribs.length}`)}</div>
-          ${callout('Twist servo', node('twist_servo_R'), V(0, 0, 0), 120, -150, a)}${honest()}`,
+          ${callout('Twist servo', node(twistServoNode(model)), V(0, 0, 0), 120, -150, a)}${honest()}`,
       };
     },
     power(u, t) {
@@ -526,7 +574,7 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
       const items = gatesCardItems(data.gates);
       return {
         state: { ...flap(t), shell: 1 },
-        html: () => `<div style="position:absolute;inset:0;background:rgba(9,11,15,${0.78 * a})"></div><div class="card gc" style="opacity:${a}"><h2>Where it stands</h2><p>${N.passCount} of ${data.gates.length} gates pass for ${N.name}, design v${data.design_version}${((k) => (k ? `, ${k} not final` : ''))(data.gates.filter((g) => gateVerdict(g) === 'NOT FINAL').length)}. Failures stay on the record.</p><div class="gates">${items}</div></div>${honest(a)}`,
+        html: () => `<div style="position:absolute;inset:0;background:rgba(9,11,15,${0.78 * a})"></div><div class="card gc" style="opacity:${a}"><h2>Where it stands</h2><p>${N.passCount} of ${data.gates.length} gates pass for ${N.name}, design v${data.design_version}${['NOT FINAL', 'NOT COUNTED'].map((v) => ((k) => (k ? `, ${k} ${v.toLowerCase()}` : ''))(data.gates.filter((g) => gateVerdict(g) === v).length)).join('')}. Failures stay on the record.</p><div class="gates">${items}</div></div>${honest(a)}`,
       };
     },
     credits(u, t) {
