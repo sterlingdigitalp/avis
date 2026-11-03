@@ -35,17 +35,21 @@ function verdict(gate, r) {
   const alt = found && String(found.ran_at) >= String(r.ran_at) ? found : null;
   if (MISSION.includes(gate) && !alt) return r.passed ? 'pass?' : 'FAIL';
   if (alt && alt.passed !== r.passed) return 'NOT FINAL';
+  // A pass that rests on something SPEC does not count (its record says counted: false) is not a pass.
+  if (r.passed && (r.counted === false || alt?.counted === false)) return 'NOT COUNTED';
   return r.passed ? 'pass' : 'FAIL';
 }
+const why = (r) => [].concat(r?.not_counted_because ?? []).join('; ');
 
 let ok = true;
 console.log(`design: ${design ?? '(any)'}`);
-console.log('pass? = no uniform-0.6 comparison on record; NOT FINAL = the verdict differs at uniform eta_s 0.6');
+console.log('pass? = no uniform-0.6 comparison on record; NOT FINAL = the verdict differs at uniform eta_s 0.6; NOT COUNTED = the record says its pass rests on something SPEC does not count');
 for (const gate of [...METHOD, ...MISSION]) {
   const r = find(gate);
   const state = verdict(gate, r);
   if (state !== 'pass') ok = false;
-  console.log(`${gate.padEnd(3)} ${state.padEnd(10)} ${r?.design ?? ''} ${r ? JSON.stringify(r.measured).slice(0, 110) : ''}`);
+  console.log(`${gate.padEnd(3)} ${state.padEnd(11)} ${r?.design ?? ''} ${r ? JSON.stringify(r.measured).slice(0, 110) : ''}`);
+  if (state === 'NOT COUNTED') console.log(`    not counted: ${why(r) || why(find(gate, at06)) || '(no reason recorded)'}`);
 }
 console.log(ok ? 'ALL GATES PASS' : 'NOT ALL GATES PASS');
 process.exit(ok ? 0 : 1);
