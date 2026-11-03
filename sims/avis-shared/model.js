@@ -219,63 +219,89 @@ function gearOf(parts, id) {
  * body loft as far as the numbers allow (the design does not say how the stages are folded); what still sticks out
  * is reported by layoutParts.
  */
+/** The design's gear ids, [pinion, wheel] per stage from the motor (drive.gears, else params.parts.gears). */
+const trainIds = (design) => design.drive.gears ?? design.params?.parts?.gears ?? [];
+
+/** What the fold needs of the motor: its catalogue [diameter, length] (35 x 40 mm without one) and its mass lump's position. */
+export function motorOf(design, parts) {
+  const spec = parts[design.motor?.id ?? design.params?.parts?.motor]?.specs;
+  return { md: parseDims(spec?.dimensions_text_mm)?.values ?? [0.035, 0.04], lumpM: design.mass.lumps.find((l) => l.name === 'flap motor')?.pos ?? [0.04, 0, 0] };
+}
+
 export function gearTrain(design, parts, fourBar) {
-  const ids = design.drive.gears ?? design.params?.parts?.gears ?? [];
-  const g = ids.map((id) => gearOf(parts, id));
+  const g = trainIds(design).map((id) => gearOf(parts, id));
   const n = Math.floor(g.length / 2);
   if (n < 1) return { gears: g, stages: [], shafts: [], links: [], ratio: design.drive.gearRatio, ratioDesign: design.drive.gearRatio };
   const stages = [];
   for (let k = 0; k < n; k++) stages.push({ pinion: g[2 * k], wheel: g[2 * k + 1], centreDistance: g[2 * k].rp + g[2 * k + 1].rp });
   const ratio = stages.reduce((r, st) => r * (st.wheel.z / st.pinion.z), 1);
   const train = { gears: g, stages, ratio, ratioDesign: design.drive.gearRatio, n };
-  train.planes = stagePlanes(design, train);
-  const motorSpec = parts[design.motor?.id ?? design.params?.parts?.motor]?.specs;
-  const md = parseDims(motorSpec?.dimensions_text_mm)?.values ?? [0.035, 0.04];
-  const lumpM = design.mass.lumps.find((l) => l.name === 'flap motor')?.pos ?? [0.04, 0, 0];
-  const motorX = [train.planes.motorAft, train.planes.motorAft + md[1]];
-  const loft = design.body.loft;
-  const chain = (ang) => {
-    const pts = [fourBar.O2];
-    for (let j = 0; j < n; j++) pts.push(add2(pts[j], mul2(dir2(ang[j]), stages[n - 1 - j].centreDistance)));
-    return pts;
-  };
-  const outAt = (x, c, r) => {
-    const h = loftHalf(loft, x);
-    if (!h) return r;
-    let worst = -Infinity;
-    for (let k = 0; k < 24; k++) {
-      const a = (k / 24) * TWO_PI;
-      const rr = Math.hypot((c[1] + r * Math.sin(a) - h.y) / h.hh, (c[0] + r * Math.cos(a)) / h.hw);
-      worst = Math.max(worst, (rr - 1) * Math.min(h.hh, h.hw));
-    }
-    return worst;
-  };
-  const cost = (ang) => {
-    const pts = chain(ang);
-    let c = 0;
-    for (let j = 0; j < n; j++) {
-      const st = stages[n - 1 - j];
-      const x = train.planes.stage[n - 1 - j];
-      // the crank wheel cannot leave the crank (it hangs where the four-bar puts it): count it, but it is fixed
-      c += Math.max(0, outAt(x, pts[j], st.wheel.ro)) + Math.max(0, outAt(x, pts[j + 1], st.pinion.ro));
-      // shafts pass through every plane between the plates: keep them clear of the other stages' gears
-      for (let q = 0; q < n; q++) {
-        if (q === n - 1 - j || q === n - j) continue;
-        const sq = stages[q], jq = n - 1 - q;
-        for (const [centre, gear] of [[pts[jq], sq.wheel], [pts[jq + 1], sq.pinion]]) {
-          for (const shaft of [pts[j], pts[j + 1]]) {
-            if (shaft === centre) continue;
-            const d = len2(sub2(shaft, centre));
-            if (d < gear.ro + 0.003) c += 4 * (gear.ro + 0.003 - d);
-          }
-        }
+  train.planes = stagePlanes(design, train, parts);
+  const { md, lumpM } = motorOf(design, parts);
+  const fold = { stages, n, planes: train.planes, loft: design.body.loft, md, lumpM, O2: fourBar.O2, motorX: [train.planes.motorAft, train.planes.motorAft + md[1]] };
+  const best = foldSearch((ang) => trainCost(fold, ang), n);
+  train.links = best.ang;
+  train.shafts = trainChain(fourBar.O2, stages, n, best.ang);
+  train.centres = { crank: train.shafts[0], motor: train.shafts[n] };
+  return train;
+}
+
+/** Shaft centres of a folded train: from the crank pivot, link j at angle ang[j] for stage n-1-j's centre distance. */
+function trainChain(O2, stages, n, ang) {
+  const pts = [O2];
+  for (let j = 0; j < n; j++) pts.push(add2(pts[j], mul2(dir2(ang[j]), stages[n - 1 - j].centreDistance)));
+  return pts;
+}
+
+/** How far (m) a circle of radius r at c leaves the loft at x (negative inside); r itself where the loft has no section. */
+function outAt(loft, x, c, r) {
+  const h = loftHalf(loft, x);
+  if (!h) return r;
+  let worst = -Infinity;
+  for (let k = 0; k < 24; k++) {
+    const a = (k / 24) * TWO_PI;
+    const rr = Math.hypot((c[1] + r * Math.sin(a) - h.y) / h.hh, (c[0] + r * Math.cos(a)) / h.hw);
+    worst = Math.max(worst, (rr - 1) * Math.min(h.hh, h.hw));
+  }
+  return worst;
+}
+
+/** The fold's cost: tip circles and the motor outside the loft, shafts through other stages' gears, the motor off its lump. */
+function trainCost({ stages, n, planes, loft, md, lumpM, O2, motorX }, ang) {
+  const pts = trainChain(O2, stages, n, ang);
+  let c = 0;
+  for (let j = 0; j < n; j++) {
+    const st = stages[n - 1 - j];
+    const x = planes.stage[n - 1 - j];
+    // the crank wheel cannot leave the crank (it hangs where the four-bar puts it): count it, but it is fixed
+    c += Math.max(0, outAt(loft, x, pts[j], st.wheel.ro)) + Math.max(0, outAt(loft, x, pts[j + 1], st.pinion.ro));
+    c += shaftCrossings(stages, n, pts, j);
+  }
+  const m = pts[n];
+  c += 2 * Math.max(0, Math.max(outAt(loft, motorX[0], m, md[0] / 2), outAt(loft, motorX[1], m, md[0] / 2)));
+  c += 0.02 * len2(sub2(m, [lumpM[2], lumpM[1]])) + 0.01 * Math.abs(m[0]);
+  return c;
+}
+
+/** Shafts pass through every plane between the plates: link j's two shafts against the other stages' gears, 3 mm clear. */
+function shaftCrossings(stages, n, pts, j) {
+  let c = 0;
+  for (let q = 0; q < n; q++) {
+    if (q === n - 1 - j || q === n - j) continue;
+    const sq = stages[q], jq = n - 1 - q;
+    for (const [centre, gear] of [[pts[jq], sq.wheel], [pts[jq + 1], sq.pinion]]) {
+      for (const shaft of [pts[j], pts[j + 1]]) {
+        if (shaft === centre) continue;
+        const d = len2(sub2(shaft, centre));
+        if (d < gear.ro + 0.003) c += 4 * (gear.ro + 0.003 - d);
       }
     }
-    const m = pts[n];
-    c += 2 * Math.max(0, Math.max(outAt(motorX[0], m, md[0] / 2), outAt(motorX[1], m, md[0] / 2)));
-    c += 0.02 * len2(sub2(m, [lumpM[2], lumpM[1]])) + 0.01 * Math.abs(m[0]);
-    return c;
-  };
+  }
+  return c;
+}
+
+/** The link angles of least cost: a coordinate search with halving steps from eight zig-zag starts. -> { c, ang } */
+function foldSearch(cost, n) {
   let best = null;
   const starts = [];
   for (const a0 of [0, 20, 40, 60]) starts.push(Array.from({ length: n }, (_, j) => (90 + (j % 2 ? -a0 : a0)) / 57.29578), Array.from({ length: n }, (_, j) => (90 + (j % 2 ? a0 : -a0)) / 57.29578));
@@ -298,10 +324,7 @@ export function gearTrain(design, parts, fourBar) {
     }
     if (!best || c < best.c) best = { c, ang: ang.slice() };
   }
-  train.links = best.ang;
-  train.shafts = chain(best.ang);
-  train.centres = { crank: train.shafts[0], motor: train.shafts[n] };
-  return train;
+  return best;
 }
 
 /** Thickness along x of the crank web: the design's (params.linkage.crank.web_t_mm), else the 2 mm crank disc. */
@@ -330,8 +353,52 @@ export function filmCouplerPlanes(design, parts, planes) {
   return { couplerR, couplerL, couplerEye: eye, crankPinEnd: pinEnd };
 }
 
+/**
+ * Length (m) a plate journal's body occupies along its seat: a flanged bushing whose flange sits on the plate's face
+ * (params.linkage.plates.flange 'face', v22 on) has its body b1 - b2 in the seat; otherwise (v21) the whole part.
+ */
+export function journalBodyLength(plates, dims) {
+  return plates?.flange === 'face' && dims.flangeB > 0 ? dims.B - dims.flangeB : dims.B;
+}
+
+/**
+ * Drive planes under the assembly clearance rule (params.layout.rule 'clearance', SPEC "Assembly clearance"): every
+ * running pair along the crank pin and the plate-adjacent stages keeps params.layout.running_mm (0.5 mm):
+ *  - the right coupler eye that far aft of the crank web, the left eye that far aft of the right one;
+ *  - the aft plate's crank bushing flange on the plate's aft face, that far forward of the web;
+ *  - the crank stage that far forward of the aft-plate journals and bosses on its two shafts (they reach past the
+ *    plate by their body length less the plate), and the forward plate that far forward of stage 1 by the same rule
+ *    for the forward plate's journals on stage 1's shafts.
+ * Everything else is stagePlanes' (the crank web 1.5 mm forward of the hinge, 1.5 mm between stages, the motor).
+ */
+function clearancePlanes(design, train, parts) {
+  const run = (design.params.layout.running_mm ?? 0.5) / 1000;
+  const x0 = design.wing.hinge[0], plateT = 0.002;
+  const L = design.params.linkage, J = design.params.joints;
+  const tA = L.plates.t_mm / 1000, tF = (L.plates.t_fwd_mm ?? L.plates.t_mm) / 1000;
+  const dims = (id) => journalDims(parts?.[id]?.specs);
+  const eye = dims(J.couplerEyes).B;
+  const crankArm = x0 + 0.0015, tw = crankWebThickness(design);
+  const plateAft = crankArm + tw / 2 + run + dims(J.crankShaft).flangeB + tA / 2;
+  const shaftJ = (k) => (k === 0 ? J.crankShaft : k === train.n ? J.motorOutboard : J.shafts?.[k - 1] ?? J.shafts?.at(-1));
+  const beyond = (k, tp) => (shaftJ(k) ? Math.max(0, journalBodyLength(L.plates, dims(shaftJ(k))) - tp) : 0);
+  const stage = new Array(train.n);
+  let x = plateAft + tA / 2 + Math.max(beyond(0, tA), beyond(1, tA)) + run;
+  for (let s = train.n - 1; s >= 0; s--) {
+    const st = train.stages[s];
+    const w = Math.max(st.wheel.face, st.pinion.face);
+    const hub = Math.max(st.wheel.hubW, st.pinion.hubW);
+    stage[s] = x + w / 2;
+    x += w + hub + (s > 0 ? 0.0015 : 0);
+  }
+  const plateFwd = x + Math.max(beyond(train.n - 1, tF), beyond(train.n, tF)) + run + tF / 2;
+  const couplerR = crankArm - tw / 2 - run - eye / 2;
+  return { crankArm, plateAft, stage, plateFwd, plateT, motorAft: plateFwd + plateT / 2 + 0.0015, couplerR, couplerL: couplerR - eye - run, rule: 'clearance' };
+}
+
 /** x planes of the drive: crank disc at the hinge, aft plate, one plane per stage (crank wheel first), front plate. */
-function stagePlanes(design, train) {
+function stagePlanes(design, train, parts) {
+  if (design.params?.layout?.rule === 'clearance' && train.n > 0) return clearancePlanes(design, train, parts);
   const x0 = design.wing.hinge[0];
   const plateT = 0.002;
   const crankArm = x0 + 0.0015;

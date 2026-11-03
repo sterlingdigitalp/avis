@@ -8,6 +8,7 @@
 // of round 11 (the negative-stall refit, polar-fit.js; bushings on their supported length, bearings.js and
 // linkage.js jointHousings) live in the physics and design code, so they apply to every build. --out other than
 // data/designs/ is for exploration.
+import { clearanceRecord } from './clearance.js';
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -97,6 +98,12 @@ async function complete(d, opt, noSuction) {
   return r;
 }
 
+/** SPEC "Assembly clearance" (2026-11-03): every part pair through the stroke, recorded with the design (passed or not). */
+export function recordClearance(d, p, catalog) {
+  if (p.linkage && p.joints) d.structure.clearance = clearanceRecord(d, catalog);
+  return d;
+}
+
 /**
  * The body fit (film checker) unless fit is false, then the build with its calibration record (calPath as for
  * calibrationOf). -> { p, d } or { failed }.
@@ -107,6 +114,7 @@ export function fittedBuild(p0, catalog, fit, calPath = null) {
   const p = f ? f.params : p0;
   const d = buildDesign(p, catalog);
   if (f) d.packing = packingOf(d, f, p, catalog);
+  recordClearance(d, p, catalog);
   const cal = calibrationOf(calPath, d);
   if (cal) d.calibration = cal;
   return { p, d };

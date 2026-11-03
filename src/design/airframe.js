@@ -315,48 +315,66 @@ function af_ties(ax) {
 
 }
 
+/** The circles a plate's outline is the hull of: every shaft seat, the motor's (forward), both rail seats, the panel lands. */
+function plateSeatCircles(ax, plateName) {
+  const { catalog, jointByName, A, shafts, railPos, mo } = ax;
+  const ringR = (jt) => { const p = byId(catalog, jt.part_id).specs; const D = Number.isFinite(p.d2_mm) ? p.d2_mm : +((p.dimensions_mm_d_D_B ?? '').split('x')[1] ?? 10); return (D / 2 + A.plates.edge_mm) / 1000; };
+  const out = [];
+  const named = { 'crank shaft': 0, 'gear shaft 1': 1, 'gear shaft 2': 2, 'gear shaft 3': 3 };
+  for (const [nm, i] of Object.entries(named)) { const jt = jointByName(nm); if (jt && shafts[i]) out.push({ c: shafts[i], r: ringR(jt) }); }
+  if (plateName === 'fwd') { const jt = jointByName('motor shaft outboard'); if (jt) out.push({ c: shafts[shafts.length - 1], r: Math.max(ringR(jt), (mo.circle_r_mm + 5) / 1000) }); }
+  for (const side of ['right', 'left']) out.push({ c: railPos[side], r: A.rail.seat_D_mm / 2000 });
+  // Flange lands for the panels (the flange's own width past the panel line).
+  for (const q of A.panels.list) {
+    const ends = q.kind === 'side' ? [[q.z_mm, q.y0_mm], [q.z_mm, q.y0_mm + q.h_mm]] : [[-q.w_mm / 2, q.y_mm], [q.w_mm / 2, q.y_mm]];
+    for (const e of ends) out.push({ c: [e[0] / 1000, e[1] / 1000], r: 0.002 });
+  }
+  return out;
+}
+
+/** The outline's top (up) or bottom edge y at z, of a convex polygon. */
+function edgeAt(poly, z, up) {
+  let best = up ? -Infinity : Infinity;
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i], q = poly[(i + 1) % poly.length];
+    if ((p[0] - z) * (q[0] - z) <= 0 && p[0] !== q[0]) { const y = p[1] + ((z - p[0]) / (q[0] - p[0])) * (q[1] - p[1]); best = up ? Math.max(best, y) : Math.min(best, y); }
+  }
+  return best;
+}
+
+/** A pad outside the plate's hull hangs on a post of post_w_mm: in-plane bending at the hull edge plus the axial force. */
+function platePosts(ax, pl, poly, pmat) {
+  const { members, A, tFwd, tAft, yB, boomRoot, fwdTray, aftTray } = ax;
+  const posts = [];
+  const pads = [['boom clamp', [0, yB], boomRoot[pl], A.boom.screw_pitch_mm + 6], [pl === 'fwd' ? 'forward tray' : 'aft tray', [0, (pl === 'fwd' ? A.tray.y_mm : A.aftTray.y_mm) / 1000], pl === 'fwd' ? fwdTray.V : aftTray.V, (pl === 'fwd' ? A.tray : A.aftTray).w_mm]];
+  for (const [nm, c, Fp, padW] of pads) {
+    const up = c[1] > 0;
+    const edge = edgeAt(poly, c[0], up);
+    const Lp = Math.max(0, up ? c[1] - edge : edge - c[1]);
+    if (!(Lp > 0)) continue;
+    const pw = A.plates.post_w_mm;
+    members.push({ name: `${pl === 'aft' ? 'aft' : 'forward'} plate post to the ${nm}`, kind: 'plate', check: 'plate', material: pmat, dims: { b_mm: pw, t_mm: pl === 'aft' ? tAft : tFwd }, sections: [sect('F', Fp), sect('M', scaleTerms(Fp, Lp))], uses: { F: 'F', M: 'M' }, note: `a ${pw} mm post ${(Lp * 1000).toFixed(1)} mm from the plate's outline to the pad: the pad force axially and at the post length` });
+    posts.push({ to: nm, length_m: Lp, area_m2: pw / 1000 * Lp + (padW / 1000) * (2 * A.plates.pad_mm / 1000) });
+  }
+  return posts;
+}
+
 function af_plateSections(ax) {
-  const { catalog, L, jointByName, members, mat, A, shafts, crank, tFwd, tAft, railPlates, railPos, yB, boomRoot, fwdTray, aftTray, mo } = ax;
+  const { L, members, mat, A, tFwd, tAft, railPlates, railPos, boomRoot } = ax;
   // ---- Plates: solid outlines, sections through the plate below the rail seats -------------------------------------
   const pmat = mat(L.plates.material);
-  const ringR = (jt) => { const p = byId(catalog, jt.part_id).specs; const D = Number.isFinite(p.d2_mm) ? p.d2_mm : +((p.dimensions_mm_d_D_B ?? '').split('x')[1] ?? 10); return (D / 2 + A.plates.edge_mm) / 1000; };
-  const seatsOf = (plateName) => {
-    const out = [];
-    const named = { 'crank shaft': 0, 'gear shaft 1': 1, 'gear shaft 2': 2, 'gear shaft 3': 3 };
-    for (const [nm, i] of Object.entries(named)) { const jt = jointByName(nm); if (jt && shafts[i]) out.push({ c: shafts[i], r: ringR(jt) }); }
-    if (plateName === 'fwd') { const jt = jointByName('motor shaft outboard'); if (jt) out.push({ c: shafts[shafts.length - 1], r: Math.max(ringR(jt), (mo.circle_r_mm + 5) / 1000) }); }
-    for (const side of ['right', 'left']) out.push({ c: railPos[side], r: A.rail.seat_D_mm / 2000 });
-    // Flange lands for the panels (the flange's own width past the panel line).
-    for (const q of A.panels.list) {
-      const ends = q.kind === 'side' ? [[q.z_mm, q.y0_mm], [q.z_mm, q.y0_mm + q.h_mm]] : [[-q.w_mm / 2, q.y_mm], [q.w_mm / 2, q.y_mm]];
-      for (const e of ends) out.push({ c: [e[0] / 1000, e[1] / 1000], r: 0.002 });
-    }
-    return out;
-  };
-  // A pad outside the plate's hull hangs on a post of post_w_mm: in-plane bending at the hull edge plus the axial force.
-  const topAt = (poly, z, up) => { let best = up ? -Infinity : Infinity; for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; if ((p[0] - z) * (q[0] - z) <= 0 && p[0] !== q[0]) { const y = p[1] + ((z - p[0]) / (q[0] - p[0])) * (q[1] - p[1]); best = up ? Math.max(best, y) : Math.min(best, y); } } return best; };
   const plates = {};
   for (const pl of ['aft', 'fwd']) {
-    const h = hullOf(seatsOf(pl));
+    const h = hullOf(plateSeatCircles(ax, pl));
     const yCut = Math.min(railPos.right[1], railPos.left[1]) - A.rail.seat_D_mm / 2000;
     const b = hullWidthAt(h.poly, yCut);
     const zR = Math.abs(railPos.right[0]);
     const F = addTerms(...railPlates[pl], boomRoot[pl]);
     const M = addTerms(...railPlates[pl].map((R) => scaleTerms(R, zR)));
     members.push({ name: `${pl === 'aft' ? 'aft' : 'forward'} plate below the rail seats`, kind: 'plate', check: 'plate', material: pmat, dims: { b_mm: +(b * 1000).toFixed(2), t_mm: pl === 'aft' ? tAft : tFwd }, sections: [sect('F', F), sect('M', M)], uses: { F: 'F', M: 'M' }, note: `the section ${(yCut * 1000).toFixed(1)} mm up, ${(b * 1000).toFixed(1)} mm wide: both rails' reactions and the boom clamp force, the rails' at their ${(zR * 1000).toFixed(0)} mm offset as in-plane bending` });
-    const posts = [];
-    const pads = [['boom clamp', [0, yB], boomRoot[pl], A.boom.screw_pitch_mm + 6], [pl === 'fwd' ? 'forward tray' : 'aft tray', [0, (pl === 'fwd' ? A.tray.y_mm : A.aftTray.y_mm) / 1000], pl === 'fwd' ? fwdTray.V : aftTray.V, (pl === 'fwd' ? A.tray : A.aftTray).w_mm]];
-    for (const [nm, c, Fp, padW] of pads) {
-      const up = c[1] > 0;
-      const edge = topAt(h.poly, c[0], up);
-      const Lp = Math.max(0, up ? c[1] - edge : edge - c[1]);
-      if (Lp > 0) {
-        const pw = A.plates.post_w_mm;
-        members.push({ name: `${pl === 'aft' ? 'aft' : 'forward'} plate post to the ${nm}`, kind: 'plate', check: 'plate', material: pmat, dims: { b_mm: pw, t_mm: pl === 'aft' ? tAft : tFwd }, sections: [sect('F', Fp), sect('M', scaleTerms(Fp, Lp))], uses: { F: 'F', M: 'M' }, note: `a ${pw} mm post ${(Lp * 1000).toFixed(1)} mm from the plate's outline to the pad: the pad force axially and at the post length` });
-        posts.push({ to: nm, length_m: Lp, area_m2: pw / 1000 * Lp + (padW / 1000) * (2 * A.plates.pad_mm / 1000) });
-      }
-    }
-    plates[pl] = { area_m2: h.area_m2 + posts.reduce((a, q) => a + q.area_m2, 0), hull_area_m2: h.area_m2, posts, cut_y_m: yCut, cut_width_m: b };
+    const posts = platePosts(ax, pl, h.poly, pmat);
+    // outline_m: the hull's corners [z, y] (m), for the assembly clearance check (src/design/clearance.js)
+    plates[pl] = { area_m2: h.area_m2 + posts.reduce((a, q) => a + q.area_m2, 0), hull_area_m2: h.area_m2, posts, cut_y_m: yCut, cut_width_m: b, outline_m: h.poly.map(([z, y]) => [+z.toFixed(5), +y.toFixed(5)]) };
   }
 
   Object.assign(ax, { plates });
@@ -466,7 +484,7 @@ function clearances(cx, railPos, A) {
   return out;
 }
 
-function mergeDefaults(def, over) {
+export function mergeDefaults(def, over) {
   const o = { ...def };
   for (const [k, v] of Object.entries(over)) o[k] = v && typeof v === 'object' && !Array.isArray(v) && def[k] && typeof def[k] === 'object' ? { ...def[k], ...v } : v;
   return o;

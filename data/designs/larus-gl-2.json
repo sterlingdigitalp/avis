@@ -10388,7 +10388,7 @@
   "Round 10: flight step 3840 Hz: the airframe channel w2 moved 10.8% at half of 1/1920 s and 2.9% at half of 1/3840 s; the flight model's aerodynamic internal states (the lifting-line circulation, one frozen-Jacobian Newton step per flight step, and the strip lag states) advance once per step, so it converges at first order in the step.",
   "Round 11: the section model's negative stall is kept inside the measured UIUC sweep with its own transition width (E387 stalls at -6.3 deg at Re 1e5 and 2e5, where the tables show the drag doubling; the round-10 fit had put it at -53 to -253 deg).",
   "Round 11: a bushing is judged on the length its housing supports (structure.joints[].supports[].housing_mm): the plate thickness in an unbossed plate seat, the part's own length in a boss, shoulder housing or coupler eye.",
-  "Round 12: the belly landing is flown by the controller's own approach-and-flare law (control.landing): approach at 9.071 m/s, 1.23 x the slowest steady glide over the robustness corners (VREF per 14 CFR 25.125), feed-forward from that speed's glide row, exponential flare; field elevation known to the controller (the launch point's baro reference).",
+  "Round 12: the belly landing is flown by the controller's own approach-and-flare law (control.landing): approach at 9.033 m/s, 1.23 x the slowest steady glide over the robustness corners (VREF per 14 CFR 25.125), feed-forward from that speed's glide row, exponential flare; field elevation known to the controller (the launch point's baro reference).",
   "Round 12: gear life factors at the declared design life (200 flights of 1500 s, every load cycle at the M7 peak, each gear's own revolutions at the rating crank frequency): JGMA 401-01 K_L and 402-01 K_HL as KHK prints them, a count reading the table row at or above it (no source states a rule between rows); Duracon from KHK Fig. 11.3 read off the printed curve less 0.05 kgf/mm2.",
   "Round 12: the servos run behind a Pololu step-down regulator: torque and speed at its published voltage less its 4% accuracy (or the lowest pack voltage less the dropout read off its curve), stall current at the voltage plus 4%, battery draw through the lower end of its published typical efficiency.",
   "Round 12: the calm-air stroke envelope keeps 0.6 of every rated member's rating (rough-air member peaks measured up to 1.58 x the calm edge); the crank governor's drive clamp is 26 A; the hand launch flaps at 2.6 Hz (control.launchLaw)."
@@ -10466,11 +10466,11 @@
   "file": "data/calibration/larus-gl-2.json",
   "source": "uvlm",
   "multipliers": {
-   "lift": 0.9914337833459366,
-   "suction": 0.9342137907568545,
-   "induced": 1.0220506470668682,
-   "lag": 0.9904727540710783,
-   "apparentMass": 0.993401470600652,
+   "lift": 0.9919728958646853,
+   "suction": 0.938348704742442,
+   "induced": 1.0209941059529088,
+   "lag": 0.9910552708617101,
+   "apparentMass": 0.9938151735431808,
    "drag": 1
   },
   "fitted_wing": {
@@ -10493,213 +10493,213 @@
   "envelope": [
    {
     "amp": 0.6632251157578453,
-    "freqMax": 3.3225945188955217,
+    "freqMax": 3.317859892070295,
     "limitedBy": "members",
     "atV": 10,
     "method": "flight test",
     "edge_peaks": {
-     "crankTorque": 10.7983,
-     "rootBend": 16.6389,
-     "elbowBend": 4.2214,
-     "couplerForce": 1117.9205,
-     "twistTorque": 0.3937,
-     "loadFactor": 2.5494,
-     "motorRms": 20.9929,
-     "battMean": 14.1134,
+     "crankTorque": 10.7617,
+     "rootBend": 16.5852,
+     "elbowBend": 4.2011,
+     "couplerForce": 1113.0958,
+     "twistTorque": 0.3924,
+     "loadFactor": 2.5478,
+     "motorRms": 20.9698,
+     "battMean": 14.0751,
      "crankFreqRatio": 0.891,
-     "airspeed": 11.0704,
+     "airspeed": 11.0783,
      "dutySat": 0,
-     "bearingRatio": 0.5745,
-     "memberRatio": 0.5996
+     "bearingRatio": 0.5733,
+     "memberRatio": 0.5967
     }
    }
   ],
   "envelopeBest": {
    "amp": 0.6632251157578453,
-   "freqMax": 3.3225945188955217,
+   "freqMax": 3.317859892070295,
    "limitedBy": "members",
    "atV": 10,
    "method": "flight test",
    "edge_peaks": {
-    "crankTorque": 10.7983,
-    "rootBend": 16.6389,
-    "elbowBend": 4.2214,
-    "couplerForce": 1117.9205,
-    "twistTorque": 0.3937,
-    "loadFactor": 2.5494,
-    "motorRms": 20.9929,
-    "battMean": 14.1134,
+    "crankTorque": 10.7617,
+    "rootBend": 16.5852,
+    "elbowBend": 4.2011,
+    "couplerForce": 1113.0958,
+    "twistTorque": 0.3924,
+    "loadFactor": 2.5478,
+    "motorRms": 20.9698,
+    "battMean": 14.0751,
     "crankFreqRatio": 0.891,
-    "airspeed": 11.0704,
+    "airspeed": 11.0783,
     "dutySat": 0,
-    "bearingRatio": 0.5745,
-    "memberRatio": 0.5996
+    "bearingRatio": 0.5733,
+    "memberRatio": 0.5967
    }
   },
-  "freqMax": 3.3225945188955217,
+  "freqMax": 3.317859892070295,
   "dt": 0.00026041666666666666,
   "glide": [
    {
     "V": 7,
-    "theta": 0.04331267324417161,
-    "gamma": -0.16394766210378975,
-    "tail": 0.11124493317173673,
-    "sink": 1.1424993637223648,
-    "LD": 6.044760133657235,
-    "stalled": 0.05870548557208662
+    "theta": 0.04367032116053092,
+    "gamma": -0.1633377927691607,
+    "tail": 0.11106624239295751,
+    "sink": 1.1382873117951513,
+    "LD": 6.067738808941716,
+    "stalled": 0.05847487586723659
    },
    {
     "V": 7.5,
-    "theta": 0.01689512403702024,
-    "gamma": -0.144618037969307,
-    "tail": 0.0759719038446515,
-    "sink": 1.0808584912062456,
-    "LD": 6.866493387168035,
-    "stalled": 0.02471054383363799
+    "theta": 0.017187051907748208,
+    "gamma": -0.1441399259595861,
+    "tail": 0.07585167129950447,
+    "sink": 1.0773099602285636,
+    "LD": 6.889589699788013,
+    "stalled": 0.02464346845693306
    },
    {
     "V": 8,
-    "theta": -0.005482292475728991,
-    "gamma": -0.13285786117709958,
-    "tail": 0.05262076246816354,
-    "sink": 1.0597388449470644,
-    "LD": 7.482502870119894,
-    "stalled": 0.013263808226259064
+    "theta": -0.005264161940774566,
+    "gamma": -0.13248398244474266,
+    "tail": 0.0525162131757935,
+    "sink": 1.0567740999329374,
+    "LD": 7.503869189252664,
+    "stalled": 0.01323592289967043
    },
    {
     "V": 8.5,
-    "theta": -0.019899531995129796,
-    "gamma": -0.1217470827303738,
-    "tail": 0.038752315203383465,
-    "sink": 1.03229561150657,
-    "LD": 8.173126652906033,
-    "stalled": 0.008397884477792932
+    "theta": -0.019721850271520236,
+    "gamma": -0.12143104232215898,
+    "tail": 0.038655228818003595,
+    "sink": 1.0296291009126262,
+    "LD": 8.194609684565334,
+    "stalled": 0.008382509312210733
    },
    {
     "V": 9,
-    "theta": -0.03291331193463713,
-    "gamma": -0.11326895873829099,
-    "tail": 0.02717212649595288,
-    "sink": 1.017242189750224,
-    "LD": 8.790755470143903,
-    "stalled": 0.005769321362844224
+    "theta": -0.0327727485761139,
+    "gamma": -0.11300489723961084,
+    "tail": 0.027082266496026113,
+    "sink": 1.0148808299521455,
+    "LD": 8.81147360637033,
+    "stalled": 0.005760214907148529
    },
    {
     "V": 9.5,
-    "theta": -0.04481362168390517,
-    "gamma": -0.10721607895789158,
-    "tail": 0.017864957511755708,
-    "sink": 1.016602445272427,
-    "LD": 9.29119314429377,
-    "stalled": 0.004281291639389643
+    "theta": -0.04470399387902797,
+    "gamma": -0.10699519709183858,
+    "tail": 0.01778153803808093,
+    "sink": 1.0145160919411693,
+    "LD": 9.310521601033853,
+    "stalled": 0.004275615506227637
    },
    {
     "V": 10,
-    "theta": -0.055854860710884885,
-    "gamma": -0.10306789794894652,
-    "tail": 0.010219362227799816,
-    "sink": 1.0288551328063278,
-    "LD": 9.667961725829306,
-    "stalled": 0.003412205285656886
+    "theta": -0.055771663495907856,
+    "gamma": -0.10288371855149947,
+    "tail": 0.010141699650683001,
+    "sink": 1.02702309541568,
+    "LD": 9.685392095857166,
+    "stalled": 0.003408647077898488
    },
    {
     "V": 10.5,
-    "theta": -0.06616432698176525,
-    "gamma": -0.10037939808246378,
-    "tail": 0.0038310280863004947,
-    "sink": 1.05221457731214,
-    "LD": 9.928721293539859,
-    "stalled": 0.0029178300981610875
+    "theta": -0.06610396182456652,
+    "gamma": -0.10022679899302663,
+    "tail": 0.003758553669571292,
+    "sink": 1.0506203402103262,
+    "LD": 9.943940093895147,
+    "stalled": 0.002915742293408551
    },
    {
     "V": 11,
-    "theta": -0.07576277124513436,
-    "gamma": -0.09873713810419302,
-    "tail": -0.001579510464335257,
-    "sink": 1.0843446297877894,
-    "LD": 10.094967617572928,
-    "stalled": 0.002677644867976945
+    "theta": -0.07572232347885334,
+    "gamma": -0.09861199533763083,
+    "tail": -0.0016472893190914075,
+    "sink": 1.082974755526749,
+    "LD": 10.107862145729023,
+    "stalled": 0.002676700407465193
    },
    {
     "V": 12,
-    "theta": -0.09579666830149444,
-    "gamma": -0.10039667716123153,
-    "tail": -0.010399391217849071,
-    "sink": 1.2027372505156906,
-    "LD": 9.927000946544071,
-    "stalled": 0.0027152055777590247
+    "theta": -0.09580087437302019,
+    "gamma": -0.10032837012099041,
+    "tail": -0.010459813380552853,
+    "sink": 1.2019216907607488,
+    "LD": 9.933805208493668,
+    "stalled": 0.0027160920878280806
    },
    {
     "V": 13,
-    "theta": -0.11242093058369473,
-    "gamma": -0.10283809195192394,
-    "tail": -0.016850128280898338,
-    "sink": 1.3345400133300436,
-    "LD": 9.689719721103035,
-    "stalled": 0.0032390748859623484
+    "theta": -0.11244718979541392,
+    "gamma": -0.10280147283000435,
+    "tail": -0.016903434695117233,
+    "sink": 1.334066478899832,
+    "LD": 9.693195767457278,
+    "stalled": 0.0032415228729389205
    },
    {
     "V": 14,
-    "theta": -0.13123456050876992,
-    "gamma": -0.110375602746515,
-    "tail": -0.02206242016796568,
-    "sink": 1.5421227601511862,
-    "LD": 9.023151390380606,
-    "stalled": 0.004102838680995097
+    "theta": -0.13129024215406626,
+    "gamma": -0.1103758755823171,
+    "tail": -0.022110753306255587,
+    "sink": 1.5421265566086924,
+    "LD": 9.023128904056449,
+    "stalled": 0.00410671281356628
    }
   ],
   "dThetaPerG": 0.07387105400279878,
   "trim": [
    {
     "V": 10,
-    "theta": 0.07009819694796894,
-    "freq": 1.9181212113319543,
-    "tail": 0.03409543801413847,
+    "theta": 0.07040082746845354,
+    "freq": 1.9151292911271396,
+    "tail": 0.033969180470109134,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 10.5,
-    "theta": 0.05382080335549625,
-    "freq": 1.9255402628852243,
-    "tail": 0.024940433663129927,
+    "theta": 0.05420622586603726,
+    "freq": 1.9215019375611981,
+    "tail": 0.024838087602192374,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 11,
-    "theta": 0.04071974868945943,
-    "freq": 1.932715814022951,
-    "tail": 0.01721168487031912,
+    "theta": 0.040024876567869676,
+    "freq": 1.9270551045106064,
+    "tail": 0.017090752186256632,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 12,
-    "theta": 0.02075039623283223,
-    "freq": 2.011703035023893,
-    "tail": 0.00469567790191194,
+    "theta": 0.020703536788020078,
+    "freq": 2.0079329412726428,
+    "tail": 0.004604971439357339,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 13,
-    "theta": 0.0035010185507308596,
-    "freq": 2.130107969937521,
-    "tail": -0.005099785428936547,
+    "theta": 0.003767972349606331,
+    "freq": 2.1288988781800797,
+    "tail": -0.005127954381219155,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 14,
-    "theta": -0.009729253611245455,
-    "freq": 2.297227917453093,
-    "tail": -0.012889260311573524,
+    "theta": -0.009733975198530385,
+    "freq": 2.2941327115208465,
+    "tail": -0.012936533660343138,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
@@ -10708,74 +10708,74 @@
   "trimDetail": [
    {
     "V": 10,
-    "power_w": 38.18217625863063,
-    "Irms_A": 9.747651731358001,
-    "stalled": 0.02731364564380382,
-    "crankPeak_Nm": 5.245904041630877,
-    "freq": 1.557305089030456,
-    "theta_deg": 3.8916695045900465,
-    "tail_deg": 1.9139180678128136
+    "power_w": 37.86537758734763,
+    "Irms_A": 9.706447128218374,
+    "stalled": 0.026817023431326692,
+    "crankPeak_Nm": 5.235835903813827,
+    "freq": 1.5517847140169818,
+    "theta_deg": 3.8736800688708835,
+    "tail_deg": 1.8947154923436622
    },
    {
     "V": 10.5,
-    "power_w": 38.32290110532612,
-    "Irms_A": 9.756606686104805,
-    "stalled": 0.0221025619981339,
-    "crankPeak_Nm": 5.270370870085831,
-    "freq": 1.550932139442401,
-    "theta_deg": 2.941866650646226,
-    "tail_deg": 1.2541803816041082
+    "power_w": 38.38340658247507,
+    "Irms_A": 9.770425272343171,
+    "stalled": 0.022169376513995545,
+    "crankPeak_Nm": 5.290547100348645,
+    "freq": 1.5521372841610384,
+    "theta_deg": 2.950117220655621,
+    "tail_deg": 1.264122789442392
    },
    {
     "V": 11,
-    "power_w": 39.18575359595621,
-    "Irms_A": 9.8370891107083,
-    "stalled": 0.020865074032539437,
-    "crankPeak_Nm": 5.332199133696632,
-    "freq": 1.563276534357387,
-    "theta_deg": 2.1637429440977143,
-    "tail_deg": 0.7736366850664312
+    "power_w": 39.216857941157244,
+    "Irms_A": 9.84543427279346,
+    "stalled": 0.0208613641053433,
+    "crankPeak_Nm": 5.340218234671549,
+    "freq": 1.5632779515686144,
+    "theta_deg": 2.1669491595035093,
+    "tail_deg": 0.7770650121675469
    },
    {
     "V": 12,
-    "power_w": 42.10340016431607,
-    "Irms_A": 10.121249560397402,
-    "stalled": 0.022870386267231715,
-    "crankPeak_Nm": 5.46017714803285,
-    "freq": 1.6104748891011598,
-    "theta_deg": 0.9121224304613298,
-    "tail_deg": 0.01793650927607926
+    "power_w": 42.004256673972,
+    "Irms_A": 10.10756270746364,
+    "stalled": 0.02270081993433824,
+    "crankPeak_Nm": 5.458750974374135,
+    "freq": 1.606981619184108,
+    "theta_deg": 0.903221956550404,
+    "tail_deg": 0.009108331754545382
    },
    {
     "V": 13,
-    "power_w": 46.85899860602842,
-    "Irms_A": 10.617804047750736,
-    "stalled": 0.02912380330255227,
-    "crankPeak_Nm": 5.739941846951158,
-    "freq": 1.6924579144189558,
-    "theta_deg": -0.047040287170786774,
-    "tail_deg": -0.5324827081781289
+    "power_w": 46.736260355417706,
+    "Irms_A": 10.60094184520218,
+    "stalled": 0.028932866507063764,
+    "crankPeak_Nm": 5.712382417324637,
+    "freq": 1.6888065085393638,
+    "theta_deg": -0.05608803818415937,
+    "tail_deg": -0.541258217396394
    },
    {
     "V": 14,
-    "power_w": 53.3661074577487,
-    "Irms_A": 11.303251879303163,
-    "stalled": 0.03924247340228162,
-    "crankPeak_Nm": 6.069593776346492,
-    "freq": 1.7960339644026253,
-    "theta_deg": -0.8260808976315379,
-    "tail_deg": -0.9958181880643496
+    "power_w": 53.27869140451789,
+    "Irms_A": 11.292271535157344,
+    "stalled": 0.039031530937866044,
+    "crankPeak_Nm": 6.052754886692004,
+    "freq": 1.793500886200939,
+    "theta_deg": -0.8307480016730246,
+    "tail_deg": -0.9997461011635947
    }
   ],
   "Vcruise": 10,
   "Vmin": 9.5,
-  "Md": 33.26888835717265,
-  "Ld": -24.42427292273224,
-  "Nd": -23.554741239000936,
-  "Tf": 2.899038102121803,
-  "Mq": 2.140559442994424,
-  "Lp": 4.0349950422391965,
-  "Nr": 1.2062764288098056,
+  "Md": 33.27058042090546,
+  "Ld": -24.436613052631493,
+  "Nd": -23.55767569597054,
+  "Tf": 2.9081515884238973,
+  "Mq": 2.139465668204447,
+  "Lp": 4.037256375892834,
+  "Nr": 1.2071651239088714,
   "inertia": {
    "Ix": 0.0841852553644961,
    "Iy": 0.11910239072013355,
@@ -10783,14 +10783,14 @@
    "xCg": 0.01471206464775558,
    "m": 1.708274421375628
   },
-  "kTheta": 0.20511493844265502,
+  "kTheta": 0.2050058813756479,
   "kQ": 0,
-  "kPhi": 0.4345531793393827,
+  "kPhi": 0.4345650832579939,
   "kP": 0,
-  "kR": 0.0256058093903512,
-  "kFv": 0.14731389871396858,
-  "kFc": 0.17677667845676232,
-  "kFcFf": 0.24077597413722332,
+  "kR": 0.025621481921396703,
+  "kFv": 0.1468522504273449,
+  "kFc": 0.17622270051281388,
+  "kFcFf": 0.24002143694222028,
   "kH": 0.5,
   "kGamma": 1,
   "kIGamma": 0.15,
@@ -10799,12 +10799,12 @@
   "kChi": 1,
   "maxBank": 0.6108652381980153,
   "diffMax": 0.3141592653589793,
-  "diffRate_rad_s": 9.069556174856661,
+  "diffRate_rad_s": 9.073979862174596,
   "diffLimit": {
    "geometric_rad": 0.3141592653589793,
-   "servo_rad": 3.0269450995034597,
-   "twist_torque_trim_Nm": 0.18077911943810196,
-   "twist_torque_per_rad": 0.27726781438095593,
+   "servo_rad": 3.0274094332026324,
+   "twist_torque_trim_Nm": 0.18036976227905718,
+   "twist_torque_per_rad": 0.27736050497181364,
    "servo_stall_Nm": 1.0200535714285714,
    "servo_speed_rad_s": 11.023132117858923,
    "supply_V": 7.2
@@ -10825,116 +10825,116 @@
   "trimFlight": [
    {
     "V": 10,
-    "theta": 0.07009819694796894,
-    "freq": 1.9181212113319543,
-    "tail": 0.03409543801413847,
+    "theta": 0.07040082746845354,
+    "freq": 1.9151292911271396,
+    "tail": 0.033969180470109134,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 64.68787803744264,
-    "flight_power_regen_credit_w": 61.327616032703325,
-    "flight_V": 10.060643270268724,
+    "flight_power_w": 64.46360348851995,
+    "flight_power_regen_credit_w": 61.10825491603598,
+    "flight_V": 10.063475436548057,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.009114553136337772,
-     "speed_err_m_s": 0.060643270268723626,
-     "freq_drift_frac": 0.010285977860024163,
-     "tail_drift_rad": 0.0012876361502602088
+     "climb_m_s": 0.013244613527583545,
+     "speed_err_m_s": 0.06347543654805676,
+     "freq_drift_frac": 0.010039732910529774,
+     "tail_drift_rad": 0.0013012167708980407
     }
    },
    {
     "V": 10.5,
-    "theta": 0.05382080335549625,
-    "freq": 1.9255402628852243,
-    "tail": 0.024940433663129927,
+    "theta": 0.05420622586603726,
+    "freq": 1.9215019375611981,
+    "tail": 0.024838087602192374,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 66.44359437230315,
-    "flight_power_regen_credit_w": 63.23030916676827,
-    "flight_V": 10.545986973566492,
+    "flight_power_w": 65.82912559900036,
+    "flight_power_regen_credit_w": 62.62063700792467,
+    "flight_V": 10.544947481744858,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.0029372937563823557,
-     "speed_err_m_s": 0.045986973566492395,
-     "freq_drift_frac": 0.0028730975076711974,
-     "tail_drift_rad": 0.0005255336290827112
+     "climb_m_s": 0.0022383162803564054,
+     "speed_err_m_s": 0.04494748174485785,
+     "freq_drift_frac": 0.0059902812943870435,
+     "tail_drift_rad": 0.0006333899608407245
     }
    },
    {
     "V": 11,
-    "theta": 0.04071974868945943,
-    "freq": 1.932715814022951,
-    "tail": 0.01721168487031912,
+    "theta": 0.040024876567869676,
+    "freq": 1.9270551045106064,
+    "tail": 0.017090752186256632,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 68.75036588341018,
-    "flight_power_regen_credit_w": 65.77417316480143,
-    "flight_V": 11.033654624347895,
+    "flight_power_w": 68.68000753739875,
+    "flight_power_regen_credit_w": 65.6618421273401,
+    "flight_V": 11.037858437256215,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.014656338150902004,
-     "speed_err_m_s": 0.03365462434789457,
-     "freq_drift_frac": 0.0016543272182605194,
-     "tail_drift_rad": 0.0005811536160627642
+     "climb_m_s": 0.009833882167858396,
+     "speed_err_m_s": 0.03785843725621518,
+     "freq_drift_frac": 0.0007618549370640682,
+     "tail_drift_rad": 0.0005941829637228363
     }
    },
    {
     "V": 12,
-    "theta": 0.02075039623283223,
-    "freq": 2.011703035023893,
-    "tail": 0.00469567790191194,
+    "theta": 0.020703536788020078,
+    "freq": 2.0079329412726428,
+    "tail": 0.004604971439357339,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 72.33688137184538,
-    "flight_power_regen_credit_w": 69.3505925458156,
-    "flight_V": 12.02485221282202,
+    "flight_power_w": 72.31362588079351,
+    "flight_power_regen_credit_w": 69.38070630880726,
+    "flight_V": 12.026576076252494,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.007836382875827557,
-     "speed_err_m_s": 0.024852212822020547,
-     "freq_drift_frac": 0.004701318334352326,
-     "tail_drift_rad": 0.00048675035161644536
+     "climb_m_s": 0.008643064239561257,
+     "speed_err_m_s": 0.026576076252494474,
+     "freq_drift_frac": 0.004475425159824267,
+     "tail_drift_rad": 0.0005021828846514635
     }
    },
    {
     "V": 13,
-    "theta": 0.0035010185507308596,
-    "freq": 2.130107969937521,
-    "tail": -0.005099785428936547,
+    "theta": 0.003767972349606331,
+    "freq": 2.1288988781800797,
+    "tail": -0.005127954381219155,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 81.0017202766485,
-    "flight_power_regen_credit_w": 78.04181124722321,
-    "flight_V": 13.033949905416334,
+    "flight_power_w": 80.81647288111073,
+    "flight_power_regen_credit_w": 77.8824416136207,
+    "flight_V": 13.032129815410446,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.012613158857899095,
-     "speed_err_m_s": 0.03394990541633369,
-     "freq_drift_frac": 0.0025586049595211525,
-     "tail_drift_rad": 0.00036339883157631824
+     "climb_m_s": 0.016043854741909135,
+     "speed_err_m_s": 0.03212981541044613,
+     "freq_drift_frac": 0.0007904382034997909,
+     "tail_drift_rad": 0.00034067743908803
     }
    },
    {
     "V": 14,
-    "theta": -0.009729253611245455,
-    "freq": 2.297227917453093,
-    "tail": -0.012889260311573524,
+    "theta": -0.009733975198530385,
+    "freq": 2.2941327115208465,
+    "tail": -0.012936533660343138,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 93.17234918905022,
-    "flight_power_regen_credit_w": 90.04308433681915,
-    "flight_V": 14.0479839605162,
+    "flight_power_w": 92.60927953660813,
+    "flight_power_regen_credit_w": 89.45667212079603,
+    "flight_V": 14.047687976456695,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.019451132453040275,
-     "speed_err_m_s": 0.04798396051620024,
-     "freq_drift_frac": 0.0017671108372944266,
-     "tail_drift_rad": 0.00025644599666927413
+     "climb_m_s": 0.01743724709286192,
+     "speed_err_m_s": 0.04768797645669487,
+     "freq_drift_frac": 0.000591566489529821,
+     "tail_drift_rad": 0.00024348907438278937
     }
    }
   ],
@@ -10957,7 +10957,7 @@
   "envelopeFrozen": [
    {
     "amp": 0.6632251157578453,
-    "freqMax": 3.555063683254923,
+    "freqMax": 3.5503141616267606,
     "limitedBy": "motor_current",
     "atV": 14
    }
@@ -10973,32 +10973,32 @@
   },
   "launchClimb_m_s": 3,
   "landing": {
-   "Vapp_m_s": 9.071,
+   "Vapp_m_s": 9.033,
    "kV": 0.03,
    "kIV": 0.02,
    "iMax_rad": 0.1,
-   "flareH_m": 1.526,
+   "flareH_m": 1.522,
    "tau_s": 1.5,
    "sinkTd_m_s": 0.3,
    "kS": 0.3,
    "kIS": 0.1,
-   "Vfloor_m_s": 8.113,
+   "Vfloor_m_s": 8.078,
    "kFloor": 0.05,
    "dThetaMin_rad": -0.2,
    "dThetaMax_rad": 0.25,
    "basis": {
-    "stall_reference_m_s": 7.375,
+    "stall_reference_m_s": 7.34375,
     "stall_reference_corner": "aero0.9 mass1.05 cg5mm",
     "stall_reference_rule": "slowest converged steady parked-wing glide trim (src/design/trim.js trimGlide) over nominal and the 8 robustness corners, to 0.05 m/s; the 1-g stall lies below it",
-    "vref": "1.23 x 7.375 m/s (14 CFR 25.125(b)(2)(i): VREF not less than 1.23 VSR0)",
-    "floor": "1.1 x 7.375 m/s",
-    "flare_height": "tau x the nominal glide table's sink at Vapp (1.017 m/s)",
+    "vref": "1.23 x 7.34375 m/s (14 CFR 25.125(b)(2)(i): VREF not less than 1.23 VSR0)",
+    "floor": "1.1 x 7.34375 m/s",
+    "flare_height": "tau x the nominal glide table's sink at Vapp (1.015 m/s)",
     "per_corner_m_s": {
      "nominal": 6.84375,
      "aero0.9 mass0.95 cg-5mm": 6.96875,
      "aero0.9 mass0.95 cg5mm": 7,
-     "aero0.9 mass1.05 cg-5mm": 7.34375,
-     "aero0.9 mass1.05 cg5mm": 7.375,
+     "aero0.9 mass1.05 cg-5mm": 7.3125,
+     "aero0.9 mass1.05 cg5mm": 7.34375,
      "aero1.1 mass0.95 cg-5mm": 6.40625,
      "aero1.1 mass0.95 cg5mm": 6.40625,
      "aero1.1 mass1.05 cg-5mm": 6.71875,
@@ -11031,6 +11031,40 @@
    "e387-L0.667-larus-v17-strip-s0.75",
    "e387-L1-Re100000-k0.35-h0.75-a4"
   ],
+  "points_skipped": [
+   {
+    "name": "e387-L0.667-Re100000-k0.35-h0.75-a4",
+    "why": "no settled verdict"
+   },
+   {
+    "name": "e387-L0.667-Re100000-k0.5-h1-a4",
+    "why": "no settled verdict"
+   },
+   {
+    "name": "e387-L0.667-larus-v14-z0.4",
+    "why": "no settled verdict"
+   },
+   {
+    "name": "e387-L0.667-larus-v14-z0.75",
+    "why": "no settled verdict"
+   },
+   {
+    "name": "e387-L0.667-larus-v17-strip-s0.4",
+    "why": "unsettled (settled false)"
+   },
+   {
+    "name": "e387-L0.667-larus-v17-strip-s0.6",
+    "why": "unsettled (settled false)"
+   },
+   {
+    "name": "e387-L0.667-larus-v17-strip-s0.75",
+    "why": "unsettled (settled false)"
+   },
+   {
+    "name": "e387-L1-Re100000-k0.35-h0.75-a4",
+    "why": "incomplete or no eta_s_strip"
+   }
+  ],
   "table": [
    [
     0.1031161903156848,
@@ -11046,25 +11080,25 @@
    ]
   ],
   "amplitude_rad": [
-   0.030368728984701335,
-   0.05253441048502932,
-   0.07714355293814937,
+   0.0301941960595019,
+   0.05235987755982989,
+   0.07731808586334879,
    0.09861110273767963,
-   0.10821041362364843,
-   0.10402162341886204,
-   0.09075712110370514,
-   0.06684611035138283,
-   0.02949606435870417,
-   0.052185344634630454,
-   0.0778416846389471,
-   0.10053096491487337,
-   0.11135200627723822,
    0.10838494654884787,
-   0.09634217471008698,
-   0.07312929565856241
+   0.10419615634406147,
+   0.091106186954104,
+   0.06684611035138283,
+   0.029321531433504737,
+   0.05235987755982989,
+   0.07801621756414652,
+   0.10053096491487337,
+   0.11152653920243766,
+   0.10838494654884787,
+   0.09599310885968812,
+   0.07330382858376185
   ],
-  "rule": "settled points only (SPEC rulings after CFD round 3): linear in effective-angle amplitude between measured points; below the smallest amplitude the first value is held; beyond the largest a lowering last-segment slope is continued and a rising one held, so eta_s never exceeds a measured value (no v21 strip lies above the band); SPEC eta_s default 0.6 not used",
-  "amplitude_change_deg_max": 0.32
+  "rule": "SPEC ruling after cfd round 3: settled points only; linear in effective-angle amplitude between them; held below the smallest; beyond the largest the last slope continued where it lowers eta_s, held where it would raise it; SPEC eta_s default 0.6 not used",
+  "amplitude_change_deg_max": 0.31
  },
  "launch": {
   "release_speed_m_s": 8,
@@ -11223,31 +11257,31 @@
   "sustained_climb": [
    {
     "V_target_m_s": 10,
-    "sustained_climb_m_s": 1.359,
-    "mean_airspeed_m_s": 10.25,
+    "sustained_climb_m_s": 1.362,
+    "mean_airspeed_m_s": 10.26,
     "climb_cmd_m_s": 1.5,
-    "mean_batt_A": 12.41,
-    "motor_rms_2s_max_A": 20.98,
+    "mean_batt_A": 12.39,
+    "motor_rms_2s_max_A": 20.99,
     "altitude_m": 1404.37
    },
    {
     "V_target_m_s": 12,
-    "sustained_climb_m_s": 1.45,
-    "mean_airspeed_m_s": 10.82,
-    "climb_cmd_m_s": 2,
-    "mean_batt_A": 12.72,
-    "motor_rms_2s_max_A": 21.46,
+    "sustained_climb_m_s": 1.449,
+    "mean_airspeed_m_s": 11.8,
+    "climb_cmd_m_s": 1.5,
+    "mean_batt_A": 13.01,
+    "motor_rms_2s_max_A": 21.77,
     "altitude_m": 1404.37
    }
   ],
-  "best_sustained_climb_m_s": 1.45,
-  "best_climb_speed_m_s": 10.82,
+  "best_sustained_climb_m_s": 1.449,
+  "best_climb_speed_m_s": 11.8,
   "corridor_elevation_m": 1444.37,
   "method": "src/physics/scenarios.js runClimb: closed loop with the flight controller, its stroke envelope and current limit; climb from 15 s to 45 s of steady climb, no wind, battery full; best over commanded climb rates 0.5-3 m/s",
   "for_environment": "the corridor can be re-solved to this climb with a margin: a gradient at speed V is climb / V",
-  "ran_at": "2026-11-03T06:11:30.203Z"
+  "ran_at": "2026-11-03T07:40:50.359Z"
  },
  "version": 21,
- "version_written": "2026-11-03T06:11:32.689Z",
+ "version_written": "2026-11-03T07:41:07.214Z",
  "supersedes_sha256": "f0e13d9ac69d300468cdfb247f8d2b0da85c6e0acf3e69ba87713d5b4ba2d967"
 }

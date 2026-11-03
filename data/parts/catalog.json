@@ -603,7 +603,11 @@
    "c_rating_continuous_claimed": 35,
    "c_rating_burst_claimed": null,
    "c_rating_note": "Retailer-stated hobby C ratings; not independent discharge tests.",
-   "mass_note": "Page: product weight 143g. Light for this capacity against the sibling 169 g and 185.6 g packs; verify before relying on it."
+   "mass_note": "Page: product weight 143g. Light for this capacity against the sibling 169 g and 185.6 g packs; verify before relying on it.",
+   "dimensions_text_mm": "74.7 x 33.5 x 25.4 (L x W x H)",
+   "dims_source_url": "https://genstattu.com/gens-ace-2200mah-3s-11-1v-35c-bashing-g-tech-lipo-battery-pack-with-deans-plug/",
+   "dims_retrieved": "2026-11-03",
+   "dims_note": "Gens Ace store page (genstattu.com) for the Bashing 2200mAh 3S 35C Deans pack, SKU GEA223S35DGT, part GA-B-35C-2200-3S1P-Deans-GT: 'Dimensions: 74.7*33.5*25.4mm (LxWxH)'. Horizon Hobby names GEA22003S35D the 'Bashing LiPo Battery: Deans'; the ozrc source page for GEA22003S35D gives 2.95 x 1.3 x 1 in (75 x 33 x 25 mm)."
   },
   "price_usd": null,
   "source_url": "https://ozrc.com.au/products/gens-ace-11-1v-2200mah-3s-35c-lipo-battery-w-deans-connector-gea22003s35d",

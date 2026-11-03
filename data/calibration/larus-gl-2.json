@@ -21,11 +21,11 @@
   "fixed_stroke": true
  },
  "multipliers": {
-  "lift": 0.9914337833459366,
-  "suction": 0.9342137907568545,
-  "induced": 1.0220506470668682,
-  "lag": 0.9904727540710783,
-  "apparentMass": 0.993401470600652,
+  "lift": 0.9919728958646853,
+  "suction": 0.938348704742442,
+  "induced": 1.0209941059529088,
+  "lag": 0.9910552708617101,
+  "apparentMass": 0.9938151735431808,
   "drag": 1
  },
  "bounds": {
@@ -56,5 +56,5 @@
  },
  "at_bounds": [],
  "note": "Multipliers of the inviscid strip terms fitted to UVLM on the cruise point. The drag multiplier is not touched here: UVLM has no viscous drag. LBM and OpenFOAM results are to refit these.",
- "ran_at": "2026-11-02T22:25:19.381Z"
+ "ran_at": "2026-11-03T07:34:19.327Z"
 }

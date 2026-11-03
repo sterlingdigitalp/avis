@@ -12,7 +12,7 @@
 //  - seats with no published bearing strength are judged against the material's tensile yield (a lower bound).
 import { byId } from './catalog.js';
 import { shaftMomentSections } from '../physics/members.js';
-import { linkageAt } from '../../sims/avis-shared/model.js';
+import { linkageAt, journalBodyLength } from '../../sims/avis-shared/model.js';
 import { airframeMembers } from './airframe.js';
 
 const PI4 = Math.PI / 4;
@@ -33,9 +33,9 @@ const gOf = (mat, v) => v * 1e6 * mat.density_g_cm3; // m^3 -> g
 /** Bore, outside diameter and length (m) of a bushing (d1, d2, b1) or bearing ("d x D x B"). */
 function partDims(part) {
   const s = part.specs ?? {};
-  if (Number.isFinite(s.d1_mm)) return { d: s.d1_mm / 1000, D: s.d2_mm / 1000, B: s.b1_mm / 1000 };
+  if (Number.isFinite(s.d1_mm)) return { d: s.d1_mm / 1000, D: s.d2_mm / 1000, B: s.b1_mm / 1000, flangeB: (s.b2_mm ?? 0) / 1000 };
   const m = /^(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/.exec(s.dimensions_mm_d_D_B ?? '');
-  return m ? { d: +m[1] / 1000, D: +m[2] / 1000, B: +m[3] / 1000 } : null;
+  return m ? { d: +m[1] / 1000, D: +m[2] / 1000, B: +m[3] / 1000, flangeB: 0 } : null;
 }
 
 const scale = (terms, f) => terms.map((t) => ({ ch: t.ch, k: +(t.k * f).toFixed(8) }));
@@ -151,6 +151,16 @@ function gearShaftMembers(cx, j) {
     }
 }
 
+/**
+ * Length (m) of the rocker hub between the two shoulder bushings: the gap between them (v21), less the layout's
+ * running clearance at each end under the clearance rule (params.layout, v22 on), or the rocker's own hub_len_mm.
+ */
+export function rockerHubLength(d, rocker, span, bushingB) {
+  if (Number.isFinite(rocker?.hub_len_mm)) return rocker.hub_len_mm / 1000;
+  const run = d.params?.layout?.rule === 'clearance' ? (d.params.layout.running_mm ?? 0.5) / 1000 : 0;
+  return span - bushingB - 2 * run;
+}
+
 /** One side's shoulder pin, rocker (hub, horn boss), horn pin, coupler eye and shoulder housings. */
 function wingSideMembers(cx, side, w) {
   // ---- Shoulder pins: clamped in the rocker hub between the two bushings; bending within each bushing.
@@ -158,11 +168,13 @@ function wingSideMembers(cx, side, w) {
     const m = mat(L.shoulderPin.material);
     const jt = jointByName(`shoulder pivot ${side}`);
     item(`shoulder pin ${side}`, m, rodV(shD.d, span + shD.B), `${(shD.d * 1000).toFixed(0)} mm x ${((span + shD.B) * 1000).toFixed(0)} mm (bushing centres ${(span * 1000).toFixed(0)} mm apart plus one bushing length); ${m.density_g_cm3} g/cm3`);
-    members.push({ name: `shoulder pin ${side}`, kind: 'pin', check: 'round', material: m, dims: { d_mm: +(shD.d * 1000).toFixed(3) }, sections: jt.supports.flatMap((sp) => [sect(`M ${sp.name}`, scale(sp.radial, shD.B / 2)), sect(`V ${sp.name}`, sp.radial.map((t) => ({ ch: t.ch, k: t.k })))]), uses: { M: jt.supports.map((sp) => `M ${sp.name}`), V: jt.supports.map((sp) => `V ${sp.name}`) }, note: 'the bushing reaction at half the bushing length from the hub face' });
-    // Rocker: hub on the shoulder pin, horn arm of the rocker length c, horn boss for the horn pin, spar socket.
     const r = L.rocker, mr = mat(r.material);
+    const hubL = rockerHubLength(d, r, span, shD.B);
+    // the bushing reaction at its centre, from the hub face (v21: half the bushing length; v22: plus the running gap)
+    const pinLever = span / 2 - hubL / 2;
+    members.push({ name: `shoulder pin ${side}`, kind: 'pin', check: 'round', material: m, dims: { d_mm: +(shD.d * 1000).toFixed(3) }, sections: jt.supports.flatMap((sp) => [sect(`M ${sp.name}`, scale(sp.radial, pinLever)), sect(`V ${sp.name}`, sp.radial.map((t) => ({ ch: t.ch, k: t.k })))]), uses: { M: jt.supports.map((sp) => `M ${sp.name}`), V: jt.supports.map((sp) => `V ${sp.name}`) }, note: pinLever > shD.B / 2 + 1e-9 ? 'the bushing reaction at its centre, measured from the hub face' : 'the bushing reaction at half the bushing length from the hub face' });
+    // Rocker: hub on the shoulder pin, horn arm of the rocker length c, horn boss for the horn pin, spar socket.
     const c = linkageAt(lay.law, d.drive.ampNominal).c;
-    const hubL = span - shD.B;
     const sparOD = (r.spar_od_mm ?? 10) / 1000;
     const vR = ringV(r.hub_od_mm / 1000, shD.d, hubL) + c * (r.arm_w_mm / 1000) * (r.arm_t_mm / 1000) + ringV(r.boss_od_mm / 1000, eyeD.d, r.boss_len_mm / 1000) + ringV(sparOD + 2 * r.socket_wall_mm / 1000, sparOD, r.socket_len_mm / 1000);
     item(`rocker ${side}`, mr, vR, `hub ${r.hub_od_mm}/${(shD.d * 1000).toFixed(0)} x ${(hubL * 1000).toFixed(0)} mm, horn arm ${(c * 1000).toFixed(1)} x ${r.arm_w_mm} x ${r.arm_t_mm} mm, horn boss ${r.boss_od_mm}/${(eyeD.d * 1000).toFixed(0)} x ${r.boss_len_mm} mm, spar socket ${r.socket_wall_mm} mm wall x ${r.socket_len_mm} mm; ${mr.density_g_cm3} g/cm3 (replaces the carbon-plate rocker)`);
@@ -206,10 +218,12 @@ function couplerLinks(cx) {
  * thinner, L.plates.t_fwd_mm; the aft plate's seats are 'aft'), or the part's length B where L.plates.bossed names
  * the seat ('joint/support'), whose boss is as long as the part.
  */
-export function plateSeatLength(plates, jointName, supportName, B_mm) {
+export function plateSeatLength(plates, jointName, supportName, B_mm, flangeB_mm = 0) {
   const tp = supportName === 'aft' ? plates.t_mm : (plates.t_fwd_mm ?? plates.t_mm);
   const boss = (plates.bossed ?? []).includes(`${jointName}/${supportName}`);
-  return { plate_mm: tp, bossed: boss, length_mm: boss ? Math.max(tp, B_mm) : tp };
+  // v22 on (plates.flange 'face'): a flanged bushing's flange sits on the plate's face, so the seat holds its body only
+  const body = journalBodyLength(plates, { B: B_mm, flangeB: flangeB_mm });
+  return { plate_mm: tp, bossed: boss, length_mm: boss ? Math.max(tp, body) : tp };
 }
 
 const PLATE_JOINT = /^(crank shaft|gear shaft|motor shaft outboard)/;
@@ -229,8 +243,9 @@ export function jointHousings(joints, L, catalog) {
       if (PLATE_JOINT.test(j.name)) {
         // Without the design's plates the seat length is unknown: the support is left as it was (judged on b1).
         if (!L?.plates) return sp;
-        const r = plateSeatLength(L.plates, j.name, sp.name, B);
-        return { ...sp, housing_mm: +Math.min(B, r.length_mm).toFixed(3), housing: r.bossed ? 'plate boss as long as the part' : `${r.plate_mm} mm plate, no boss` };
+        const r = plateSeatLength(L.plates, j.name, sp.name, B, pd.flangeB * 1000);
+        const body = journalBodyLength(L.plates, { B, flangeB: pd.flangeB * 1000 });
+        return { ...sp, housing_mm: +Math.min(body, r.length_mm).toFixed(3), housing: r.bossed ? (body < B ? 'plate boss as long as the bushing body, flange on the plate face' : 'plate boss as long as the part') : `${r.plate_mm} mm plate, no boss` };
       }
       return { ...sp, housing_mm: +B.toFixed(3), housing: /^shoulder/.test(j.name) ? 'shoulder housing ring as long as the part' : 'coupler eye ring as long as the part' };
     }) };
@@ -255,7 +270,7 @@ function plateSeats(cx) {
       const key = `${jt.name}/${sp.name}`;
       const boss = bossed.has(key);
       const D = pd.D * 1000 + 2 * (boss ? L.plates.boss_wall_mm : L.plates.edge_mm);
-      const { plate_mm: tp, length_mm: t } = plateSeatLength(L.plates, jt.name, sp.name, pd.B * 1000);
+      const { plate_mm: tp, length_mm: t } = plateSeatLength(L.plates, jt.name, sp.name, pd.B * 1000, pd.flangeB * 1000);
       if (boss) bossV += ringV(D / 1000, pd.D, Math.max(0, t / 1000 - tp / 1000));
       members.push({ name: `plate seat ${jt.name} ${sp.name}`, kind: 'seat', check: 'lug', material: pm, dims: { d_mm: +(pd.D * 1000).toFixed(3), D_mm: +D.toFixed(3), t_mm: +t.toFixed(3) }, sections: [sect('F', sp.radial.map((q) => ({ ch: q.ch, k: q.k })))], uses: { F: 'F' }, note: boss ? `a boss ${D.toFixed(1)} mm round the ${prt.id}, as long as the part` : `the plate alone, judged as a ${L.plates.edge_mm} mm ring round the ${prt.id}` });
     }
