@@ -231,6 +231,42 @@ def strip_matched_point(base, name, r, m):
         sel = rows[::max(1, int(len(rows) / len(hist["cc"])))][:len(hist["cc"])]
         hist["cl"] = [round(q[2], 4) for q in sel]
     deg = lambda key: [round(math.degrees(p[key]), 3) for p in m["samples"][::4]]
+    history = cycle_history(d, r, m, cd_f)
+    return dict(**history,
+                cycles_note="all_cycles lists every whole cycle after the first. A cycle counts as separated when its mean "
+                            "CL is below 60% of the median cycle CL (definition set for this report).",
+                **strip_matched_fields(name, r, m, ev, hist, deg, cd_f, cd_from, d))
+
+
+def cycle_history(d, r, m, cd_f):
+    """Every whole cycle after the first, separated-cycle flags, recurrence after cycle 4, and the long-run eta over
+    all cycles after the first separated episode (time-integrated, strip form)."""
+    import suction_kin
+    rows = suction_kin.section_forces(bird3d.read_forces(d), r, m, 0.1)
+    if not rows:
+        return dict(all_cycles=[], separated_cycles=[], separation_recurs_after_cycle_4=None, long_run_after_first_episode=None)
+    n_whole = int(rows[-1][0] / r["period"] + 1e-3)
+    allc = suction_kin.evaluate_last(d, r, m, cd_f, last=max(1, n_whole - 1)).get("per_cycle", [])
+    cls = sorted(c["cl"] for c in allc)
+    med = cls[len(cls) // 2] if cls else 0
+    sep = [c["cycle"] for c in allc if med > 0 and c["cl"] < 0.6 * med]
+    out = dict(all_cycles=[dict(cycle=c["cycle"], eta_s=c["eta_s"], cl=c["cl"], cc=c["cc"]) for c in allc],
+               separated_cycles=sep, separation_recurs_after_cycle_4=any(c > 4 for c in sep) if allc else None,
+               long_run_after_first_episode=None)
+    if sep:
+        first_end = sep[0]
+        while first_end + 1 in sep:
+            first_end += 1
+        after = [c for c in allc if c["cycle"] > first_end]
+        if after:
+            num = sum(c["eta_s"] * c["mean_cl_sin_a"] for c in after)
+            den = sum(c["mean_cl_sin_a"] for c in after)
+            out["long_run_after_first_episode"] = dict(cycles=[c["cycle"] for c in after], eta_s_strip=num / den if den else None,
+                                                       eta_s_mean_of_cycles=sum(c["eta_s"] for c in after) / len(after))
+    return out
+
+
+def strip_matched_fields(name, r, m, ev, hist, deg, cd_f, cd_from, d):
     return dict(
         name=name, kind="design kinematics, strip-matched effective angle (round 2)", level=r["level"],
         design=m["design"], design_version=m["version"], motion_source="cfd/strip_motion.mjs on the setupFlight cruise",

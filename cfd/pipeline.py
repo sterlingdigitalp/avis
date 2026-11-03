@@ -136,7 +136,10 @@ def container(name, d, script, max_seconds, cpus, memory, on_poll):
 # host's stop file is relayed in; everything is copied back when the run ends.
 LOCAL_PROLOGUE = """set -u
 rm -f /work/stop; R=/tmp/case; rm -rf $R; mkdir -p $R; cp -a /work/. $R/; cd $R
-sync_back() {{ mkdir -p /work/postProcessing; cp -a postProcessing/. /work/postProcessing/ 2>/dev/null || true; }}
+sync_back() {{ mkdir -p /work/postProcessing; cp -a postProcessing/. /work/postProcessing/ 2>/dev/null || true; ckpt; }}
+# Checkpoint: the second-newest processor time directory is complete (purgeWrite 2), so copy it to the host and keep
+# only that one there, so a killed run can still be resumed from its last whole checkpoint.
+ckpt() {{ for p in processor*; do [ -d "$p" ] || continue; ts=$(ls -1 "$p" | grep -E '^[0-9.e+-]+$' | grep -vx 0 | sort -g); [ $(echo "$ts" | grep -c .) -ge 2 ] || continue; t=$(echo "$ts" | tail -2 | head -1); [ -d "/work/$p/$t" ] && continue; mkdir -p "/work/$p"; [ -d "/work/$p/constant" ] || cp -a "$p/constant" "/work/$p/"; cp -a "$p/$t" "/work/$p/"; for o in $(ls -1 "/work/$p" | grep -E '^[0-9.e+-]+$' | grep -vx 0 | grep -vx "$t"); do rm -rf "/work/$p/$o"; done; done; }}
 ( while true; do sleep 15; [ -f /work/stop ] && touch $R/stop; sync_back; done ) &
 SYNC=$!
 finish() {{ rc=$1; kill $SYNC 2>/dev/null; sync_back; cp -a $R/. /work/ 2>/dev/null; exit $rc; }}
@@ -328,6 +331,29 @@ def set_transient(d, spec, dt, end_time):
     meta_span = json.load(open(os.path.join(ROOT, "out/cfd/meshes", spec["mesh"], "mesh.json")))["span"]
     casegen.write_system(d, mode="transient", end_time=end_time, dt=dt, span=meta_span, a=a, ncpu=spec["ncpu"],
                          write_interval=end_time)
+
+
+def clean_keep_restart(d):
+    """Like clean, but keeps what a restart needs: system, constant, the processor meshes and each processor's latest
+    time directory, so the case can be extended later (suction_kin.py extend)."""
+    for name in os.listdir(d):
+        path = os.path.join(d, name)
+        if name.startswith("processor"):
+            times = sorted((t for t in os.listdir(path) if re.fullmatch(r"[0-9.e+-]+", t) and t != "0"), key=float)
+            for t in times[:-1]:
+                shutil.rmtree(os.path.join(path, t), ignore_errors=True)
+        elif name == "dynamicCode":
+            shutil.rmtree(path, ignore_errors=True)
+        elif name not in ("0",) and re.fullmatch(r"[0-9.e+-]+", name):
+            shutil.rmtree(path, ignore_errors=True)
+
+
+def latest_processor_time(d):
+    p = os.path.join(d, "processor0")
+    if not os.path.isdir(p):
+        return None
+    times = [t for t in os.listdir(p) if re.fullmatch(r"[0-9.e+-]+", t) and t != "0"]
+    return max(times, key=float) if times else None
 
 
 def clean(d):

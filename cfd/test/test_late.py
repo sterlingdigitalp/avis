@@ -426,3 +426,45 @@ class LastCycles(unittest.TestCase):
         r = self.run_eval([0.5, 0.5, 0.5, 0.5])
         self.assertFalse(r["complete"])
         self.assertEqual(r["averaged_cycles"], [2, 3, 4])
+
+
+class Extendable(unittest.TestCase):
+    def test_keep_restart_and_prepare_extend(self):
+        import pipeline
+        with tempfile.TemporaryDirectory() as d:
+            for p in ("processor0", "processor1"):
+                for t in ("0", "32.4", "48.6"):
+                    os.makedirs(os.path.join(d, p, t))
+                os.makedirs(os.path.join(d, p, "constant", "polyMesh"))
+            os.makedirs(os.path.join(d, "48.6"))
+            os.makedirs(os.path.join(d, "system"))
+            write(os.path.join(d, "system", "controlDict"), "application foamRun;\\nendTime 48.6;\\nwriteInterval 48.6;\\npurgeWrite 1;\\n")
+            write(os.path.join(d, "spec.json"), json.dumps(dict(period=16.2)))
+            write(os.path.join(d, "stop"), "")
+            pipeline.clean_keep_restart(d)
+            self.assertEqual(sorted(os.listdir(os.path.join(d, "processor0"))), ["0", "48.6", "constant"])
+            self.assertFalse(os.path.exists(os.path.join(d, "48.6")))
+            t0, end = suction_kin.prepare_extend(d, 3, 3)
+            ctl = open(os.path.join(d, "system", "controlDict")).read()
+            self.assertEqual(t0, 48.6)
+            self.assertAlmostEqual(end, 48.6 + 3 * 16.2)
+            self.assertIn(f"endTime {end:.10g};", ctl)
+            self.assertAlmostEqual((end / 16.2) % 1.0, 0.0, places=9)
+            self.assertIn("writeInterval 16.2;", ctl)
+            self.assertIn("purgeWrite 2;", ctl)
+            self.assertIn("startFrom latestTime;", ctl)
+            self.assertFalse(os.path.exists(os.path.join(d, "stop")))
+            self.assertIn("foamRun -parallel", open(os.path.join(d, "resume.sh")).read())
+            self.assertNotIn("decomposePar", open(os.path.join(d, "resume.sh")).read())
+            self.assertEqual(json.load(open(os.path.join(d, "spec.json")))["extensions"][0]["from_t"], 48.6)
+
+    def test_extend_refuses_without_restart(self):
+        with tempfile.TemporaryDirectory() as d:
+            write(os.path.join(d, "spec.json"), json.dumps(dict(period=1.0)))
+            with self.assertRaises(RuntimeError):
+                suction_kin.prepare_extend(d, 2, 3)
+
+    def test_scripts_still_format(self):
+        import pipeline
+        self.assertIn("ckpt;", pipeline.STEADY_SCRIPT.format(n=3))
+        self.assertIn("foamRun", suction_kin.RESUME_SCRIPT.format(n=3))

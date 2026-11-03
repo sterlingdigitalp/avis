@@ -53,7 +53,7 @@ def motion_tables(m):
                 mean_speed=sum(speed) / n, alpha_inf=math.atan2(U[1], U[0]))
 
 
-def make(d, mesh, m, tables, *, level, ranks, cycles):
+def make(d, mesh, m, tables, *, level, ranks, cycles, write_fraction=1.0):
     re_cfd = m["re_chord"] / tables["mean_speed"]  # nu* = mean|q*| / Re_local, with Re = 1 / nu in case.py
     y1 = json.load(open(os.path.join(mesh, "mesh.json")))["y1"]
     dt = 0.0025 * y1 / 7.0e-5  # wall Courant number as on the level-1 tests
@@ -96,6 +96,7 @@ forces1
     with open(os.path.join(d, "run.sh"), "w") as f:
         f.write(pipeline.STEADY_SCRIPT.format(n=ranks).replace(
             "reconstructPar -latestTime > log.reconstructPar 2>&1 || finish 14\n", ""))
+    checkpoint_every_cycle(d, tables["period"], write_fraction, end)
     spec.update(kind="design-kinematics", motion=dict({k: v for k, v in m.items() if k != "samples"}),
                 period=tables["period"], cycles=cycles, dt=dt, U_inf=tables["U"], U_ref_m_s=tables["Umag"],
                 alpha_inf_deg=math.degrees(tables["alpha_inf"]), closure_drift=tables["closure_drift"],
@@ -105,6 +106,56 @@ forces1
     with open(os.path.join(d, "motion.json"), "w") as f:
         json.dump(m, f)
     return spec
+
+
+RESUME_SCRIPT = pipeline.LOCAL_PROLOGUE + """
+mpirun --allow-run-as-root --bind-to none --mca mpi_yield_when_idle 1 -np {n} foamRun -parallel > log.foamRun.resume 2>&1 || finish 13
+finish 0
+"""
+
+
+def set_control(d, **entries):
+    """Set controlDict entries in place (endTime, writeInterval, purgeWrite, ...)."""
+    import re as _re
+    path = os.path.join(d, "system", "controlDict")
+    text = open(path).read()
+    for key, val in entries.items():
+        text, n = _re.subn(rf"(^|\n){key}\s+[^;]*;", rf"\g<1>{key} {val};", text)
+        if not n:
+            text += f"{key} {val};\n"
+    with open(path, "w") as f:
+        f.write(text)
+
+
+def checkpoint_every_cycle(d, period, fraction=1.0, end=None):
+    """Write every `fraction` of a cycle and keep the two newest (the second-newest is complete for the host copy).
+    The end time is rounded to whole write intervals: OpenFOAM writes no final time between intervals."""
+    interval = fraction * period
+    entries = dict(writeControl="runTime", writeInterval=f"{interval:.10g}", purgeWrite=2)
+    if end is not None:
+        entries["endTime"] = f"{max(1, round(end / interval)) * interval:.10g}"
+    set_control(d, **entries)
+
+
+def prepare_extend(d, cycles_more, ranks):
+    """Set a finished or stopped case up to run `cycles_more` further cycles from its latest restart time."""
+    spec = json.load(open(os.path.join(d, "spec.json")))
+    t0 = pipeline.latest_processor_time(d)
+    if t0 is None:
+        raise RuntimeError(f"{d} has no restart time directory to extend from")
+    frac = spec.get("write_fraction", 1.0)
+    end = float(t0) + cycles_more * spec["period"]
+    set_control(d, startFrom="latestTime")
+    checkpoint_every_cycle(d, spec["period"], frac, end)
+    end = max(1, round(end / (frac * spec["period"]))) * frac * spec["period"]
+    if os.path.exists(os.path.join(d, "stop")):
+        os.remove(os.path.join(d, "stop"))
+    with open(os.path.join(d, "resume.sh"), "w") as f:
+        f.write(RESUME_SCRIPT.format(n=ranks))
+    spec.setdefault("extensions", []).append(dict(from_t=float(t0), to_t=end))
+    with open(os.path.join(d, "spec.json"), "w") as f:
+        json.dump(spec, f, indent=1)
+    return float(t0), end
 
 
 def section_forces(raw, spec, m, span):
@@ -231,38 +282,72 @@ def evaluate(d, spec, m, cd_f):
                 eta_s_strip=num / den if den else None, cc_mean=cc, cl_mean=cl, mean_cl_sin_a=den / span_t, cd_f=cd_f)
 
 
+def run_container(d, spec, m, a, script):
+    """Run until the motion's end time, or stop early (writeNow) once the last three whole cycles settle."""
+    cd_f, _ = suction.friction_drag_at(m["re_chord"])
+    state = dict(diverged=False, settled=False, seen=0)
+
+    def poll():
+        rows = pipeline.read_forces(d)
+        if pipeline.bad(rows):
+            state["diverged"] = True
+            return "kill"
+        whole = int(rows[-1][0] / spec["period"] + 1e-3) if rows else 0
+        if whole >= max(6, a.min_cycles) and whole > state["seen"]:
+            state["seen"] = whole
+            ev = evaluate_last(d, spec, m, cd_f)
+            if ev.get("settled") and ev.get("cycles_whole", 0) >= 6:
+                state["settled"] = True
+                return "stop"
+        return None
+    rc, _ = pipeline.container(f"kin-{a.tag}"[:50], d, script, 14 * 3600, a.cpus, pipeline.MEMORY, poll)
+    return rc, state
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=("run", "evaluate"))
+    ap.add_argument("what", choices=("run", "evaluate", "extend"))
     ap.add_argument("motion")
     ap.add_argument("tag")
     ap.add_argument("--level", type=float, default=0.667)
     ap.add_argument("--cycles", type=float, default=3)
     ap.add_argument("--cpus", type=int, default=pipeline.CPUS)
     ap.add_argument("--ranks", type=int, default=pipeline.RANKS)
+    ap.add_argument("--min-cycles", type=int, default=6, help="no settled stop before this many whole cycles")
+    ap.add_argument("--write-fraction", type=float, default=1.0, help="checkpoint every this fraction of a cycle")
     a = ap.parse_args()
     m = json.load(open(a.motion))
     d = os.path.join(ROOT, "out/cfd/runs", GROUP, a.tag)
     if a.what == "run":
         mesh = pipeline.build_mesh(os.path.join(ROOT, "data/references/airfoils/e387.dat"), f"e387-L{a.level:g}", a.level)
         tables = motion_tables(m)
-        spec = make(d, mesh, m, tables, level=a.level, ranks=a.ranks, cycles=a.cycles)
-        state = dict(diverged=False)
-
-        def poll():
-            rows = pipeline.read_forces(d)
-            if pipeline.bad(rows):
-                state["diverged"] = True
-                return "kill"
-            return None
-        rc, _ = pipeline.container(f"kin-{a.tag}"[:50], d, "run.sh", 8 * 3600, a.cpus, pipeline.MEMORY, poll)
+        spec = make(d, mesh, m, tables, level=a.level, ranks=a.ranks, cycles=a.cycles, write_fraction=a.write_fraction)
+        spec["write_fraction"] = a.write_fraction
+        with open(os.path.join(d, "spec.json"), "w") as f:
+            json.dump(spec, f, indent=1)
+        rc, state = run_container(d, spec, m, a, "run.sh")
         try:
             check = motion_check(d, m, tables, mesh)
         except Exception as e:  # recorded, never fatal
             check = dict(error=repr(e))
         with open(os.path.join(d, "result.json"), "w") as f:
-            json.dump(dict(spec, rc=rc, diverged=state["diverged"], motion_check=check), f, indent=1)
-        pipeline.clean(d)
+            json.dump(dict(spec, rc=rc, diverged=state["diverged"], settled_stop=state["settled"], motion_check=check), f, indent=1)
+        pipeline.clean_keep_restart(d)
+    elif a.what == "extend":
+        mesh = os.path.join(ROOT, "out/cfd/meshes", f"e387-L{a.level:g}")
+        tables = motion_tables(m)
+        spec = json.load(open(os.path.join(d, "spec.json")))
+        prepare_extend(d, a.cycles, a.ranks)
+        rc, state = run_container(d, spec, m, a, "resume.sh")
+        try:
+            check = motion_check(d, m, tables, mesh)
+        except Exception as e:
+            check = dict(error=repr(e))
+        res = json.load(open(os.path.join(d, "result.json"))) if os.path.exists(os.path.join(d, "result.json")) else dict(spec)
+        res.update(rc_extend=rc, diverged=state["diverged"], settled_stop=state["settled"], motion_check=check)
+        with open(os.path.join(d, "result.json"), "w") as f:
+            json.dump(res, f, indent=1)
+        pipeline.clean_keep_restart(d)
     spec = json.load(open(os.path.join(d, "spec.json")))
     cd_f, cd_from = suction.friction_drag_at(m["re_chord"])
     print(json.dumps(dict(evaluate_last(d, spec, m, cd_f), cd_f_from=cd_from)))

@@ -181,6 +181,16 @@ stations. The round-1 hand-wing collapse (lift 0.47 to 0.03 in cycle 3) has the 
 flow-state transient; three cycles were too few to see the recovery. No point settled, so the optional L1 check was
 not run.
 
+### eta_s round 3 (running at handoff)
+
+Kinematics runs are now extendable: each cycle is checkpointed, the latest restart time is kept when a case ends
+(`pipeline.clean_keep_restart`), and `python3 cfd/suction_kin.py extend <motion.json> <tag> --cycles N` continues a
+case (tested; motion error 2.6e-8 c after an extension). Runs stop themselves once the last three cycles settle.
+Round-3 reruns of the three v17 stations to up to 12 cycles: `out/cfd/runs/suction/*-r3/`. `suction.json` now
+lists every cycle (`all_cycles`), separated cycles, recurrence after cycle 4, and the long-run eta_s after the first
+separated episode. Round-2 data under this analysis: no separated cycle after cycle 4 within 6 cycles; long-run eta_s
+0.66, 0.55, 0.67 at s/L 0.4, 0.6, 0.75.
+
 ### 3D finalist check
 
 Not done for the current design. The pipeline is built and tested end to end (`pose.mjs` from
