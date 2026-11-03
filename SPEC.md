@@ -198,6 +198,12 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
     2. The left coupler's rocker-end eye cuts 2.4 mm radially into the left aft shoulder housing.
     3. The 6 mm crank web leaves no room for the crank bushing's 1 mm flange.
     4. The aft-plate bosses reach into the last gear stage.
+  - **Full check, 2026-11-03.** The check now in the physics build found about 47 further clashing pairs across the airframe and drive. It also found that the encoder magnet's bore does not fit the crank shaft. So v21 as laid out does not assemble.
+  - **Layout freedom.** The correction may therefore move parts:
+    - shoulder spacing, horn stacking and gearbox position;
+    - gear-train folding, with the same gears;
+    - rail, tray and panel routing, battery placement, and the pod through its fit rule.
+  - **Replacements.** A part is replaced only where it physically cannot fit.
   - **Correction.** These are corrected as v22 = v21 plus clearance corrections. Nothing changes for any gate's sake: same parts wherever they fit, same planform, kinematics and controller. The full gate set is flown again on v22, and v22 becomes the frozen design.
 
 ### Public repository
