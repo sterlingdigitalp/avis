@@ -185,6 +185,13 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
   - **Final verdicts.** A gate verdict counts as final only if the same verdict holds with η_s at the 0.6 default everywhere. A strip held at the smallest point's value therefore cannot decide a gate.
   - **v21.** Its verdicts are the same under the table and at 0.6, and M4 still passes at a uniform 0.50.
 
+### Design freeze (2026-11-03, operator decision after physics round 13)
+
+- **Frozen design.** Larus GL-2 v21 is the final design. No v22 is built, and the gates stay exactly as declared.
+- **M1 stands as a fail.** M1 fails at its worst corners, and it is reported that way in the film's gates card, the README and `tools/verify.mjs`, with its own numbers.
+- **Why no closure.** Round 13 showed the conflict. Closing M1 at an 8 m/s release needs wing loading ≤ about 20.4 N/m², and that breaks M4 and M7 at the gear train. A train strong enough for that adds mass that breaks M1 again.
+- **What may still change.** Only freeze verification: V5 and its calibration on v21 itself, and the gate set re-flown if that calibration changes. Everything else stays as built.
+
 ### Public repository
 
 `github.com/sterlingdigitalp/avis` is public. UIUC-derived tables and airfoil coordinate files stay local and gitignored (`data/references/airfoil-e387.json`, `data/references/airfoils/`), because their licence terms are unclear or reserved. Our own CFD polars are ours to publish. Copernicus terrain, if used, requires the notice in `data/references/credits.md` in the film credits and README.
