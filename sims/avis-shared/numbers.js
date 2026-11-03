@@ -45,12 +45,28 @@ export function numbers(model, data) {
     sched,
     twistAt: (phase, side = 1) => twistCommand(phase, sched, side),
     gates: data.gates,
-    passCount: data.gates.filter((g) => g.passed).length,
+    passCount: data.gates.filter((g) => gateVerdict(g) === 'pass').length,
     fit: data.fit,
   };
 }
 
 /** One line per gate for cards and panels, in the gate's own words and numbers, each against its limit. */
+export const MISSION = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'];
+
+/**
+ * A gate's verdict by tools/verify.mjs's rule (SPEC "Final verdicts"): a mission gate is final only if it is the same
+ * flown with eta_s at the published 0.6 everywhere (out/verification/eta0.6/, carried here as g.at06, the newest such
+ * file, counted only when no older than the official run). 'NOT FINAL' when the two differ (a pass that is not final is
+ * not a pass), 'pass?' when a mission gate has no comparison on record, else 'pass' or 'FAIL'.
+ */
+export function gateVerdict(g) {
+  if (!g) return 'MISSING';
+  const alt = g.at06 && String(g.at06.ran_at) >= String(g.ran_at) ? g.at06 : null;
+  if (MISSION.includes(g.gate) && !alt) return g.passed ? 'pass?' : 'FAIL';
+  if (alt && alt.passed !== g.passed) return 'NOT FINAL';
+  return g.passed ? 'pass' : 'FAIL';
+}
+
 export function gateLine(g) {
   if (g.line) return g.line;
   const m = g.measured ?? {}, L = g.limit ?? {};

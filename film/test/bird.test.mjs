@@ -156,7 +156,8 @@ test('a pooled "bearing" line (older designs) is drawn two per shoulder hinge, t
   const id = design.bom.parts.find((p) => /^bearing/.test(p.role))?.id ?? design.bom.parts.find((p) => /^bushing/.test(p.role)).id;
   for (const N of [4 + 2 * shafts + 4, 4 + 2 * shafts - 1]) {
     const parts = [...design.bom.parts.filter((p) => !/^(bearing|bushing)\b/.test(p.role)), { role: 'bearing', id, count: N }];
-    const m = prepare({ ...design, bom: { ...design.bom, parts } }, model.parts);
+    // an older design's BOM: no physics layout (params.layout), so the film places the journals itself
+    const m = prepare({ ...design, params: { ...design.params, layout: undefined }, bom: { ...design.bom, parts } }, model.parts);
     const b = buildBird(m, makeMaterials({ textures: false }));
     const n = (re) => b.meshes.filter((o) => re.test(o.name)).length;
     assert.equal(n(/^hinge_bearing_/), 4);
@@ -166,59 +167,59 @@ test('a pooled "bearing" line (older designs) is drawn two per shoulder hinge, t
   }
 });
 
-test('journals are drawn at catalogue size on their shafts; the encoder rings weigh what the catalogue says', async () => {
+test('journals are drawn at catalogue size in their plate seats, by the design\'s convention; the encoder at catalogue size on the crank, forward of stage 1', async () => {
   const { journalDims } = await import('../../sims/avis-shared/model.js');
   bird.update({ phase: 0.3, amp: model.law.ampNominal ?? design.cruise.amp });
   bird.root.updateMatrixWorld(true);
-  const size = (o) => new THREE.Box3().setFromBufferAttribute(o.geometry.attributes.position).getSize(new THREE.Vector3());
-  const P = model.planes, shafts = model.train.shafts;
-  let n = 0;
-  for (const o of bird.meshes.filter((m) => /^(gearbox|hinge|coupler|elbow)_(bearing|bushing)_/.test(m.name))) {
-    const d = journalDims(model.parts[o.userData.partId].specs);
-    const s = size(o);
-    assert.ok(Math.abs(s.x - d.B) < 1e-6 && Math.abs(s.y - Math.max(d.D, d.flangeD)) < 2e-4, `${o.name}: ${s.x} x ${s.y}`);
-    const g = o.name.match(/^gearbox_\w+_(\d+)_(aft|fwd)$/);
-    if (g) {
-      // flush with the plate's outer face, reaching into the gearbox (the plate's thickness from the design when it
-      // gives one), so a journal longer than its plate never pokes out of the aft plate into the crank web
-      const PL = design.params?.linkage?.plates;
-      const t = g[2] === 'aft' ? (PL ? PL.t_mm / 1000 : P.plateT) : (PL ? (PL.t_fwd_mm ?? PL.t_mm) / 1000 : P.plateT);
-      const x = g[2] === 'aft' ? P.plateAft - t / 2 + d.B / 2 : P.plateFwd + t / 2 - d.B / 2;
-      assert.ok(Math.abs(o.position.x - x) < 1e-12, `${o.name} x`);
-      assert.deepEqual([o.position.y, o.position.z], [shafts[+g[1]][1], shafts[+g[1]][0]]);
-      n++;
+  const box = (o) => new THREE.Box3().setFromObject(o, true);
+  const P = model.planes, shafts = model.train.shafts, PL = design.params.linkage.plates;
+  const tA = PL.t_mm / 1000, tF = (PL.t_fwd_mm ?? PL.t_mm) / 1000;
+  const radii = (o) => {
+    const c = shafts[+(o.name.match(/_(\d+)_/)?.[1] ?? shafts.length - 1)];
+    let lo = Infinity, hi = 0;
+    const pos = o.geometry.attributes.position, v = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld);
+      const r = Math.hypot(v.y - c[1], v.z - c[0]);
+      lo = Math.min(lo, r);
+      hi = Math.max(hi, r);
     }
-  }
-  assert.ok(n >= 2);
-  const ring = (name, id, rho) => {
-    const o = bird.root.getObjectByName(name);
-    if (!o) return;
-    const s = size(o);
-    const pos = o.geometry.attributes.position.array;
-    let ri = Infinity;
-    for (let i = 0; i < pos.length; i += 3) ri = Math.min(ri, Math.hypot(pos[i + 1], pos[i + 2]));
-    const vol = Math.PI * ((s.y / 2) ** 2 - ri ** 2) * s.x;
-    assert.ok(Math.abs(vol * rho * 1000 - model.parts[id].mass_g) < 0.05 * model.parts[id].mass_g, `${name}: ${vol * rho * 1000} g`);
-    assert.ok(Math.abs(o.position.y - shafts[0][1]) < 1e-9 && Math.abs(o.position.z - shafts[0][0]) < 1e-9, `${name} on the crank shaft`);
-    return ri;
+    return [lo, hi];
   };
-  const enc = design.bom.parts.find((p) => /encoder/.test(p.role) && !/magnet/.test(p.role));
-  const mag = design.bom.parts.find((p) => /encoder magnet/.test(p.role));
-  if (mag) {
-    const ri = ring('encoder_magnet', mag.id, 7500);
-    assert.ok(Math.abs(2 * ri - (model.parts[mag.id].specs.inner_diameter_mm ?? 8) / 1000) < 2e-4);
+  let n = 0;
+  for (const o of bird.meshes.filter((m) => /^(gearbox_(bearing|bushing)_\d+_(aft|fwd)|motor_outboard_(bearing|bushing))$/.test(m.name))) {
+    const d = journalDims(model.parts[o.userData.partId].specs), b = box(o);
+    // v22 (plates.flange 'face'): a flanged bushing's flange on the plate's outer face, its body through the plate
+    // inward; a bearing flush with the outer face, inward. The motor's outboard bearing (stage 1 overhung) from the
+    // forward plate's inner face outward.
+    const fl = PL.flange === 'face' && d.flangeB > 0 ? d.flangeB : 0;
+    let want;
+    if (/^motor_outboard/.test(o.name)) want = P.stage1 === 'overhung' ? [P.plateFwd - tF / 2, P.plateFwd - tF / 2 + d.B] : [P.plateFwd + tF / 2 - d.B, P.plateFwd + tF / 2];
+    else if (/_aft$/.test(o.name)) want = [P.plateAft - tA / 2 - fl, P.plateAft - tA / 2 - fl + d.B];
+    else want = [P.plateFwd + tF / 2 + fl - d.B, P.plateFwd + tF / 2 + fl];
+    assert.ok(Math.abs(b.min.x - want[0]) < 1e-6 && Math.abs(b.max.x - want[1]) < 1e-6, `${o.name}: x ${b.min.x}..${b.max.x} vs ${want}`);
+    const [lo, hi] = radii(o);
+    assert.ok(Math.abs(lo - d.d / 2) < 1e-5 && Math.abs(hi - Math.max(d.D, d.flangeD ?? 0) / 2) < 1e-5, `${o.name}: bore ${lo}, outside ${hi}`);
+    n++;
   }
-  if (enc) ring('encoder_readhead', enc.id, 1850);
-  if (enc && mag) {
-    // the readhead clears the magnet, and both sit between the gearbox plates on the crank shaft
-    const rh = bird.root.getObjectByName('encoder_readhead'), mg = bird.root.getObjectByName('encoder_magnet');
-    const p = rh.geometry.attributes.position.array;
-    let inner = Infinity;
-    for (let i = 0; i < p.length; i += 3) inner = Math.min(inner, Math.hypot(p[i + 1], p[i + 2]));
-    assert.ok(inner > size(mg).y / 2, 'readhead bore clears the magnet');
-    for (const o of [rh, mg]) assert.ok(o.position.x - size(o).x / 2 > P.plateAft && o.position.x + size(o).x / 2 < P.plateFwd, `${o.name} between the plates`);
-  }
-  if (enc || mag) assert.ok(model.layout.assumptions.some((a) => /encoder/.test(a)));
+  assert.equal(n, 2 * (shafts.length - 1) + 1, 'two journals per shaft and the motor\'s outboard bearing');
+  // the crank encoder: its catalogue rings (readhead outer and bore and thickness, actuator outer, bore and height) on
+  // the crank axis, the actuator its catalogue ride height from the readhead, both forward of stage 1 (encoder 'front')
+  const PP = design.params.parts, rh = model.parts[PP.crankEncoder].specs.dimensions, ac = model.parts[PP.encoderMagnet].specs;
+  const ring = (name, od, id, len) => {
+    const o = bird.root.getObjectByName(name), b = box(o);
+    assert.ok(Math.abs(b.max.x - b.min.x - len / 1000) < 1e-6, `${name} length`);
+    assert.ok(Math.abs((b.max.y - b.min.y) - od / 1000) < 1e-5 && Math.abs((b.max.z - b.min.z) - od / 1000) < 1e-5, `${name} od`);
+    assert.ok(Math.abs((b.max.y + b.min.y) / 2 - shafts[0][1]) < 1e-6 && Math.abs((b.max.z + b.min.z) / 2 - shafts[0][0]) < 1e-6, `${name} on the crank`);
+    const [lo] = radii(Object.assign(o, { name }));
+    return { b, lo };
+  };
+  const r = ring('encoder_readhead', rh.od_mm, rh.id_mm, rh.thickness_mm), m = ring('encoder_magnet', ac.od_mm, ac.inner_diameter_mm, ac.h_mm);
+  assert.ok(Math.abs(m.b.min.x - r.b.max.x - ac.ride_height_mm / 1000) < 1e-6, 'ride height');
+  // forward of stage 1's teeth by the running clearance (its wheel's hub, on gear shaft 3, passes beside the readhead)
+  const s0 = model.train.stages[0];
+  const stage1Fwd = P.stage[0] + Math.max(s0.wheel.face, s0.pinion.face) / 2;
+  if (design.params.layout.encoder === 'front') assert.ok(r.b.min.x >= stage1Fwd + design.params.layout.running_mm / 1000 - 1e-9, `readhead ${r.b.min.x} forward of stage 1 ${stage1Fwd}`);
 });
 
 test('rocker track: a band either side of the slot, or a round hole where a fixed stroke leaves no slot', async () => {

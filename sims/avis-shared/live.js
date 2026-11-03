@@ -4,7 +4,7 @@
 // 25 s it tours itself with a cursor; any touch, click, drag, wheel or key hands control back.
 import * as THREE from 'three';
 import { model, DATA } from './data.js';
-import { makeMaterials, ACCENT } from './materials.js';
+import { makeMaterials, ACCENT, livery, defaultLivery } from './materials.js';
 import { buildBird, SUBSYSTEMS } from './bird.js';
 import { createStage, loadValley } from './stage.js';
 import { numbers, gateLine } from './numbers.js';
@@ -139,8 +139,10 @@ export function runLive() {
   // ---- scene --------------------------------------------------------------------------------------------------
   const lowTier = /Mobi|Android/i.test(navigator.userAgent) || innerWidth < 700;
   const stage = createStage(canvas, { quality: lowTier ? 'low' : 'high' });
-  const mats = makeMaterials({ textures: true });
-  const bird = buildBird(model, mats);
+  // the covering the BOM records (the white), as the film draws it
+  const liv = livery(defaultLivery(model.parts, model.design.bom));
+  const mats = makeMaterials({ textures: true, livery: liv });
+  const bird = buildBird(model, mats, { livery: liv });
   const holder = new THREE.Group();
   holder.add(bird.root);
   stage.scene.add(holder);

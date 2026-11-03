@@ -33,9 +33,16 @@ export function loadModel(name = 'larus-gl-2') {
   return { model: prepareFilm(design, parts), design, parts, path, sha256 };
 }
 
-/** The gate files as they are, newest per gate, for this design and the method gates. Never edited. */
+/** The gate files as they are, newest per gate, for this design and the method gates, each mission gate with its
+ * uniform eta_s 0.6 comparison (out/verification/eta0.6/, newest per gate) as `at06`. Never edited. */
 export function loadVerification(designName) {
   const dir = join(ROOT, 'out', 'verification');
+  const official = newestGates(dir, designName);
+  const at06 = new Map(newestGates(join(dir, 'eta0.6'), designName).map((g) => [g.gate, g]));
+  return official.map((g) => (at06.has(g.gate) ? { ...g, at06: at06.get(g.gate) } : g));
+}
+
+function newestGates(dir, designName) {
   if (!existsSync(dir)) return [];
   const all = readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => {
     try {

@@ -86,7 +86,8 @@ test('a failed gate shows what failed in the file\'s own words and numbers; a pa
   assert.ok(f.includes('nominal case fails') && f.some((x) => x.includes('7.5') && x.includes('3')), f.join(' / '));
 });
 
-test('the card: one row per gate, a failure across the card with its reasons, a pass on half a row', () => {
+test('the card: one row per gate, a failure (or a verdict not final) across the card with its reasons, a pass on half a row', async () => {
+  const { gateVerdict } = await import('../../sims/avis-shared/numbers.js');
   const html = gatesCardItems(gates);
   const rows = html.split('<div class="g').slice(1);
   assert.equal(rows.length, gateOrder(gates).length);
@@ -95,6 +96,7 @@ test('the card: one row per gate, a failure across the card with its reasons, a 
     const h = rows.find((x) => x.includes(`<em>${g}</em>`));
     assert.ok(h, g);
     if (!r) assert.ok(h.includes('not run'), g);
+    else if (gateVerdict(r) === 'NOT FINAL') assert.ok(h.startsWith(' wide') && h.includes('NOT FINAL') && !h.includes('v ok'), g);
     else if (r.passed) assert.ok(!h.startsWith(' wide') && h.includes('pass'), g);
     else {
       assert.ok(h.startsWith(' wide') && h.includes('FAIL'), g);
@@ -140,4 +142,33 @@ test('gate failures, each kind in the file\'s own words', () => {
   assert.deepEqual(F({ points: 26, points_passed: 20 }), ['6 of 26 points fail']);
   assert.deepEqual(F({ points: 26, points_passed: 26 }), ['fails (the file names no single check)']);
   assert.deepEqual(F({}), ['fails (the file names no single check)']);
+});
+
+test('a mission gate whose uniform eta_s 0.6 verdict differs is never drawn as a pass: NOT FINAL, both runs\' numbers', async () => {
+  const { gatesCardItems } = await import('../../sims/avis-shared/film.js');
+  const { gateVerdict, numbers: nums } = await import('../../sims/avis-shared/numbers.js');
+  const m4 = (passed, seeds, ran_at) => ({ gate: 'M4', design: 'larus-gl-2', passed, ran_at, measured: { seeds_passed: seeds, seeds_run: 100 }, limit: { pass_seeds: 98 } });
+  const g = { ...m4(true, 99, '2026-11-03T10:00'), at06: m4(false, 97, '2026-11-03T11:00') };
+  assert.equal(gateVerdict(g), 'NOT FINAL');
+  const row = gatesCardItems([g]).split('<div class="g').find((r) => /<em>M4<\/em>/.test(r));
+  assert.ok(/NOT FINAL/.test(row) && !/v ok/.test(row) && !/>pass</.test(row), row);
+  assert.ok(/99 of 100/.test(row) && /97 of 100/.test(row), 'both numbers');
+  // a comparison older than the official run is stale: no comparison on record, so not a plain pass either
+  assert.equal(gateVerdict({ ...g, at06: m4(false, 97, '2026-11-03T09:00') }), 'pass?');
+  assert.equal(gateVerdict({ ...g, at06: m4(false, 97, '2026-11-03T10:00') }), 'NOT FINAL', 'a comparison run with the official one counts');
+  assert.equal(gateVerdict({ ...g, at06: m4(true, 99, '2026-11-03T11:00') }), 'pass');
+  assert.equal(gateVerdict({ ...m4(false, 90, 'x'), at06: m4(false, 90, 'y') }), 'FAIL');
+  assert.equal(gateVerdict({ gate: 'V1', passed: true, ran_at: 'x' }), 'pass', 'a method gate needs no comparison');
+  assert.equal(gateVerdict(null), 'MISSING');
+});
+
+test('the card\'s verdicts are tools/verify.mjs\'s, gate by gate, from the same files', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const { loadVerification } = await import('../../sims/avis-shared/node-load.js');
+  const { gateVerdict } = await import('../../sims/avis-shared/numbers.js');
+  const out = spawnSync(process.execPath, ['tools/verify.mjs', 'larus-gl-2'], { encoding: 'utf8' }).stdout;
+  const theirs = Object.fromEntries([...out.matchAll(/^([MV]\d)\s+(NOT FINAL|pass\?|pass|FAIL|MISSING)/gm)].map((m) => [m[1], m[2]]));
+  assert.ok(Object.keys(theirs).length >= 15, out.slice(0, 200));
+  const gates = loadVerification('larus-gl-2');
+  for (const [gate, v] of Object.entries(theirs)) assert.equal(gateVerdict(gates.find((x) => x.gate === gate) ?? null), v, gate);
 });

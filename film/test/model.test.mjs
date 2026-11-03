@@ -9,6 +9,7 @@ import { syntheticLog } from './fixture.mjs';
 import { drivePose, gearAngles, meshAngle, stationsAt, wingStations, sectionPoint, halfThickness, parseDims, boxProtrusion, linkageAt, leftRightAsymmetry, sineSeries, membraneDip } from '../../sims/avis-shared/model.js';
 import { strokeAngle, makeLatticeSpec, wingGrid } from '../../src/physics/kinematics.js';
 import { sampleLog } from '../bake_pose.mjs';
+import { physicsAssembly } from '../../sims/avis-shared/solids.js';
 
 const { model, design } = loadModel('larus-gl-2');
 const TWO_PI = 2 * Math.PI;
@@ -217,16 +218,49 @@ test('section frames are orthonormal, start at the hinge, and the film is the se
   assert.equal(st.seg[2], model.wing.segments.length - 1);
 });
 
-test('drive planes are in order and no two stages overlap along x', () => {
-  const P = model.planes, t = model.train;
+test('drive planes are in order and no two stages overlap along x: inside the box, or overhung forward of it as the design states', () => {
+  // From the design's own numbers and the physics' planes and solids (src/design/clearance.js): never from the
+  // film's drawing. Along the crank pin: the left eye, the right eye, the web, the aft plate.
+  const P = model.planes, t = model.train, Ly = design.params.layout, PL = design.params.linkage.plates;
+  const tA = PL.t_mm / 1000, tF = (PL.t_fwd_mm ?? PL.t_mm) / 1000, run = (Ly.running_mm ?? 0.5) / 1000;
   assert.ok(P.couplerL < P.couplerR && P.couplerR < P.crankArm && P.crankArm < P.plateAft);
-  let prev = P.plateAft + P.plateT / 2;
-  for (let s = t.n - 1; s >= 0; s--) {
-    const w = Math.max(t.stages[s].wheel.face, t.stages[s].pinion.face);
-    assert.ok(P.stage[s] - w / 2 > prev, `stage ${s}`);
-    prev = P.stage[s] + w / 2;
+  // each stage's x: its widest face, its hub forward of it
+  const ext = (s) => {
+    const st = t.stages[s], w = Math.max(st.wheel.face, st.pinion.face);
+    return [P.stage[s] - w / 2, P.stage[s] + w / 2 + Math.max(st.wheel.hubW ?? 0, st.pinion.hubW ?? 0)];
+  };
+  const over = Ly.stage1 === 'overhung';
+  assert.equal(P.stage1 === 'overhung', over, 'the planes follow the design\'s fold');
+  // inside the box, crank stage first, every stage clear of the last and of both plates' inner faces
+  let prev = P.plateAft + tA / 2;
+  for (let s = t.n - 1; s >= (over ? 1 : 0); s--) {
+    const [a, b] = ext(s);
+    assert.ok(a > prev, `stage ${s + 1} at ${a} overlaps what is aft of it, at ${prev}`);
+    prev = b;
   }
-  assert.ok(P.plateFwd - P.plateT / 2 > prev && P.motorAft > P.plateFwd);
+  assert.ok(prev < P.plateFwd - tF / 2, 'the last stage inside clears the forward plate');
+  if (over) {
+    // stage 1 forward of the forward plate's outer face (shafts 1 mm proud), the motor inside the box on its aft face
+    assert.ok(ext(0)[0] >= P.plateFwd + tF / 2 + 0.001 + run - 1e-9, 'stage 1 overhung clear of the plate and the shaft ends');
+    assert.ok(P.motorX[0] > P.plateAft + tA / 2 && P.motorX[1] < P.plateFwd - tF / 2, 'the motor can inside the box');
+  } else assert.ok(P.motorAft > P.plateFwd + tF / 2, 'the motor forward of the box');
+  // the fold is the design's own (round 14), and no gear shaft passes through another stage's gear where it crosses
+  // that gear's plane: the physics' shaft solids against each gear's tip circle, the running clearance between
+  if (Array.isArray(Ly.links_deg)) t.links.forEach((a, j) => assert.ok(Math.abs((a * 180) / Math.PI - Ly.links_deg[j]) < 1e-9, `link ${j}`));
+  const phys = physicsAssembly(design, model.parts);
+  const shaft = (k) => ({ c: t.shafts[k], r: (k === 0 ? design.params.linkage.crank.shaft_od_mm : design.params.linkage.gearShafts[k - 1].d_mm) / 2000, x: phys.solid(k === 0 ? 'crank' : `gear shaft ${k}`, 'shaft').x });
+  let crossings = 0;
+  for (let s = 0; s < t.n; s++) for (const [g, own] of [[t.stages[s].wheel, t.n - 1 - s], [t.stages[s].pinion, t.n - s]]) {
+    for (let k = 0; k < t.n; k++) {
+      if (k === own) continue;
+      const sh = shaft(k), d = Math.hypot(sh.c[0] - t.shafts[own][0], sh.c[1] - t.shafts[own][1]);
+      const [a, b] = ext(s), x = sh.x;
+      if (x[1] <= a || x[0] >= b) continue; // the shaft ends short of this gear's plane
+      crossings++;
+      assert.ok(d >= g.ro + sh.r + run - 1e-9, `shaft ${k} passes ${((g.ro + sh.r - d) * 1000).toFixed(2)} mm inside stage ${s + 1}'s ${g.id}`);
+    }
+  }
+  assert.ok(crossings > 0, 'some shaft crosses another stage\'s plane');
 });
 
 test('catalogue gears: pitch radius from module and teeth, tip radius from the listed outside diameter', () => {
@@ -338,9 +372,19 @@ test('servos: tail servos either side of their lump; a stroke servo exactly when
   const sv = parseDims(model.parts[strokeId]?.specs?.dimensions_text_mm)?.values ?? [0.033, 0.01, 0.035];
   const tailId = design.bom.parts.find((p) => p.role === 'tail servo')?.id;
   const tv = parseDims(model.parts[tailId]?.specs?.dimensions_text_mm)?.values ?? sv;
-  assert.ok(Math.abs(tr.cz - tl.cz - 2 * 0.55 * tv[1]) < 1e-9 && Math.abs((tl.cz + tr.cz) / 2 - lump[2]) < 1e-9);
-  assert.deepEqual([tl.sx, tl.sy, tl.sz].map((v) => +v.toFixed(6)), [tv[0], tv[2], tv[1]].map((v) => +v.toFixed(6)), 'tail servo at its catalogue size');
-  for (const b of [tl, tr]) assert.ok(Math.abs(b.cx - lump[0]) < 0.005 && Math.abs(b.cy - lump[1]) < 0.005, 'at the tail-servo lump');
+  const mounts = design.params?.layout?.mounts ?? {};
+  if (mounts.servo_tail_L) {
+    // v23: mounted on their carrier (params.layout.mounts): on its face, at its x and z
+    for (const [b, k] of [[tl, 'servo_tail_L'], [tr, 'servo_tail_R']]) {
+      assert.ok(Math.abs(b.y0 - mounts[k].face_y_m) < 1e-9, `${k} on the ${mounts[k].carrier}`);
+      if (mounts[k].x0_m != null) assert.ok(Math.abs(b.x0 - mounts[k].x0_m) < 1e-9, `${k} x`);
+      if (mounts[k].z0_m != null) assert.ok(Math.abs(b.z0 - mounts[k].z0_m) < 1e-9, `${k} z`);
+    }
+  } else {
+    assert.ok(Math.abs(tr.cz - tl.cz - 2 * 0.55 * tv[1]) < 1e-9 && Math.abs((tl.cz + tr.cz) / 2 - lump[2]) < 1e-9);
+    for (const b of [tl, tr]) assert.ok(Math.abs(b.cx - lump[0]) < 0.005 && Math.abs(b.cy - lump[1]) < 0.005, 'at the tail-servo lump');
+  }
+  assert.deepEqual([tl.sx, tl.sy, tl.sz].map((v) => +v.toFixed(6)).sort(), [tv[0], tv[2], tv[1]].map((v) => +v.toFixed(6)).sort(), 'tail servo at its catalogue size');
   const hasLump = design.mass.lumps.some((l) => l.name === 'stroke servo');
   assert.equal(!!box(model, 'servo_stroke'), hasLump);
   // fit.js's packing view adds a massless lump for a fixed stroke: the box is kept free there, as before
@@ -380,8 +424,11 @@ test('catalogue sizes with their units; the regulator is packed for the film onl
   assert.equal(catalogueDims({}), null);
   const reg = design.bom.parts.find((p) => p.role === 'servo regulator');
   if (!reg) return;
-  assert.ok(!prepare(design, model.parts).layout.parts.some((p) => p.name === 'regulator'), 'src/design packs without it');
+  // packed by the film unless the design mounts it (v23: params.layout.mounts.regulator, then src/design packs it, once)
+  const mounted = !!design.params?.layout?.mounts?.regulator;
+  assert.equal(prepare(design, model.parts).layout.parts.filter((p) => p.name === 'regulator').length, mounted ? 1 : 0, 'src/design packs it only when the design mounts it');
   const film = prepareFilm(design, model.parts);
+  assert.equal(film.layout.parts.filter((p) => p.name === 'regulator').length, 1, 'drawn once');
   const box = film.layout.parts.find((p) => p.name === 'regulator').box;
   const d = catalogueDims(model.parts[reg.id].specs).values;
   assert.deepEqual([box.sx, box.sy, box.sz].map((v) => +v.toFixed(6)).sort(), [...d].map((v) => +v.toFixed(6)).sort());

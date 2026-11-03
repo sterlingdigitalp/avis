@@ -53,6 +53,6 @@ export async function exportGlb(name = 'larus-gl-2', outDir = join(ROOT, 'out', 
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const r = await exportGlb(process.argv[2] ?? 'larus-gl-2', undefined, { livery: process.argv[3] ?? process.env.AVIS_LIVERY ?? null });
+  const r = await exportGlb(process.argv[2] ?? 'larus-gl-2', undefined, { livery: process.argv[3] ?? process.env.AVIS_LIVERY ?? undefined });
   console.log(`${r.file}  ${(r.bytes / 1024).toFixed(0)} KB  ${r.meta.posed.length} posed nodes, ${r.meta.deform.length} deforming meshes, design v${r.meta.design_version}`);
 }

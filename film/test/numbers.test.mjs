@@ -21,12 +21,15 @@ test('drive numbers: ratio from the teeth, motor speed from the trimmed flap fre
   assert.equal(N.stages.length, design.drive.gears.length / 2);
 });
 
-test('power numbers: battery energy from its cells and capacity, cruise power from the M2 gate file', () => {
+test('power numbers: battery energy from its cells and capacity, cruise power from the M2 gate file', async () => {
   assert.ok(Math.abs(N.batteryWh - design.battery.V_nom * design.battery.capacity_Ah) < 1e-12);
   const m2 = gates.find((g) => g.gate === 'M2');
   if (m2) assert.equal(N.cruisePowerW, m2.measured.cruise_power_w);
   else assert.equal(N.cruisePowerW, null);
-  assert.equal(N.passCount, gates.filter((g) => g.passed).length);
+  // a pass that is not final is not a pass (tools/verify.mjs's rule; pinned gate by gate in sequences.test.mjs)
+  const { gateVerdict } = await import('../../sims/avis-shared/numbers.js');
+  assert.equal(N.passCount, gates.filter((g) => gateVerdict(g) === 'pass').length);
+  assert.ok(N.passCount <= gates.filter((g) => g.passed).length);
 });
 
 test('mass numbers are the BOM totals', () => {

@@ -1,25 +1,47 @@
 // Run: node --import ./film/lib/three-hooks.mjs --test film/test/*.test.mjs
-// The covering's livery switch (sims/avis-shared/materials.js LIVERIES): off by default, so the film draws the clear
-// film the catalogue records; on, every covering mesh carries its surface's colour as vertex colours without a change
-// to the geometry the bake and the GLB depend on; and any livery the catalogue does not record is reported as such.
+// The covering's livery (sims/avis-shared/livery.js LIVERIES): by default the white the BOM records (the catalogue's
+// film-oracover-air-light is light scale white, 331-099, and the BOM covers every surface with it), the clear film for
+// a BOM without a colour, the gull only ever as a labelled preview; every covering mesh carries its surface's colour
+// as vertex colours without a change to the geometry the bake and the GLB depend on.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LIVERIES, COVERING_LIVERY, COVERING_SURFACES, livery, liveryInBom, makeMaterials } from '../../sims/avis-shared/materials.js';
+import * as THREE from 'three';
+import { LIVERIES, COVERING_LIVERY, COVERING_SURFACES, livery, liveryInBom, defaultLivery, makeMaterials, patchLiveryShader } from '../../sims/avis-shared/materials.js';
 import { tipStation, wingSurface, buildBird } from '../../sims/avis-shared/bird.js';
 import { nodeBird } from '../lib/bird-node.mjs';
 
 const covering = (bird) => bird.meshes.filter((m) => /^(film_|tail_film_)/.test(m.name) || m.name === 'shell');
 const same = (a, b) => a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) < 1e-6);
 
-test('no livery by default: the clear film, no vertex colours, and an unknown livery is an error', () => {
-  assert.equal(COVERING_LIVERY, null);
+test('the white the BOM records by default; the clear film for a BOM without a colour; never the gull', () => {
+  assert.equal(COVERING_LIVERY, 'white');
   assert.equal(livery(), null);
   assert.equal(livery('clear'), null);
   assert.throws(() => livery('seagull'), /no livery "seagull"/);
-  const { bird } = nodeBird();
-  for (const m of covering(bird)) assert.equal(m.geometry.attributes.color, undefined, m.name);
+  const { bird, model, design, livery: l } = nodeBird();
+  assert.equal(l, LIVERIES.white, 'the catalogue records light scale white and the BOM covers every surface with it');
+  const white = LIVERIES.white.surfaces.pod.rgb;
+  for (const m of covering(bird)) {
+    const c = m.geometry.attributes.color;
+    assert.ok(c, m.name);
+    for (let i = 0; i < c.count; i += 97) assert.ok(same([c.getX(i), c.getY(i), c.getZ(i)], white), `${m.name} white`);
+  }
+  // a catalogue entry with no colour: the clear film, no vertex colours
+  const film = LIVERIES.white.film, { colour, ...specs } = model.parts[film].specs;
+  const bare = { ...model.parts, [film]: { ...model.parts[film], specs } };
+  assert.equal(defaultLivery(bare, design.bom), null);
+  const clear = nodeBird('larus-gl-2', { livery: null }).bird;
+  for (const m of covering(clear)) assert.equal(m.geometry.attributes.color, undefined, m.name);
   const mats = makeMaterials({ textures: false });
   assert.ok(mats.film_wing.transmission > 0.9 && !mats.film_wing.vertexColors);
+  // a BOM covering any surface with another film: not the white
+  const other = { ...design.bom, structure: design.bom.structure.map((s) => (/fuselage film/.test(s.name) ? { ...s, material_id: 'film-other' } : s)) };
+  assert.equal(defaultLivery({ ...model.parts, 'film-other': { category: model.parts[film].category, specs: {} } }, other), null);
+  // a BOM with no covering line records no covering; one line on the film is enough
+  assert.equal(liveryInBom(LIVERIES.white, model.parts, { structure: [] }), false);
+  assert.equal(liveryInBom(LIVERIES.white, model.parts, { structure: design.bom.structure.filter((s) => /fuselage film/.test(s.name)) }), true);
+  // the gull's chrome is not in the BOM: never the default, always labelled
+  assert.equal(liveryInBom(LIVERIES.gull, model.parts, design.bom), false);
 });
 
 // ORACOVER Air Light's published range (maker's 2010 catalogue and shop, read 2026-11-03): light scale white 331-099
@@ -34,11 +56,20 @@ test('every livery colour is one the maker publishes for the film, with its orde
       if (c === null && s === 'wing_tip') continue; // no tip colour: the tip keeps its faces' colours
       assert.ok(c && c.rgb.length === 3 && c.rgb.every((v) => v >= 0 && v <= 1), `${l.name}.${s}`);
       assert.equal(AIR_LIGHT[c.order], c.colour, `${l.name}.${s}: ${c.colour} ${c.order} is not in the Air Light range`);
-      assert.equal(c.g_m2, 18, `${l.name}.${s}: Air Light is about 18 g/m2 in every colour`);
+      // the white is the catalogue's own entry (its technical data sheet's 17 g/m2, the ruling's figure); the
+      // chromes the maker's catalogue's approx. 18 g/m2
+      assert.equal(c.g_m2, c.order === '331-099' ? 17 : 18, `${l.name}.${s}: ${c.g_m2} g/m2`);
       assert.equal(!!c.metallic, /chrome/.test(c.colour), `${l.name}.${s}: the chromes are metallised, the white is not`);
     }
     assert.ok(l.tipFrom > 0.5 && l.tipFrom < 1, `${l.name}: tip from ${l.tipFrom}`);
   }
+});
+
+test('white livery (the bird as built): every surface light scale white, the vertex counts unchanged', () => {
+  const { livery: l } = nodeBird('larus-gl-2', { livery: 'white' });
+  assert.equal(l.name, 'white');
+  for (const s of COVERING_SURFACES) assert.equal(l.surfaces[s].order, '331-099');
+  checkLivery(l);
 });
 
 test('gull livery: upper face, lower face and tip by geometry, tail and pod in theirs, the vertex counts unchanged', () => {
@@ -70,7 +101,7 @@ test('tip station: the rib nearest tipFrom of the wing; a surface: upper face be
 });
 
 function checkLivery(l) {
-  const clear = nodeBird();
+  const clear = nodeBird('larus-gl-2', { livery: null });
   const { model } = clear;
   const bird = buildBird(model, makeMaterials({ textures: false, livery: l }), { livery: l });
   // same geometry as the clear bird: the bake and the GLB's deform list do not move
@@ -84,6 +115,12 @@ function checkLivery(l) {
     assert.equal(m.thickness, 0, k);
     assert.equal(typeof m.onBeforeCompile, 'function', k);
   }
+  // and the patch reaches the shader three.js compiles: onBeforeCompile sees the physical material's source with its
+  // #include chunks unexpanded, so the metal scaling must land in them (it once matched nothing: a dark mirror)
+  const sh = patchLiveryShader({ vertexShader: THREE.ShaderLib.physical.vertexShader, fragmentShader: THREE.ShaderLib.physical.fragmentShader });
+  assert.ok(sh.vertexShader.includes('vMetal = metal;'));
+  assert.ok(sh.fragmentShader.includes('float metalnessFactor = metalness * vMetal;') && !sh.fragmentShader.includes('#include <metalnessmap_fragment>'), 'metalness scaled by the face');
+  assert.ok(sh.fragmentShader.includes('material.transmission = transmission * (1.0 - vMetal);') && !sh.fragmentShader.includes('#include <transmission_fragment>'), 'a chrome face passes no light');
   // a tip colour, where a livery has one, starts at a rib; the gull has none (Air Light has no black)
   const S = { ...l.surfaces, wing_tip: l.surfaces.wing_tip ?? { rgb: [-1, -1, -1] } };
   const tipColour = (v) => !!l.surfaces.wing_tip && v;
@@ -159,10 +196,11 @@ function stationS(model, i) {
   return fs[i];
 }
 
-test('the film page labels a livery the catalogue does not record, on every frame, and nothing without one', async () => {
+test('the film page labels a livery the catalogue does not record, on every frame, and nothing on the white or the clear film', async () => {
   const { filmLivery } = await import('../../sims/avis-shared/film.js');
-  const { model } = nodeBird();
-  assert.deepEqual(filmLivery({}, model.parts), { liv: null, tag: '' });
+  const { model, design } = nodeBird();
+  assert.deepEqual(filmLivery({}, model.parts, design.bom), { liv: LIVERIES.white, tag: '' });
+  assert.deepEqual(filmLivery({ livery: 'white' }, model.parts, design.bom), { liv: LIVERIES.white, tag: '' });
   assert.deepEqual(filmLivery({ livery: null }, model.parts), { liv: null, tag: '' });
   const on = filmLivery({ livery: 'gull' }, model.parts);
   assert.equal(on.liv, LIVERIES.gull);

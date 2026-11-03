@@ -113,7 +113,7 @@
    "kind": "bl",
    "scenario": "larus-gl-2-corridor",
    "shot": "under_wing_full",
-   "start_s": 98,
+   "start_s": 100,
    "dur": 4.0,
    "slow": 2,
    "caption": "Under the wing",

@@ -3,10 +3,10 @@
 // the flight logs) shown behind a HUD that reads the same log. The edit (film/edit.json, resolved by
 // film/render.mjs into site/data/edit.json) decides the order and timing; the score reads the same edit.
 import * as THREE from 'three';
-import { makeMaterials, ACCENT, livery as liveryOf, liveryInBom } from './materials.js';
+import { makeMaterials, ACCENT, livery as liveryOf, liveryInBom, defaultLivery } from './materials.js';
 import { buildBird } from './bird.js';
 import { createStage } from './stage.js';
-import { numbers, gateLine, gateFailures } from './numbers.js';
+import { numbers, gateLine, gateFailures, gateVerdict } from './numbers.js';
 import { drivePose } from './model.js';
 
 const DEG = 180 / Math.PI;
@@ -180,13 +180,14 @@ const CSS = `
 .g em{font-style:normal;font-family:'JetBrains Mono',monospace;font-weight:700;width:64px;color:#8d99a6}
 .g .ok{color:#cfe8d7}.g .no{color:#ff8a75}
 .g .v{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:600}
+.g .v.nf{color:#f0b35a;white-space:nowrap}
 .g.wide{grid-column:1/-1}
 .g .why{display:block;font-size:26px;color:#ffb3a6;margin-top:4px}
 .frow.dim{opacity:.38}
 .frow b{white-space:nowrap;margin-left:16px}
 .frow.s{padding:7px 0}.frow.s span{font-size:25px}.frow.s b{font-size:28px}
-.g{font-size:26px;padding:7px 0}
-.card.gc h2{font-size:56px}.card.gc p{font-size:28px;margin-bottom:16px}
+.g{font-size:24px;padding:5px 0}.g .why{font-size:21px;margin-top:2px}
+.card.gc h2{font-size:48px}.card.gc p{font-size:26px;margin-bottom:10px}
 .credits{columns:2;column-gap:80px;font-size:30px;line-height:1.45;color:#c9d3dc}
 .credits b{color:#fff;font-weight:600}
 `;
@@ -281,11 +282,11 @@ export function segMarker(seg, d, j, N) {
   return seg.marker ? birdMarker(d?.px?.[j], N.span_m, N.name) : '';
 }
 
-/** The edit's livery (none: the clear film) and, when the catalogue does not record its colours, the label every
- * frame carries so a preview never passes for the bird as built. */
-export function filmLivery(edit, parts) {
-  const liv = liveryOf(edit.livery ?? null);
-  return { liv, tag: liv && !liveryInBom(liv, parts) ? `<div class="livtag">preview, livery not yet in BOM · ${liv.name}</div>` : '' };
+/** The edit's livery (null: the clear film; absent: the white the BOM records, else the clear film) and, when the
+ * BOM does not record its colours, the label every frame carries so a preview never passes for the bird as built. */
+export function filmLivery(edit, parts, bom = null) {
+  const liv = liveryOf(edit.livery === undefined ? defaultLivery(parts, bom) : edit.livery);
+  return { liv, tag: liv && !liveryInBom(liv, parts, bom) ? `<div class="livtag">preview, livery not yet in BOM · ${liv.name}</div>` : '' };
 }
 
 /** A studio sequence's duration in the edit (the first segment that plays it), or `d` when the edit has none. */
@@ -301,13 +302,36 @@ export function gatesCardItems(gates) {
   return gateOrder(gates).map((g) => {
     const r = gates.find((x) => x.gate === g);
     if (!r) return `<div class="g"><em>${g}</em><span>no result yet</span><span class="v" style="color:#8d99a6">not run</span></div>`;
-    if (r.passed) return `<div class="g"><em>${g}</em><span>${gateLine(r)}</span><span class="v ok">pass</span></div>`;
+    const v = gateVerdict(r);
+    if (v === 'pass' || v === 'pass?') return `<div class="g"><em>${g}</em><span>${gateLine(r)}</span><span class="v ok">${v}</span></div>`;
+    // not final: both runs' own numbers, and why it is not a pass
+    if (v === 'NOT FINAL') return `<div class="g wide"><em>${g}</em><span>${gateLine(r)} on the CFD suction table; ${gateLine(r.at06).replace(/^[^:]*:\s*/, '')} at the published η<sub>s</sub> 0.6<span class="why">not final, so not a pass: the verdict differs at η<sub>s</sub> 0.6${(r.passed ? r.at06.failures ?? gateFailures(r.at06) : r.failures ?? gateFailures(r)).length ? ` (${(r.passed ? r.at06.failures ?? gateFailures(r.at06) : r.failures ?? gateFailures(r)).join('; ')})` : ''}</span></span><span class="v nf">NOT FINAL</span></div>`;
     return `<div class="g wide"><em>${g}</em><span>${gateLine(r)}<span class="why">${(r.failures ?? gateFailures(r)).join('; ')}</span></span><span class="v no">FAIL</span></div>`;
   }).join('');
 }
 
 /** The drive panel's stage rows, motor first: catalogue numbers, teeth and ratio. */
 export const stageRows = (stages) => stages.map((x) => row(`${x.pinion} → ${x.wheel}`, `${x.zp}:${x.zw} · ${fmt(x.ratio, 2)}`, '', 's')).join('');
+
+/**
+ * The assembly at u: build progress (bird.js steps, one after another, evenly over u 0..0.86) and each subsystem's
+ * exploded fraction for the panel's rows; a bird without steps (no physics layout) explodes by subsystem windows.
+ */
+export function assemblyExplode(bird, u) {
+  const build = span(u, 0.0, 0.86);
+  const bx = bird.buildExplode(build);
+  if (bx) return { build, ex: Object.fromEntries(['structure', 'drive', 'power', 'avionics', 'wing'].map((k) => [k, bx[k] ?? 0])) };
+  const w = { structure: [0.0, 0.42], drive: [0.12, 0.55], power: [0.22, 0.62], avionics: [0.3, 0.7], wing: [0.4, 0.86] };
+  return { build: null, ex: Object.fromEntries(Object.entries(w).map(([k, [a, b]]) => [k, 1 - ease(span(u, a, b))])) };
+}
+
+/** The assembly camera at u: [target, azimuth deg, elevation deg, distance m, fov deg]; on the gearbox (between
+ * the plates, about the crank axis) while it and its frame go together, out to the whole bird from u 0.68 to 0.84. */
+export function assemblyOrbit(u) {
+  // from the right side, in the key light, so the slides along x read across the frame; then round to the old path
+  const out = ease(span(u, 0.68, 0.84));
+  return [new THREE.Vector3(0.045 - 0.195 * out, -0.025 * (1 - out), 0), 75 + (75 + 45 * ease(u)) * out, 24 - 6 * u, 0.6 + 1.85 * out - 0.25 * u, 30];
+}
 
 /** The assembly panel's subsystem rows: each subsystem's BOM mass, dimmed until it is in place. */
 export const massRows = (ex, massBy) => Object.keys(ex).map((k) => `<div class="frow${ex[k] < 0.02 ? '' : ' dim'}"><span>${k}</span><b>${fmt(massBy[k], 0)} g</b></div>`).join('');
@@ -341,7 +365,7 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
   stage.resize(1920, 1080);
   // the covering's livery: none (the clear film) unless the edit names one; one the catalogue does not record yet is
   // labelled on every frame, so a preview never passes for the bird as built
-  const { liv, tag: liveryTag } = filmLivery(edit, model.parts);
+  const { liv, tag: liveryTag } = filmLivery(edit, model.parts, model.design.bom);
   const mats = makeMaterials({ textures: true, livery: liv });
   const bird = buildBird(model, mats, { livery: liv });
   stage.scene.add(bird.root);
@@ -402,14 +426,13 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
       };
     },
     assembly(u, t) {
-      const ex = {
-        structure: 1 - ease(span(u, 0.0, 0.42)),
-        drive: 1 - ease(span(u, 0.12, 0.55)),
-        power: 1 - ease(span(u, 0.22, 0.62)),
-        avionics: 1 - ease(span(u, 0.3, 0.7)),
-        wing: 1 - ease(span(u, 0.4, 0.86)),
-      };
-      orbit(V(-0.15, 0.0, 0), 150 + 45 * ease(u), 24 - 6 * u, 2.7 - 0.25 * u, 30);
+      // the parts go together one step after another in an order a person could follow with them (bird.js steps:
+      // the physics' layout through solids.js assemblyPlan, then the packed parts, the pod and the wings); each
+      // subsystem's row lights when its last step is in. A design without the physics' solids explodes by subsystem.
+      const { build, ex } = assemblyExplode(bird, u);
+      // close on the gearbox while it goes together (the steps up to the trays), then out to the whole bird for the
+      // packed parts, the pod and the wings
+      orbit(...assemblyOrbit(u));
       const fl = span(u, 0.88, 1);
       const st = fl > 0 ? flap(t - 0.88 * this._dur) : { phase: this._level, amp: N.ampDeg / DEG };
       let g = 0;
@@ -417,7 +440,7 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
       g += N.margin_g * span(u, 0.86, 0.95);
       return {
         shift: 260,
-        state: { ...st, explode: ex, shell: 1 },
+        state: { ...st, explode: ex, build, shell: 1 },
         html: () => `<div class="fcap">Every part from a catalogue<small>${N.bomLines} BOM lines, ${N.partCount} bought parts, each with a source</small></div>
           <div class="panel" style="top:auto;bottom:120px"><h3>${fmt(g, 0)} g</h3><div class="sub">parts ${fmt(N.parts_g, 0)} g · structure ${fmt(N.structure_g, 0)} g · 15% margin ${fmt(N.margin_g, 0)} g</div>
           ${massRows(ex, massBy)}${row('span', `${fmt(N.span_m, 2)} m`)}</div>${honest()}`,
@@ -492,7 +515,7 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
         state: { ...st, focus: 'power', also: servoIds, accents: true },
         html: () => `<div class="fcap">Power<small>${N.batteryCells}S ${fmt(N.batteryMah, 0)} mAh ${model.design.battery.chemistry ?? ''}, ${fmt(N.batteryWh, 1)} Wh${model.design.battery.charge_limit_V_per_cell ? ` · charged to ${fmt(model.design.battery.charge_limit_V_per_cell, 2)} V a cell` : ''}</small></div>
           <div class="panel" style="opacity:${a}"><h3>${fmt(N.cruisePowerW, 1)} W</h3><div class="sub">electrical power in cruise at ${fmt(N.cruiseV, 1)} m/s (M2)</div>
-          ${row('endurance', `${fmt(N.enduranceMin, 1)} min`)}${row('gate M2', m2 ? (m2.passed ? 'pass' : 'FAIL') : 'not run', m2 && !m2.passed ? 'bad' : '')}
+          ${row('endurance', `${fmt(N.enduranceMin, 1)} min`)}${row('gate M2', m2 ? gateVerdict(m2) : 'not run', m2 && gateVerdict(m2) !== 'pass' ? 'bad' : '')}
           ${power.map((p) => row(`${p.label} · ${p.name}`, `${fmt(p.mass_g, 0)} g`, '', 's')).join('')}</div>
           ${power.map((p, k) => calloutAt(p.label === 'ESC' ? 'ESC' : p.label[0].toUpperCase() + p.label.slice(1), node(p.node), POWER_LABELS[powerSlots[k]], a)).join('')}${honest()}`,
       };
@@ -503,7 +526,7 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
       const items = gatesCardItems(data.gates);
       return {
         state: { ...flap(t), shell: 1 },
-        html: () => `<div style="position:absolute;inset:0;background:rgba(9,11,15,${0.78 * a})"></div><div class="card gc" style="opacity:${a}"><h2>Where it stands</h2><p>${N.passCount} of ${data.gates.length} gates pass for ${N.name}, design v${data.design_version}. Failures stay on the record.</p><div class="gates">${items}</div></div>${honest(a)}`,
+        html: () => `<div style="position:absolute;inset:0;background:rgba(9,11,15,${0.78 * a})"></div><div class="card gc" style="opacity:${a}"><h2>Where it stands</h2><p>${N.passCount} of ${data.gates.length} gates pass for ${N.name}, design v${data.design_version}${((k) => (k ? `, ${k} not final` : ''))(data.gates.filter((g) => gateVerdict(g) === 'NOT FINAL').length)}. Failures stay on the record.</p><div class="gates">${items}</div></div>${honest(a)}`,
       };
     },
     credits(u, t) {

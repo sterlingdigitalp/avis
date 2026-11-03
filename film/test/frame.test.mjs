@@ -14,6 +14,7 @@ import {
   offCount, parseTube, parseRing, parseBlocks, parsePlate, parseBracket, parseChannel, parsePanel,
   splitEven, scatter, screwGeo, nutGeo, tieGeo, toM,
 } from '../../sims/avis-shared/frame.js';
+import { lockFlangeCircles } from '../../src/design/airframe.js';
 
 const { bird, design, model } = nodeBird('larus-gl-2');
 const EPS = 1e-6;
@@ -37,19 +38,38 @@ const closeDims = (o, mmList) => {
 const FRAME_NAME_RE = /^(shoulder rail|shoulder bracket|tail boom clamp blocks|forward tray|aft tray|motor doubler|gearbox panels)/;
 const FRAME_MATERIAL_IDS = ['screw-iso4762-m3x8-10.9', 'nut-iso4032-m3-10', 'tie-hellermanntyton-t18r'];
 
-test('shoulder rails: OD, ID and length from the basis, at the design\'s rail position', () => {
+// v22 on, the rails, brackets, clamps, trays, panels and boom are the physics' own solids (film/test/physics-solids.
+// test.mjs holds the drawing to them). Here the physics' solids are checked against the BOM's basis text, which the
+// physics also writes: they must describe the same part. Disagreements found are reported to the physics, listed in
+// REPORTED with both numbers; each must still disagree (so the list is pruned when the physics corrects it).
+const ph = bird.phys;
+const sol = (id, name) => { const s = ph.solid(id, name); assert.ok(s, `${id}/${name}`); return s; };
+const xLen = (s) => s.x[1] - s.x[0];
+const REPORTED = {
+  'keel and tail boom length': { bom: 1075, physics: 1028.04 }, // BOM "43 g/m x 1.075 m"; the boom solid from the tail to the forward clamp
+  'gearbox panel length between the plates': { bom: 61.6, physics: 60.2 }, // BOM "each 61.6 mm": the plates' centre spacing; the sheet between their inner faces
+};
+const found = {};
+const agree = (what, bom, physics, tol = 0.05) => {
+  if (Math.abs(bom - physics) <= tol) return assert.ok(!REPORTED[what], `${what}: reported as ${JSON.stringify(REPORTED[what])}, now agrees (${bom} mm)`);
+  found[what] = true;
+  assert.ok(REPORTED[what] && Math.abs(REPORTED[what].bom - bom) < 0.05 && Math.abs(REPORTED[what].physics - physics) < 0.05, `${what}: BOM ${bom} mm vs physics ${physics.toFixed(2)} mm`);
+};
+
+test('shoulder rails: the physics\' tube and lock flange at the BOM\'s OD, ID, length and flange thickness, at the design\'s rail position', () => {
   for (const side of ['right', 'left']) {
     const item = design.bom.structure.find((s) => s.name === `shoulder rail ${side}`);
     const [, od, id, len] = item.basis.match(/([\d.]+)\/([\d.]+)\s*mm tube x\s*([\d.]+)\s*mm/).map(Number);
-    const o = part(item.name).objects[0];
-    close(size(o).x, len / 1000);
-    close(size(o).y, od / 1000);
-    close(size(o).z, od / 1000);
-    close(2 * minRadius(o), id / 1000);
-    const pos = design.structure.airframe.parts.rails[side];
-    close(o.position.y, pos[1], 1e-9);
-    close(o.position.z, pos[0], 1e-9);
-    close(o.position.x, planeMid, 1e-9);
+    const tube = sol(`shoulder rail ${side}`, 'tube'), lock = sol(`shoulder rail ${side}`, 'lock flange');
+    agree(`rail ${side} OD`, od, 2000 * tube.shape.ro, 1e-6);
+    agree(`rail ${side} ID`, id, 2000 * tube.shape.ri, 1e-6);
+    agree(`rail ${side} length`, len, 1000 * xLen(tube));
+    agree(`rail ${side} lock flange`, +item.basis.match(/([\d.]+) mm lock flange/)[1], 1000 * xLen(lock), 1e-6);
+    assert.deepEqual(tube.shape.c, design.structure.airframe.parts.rails[side]);
+    // the lock flange where the design says it is screwed (v22: the forward plate's aft face)
+    const fwd = design.params.linkage.airframe.rail.lock_at === 'forward';
+    close(fwd ? lock.x[1] : lock.x[0], fwd ? model.planes.plateFwd - design.params.linkage.plates.t_fwd_mm / 2000 : model.planes.plateAft + design.params.linkage.plates.t_mm / 2000, 1e-9);
+    assert.deepEqual(part(item.name).objects.map((o) => o.name).sort(), [`frame_rail_${side}`, `frame_rail_lock_${side}`].sort());
   }
 });
 
@@ -69,129 +89,95 @@ test('shoulder rail aft seat bosses: ring OD, ID and thickness from the basis, o
   }
 });
 
-test('shoulder brackets: two sleeves and two arms, each sized from the basis', () => {
-  const railItem = {};
-  for (const side of ['right', 'left']) railItem[side] = design.bom.structure.find((s) => s.name === `shoulder rail ${side}`);
-  for (const side of ['right', 'left']) {
+test('shoulder brackets: the physics\' sleeves and arms at the BOM\'s sizes, a sleeve on the rail and an arm to each housing', () => {
+  for (const [side, tag] of [['right', 'R'], ['left', 'L']]) {
     const item = design.bom.structure.find((s) => s.name === `shoulder bracket ${side}`);
-    const [, sOd, sId, sLen] = item.basis.match(/two sleeves\s*([\d.]+)\/([\d.]+)\s*x\s*([\d.]+)\s*mm/).map(Number);
-    const [, aB, aH, aLen] = item.basis.match(/two arms\s*([\d.]+)\s*x\s*([\d.]+)\s*x\s*([\d.]+)\s*mm/).map(Number);
-    const railLen = parseTube(railItem[side].basis).len / 1000;
-    const objs = part(item.name).objects;
-    assert.equal(objs.length, 4);
-    const sleeves = objs.filter((o) => /sleeve/.test(o.name));
-    const arms = objs.filter((o) => /arm/.test(o.name));
-    assert.equal(sleeves.length, 2);
-    assert.equal(arms.length, 2);
-    const railPos = design.structure.airframe.parts.rails[side];
-    const railXs = [planeMid - railLen / 2, planeMid + railLen / 2].sort((p, q) => p - q);
-    const sleeveXs = sleeves.map((o) => o.position.x).sort((p, q) => p - q);
-    sleeveXs.forEach((x, i) => close(x, railXs[i], 1e-9));
-    for (const o of sleeves) {
-      close(size(o).x, sLen / 1000); close(size(o).y, sOd / 1000); close(size(o).z, sOd / 1000); close(2 * minRadius(o), sId / 1000);
-      close(o.position.y, railPos[1], 1e-9); close(o.position.z, railPos[0], 1e-9);
+    const b = parseBracket(item.basis);
+    const rail = design.structure.airframe.parts.rails[side];
+    for (const nm of ['aft', 'forward']) {
+      const sl = sol(`shoulder bracket ${tag} ${nm}`, 'sleeve'), arm = sol(`shoulder bracket ${tag} ${nm}`, 'arm');
+      agree('bracket sleeve OD', b.sOd, 2000 * sl.shape.ro, 1e-6);
+      agree('bracket sleeve ID', b.sId, 2000 * sl.shape.ri, 1e-6);
+      agree('bracket sleeve length', b.sLen, 1000 * xLen(sl), 1e-6);
+      assert.deepEqual(sl.shape.c, rail);
+      agree('bracket arm thickness', b.aH, 1000 * xLen(arm), 1e-6);
+      // the arm a bar of the BOM's width; its length the BOM's: the housing's centre to the rail's
+      const pts = arm.shape.pts, w = Math.hypot(pts[1][0] - pts[2][0], pts[1][1] - pts[2][1]);
+      agree('bracket arm width', b.aB, 1000 * w, 1e-6);
+      const O4 = tag === 'R' ? model.fourBar.O4 : [-model.fourBar.O4[0], model.fourBar.O4[1]];
+      agree('bracket arm length', b.aLen, 1000 * Math.hypot(O4[0] - rail[0], O4[1] - rail[1]));
     }
-    // each arm's own centre: from the rail toward the shoulder housing (model.fourBar.O4), at the basis's own length
-    const housing = side === 'right' ? model.fourBar.O4 : [-model.fourBar.O4[0], model.fourBar.O4[1]];
-    const n = Math.hypot(housing[1] - railPos[1], housing[0] - railPos[0]);
-    const expectArm = [railPos[1] + ((housing[1] - railPos[1]) / n) * (aLen / 1000) / 2, railPos[0] + ((housing[0] - railPos[0]) / n) * (aLen / 1000) / 2];
-    for (const o of arms) {
-      closeDims(o, [aB, aH, aLen]);
-      close(o.position.y, expectArm[0]);
-      close(o.position.z, expectArm[1]);
-    }
-    const armXs = arms.map((o) => o.position.x).sort((p, q) => p - q);
-    armXs.forEach((x, i) => close(x, railXs[i], 1e-9));
+    assert.equal(part(item.name).objects.length, 4);
   }
 });
 
-test('shoulder bracket arms: their actual world rotation carries the local "up" axis from the rail toward the housing', () => {
-  for (const side of ['right', 'left']) {
-    const item = design.bom.structure.find((s) => s.name === `shoulder bracket ${side}`);
-    const aLen = toM(parseBracket(item.basis).aLen);
-    const railPos = design.structure.airframe.parts.rails[side];
-    const housing = side === 'right' ? model.fourBar.O4 : [-model.fourBar.O4[0], model.fourBar.O4[1]];
-    const n = Math.hypot(housing[1] - railPos[1], housing[0] - railPos[0]);
-    const unit = [(housing[1] - railPos[1]) / n, (housing[0] - railPos[0]) / n];
-    const arms = part(item.name).objects.filter((o) => /arm/.test(o.name));
-    for (const o of arms) {
-      const near = new THREE.Vector3(0, -aLen / 2, 0).applyQuaternion(o.quaternion).add(o.position);
-      const far = new THREE.Vector3(0, aLen / 2, 0).applyQuaternion(o.quaternion).add(o.position);
-      close(near.y, railPos[1]); close(near.z, railPos[0]);
-      close(far.y, railPos[1] + unit[0] * aLen); close(far.z, railPos[0] + unit[1] * aLen);
-    }
-  }
-});
-
-test('tail boom clamp blocks: 2 off, cross-section and length from the basis, clamp_spacing_m apart', () => {
+test('tail boom clamp blocks: 2 off, the physics\' blocks at the BOM\'s section and length, bored for the boom, clamp_spacing_m apart', () => {
   const item = design.bom.structure.find((s) => /^tail boom clamp blocks/.test(s.name));
-  const [, a, b, len] = item.basis.match(/([\d.]+)\s*x\s*([\d.]+)\s*mm blocks x\s*([\d.]+)\s*mm/).map(Number);
-  const objs = part(item.name).objects;
-  assert.equal(objs.length, 2);
-  for (const o of objs) {
-    closeDims(o, [a, b, len]);
-    close(o.position.y, design.structure.airframe.parts.boom_y_m, 1e-9);
-    close(o.position.z, 0, 1e-9);
+  const d = parseBlocks(item.basis);
+  const bore = +item.basis.match(/bored\s*([\d.]+)\s*mm/)[1];
+  const blocks = ['aft', 'forward'].map((nm) => sol(`boom clamp ${nm}`, 'block'));
+  for (const b of blocks) {
+    const zs = b.shape.pts.map((p) => p[0]), ys = b.shape.pts.map((p) => p[1]);
+    agree('clamp block width', d.a, 1000 * (Math.max(...zs) - Math.min(...zs)));
+    agree('clamp block height', d.b, 1000 * (Math.max(...ys) - Math.min(...ys)));
+    agree('clamp block length', d.len, 1000 * xLen(b), 1e-6);
+    agree('clamp bore', bore, 2000 * b.shape.holes[0].r, 1e-6);
+    assert.deepEqual(b.shape.holes[0].c, [0, design.structure.airframe.parts.boom_y_m]);
   }
-  const xs = objs.map((o) => o.position.x).sort((p, q) => p - q);
-  close(xs[1] - xs[0], design.structure.airframe.parts.clamp_spacing_m, 1e-6);
-  const expectXs = [model.planes.plateAft - model.planes.plateT / 2 - len / 2000, model.planes.plateFwd + model.planes.plateT / 2 + len / 2000];
-  xs.forEach((x, i) => close(x, expectXs[i], 1e-9));
+  close((blocks[1].x[0] + blocks[1].x[1]) / 2 - (blocks[0].x[0] + blocks[0].x[1]) / 2, design.structure.airframe.parts.clamp_spacing_m, 1e-6);
+  assert.equal(part(item.name).objects.length, 2);
 });
 
-test('forward and aft trays: channel width, flange height and overall length from the basis, outward from the plate', () => {
-  for (const [tag, outward] of [['forward', 1], ['aft', -1]]) {
+test('forward and aft trays: the physics\' channels at the BOM\'s width, flange height, sheet and length from the plate', () => {
+  for (const tag of ['forward', 'aft']) {
     const item = design.bom.structure.find((s) => s.name === `${tag} tray`);
-    const m = item.basis.match(/channel\s*([\d.]+)\s*x\s*([\d.]+)\s*x\s*([\d.]+)\s*mm sheet.*?x\s*([\d.]+)\s*mm/).map(Number);
-    const [, w, flangeH, , len] = m;
-    const o = part(item.name).objects[0];
-    closeDims(o, [w, flangeH, len]);
-    close(o.position.y, design.structure.airframe.parts.trays[tag].y_m, 1e-9);
-    close(o.position.z, 0, 1e-9);
-    const plateFace = tag === 'forward' ? model.planes.plateFwd + model.planes.plateT / 2 : model.planes.plateAft - model.planes.plateT / 2;
-    close(o.position.x, plateFace + (outward * len) / 2000, 1e-9);
+    // the channel's width, flange height and sheet, then its length (v22: "to N mm from the plate"; v23: "x N mm")
+    const m = item.basis.match(/channel\s*([\d.]+)\s*x\s*([\d.]+)\s*x\s*([\d.]+)\s*mm/).slice(1).map(Number);
+    const c = { w: m[0], flangeH: m[1], t: m[2] };
+    const fromPlate = +(item.basis.match(/to\s*([\d.]+)\s*mm from the plate/) ?? item.basis.match(/mm x\s*([\d.]+)\s*mm/))[1];
+    const base = sol(`${tag} tray`, 'base'), fl = sol(`${tag} tray`, 'flange right');
+    // the BOM's channel by its sheet's centreline (its area is (w + 2 h) t): base and flanges as capsules along it
+    agree(`${tag} tray width`, c.w, 1000 * Math.abs(base.shape.b[0] - base.shape.a[0]), 1e-6);
+    agree(`${tag} tray flange height`, c.flangeH, 1000 * Math.abs(fl.shape.b[1] - fl.shape.a[1]), 1e-6);
+    agree(`${tag} tray sheet`, c.t, 2000 * base.shape.r, 1e-6);
+    agree(`${tag} tray length from the plate`, fromPlate, 1000 * xLen(base));
+    close(base.shape.a[1], design.structure.airframe.parts.trays[tag].y_m, 1e-12);
   }
 });
 
-test('forward tray flange doubler and motor doubler: width and thickness from the basis, as a square plate, on the forward plate', () => {
-  const fwdFace = model.planes.plateFwd + model.planes.plateT / 2;
-  const motorBox = model.layout.parts.find((p) => p.name === 'motor').box;
-  const expect = { 'forward tray flange doubler': [fwdFace, design.structure.airframe.parts.trays.forward.y_m, 0], 'motor doubler': [fwdFace, motorBox.cy, motorBox.cz] };
-  for (const name of ['forward tray flange doubler', 'motor doubler']) {
-    const item = design.bom.structure.find((s) => s.name === name);
-    const [, w, t] = item.basis.match(/([\d.]+)\s*mm x\s*([\d.]+)\s*mm/).map(Number);
-    const o = part(name).objects[0];
-    closeDims(o, [t, w, w]);
-    close(o.position.x, expect[name][0], 1e-9);
-    close(o.position.y, expect[name][1], 1e-9);
-    close(o.position.z, expect[name][2], 1e-9);
-  }
-});
-
-test('gearbox panels: 3 off, each panel\'s h/w and thickness from the basis, over the plate gap plus two flanges', () => {
+test('gearbox panels and the boom: the physics\' sheets at the BOM\'s height and thickness where the design places them; lengths against the BOM', () => {
   const item = design.bom.structure.find((s) => /^gearbox panels/.test(s.name));
-  const [, gap, flange] = item.basis.match(/each\s*([\d.]+)\s*mm plus two\s*([\d.]+)\s*mm flanges/).map(Number);
-  const len = gap + 2 * flange;
-  const objs = part(item.name).objects;
-  assert.equal(objs.length, 3);
+  const [, gap] = item.basis.match(/each\s*([\d.]+)\s*mm plus two\s*([\d.]+)\s*mm flanges/).map(Number);
   const list = design.params.linkage.airframe.panels.list;
   for (const nm of ['side panel right', 'side panel left', 'top panel']) {
     const [, a, t] = item.basis.match(new RegExp(`${nm}\\s+([\\d.]+)\\s*x\\s*([\\d.]+)\\s*mm`)).map(Number);
-    const o = objs.find((oo) => oo.name === `frame_panel_${nm.replace(/\s+/g, '_')}`);
-    assert.ok(o, nm);
-    closeDims(o, [a, t, len]);
-    close(o.position.x, planeMid, 1e-9);
-    const entry = list.find((p) => p.name === nm);
-    if (nm === 'top panel') { close(o.position.y, entry.y_mm / 1000, 1e-9); close(o.position.z, 0, 1e-9); }
-    else { close(o.position.y, (entry.y0_mm + a / 2) / 1000, 1e-9); close(o.position.z, entry.z_mm / 1000, 1e-9); }
+    const s = sol(`gearbox ${nm}`, 'sheet'), e = list.find((p) => p.name === nm);
+    agree(`${nm} height`, a, 1000 * Math.hypot(s.shape.b[0] - s.shape.a[0], s.shape.b[1] - s.shape.a[1]), 1e-6);
+    agree(`${nm} thickness`, t, 2000 * s.shape.r, 1e-6);
+    if (nm === 'top panel') close(s.shape.a[1], e.y_mm / 1000, 1e-12);
+    else { close(s.shape.a[0], e.z_mm / 1000, 1e-12); close(s.shape.a[1], e.y0_mm / 1000, 1e-12); }
+    agree('gearbox panel length between the plates', gap, 1000 * xLen(s));
   }
+  assert.equal(part(item.name).objects.length, 3);
+  const keel = design.bom.structure.find((s) => /keel/.test(s.name));
+  agree('keel and tail boom length', 1000 * +keel.basis.match(/x\s*([\d.]+)\s*m$/)[1], 1000 * xLen(sol('tail boom', 'tube')));
 });
 
-test('gearbox panels: without design.params.linkage.airframe.panels.list, fall back to default offsets', () => {
-  const d2 = structuredClone(design);
-  delete d2.params.linkage.airframe.panels;
-  const m2 = prepare(d2, model.parts);
-  const b2 = buildBird(m2, makeMaterials({ textures: false }));
+test('every reported BOM / physics disagreement was found', () => {
+  assert.deepEqual(Object.keys(found).sort(), Object.keys(REPORTED).sort());
+});
+
+// The BOM-text path frame.js keeps for a design the physics does not lay out (no params.layout): its defaults.
+const withoutLayout = (mutate) => {
+  const d = structuredClone(design);
+  delete d.params.layout;
+  mutate(d);
+  const m = prepare(d, model.parts);
+  return { m, b: buildBird(m, makeMaterials({ textures: false })) };
+};
+
+test('gearbox panels (no physics layout): without design.params.linkage.airframe.panels.list, fall back to default offsets', () => {
+  const { b: b2 } = withoutLayout((d2) => delete d2.params.linkage.airframe.panels);
   const objs = b2.parts.find((p) => p.name === 'gearbox panels, 3 off').objects;
   const right = objs.find((o) => o.name === 'frame_panel_side_panel_right');
   const left = objs.find((o) => o.name === 'frame_panel_side_panel_left');
@@ -221,55 +207,51 @@ test('M3 nuts: the BOM count, each an across-flats ring with its bore', () => {
   for (const o of objs) { close(size(o).x, high / 1000); close(size(o).y, flats / 1000); close(size(o).z, flats / 1000); close(2 * minRadius(o), bore / 1000); }
 });
 
-test('cable ties: the BOM count, each the catalogue\'s own strap dimensions', () => {
-  const item = design.bom.structure.find((s) => /^cable ties/.test(s.name));
-  const n = +item.name.match(/,\s*(\d+)\s*off/)[1];
-  const dims = model.parts[item.material_id].specs.dimensions.match(/([\d.]+)\s*x\s*([\d.]+)\s*x\s*([\d.]+)\s*mm/).slice(1).map(Number);
-  const objs = part(item.name).objects;
-  assert.equal(objs.length, n);
-  for (const o of objs) closeDims(o, dims);
+test('cable ties: every BOM tie line drawn to its count: round its part and carrier where the design states it, the pitot\'s by the physics', () => {
+  const S = design.structure.airframe.parts.support;
+  for (const item of design.bom.structure.filter((x) => /^cable ties/.test(x.name))) {
+    const n = +item.name.match(/,\s*(\d+)\s*off/)[1];
+    const objs = part(item.name).objects;
+    const pitot = S?.pitot?.tie === item.material_id ? S.pitot.n : 0;
+    assert.equal(objs.length + pitot, n, item.name);
+    for (const t of (S?.ties ?? []).filter((x) => x.tie === item.material_id)) {
+      const b = model.layout.parts.find((p) => p.name === t.part).box;
+      const loops = objs.filter((o) => o.name.startsWith(`frame_tie_${t.part}_`));
+      assert.equal(loops.length, t.n, t.part);
+      for (const o of loops) {
+        assert.ok(o.position.x > b.x0 && o.position.x < b.x1, `${t.part} tie along its part`);
+        close(size(o).x, t.band_mm[0] / 1000, 1e-7);
+        assert.ok(size(o).z >= b.z1 - b.z0 && size(o).y >= b.y1 - b.y0, `${t.part} tie round it`);
+      }
+    }
+  }
 });
 
-test('M3 screws and nuts land at their joints: the rail\'s own lock-screw count per side, 2 each at the boom clamps, the trays and the motor (no nut there)', () => {
+test('M3 screws and nuts land at their joints: the rail\'s lock screws on its lock flange\'s lands; v23 the motor bracket\'s at its holes (no nuts: the motor\'s own threads), 2 each at the boom clamps, the trays and the riser', () => {
   const A = design.structure.airframe.parts;
   const lock = design.params.linkage.airframe.rail.lock_screws;
-  const clampLen = +design.bom.structure.find((s) => /^tail boom clamp blocks/.test(s.name)).basis.match(/mm blocks x\s*([\d.]+)\s*mm/)[1];
-  const motorBox = model.layout.parts.find((p) => p.name === 'motor').box;
-  const joints = {
-    'rail right': [model.planes.plateAft, A.rails.right[1], A.rails.right[0]],
-    'rail left': [model.planes.plateAft, A.rails.left[1], A.rails.left[0]],
-    'boom aft': [model.planes.plateAft - model.planes.plateT / 2 - clampLen / 2000, A.boom_y_m, 0],
-    'boom fwd': [model.planes.plateFwd + model.planes.plateT / 2 + clampLen / 2000, A.boom_y_m, 0],
-    'tray fwd': [model.planes.plateFwd + model.planes.plateT / 2, A.trays.forward.y_m, 0],
-    'tray aft': [model.planes.plateAft - model.planes.plateT / 2, A.trays.aft.y_m, 0],
-    motor: [motorBox.cx, motorBox.cy, motorBox.cz],
-  };
+  const mid = (s) => (s.x[0] + s.x[1]) / 2;
+  const lockX = mid(sol('shoulder rail right', 'lock flange'));
   const screws = part(design.bom.structure.find((s) => /^M3 screws/.test(s.name)).name).objects;
   const nuts = part(design.bom.structure.find((s) => /^M3 nuts/.test(s.name)).name).objects;
-  const near = (objs, c, r = 0.02) => objs.filter((o) => Math.hypot(o.position.x - c[0], o.position.y - c[1], o.position.z - c[2]) < r).length;
-  const expectScrew = { 'rail right': lock, 'rail left': lock, 'boom aft': 2, 'boom fwd': 2, 'tray fwd': 2, 'tray aft': 2, motor: 2 };
-  const expectNut = { 'rail right': lock, 'rail left': lock, 'boom aft': 2, 'boom fwd': 2, 'tray fwd': 2, 'tray aft': 2, motor: 0 };
-  for (const [key, c] of Object.entries(joints)) {
-    assert.equal(near(screws, c), expectScrew[key], `${key} screws`);
-    assert.equal(near(nuts, c), expectNut[key], `${key} nuts`);
+  const at = (objs, p) => objs.filter((o) => Math.hypot(o.position.x - p[0], o.position.y - p[1], o.position.z - p[2]) < 1e-9);
+  const R = design.params.linkage.airframe.rail, used = new Set();
+  for (const side of ['right', 'left']) for (const q of lockFlangeCircles(R, A.rails[side], side === 'right' ? 1 : -1).slice(1)) {
+    for (const objs of [screws, nuts]) { const o = at(objs, [lockX, q.c[1], q.c[0]]); assert.equal(o.length, 1, `rail ${side} land`); used.add(o[0]); }
   }
-  assert.equal(screws.length, Object.values(expectScrew).reduce((a, b) => a + b, 0));
-  assert.equal(nuts.length, Object.values(expectNut).reduce((a, b) => a + b, 0));
-});
-
-test('cable ties: clustered at the forward tray, aft tray and motor joints, none left over', () => {
-  const A = design.structure.airframe.parts;
-  const motorBox = model.layout.parts.find((p) => p.name === 'motor').box;
-  const joints = [
-    [model.planes.plateFwd + model.planes.plateT / 2, A.trays.forward.y_m, 0],
-    [model.planes.plateAft - model.planes.plateT / 2, A.trays.aft.y_m, 0],
-    [motorBox.cx, motorBox.cy, motorBox.cz],
-  ];
-  const ties = part(design.bom.structure.find((s) => /^cable ties/.test(s.name)).name).objects;
-  const near = (c, r = 0.02) => ties.filter((o) => Math.hypot(o.position.x - c[0], o.position.y - c[1], o.position.z - c[2]) < r).length;
-  const counts = joints.map((c) => near(c));
-  assert.equal(counts.reduce((a, b) => a + b, 0), ties.length);
-  assert.ok(counts.every((n) => n > 0), counts);
+  const mb = A.motor_bracket, ri = A.carriers.riser;
+  for (const h of mb.holes) { const o = at(screws, [mid({ x: mb.x }), h[1], h[0]]); assert.equal(o.length, 1, 'bracket hole'); used.add(o[0]); }
+  const xr = mid({ x: ri.x });
+  const joints = {
+    'boom aft': [mid(sol('boom clamp aft', 'block')), A.boom_y_m, 0], 'boom fwd': [mid(sol('boom clamp forward', 'block')), A.boom_y_m, 0],
+    'tray fwd': [sol('forward tray', 'base').x[0], sol('forward tray', 'base').shape.a[1], 0], 'tray aft': [sol('aft tray', 'base').x[1], sol('aft tray', 'base').shape.a[1], 0],
+    'riser foot': [xr, ri.y[0], 0], 'riser tab': [xr, ri.y[1], 0],
+  };
+  const near = (objs, c) => objs.filter((o) => !used.has(o) && Math.hypot(o.position.x - c[0], o.position.y - c[1], o.position.z - c[2]) < 0.0121).length;
+  for (const [key, c] of Object.entries(joints)) { assert.equal(near(screws, c), 2, `${key} screws`); assert.equal(near(nuts, c), 2, `${key} nuts`); }
+  assert.equal(screws.length, 2 * lock + mb.holes.length + 12);
+  assert.equal(nuts.length, 2 * lock + 12);
+  assert.equal(screws.length, +design.bom.structure.find((s) => /^M3 screws/.test(s.name)).name.match(/(\d+) off/)[1]);
 });
 
 test('every frame BOM line is registered with its own material_id', () => {
@@ -299,11 +281,8 @@ test('M3 screws: without a design-given rail lock-screw count, falls back to 2 p
   assert.equal(screws.length, n);
 });
 
-test('with no design.params.linkage.airframe at all, panels and screws still fall back to their defaults', () => {
-  const d3 = structuredClone(design);
-  delete d3.params.linkage.airframe;
-  const m3 = prepare(d3, model.parts);
-  const b3 = buildBird(m3, makeMaterials({ textures: false }));
+test('with no design.params.linkage.airframe at all (no physics layout), panels and screws still fall back to their defaults', () => {
+  const { m: m3, b: b3 } = withoutLayout((d3) => delete d3.params.linkage.airframe);
   const right = b3.parts.find((p) => p.name === 'gearbox panels, 3 off').objects.find((o) => o.name === 'frame_panel_side_panel_right');
   close(right.position.z, 31 / 1000, 1e-9);
   assert.ok(m3.layout.assumptions.some((a) => /assumed 2 shoulder rail lock screws/.test(a)));
@@ -320,13 +299,10 @@ test('with no rails in design.structure.airframe.parts, no rail, boss or bracket
   assert.equal(b4.parts.find((p) => /^M3 screws/.test(p.name)).objects.length, nScrew - 2 * lock);
 });
 
-test('with no trays in design.structure.airframe.parts, neither tray nor its doubler is drawn, and nothing else breaks', () => {
-  const d5 = structuredClone(design);
-  delete d5.structure.airframe.parts.trays;
-  const m5 = prepare(d5, model.parts);
-  const b5 = buildBird(m5, makeMaterials({ textures: false }));
+test('with no trays in design.structure.airframe.parts (no physics layout: a v23 design needs its carriers), neither tray nor its doubler is drawn, and nothing else breaks', () => {
+  const { b: b5 } = withoutLayout((d5) => { delete d5.structure.airframe.parts.trays; delete d5.structure.airframe.parts.carriers; });
   assert.ok(!b5.parts.some((p) => /^(forward|aft) tray/.test(p.name)));
-  assert.ok(b5.parts.some((p) => /^motor doubler/.test(p.name)));
+  assert.ok(!b5.parts.some((p) => /^forward tray flange doubler/.test(p.name)));
 });
 
 test('no NaN in any frame part\'s geometry or world matrix after a pose update', () => {
@@ -432,4 +408,26 @@ test('tieGeo: a box at the catalogue\'s own dimensions; null without them', () =
   assert.equal(+g.parameters.height.toFixed(4), 0.0025);
   assert.equal(+g.parameters.depth.toFixed(4), 0.001);
   assert.equal(tieGeo(fakeCtx, { material_id: 'missing' }), null);
+});
+
+test('motor doubler (film-placed, no physics solid): the BOM\'s square and thickness on the forward plate\'s outer face, round the motor\'s shaft, bored clear of its outboard bearing', () => {
+  const item = design.bom.structure.find((s) => s.name === 'motor doubler');
+  if (!item) return assert.equal(bird.root.getObjectByName('frame_motor_doubler'), undefined, 'none without its BOM line');
+  const d = parsePlate(item.basis), o = part(item.name).objects[0];
+  const can = sol('motor', 'can'), ob = bird.phys.parts.find((p) => /^motor shaft outboard journal/.test(p.id)).solids[0];
+  const PL = design.params.linkage.plates, face = model.planes.plateFwd + (PL.t_fwd_mm ?? PL.t_mm) / 2000;
+  bird.root.updateMatrixWorld(true);
+  const b = new THREE.Box3().setFromObject(o, true);
+  close(b.min.x, face, 1e-7);
+  close(b.max.x - b.min.x, d.t / 1000, 1e-7);
+  close(b.max.z - b.min.z, d.w / 1000, 1e-7);
+  close(b.max.y - b.min.y, d.w / 1000, 1e-7);
+  close((b.max.y + b.min.y) / 2, can.shape.c[1], 1e-7);
+  close((b.max.z + b.min.z) / 2, can.shape.c[0], 1e-7);
+  // its bore: the nearest vertex to the shaft axis is the bearing's outside radius and the running clearance
+  const pos = o.geometry.attributes.position, v = new THREE.Vector3();
+  let r = Infinity;
+  for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld); r = Math.min(r, Math.hypot(v.z - can.shape.c[0], v.y - can.shape.c[1])); }
+  close(r, ob.shape.ro + 0.0005, 1e-7);
+  assert.equal(o.userData.joint, 'motor');
 });

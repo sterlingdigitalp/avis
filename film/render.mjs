@@ -10,8 +10,9 @@
 //            --stills DIR (one Blender still per flight shot at its log start and one mid-shot, at the edit's resolution
 //                     and samples, the camera solved over the whole shot as in the film; PNGs into DIR, then stop)
 //            --threads N (Blender CPU threads; default Blender's own)
-//            --livery NAME (a covering livery from sims/avis-shared/materials.js LIVERIES, overriding the edit's
-//                     "livery"; default none, the clear film; a livery the catalogue does not record is labelled)
+//            --livery NAME (a covering livery from sims/avis-shared/materials.js LIVERIES, or "clear", overriding the
+//                     edit's "livery"; default the white the BOM records, else the clear film; a livery the catalogue
+//                     does not record is labelled)
 //
 // The corridor flight logs come from the design and the flight model: film/flight_log.mjs flies one again whenever
 // the design file, the flight model's sources or the corridor changed since the log on disk was flown.
@@ -24,6 +25,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { defaultLivery } from '../sims/avis-shared/livery.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -62,7 +64,9 @@ const log = (...m) => console.log('[render]', ...m);
 const edit = readJson(editFile);
 const fps = edit.fps ?? 30;
 const design = edit.design ?? 'larus-gl-2';
-const livery = opt('livery', edit.livery ?? null) || null;
+// the covering: --livery, else the edit's, else the white the BOM records (materials.js defaultLivery; the clear film
+// for a BOM without a colour); "clear" asks for the clear film
+const liveryAsked = opt('livery', edit.livery);
 fs.mkdirSync(path.join(OUT, 'logs'), { recursive: true });
 const stateFile = path.join(OUT, proxy ? 'state-proxy.json' : stillsDir ? 'state-stills.json' : 'state.json');
 const state = readJson(stateFile, { plates: {}, chunks: {} });
@@ -73,12 +77,16 @@ node('film/gen_data.mjs', [design]);
 for (const sc of new Set(edit.segments.filter((x) => x.kind === 'bl').map((x) => x.scenario))) {
   if (sc === `${design}-corridor`) guarded(590, path.join(OUT, 'logs', 'flight_log.log'), [process.execPath, 'film/flight_log.mjs', design], false);
 }
-const designSha = readJson(path.join(OUT, 'gen', 'model-data.json')).design_sha256;
+const modelData = readJson(path.join(OUT, 'gen', 'model-data.json'));
+const designSha = modelData.design_sha256;
+const asked = liveryAsked === undefined ? defaultLivery(modelData.parts, modelData.design.bom) : liveryAsked;
+const livery = asked && asked !== 'clear' ? asked : null;
+log(`covering: ${livery ?? 'clear film'}${liveryAsked === undefined ? ' (the BOM\'s)' : ''}`);
 buildPages();
 // the bird is the design, the catalogue entries it names (a part's dimensions size its drawing) and the code that
 // builds it: a change to any of them re-exports it and re-renders its plates. A livery (--livery, or the edit's
 // "livery"; materials.js LIVERIES) is its own GLB, so switching it never leaves a stale bird behind.
-const birdSig = hashOf(designSha, readJson(path.join(OUT, 'gen', 'model-data.json')).parts, livery, ...['bird.js', 'model.js', 'materials.js'].map((f) => fs.readFileSync(path.join(ROOT, 'sims', 'avis-shared', f), 'utf8')));
+const birdSig = hashOf(designSha, modelData.parts, livery, ...['bird.js', 'model.js', 'materials.js', 'frame.js', 'solids.js', 'drive-solids.js'].map((f) => fs.readFileSync(path.join(ROOT, 'sims', 'avis-shared', f), 'utf8')), ...['clearance.js', 'joints.js', 'airframe.js', 'linkage.js'].map((f) => fs.readFileSync(path.join(ROOT, 'src', 'design', f), 'utf8')));
 const glb = path.join(OUT, 'bird', `${design}${livery ? `-${livery}` : ''}.glb`);
 const sigFile = path.join(OUT, 'bird', livery ? `sig-${livery}.json` : 'sig.json');
 if (!fs.existsSync(glb) || readJson(sigFile, {}).sig !== birdSig) {

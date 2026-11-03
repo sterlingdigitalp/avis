@@ -1,6 +1,6 @@
 // The three.js bird in node, for the GLB export and the pose bake: same model.js and bird.js as the page.
 import { loadModel } from '../../sims/avis-shared/node-load.js';
-import { makeMaterials, livery as liveryOf } from '../../sims/avis-shared/materials.js';
+import { makeMaterials, livery as liveryOf, defaultLivery } from '../../sims/avis-shared/materials.js';
 import { buildBird } from '../../sims/avis-shared/bird.js';
 import { strokeAngle } from '../../src/physics/kinematics.js';
 
@@ -17,10 +17,11 @@ export function levelPhase(model, amp) {
   return 0.5 * (lo + hi);
 }
 
-/** The bird in node; `livery` (a LIVERIES key, default none: the clear film) paints the covering's vertex colours. */
-export function nodeBird(name = 'larus-gl-2', { livery = null } = {}) {
+/** The bird in node; `livery` (a LIVERIES key, or null for the clear film; default the white the BOM records, else
+ * the clear film) paints the covering's vertex colours. */
+export function nodeBird(name = 'larus-gl-2', { livery } = {}) {
   const { model, design, sha256, path } = loadModel(name);
-  const l = liveryOf(livery);
+  const l = liveryOf(livery === undefined ? defaultLivery(model.parts, design.bom) : livery);
   const mats = makeMaterials({ textures: false, livery: l });
   const bird = buildBird(model, mats, { livery: l });
   const amp = model.law.ampNominal ?? design.cruise.amp;
