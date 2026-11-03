@@ -150,6 +150,14 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
   - **Disclosure.** M7 reports each such joint as "unrated, RC practice", with its peak torque. The README lists every one.
 - **Launch speed.** M1's "8 m/s or less" caps the release speed. The design names its release speed, which must be 8 m/s or less, and M1 is gated at that speed. Report the lowest passing speed for information.
 
+### Rulings after physics round 11 (2026-11-02)
+
+- **Design life.** Any cycle-dependent rating uses a design life of 200 flights, each lasting the design's M2 endurance time. This life was declared before any life factor was computed, and it is not a design variable.
+  - **Load at every cycle.** Count every cycle at the M7 peak load. This is conservative: no load spectrum and no Miner sum.
+  - **Life factor.** Use the standard's own life factor at that cycle count, such as JGMA 401/402's YN and ZN, and never above the standard's cap.
+  - **Cycle counts.** A gear's cycles are its own revolutions, not the crank's.
+- **Controller laws are design.** Landing approach speed, flare, and launch pitch and stroke schedules are flight-controller code. They may be changed if they use only BOM sensors, run at the controller rate and carry the 20 ms delay. Every robustness corner still applies, including aero 0.9 for any slow approach.
+
 ### Public repository
 
 `github.com/sterlingdigitalp/avis` is public. UIUC-derived tables and airfoil coordinate files stay local and gitignored (`data/references/airfoil-e387.json`, `data/references/airfoils/`), because their licence terms are unclear or reserved. Our own CFD polars are ours to publish. Copernicus terrain, if used, requires the notice in `data/references/credits.md` in the film credits and README.
