@@ -44,7 +44,8 @@
    "id": "title",
    "kind": "td",
    "seq": "title",
-   "dur": 4.0
+   "dur": 4.0,
+   "fadeOut": 0.2
   },
   {
    "id": "wide",
@@ -55,8 +56,9 @@
    "dur": 5.0,
    "caption": "Bow Valley, Banff",
    "sub": "Flown in the air of {altitude_m} m and {temperature_C} \u00b0C \u00b7 flight log larus-gl-2-corridor",
-   "fadeIn": 0.4,
-   "hud": false
+   "fadeIn": 0.25,
+   "hud": false,
+   "marker": true
   },
   {
    "id": "track",
@@ -66,14 +68,15 @@
    "start_s": 50,
    "dur": 4.0,
    "caption": "Cruise",
-   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor"
+   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
+   "fadeOut": 0.2
   },
   {
    "id": "assembly",
    "kind": "td",
    "seq": "assembly",
    "dur": 8.0,
-   "fadeIn": 0.4
+   "fadeIn": 0.25
   },
   {
    "id": "drive",
@@ -92,7 +95,7 @@
    "kind": "td",
    "seq": "power",
    "dur": 5.5,
-   "fadeOut": 0.4
+   "fadeOut": 0.2
   },
   {
    "id": "lead",
@@ -103,7 +106,7 @@
    "dur": 4.0,
    "caption": "Head on",
    "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
-   "fadeIn": 0.4
+   "fadeIn": 0.25
   },
   {
    "id": "under",
@@ -144,7 +147,8 @@
    "start_s": 104,
    "dur": 5.0,
    "caption": "Banked turn",
-   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor"
+   "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
+   "lens": 200
   },
   {
    "id": "river",
@@ -155,14 +159,15 @@
    "dur": 4.0,
    "caption": "Over the Bow",
    "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
-   "fadeOut": 0.4
+   "fadeOut": 0.2,
+   "lens": 80
   },
   {
    "id": "gates",
    "kind": "td",
    "seq": "gates",
    "dur": 6.0,
-   "fadeIn": 0.4
+   "fadeIn": 0.25
   },
   {
    "id": "credits",

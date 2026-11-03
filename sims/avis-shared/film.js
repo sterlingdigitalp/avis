@@ -3,7 +3,7 @@
 // the flight logs) shown behind a HUD that reads the same log. The edit (film/edit.json, resolved by
 // film/render.mjs into site/data/edit.json) decides the order and timing; the score reads the same edit.
 import * as THREE from 'three';
-import { makeMaterials, ACCENT } from './materials.js';
+import { makeMaterials, ACCENT, livery as liveryOf, liveryInBom } from './materials.js';
 import { buildBird } from './bird.js';
 import { createStage } from './stage.js';
 import { numbers, gateLine, gateFailures } from './numbers.js';
@@ -46,8 +46,90 @@ export function driveLabels(model) {
 
 /** Where the power sequence's labels sit on screen, one per powerParts row: clear ground left of the parts. */
 export const POWER_LABELS = [[330, 330], [330, 430], [330, 530], [330, 630], [330, 730]];
+// The power sequence's camera: an orbit round the power parts' sphere, held at `fill` of the frame height, shifted
+// so every part stays right of the label column (POWER_LABELS' x) and each line runs away from its label.
+export const POWER_CAM = { az0: 30, azSpan: 25, el0: -22, elSpan: 8, distSpan: -0.08, fov: 30, fill: 0.72, shift: 160 };
+
+/** Place `cam` on an orbit round `target` (degrees, metres), looking at it. */
+export function orbitCamera(cam, target, azDeg, elDeg, dist, fov = 30) {
+  const az = azDeg / DEG, el = elDeg / DEG;
+  cam.fov = fov;
+  cam.position.set(target.x + dist * Math.cos(el) * Math.cos(az), target.y + dist * Math.sin(el), target.z + dist * Math.cos(el) * Math.sin(az));
+  cam.lookAt(target);
+  cam.updateProjectionMatrix();
+}
+
+/** Segments [p, q] and [r, s] (screen points) cross each other, end points excluded. */
+export function segmentsCross([p, q], [r, s]) {
+  const o = (a, b, c) => Math.sign((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]));
+  return o(p, q, r) * o(p, q, s) < 0 && o(r, s, p) * o(r, s, q) < 0;
+}
+
+/** Every ordering of the items of `a`. */
+function permutations(a) {
+  if (a.length <= 1) return [a];
+  return a.flatMap((x, i) => permutations([...a.slice(0, i), ...a.slice(i + 1)]).map((r) => [x, ...r]));
+}
+
+/** The slot for each callout: tracks[k][j] is part k's screen point at sample j (null off screen), slots the label
+ * points. Of every assignment of parts to slots, the one whose lines (part to slot) cross least over all samples;
+ * ties go to the fewest parts moved from the listed order. Held for the whole sequence, so no label jumps. */
+export function assignSlots(tracks, slots) {
+  const lines = (perm, j) => tracks.map((tr, k) => (tr[j] ? [tr[j], slots[perm[k]]] : null)).filter(Boolean);
+  const nS = Math.max(0, ...tracks.map((t) => t.length));
+  let best = null;
+  for (const perm of permutations([...slots.keys()]).map((p) => p.slice(0, tracks.length))) {
+    let cross = 0;
+    for (let j = 0; j < nS; j++) {
+      const L = lines(perm, j);
+      for (let a = 0; a < L.length; a++) for (let b = a + 1; b < L.length; b++) cross += segmentsCross(L[a], L[b]);
+    }
+    const moved = perm.reduce((m, v, k) => m + (v !== k), 0);
+    if (!best || cross < best.cross || (cross === best.cross && moved < best.moved)) best = { perm, cross, moved };
+  }
+  return best;
+}
+
+/** The title camera's orbit at u (0..1 through the sequence): [target, azimuth deg, elevation deg, distance, fov]. */
+export function titleOrbit(u) {
+  const c = TITLE_CAM;
+  return [new THREE.Vector3(...c.target), c.az0 + c.azSpan * u, c.el0 + c.elSpan * u, c.dist0 + c.distSpan * ease(u), c.fov];
+}
+
+/** The power camera's orbit at u round the power parts' bounding sphere, as titleOrbit. */
+export function powerOrbit(sphere, u) {
+  const c = POWER_CAM;
+  const fr = framing(sphere.c, sphere.r, c.fov, c.fill);
+  return [fr.target, c.az0 + c.azSpan * ease(u), c.el0 + c.elSpan * u, fr.dist * (1 + c.distSpan * ease(u)), c.fov];
+}
+
+/** Screen tracks of the power parts' callout points over the power sequence: the camera SEQ.power flies, the bird
+ * flapping as it does, `samples` times over `dur` seconds. */
+export function powerTracks({ bird, cam, sphere, parts, flap, dur, samples = 48 }) {
+  const c = POWER_CAM;
+  const tracks = parts.map(() => []);
+  for (let j = 0; j < samples; j++) {
+    const t = (j / (samples - 1)) * dur, u = t / dur;
+    orbitCamera(cam, ...powerOrbit(sphere, u));
+    cam.setViewOffset(1920, 1080, c.shift, 0, 1920, 1080);
+    cam.updateMatrixWorld(true);
+    bird.update({ ...flap(t), focus: 'power' });
+    bird.root.updateMatrixWorld(true);
+    parts.forEach((p, k) => {
+      const o = bird.root.getObjectByName(p.node);
+      if (!o) return tracks[k].push(null);
+      const v = o.getWorldPosition(new THREE.Vector3()).project(cam);
+      const x = (v.x * 0.5 + 0.5) * 1920, y = (-v.y * 0.5 + 0.5) * 1080;
+      tracks[k].push(onScreen(x, y, v.z) ? [x, y] : null);
+    });
+  }
+  return tracks;
+}
 
 /** The twist sequence's orbit: aim point, azimuth sweep (deg), elevation (deg), distance (m), lens fov (deg). */
+// The title's camera and the title block's top edge: the bird flaps in the upper right while the block sits lower
+// left, so no wing crosses "Avis", the subtitle or the rule over the slow push-in (film/test/title-camera.test.mjs).
+export const TITLE_CAM = { target: [-0.22, -0.2, 0], az0: 32, azSpan: -10, el0: 16, elSpan: -4, dist0: 4.1, distSpan: -0.3, fov: 30, shift: -300, top: 640 };
 export const TWIST_CAM = { target: [-0.06, 0.06, 0], az0: 10, azSpan: 24, el: 12, dist0: 3.6, distSpan: -0.1, fov: 33, shift: 260 };
 
 const fmt = (v, d = 0) => (v == null || Number.isNaN(v) ? '—' : v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }));
@@ -68,11 +150,14 @@ const CSS = `
 #film .fade{position:absolute;inset:0;background:#07090c;opacity:0}
 .honest{position:absolute;left:64px;bottom:52px;font-size:30px;letter-spacing:.02em;color:#c9d3dc;opacity:.92;font-weight:500;text-shadow:0 1px 12px #0008}
 .honest b{color:${ACCENT};font-weight:600}
-.titleblock{position:absolute;left:120px;top:330px}
+.mark{position:absolute;border:2px solid ${ACCENT};border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 0 10px rgba(0,0,0,.4)}
+.markl{position:absolute;font-size:26px;font-weight:600;white-space:nowrap;color:#f3f6f9;text-shadow:0 1px 10px #000c}
+.livtag{position:absolute;right:64px;bottom:52px;font-size:28px;font-weight:600;color:#0b0e12;background:${ACCENT};padding:6px 16px;border-radius:8px}
+.titleblock{position:absolute;left:120px;top:${TITLE_CAM.top}px}
 .titleblock h1{font-size:200px;line-height:.9;margin:0;font-weight:800;letter-spacing:-.04em}
 .titleblock h2{font-size:46px;margin:28px 0 0;font-weight:500;color:#c9d3dc;letter-spacing:-.01em}
 .titleblock .rule{width:96px;height:4px;background:${ACCENT};border-radius:2px;margin-top:36px}
-.panel{position:absolute;right:72px;top:96px;width:560px;padding:34px 38px;border-radius:24px;background:rgba(14,18,24,.66);backdrop-filter:blur(20px) saturate(1.4);box-shadow:0 30px 60px #0007,inset 0 1px 0 rgba(255,255,255,.06)}
+.panel{position:absolute;right:72px;top:96px;width:560px;padding:34px 38px;border-radius:24px;background:rgba(14,18,24,.97);backdrop-filter:blur(20px) saturate(1.4);box-shadow:0 30px 60px #0007,inset 0 1px 0 rgba(255,255,255,.06)}
 .panel h3{margin:0 0 6px;font-size:40px;font-weight:700;letter-spacing:-.02em}
 .panel .sub{font-size:28px;color:#a9b5c1;margin-bottom:22px;line-height:1.3}
 .frow{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;border-top:1px solid rgba(255,255,255,.07)}
@@ -179,6 +264,35 @@ export function framing(c, r, fovDeg = 30, k = 0.62) {
   return { target: c, dist: r / (k * Math.tan((fovDeg * Math.PI) / 360)) };
 }
 
+/** A ring round a bird too small to read in a wide shot, at its place on screen [x, y, distance m] from the log and
+ * the shot's camera (film/bird_px.py), labelled with what it is and how far away. Nothing when it is off screen. */
+export function birdMarker(px, span_m, name) {
+  if (!px || !onScreen(px[0], px[1], 0) || !(px[2] > 0)) return '';
+  const [x, y, d] = px;
+  const R = 26;
+  const left = x > 1920 - 560; // label on the side with room
+  const far = d >= 1000 ? `${fmt(d / 1000, 1)} km` : `${fmt(d, 0)} m`;
+  return `<div class="mark" style="left:${x - R}px;top:${y - R}px;width:${2 * R}px;height:${2 * R}px"></div>
+    <div class="markl" style="left:${left ? x - R - 14 : x + R + 14}px;top:${y - R - 34}px;${left ? 'transform:translateX(-100%)' : ''}">${name} · ${fmt(span_m, 2)} m span, ${far} away</div>`;
+}
+
+/** A marker segment's ring at plate frame j of its data d (render.mjs birdOnScreen); nothing for other segments. */
+export function segMarker(seg, d, j, N) {
+  return seg.marker ? birdMarker(d?.px?.[j], N.span_m, N.name) : '';
+}
+
+/** The edit's livery (none: the clear film) and, when the catalogue does not record its colours, the label every
+ * frame carries so a preview never passes for the bird as built. */
+export function filmLivery(edit, parts) {
+  const liv = liveryOf(edit.livery ?? null);
+  return { liv, tag: liv && !liveryInBom(liv, parts) ? `<div class="livtag">preview, livery not yet in BOM · ${liv.name}</div>` : '' };
+}
+
+/** A studio sequence's duration in the edit (the first segment that plays it), or `d` when the edit has none. */
+export function seqDur(edit, seq, d = 5.5) {
+  return edit.segments.find((s) => s.seq === seq)?.dur ?? d;
+}
+
 /** One panel row: a label and its value. */
 const row = (k, v, cls = '', rowCls = '') => `<div class="frow ${rowCls}"><span>${k}</span><b class="${cls}">${v}</b></div>`;
 
@@ -225,8 +339,11 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
 
   const stage = createStage(canvas, { capture: true, pr: 1 });
   stage.resize(1920, 1080);
-  const mats = makeMaterials({ textures: true });
-  const bird = buildBird(model, mats);
+  // the covering's livery: none (the clear film) unless the edit names one; one the catalogue does not record yet is
+  // labelled on every frame, so a preview never passes for the bird as built
+  const { liv, tag: liveryTag } = filmLivery(edit, model.parts);
+  const mats = makeMaterials({ textures: true, livery: liv });
+  const bird = buildBird(model, mats, { livery: liv });
   stage.scene.add(bird.root);
   const massBy = subsystemMass(model.design);
   const stages = driveStages(model), power = powerParts(model);
@@ -238,17 +355,15 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
   const orbit = (target, azDeg, elDeg, dist, fov = 30) => {
-    const az = azDeg / DEG, el = elDeg / DEG;
-    cam.fov = fov;
-    cam.position.set(target.x + dist * Math.cos(el) * Math.cos(az), target.y + dist * Math.sin(el), target.z + dist * Math.cos(el) * Math.sin(az));
-    cam.lookAt(target);
-    cam.updateProjectionMatrix();
+    orbitCamera(cam, target, azDeg, elDeg, dist, fov);
     stage.aimLights(target, 1.3);
   };
   const flap = (t, speed = 1) => {
     const ph = 2 * Math.PI * N.flapHz * t * speed;
     return { phase: ph, amp: N.ampDeg / DEG, twistL: N.twistAt(ph, -1), twistR: N.twistAt(ph, 1) };
   };
+  // the power callouts' label slots, held for the sequence: the assignment whose lines never (or least) cross
+  const powerSlots = assignSlots(powerTracks({ bird, cam: cam.clone(), sphere: powerSphere, parts: power, flap, dur: seqDur(edit, 'power') }), POWER_LABELS).perm;
   const screenOf = (obj, local = V(0, 0, 0)) => {
     const p = local.clone();
     obj.updateMatrixWorld(true);
@@ -271,16 +386,17 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
     if (!onScreen(x, y, z)) return ''; // the part is out of shot: no line to nowhere
     return callout(text, obj, V(0, 0, 0), at[0] - x, at[1] - y, alpha);
   };
-  const honest = (a = 1) => `<div class="honest" style="opacity:${0.92 * a}"><b>●</b>&nbsp; simulated flight · real parts</div>`;
+  const honest = (a = 1) => `<div class="honest" style="opacity:${0.92 * a}"><b>●</b>&nbsp; simulated flight · real parts</div>${liveryTag}`;
   const node = (n) => bird.root.getObjectByName(n);
 
   // ---- studio sequences: (u in 0..1, t seconds into the sequence, dur) -> { state, html } with the camera set ---
   const SEQ = {
     title(u, t) {
-      orbit(V(-0.22, 0.02, 0), 32 - 10 * u, 16 - 4 * u, 3.3 - 0.4 * ease(u), 30);
+      const c = TITLE_CAM;
+      orbit(...titleOrbit(u));
       const a = easeOut(span(u, 0.05, 0.3));
       return {
-        shift: -300,
+        shift: c.shift,
         state: flap(t),
         html: () => `<div class="titleblock" style="opacity:${a};transform:translateY(${(1 - a) * 24}px)"><h1>Avis</h1><h2>${N.name} · a gull built from catalogue parts</h2><div class="rule"></div></div>${honest(a)}`,
       };
@@ -366,19 +482,19 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
       };
     },
     power(u, t) {
-      const fr = framing(powerSphere.c, powerSphere.r, 30, 0.72);
-      orbit(fr.target, 30 + 25 * ease(u), -22 + 8 * u, fr.dist * (1 - 0.08 * ease(u)), 30);
+      const c = POWER_CAM;
+      orbit(...powerOrbit(powerSphere, u));
       const st = flap(t);
       const a = easeOut(span(u, 0.05, 0.2));
       const m2 = data.gates.find((g) => g.gate === 'M2');
       return {
-        shift: 280,
+        shift: c.shift,
         state: { ...st, focus: 'power', also: servoIds, accents: true },
         html: () => `<div class="fcap">Power<small>${N.batteryCells}S ${fmt(N.batteryMah, 0)} mAh ${model.design.battery.chemistry ?? ''}, ${fmt(N.batteryWh, 1)} Wh${model.design.battery.charge_limit_V_per_cell ? ` · charged to ${fmt(model.design.battery.charge_limit_V_per_cell, 2)} V a cell` : ''}</small></div>
           <div class="panel" style="opacity:${a}"><h3>${fmt(N.cruisePowerW, 1)} W</h3><div class="sub">electrical power in cruise at ${fmt(N.cruiseV, 1)} m/s (M2)</div>
           ${row('endurance', `${fmt(N.enduranceMin, 1)} min`)}${row('gate M2', m2 ? (m2.passed ? 'pass' : 'FAIL') : 'not run', m2 && !m2.passed ? 'bad' : '')}
           ${power.map((p) => row(`${p.label} · ${p.name}`, `${fmt(p.mass_g, 0)} g`, '', 's')).join('')}</div>
-          ${power.map((p, k) => calloutAt(p.label === 'ESC' ? 'ESC' : p.label[0].toUpperCase() + p.label.slice(1), node(p.node), POWER_LABELS[k], a)).join('')}${honest()}`,
+          ${power.map((p, k) => calloutAt(p.label === 'ESC' ? 'ESC' : p.label[0].toUpperCase() + p.label.slice(1), node(p.node), POWER_LABELS[powerSlots[k]], a)).join('')}${honest()}`,
       };
     },
     gates(u, t) {
@@ -425,7 +541,8 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
     const hud = flightHud(d, j);
     const cap = `<div class="fcap">${fillDesign(seg.caption ?? '', model.design)}<small>${fillDesign(seg.sub ?? '', model.design)}${p.slow > 1 ? ` · ${p.slow}× slow motion` : ''}</small></div>`;
     const scrim = '<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,9,13,.55) 0%,rgba(6,9,13,0) 22%,rgba(6,9,13,0) 70%,rgba(6,9,13,.6) 100%)"></div>';
-    return { src: `${plateBase}/${p.dir}/f_${String(idx).padStart(5, '0')}.png`, html: scrim + cap + (seg.hud === false ? '' : hud) + honest() };
+    const mark = segMarker(seg, d, j, N);
+    return { src: `${plateBase}/${p.dir}/f_${String(idx).padStart(5, '0')}.png`, html: scrim + mark + cap + (seg.hud === false ? '' : hud) + honest() };
   }
 
   const segs = edit.segments;

@@ -148,20 +148,31 @@ def balsa(name):
 
 
 PET_IOR = 1.64  # biaxially oriented polyester film, the base of Oracover films
-# The covering's colour: None draws the clear film. The catalogue entry (film-oracover-air-light) records no colour;
-# when it does, set the pigmented film's linear RGB here (or AVIS_FILM_RGB="r,g,b" in the environment).
+# The covering's colour: None draws the clear film. The catalogue entry (film-oracover-air-light) records no colour.
+# Per-surface colours (a livery) are set in one place, sims/avis-shared/materials.js LIVERIES: a GLB exported with a
+# livery carries them as vertex colours and names the livery in its meta, and load_bird pigments the film from
+# those. COVERING_RGB (or AVIS_FILM_RGB="r,g,b", linear) is a single colour for every covered surface of a clear GLB.
 COVERING_RGB = tuple(float(v) for v in os.environ["AVIS_FILM_RGB"].split(",")) if os.environ.get("AVIS_FILM_RGB") else None
+VERTEX_COLOUR = "Color"  # the glTF importer's name for COLOR_0
 
 
-def film(name, haze=0.03, rough=0.07, ior=PET_IOR):
+def film(name, haze=0.03, rough=0.07, ior=PET_IOR, livery=None):
     """Clear covering film. The BOM's covering is Oracover Air Light, 12 um polyester (catalogue
     film-oracover-air-light); the catalogue records no colour, so it is drawn as the clear film, an assumption to
     revisit when the catalogue states one. Optically a thin slab: it reflects 2r/(1+r) of one interface's r
     (Schlick, from the incidence angle on either side: a film has no total internal reflection), transmits the
     rest untinted, and scatters `haze` of what it transmits (adhesive, stretch marks). Heat-shrunk film is smooth
     but never optically flat: a little roughness on the reflection."""
+    if livery:
+        metals = [c["rgb"] for c in livery["surfaces"].values() if c and c.get("metallic")]
+        return pigmented_film(name, None, rough, attr=VERTEX_COLOUR, metals=metals)
     if COVERING_RGB is not None:
         return pigmented_film(name, COVERING_RGB, rough)
+    return clear_film(name, haze, rough, ior)
+
+
+def clear_film(name, haze, rough, ior):
+    """The clear film's node graph (see film())."""
     m, nt, out = _nodes(name)
     geo = nt.nodes.new("ShaderNodeNewGeometry")
     dot = nt.nodes.new("ShaderNodeVectorMath")
@@ -208,29 +219,70 @@ def film(name, haze=0.03, rough=0.07, ior=PET_IOR):
     return m
 
 
-def pigmented_film(name, rgb, rough):
+def metal_mask(nt, colour, metals):
+    """1 where `colour` (a socket) is one of `metals` (linear RGB), else 0; None for no metals. A livery's colours
+    are flat per surface, so a metallised surface is told by its colour (8-bit storage moves a value well under 0.03)."""
+    mask = None
+    for m_rgb in metals:
+        dist = nt.nodes.new("ShaderNodeVectorMath")
+        dist.operation = "DISTANCE"
+        nt.links.new(colour, dist.inputs[0])
+        dist.inputs[1].default_value = tuple(m_rgb)
+        near = nt.nodes.new("ShaderNodeMath")
+        near.operation = "LESS_THAN"
+        nt.links.new(dist.outputs["Value"], near.inputs[0])
+        near.inputs[1].default_value = 0.03
+        if mask is not None:
+            mx = nt.nodes.new("ShaderNodeMath")
+            mx.operation = "MAXIMUM"
+            nt.links.new(mask, mx.inputs[0])
+            nt.links.new(near.outputs[0], mx.inputs[1])
+            near = mx
+        mask = near.outputs[0]
+    return mask
+
+
+def pigmented_film(name, rgb, rough, attr=None, metals=()):
     """A coloured covering film: the pigment scatters, so it reads as a thin coloured skin that passes a little
-    light (a sixth, forward-scattered) rather than a window; the same glossy polyester face as the clear film."""
+    light (a sixth, forward-scattered) rather than a window; the same glossy polyester face as the clear film. The
+    colour is `rgb` (linear), or with `attr` the mesh's colour attribute of that name (a livery, per surface). Faces
+    whose colour is one of `metals` (a livery's metallised chrome films) reflect as metal and pass no light."""
     m, nt, out = _nodes(name)
-    p = _bsdf(nt, **{"Base Color": (*rgb, 1.0), "Roughness": rough, "IOR": PET_IOR, "Specular IOR Level": 0.5})
+    base = (*(rgb or (1.0, 1.0, 1.0)), 1.0)
+    p = _bsdf(nt, **{"Base Color": base, "Roughness": rough, "IOR": PET_IOR, "Specular IOR Level": 0.5})
     tl = nt.nodes.new("ShaderNodeBsdfTranslucent")
-    tl.inputs["Color"].default_value = (*rgb, 1.0)
+    tl.inputs["Color"].default_value = base
+    metal = None
+    if attr:
+        vc = nt.nodes.new("ShaderNodeVertexColor")
+        vc.layer_name = attr
+        nt.links.new(vc.outputs["Color"], p.inputs["Base Color"])
+        nt.links.new(vc.outputs["Color"], tl.inputs["Color"])
+        metal = metal_mask(nt, vc.outputs["Color"], metals)
     mix = nt.nodes.new("ShaderNodeMixShader")
     mix.inputs["Fac"].default_value = 1.0 / 6.0
+    if metal is not None:
+        nt.links.new(metal, p.inputs["Metallic"])
+        lit = nt.nodes.new("ShaderNodeMath")
+        lit.operation = "MULTIPLY_ADD"  # (metal * -1/6) + 1/6: a chrome face passes no light
+        nt.links.new(metal, lit.inputs[0])
+        lit.inputs[1].default_value = -1.0 / 6.0
+        lit.inputs[2].default_value = 1.0 / 6.0
+        nt.links.new(lit.outputs[0], mix.inputs["Fac"])
     nt.links.new(p.outputs[0], mix.inputs[1])
     nt.links.new(tl.outputs[0], mix.inputs[2])
     nt.links.new(mix.outputs[0], out.inputs["Surface"])
     return m
 
 
-def build_materials():
+def build_materials(livery=None):
     return {
         "carbon_woven": carbon_weave("avis_carbon_woven", (260.0, 260.0, 260.0)),
         "carbon_pultruded": solid("avis_carbon_pultruded", (0.012, 0.013, 0.015), 0.24, coat=0.7, coat_rough=0.08),
         "carbon_plate": carbon_weave("avis_carbon_plate", (900.0, 900.0, 900.0), coat=0.6),
         "balsa": balsa("avis_balsa"),
-        "film_wing": film("avis_film_wing"),
-        "film_shell": film("avis_film_shell"),
+        "film_wing": film("avis_film_wing", livery=livery),
+        "film_shell": film("avis_film_shell", livery=livery),
         "steel_ground": brushed("avis_steel_ground", (0.62, 0.63, 0.64), 0.22),
         "steel_shaft": solid("avis_steel_shaft", (0.72, 0.73, 0.74), 0.15, metal=1.0),
         "acetal": solid("avis_acetal", (0.86, 0.84, 0.79), 0.38, sss=0.25),
@@ -251,25 +303,31 @@ def build_materials():
 
 # ---- import and pose --------------------------------------------------------------------------------------------
 
+def assign_materials(objs, mats, livery):
+    """Swap each mesh's GLB material for the film's own of that name. A livery's film reads its colour from the
+    mesh, so a covering mesh without the colour attribute is refused rather than rendered white."""
+    for o in objs:
+        if o.type != "MESH":
+            continue
+        for slot in o.material_slots:
+            key = slot.material.name.split(".")[0] if slot.material else None
+            if key in mats:
+                slot.material = mats[key]
+            if livery and key and key.startswith("film_") and VERTEX_COLOUR not in o.data.color_attributes:
+                raise RuntimeError("livery GLB: %s has no %s colour attribute" % (o.name, VERTEX_COLOUR))
+
+
 def load_bird(glb):
     import import_flight as IF
     meta = json.load(open(glb + ".json"))
     rig = IF.import_glb(glb)
-    mats = build_materials()
+    mats = build_materials(meta.get("livery"))
     # only the imported bird's objects, by their GLB names (Blender may suffix .001 on a clash with the scene)
     import re
     objs = {}
     for o in [rig["body"]] + list(rig["body"].children_recursive):
         objs.setdefault(re.sub(r"\.\d{3}$", "", o.name), o)
-    for o in list(objs.values()):
-        if o.type != "MESH":
-            continue
-        for slot in o.material_slots:
-            if slot.material is None:
-                continue
-            key = slot.material.name.split(".")[0]
-            if key in mats:
-                slot.material = mats[key]
+    assign_materials(objs.values(), mats, meta.get("livery"))
     # deforming meshes: plain smooth normals (custom normals from the GLB would not follow the vertices)
     deform = []
     for d in meta["deform"]:

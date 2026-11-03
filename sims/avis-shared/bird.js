@@ -59,20 +59,24 @@ function ringX(ro, ri, w, seg = 28) {
   g.translate(0, 0, -w / 2);
   return alongX(g);
 }
-function roundedBox(sx, sy, sz, r) {
+export function roundedBox(sx, sy, sz, r) {
+  // the bevel grows the extruded shape by `bs` on every side, so the shape is drawn that much smaller and the box
+  // comes out at its catalogue size, sx x sy x sz; on a thin side the bevel shrinks to fit (a stadium end at worst)
+  const t = Math.min(r, sz / 4), bs = 0.8 * Math.min(t, sx / 4, sy / 4);
+  const ex = sx - 2 * bs, ey = sy - 2 * bs, er = Math.max(1e-5, Math.min(r - bs, ex / 2, ey / 2));
   const s = new THREE.Shape();
-  const hx = sx / 2 - r, hy = sy / 2 - r;
-  s.moveTo(-hx, -sy / 2);
-  s.lineTo(hx, -sy / 2);
-  s.absarc(hx, -hy, r, -Math.PI / 2, 0);
-  s.lineTo(sx / 2, hy);
-  s.absarc(hx, hy, r, 0, Math.PI / 2);
-  s.lineTo(-hx, sy / 2);
-  s.absarc(-hx, hy, r, Math.PI / 2, Math.PI);
-  s.lineTo(-sx / 2, -hy);
-  s.absarc(-hx, -hy, r, Math.PI, 1.5 * Math.PI);
-  const g = new THREE.ExtrudeGeometry(s, { depth: sz - 2 * Math.min(r, sz / 4), bevelEnabled: true, bevelSize: Math.min(r, sz / 4) * 0.8, bevelThickness: Math.min(r, sz / 4), bevelSegments: 2, curveSegments: 6 });
-  g.translate(0, 0, -(sz - 2 * Math.min(r, sz / 4)) / 2);
+  const hx = ex / 2 - er, hy = ey / 2 - er;
+  s.moveTo(-hx, -ey / 2);
+  s.lineTo(hx, -ey / 2);
+  s.absarc(hx, -hy, er, -Math.PI / 2, 0);
+  s.lineTo(ex / 2, hy);
+  s.absarc(hx, hy, er, 0, Math.PI / 2);
+  s.lineTo(-hx, ey / 2);
+  s.absarc(-hx, hy, er, Math.PI / 2, Math.PI);
+  s.lineTo(-ex / 2, -hy);
+  s.absarc(-hx, -hy, er, Math.PI, 1.5 * Math.PI);
+  const g = new THREE.ExtrudeGeometry(s, { depth: sz - 2 * t, bevelEnabled: true, bevelSize: bs, bevelThickness: t, bevelSegments: 2, curveSegments: 6 });
+  g.translate(0, 0, -(sz - 2 * t) / 2);
   return g;
 }
 
@@ -673,6 +677,46 @@ function buildWings(ctx) {
   }
   filmSt.push(filmStations);
   return { wings, filmSt };
+}
+
+/** The rib station where a livery's tip colour starts: the rib nearest `tipFrom` of the wing's length. */
+export function tipStation(model, tipFrom) {
+  const want = tipFrom * model.wing.L;
+  return model.ribs.reduce((best, s) => (Math.abs(s - want) < Math.abs(best - want) ? s : best), model.ribs[0]);
+}
+
+/** The covered surface a wing film vertex lies on: ring index c (TE upper -> LE -> TE lower) at span station s; the
+ * tip only where the livery colours it (sTip null: no tip colour). */
+export function wingSurface(c, nSec, s, sTip) {
+  if (sTip != null && s > sTip + 1e-9) return 'wing_tip';
+  return c < nSec - 1 ? 'wing_upper' : 'wing_lower';
+}
+
+/** A livery as vertex colours (linear RGB) on every covering mesh: wing film by surface, tail film, pod shell. The
+ * geometry is unchanged, so the bake and the GLB keep their vertex counts. */
+function paintCovering(ctx, l) {
+  const { model, wings, filmSt, meshes } = ctx;
+  const nSec = model.section.length, ringN = 2 * nSec - 1;
+  const st = filmSt[0];
+  const sTip = l.surfaces.wing_tip ? tipStation(model, l.tipFrom) : null;
+  const paint = (m, surfaceAt) => {
+    const n = m.geometry.attributes.position.count;
+    const col = new Float32Array(n * 3), metal = new Float32Array(n);
+    for (let v = 0; v < n; v++) {
+      const c = l.surfaces[surfaceAt(v)];
+      col.set(c.rgb, v * 3);
+      metal[v] = c.metallic ? 1 : 0;
+    }
+    m.geometry.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    m.geometry.setAttribute('metal', new THREE.BufferAttribute(metal, 1));
+  };
+  for (const w of Object.values(wings)) {
+    for (const f of w.films) paint(f, (v) => wingSurface(v % ringN, nSec, st.s[f.userData.rows[Math.floor(v / ringN)]], sTip));
+  }
+  for (const m of meshes) {
+    if (/^tail_film_/.test(m.name)) paint(m, () => 'tail');
+    if (m.name === 'shell') paint(m, () => 'pod');
+  }
 }
 
 /** Points `half` either side of a polyline (left, right) at each of its vertices, square to the local direction. */
@@ -1544,6 +1588,7 @@ export function buildBird(model, mats, opts = {}) {
   buildFuselage(ctx);
   ctx.tailNodes = buildTail(ctx);
   Object.assign(ctx, buildWings(ctx));
+  if (opts.livery) paintCovering(ctx, opts.livery);
   ctx.drive = {};
   buildLinkage(ctx);
   buildCrank(ctx);

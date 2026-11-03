@@ -81,7 +81,7 @@
    "kind": "td",
    "seq": "power",
    "dur": 2.0,
-   "fadeOut": 0.3
+   "fadeOut": 0.2
   },
   {
    "id": "p-under",
@@ -93,8 +93,8 @@
    "slow": 2,
    "caption": "Under the wing",
    "sub": "Bow Valley, Banff \u00b7 flight log larus-gl-2-corridor",
-   "fadeIn": 0.3,
-   "fadeOut": 0.3,
+   "fadeIn": 0.25,
+   "fadeOut": 0.2,
    "lens": 14
   },
   {
@@ -102,7 +102,7 @@
    "kind": "td",
    "seq": "credits",
    "dur": 2.5,
-   "fadeIn": 0.3,
+   "fadeIn": 0.25,
    "fadeOut": 0.5
   }
  ]

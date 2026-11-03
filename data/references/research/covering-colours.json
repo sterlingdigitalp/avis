@@ -1,0 +1,264 @@
+{
+  "product": "ORACOVER AIR LIGHT (code range 331-09x; adhesive-free film, hotmelt brushed on separately)",
+  "maker": "LANITZ-PRENA Folien Factory GmbH, Leipzig, Germany (brands ORACOVER / Lanitz Aviation)",
+  "question": "What colours does ORACOVER Air Light come in, with order numbers and areal mass per colour; do white, grey and black exist; can a gull livery (white underside/body, grey upper wing, black tips) be done in this film?",
+  "retrieved": "2026-11-03",
+  "verdict": "Yes, but only coloured variants exist: Air Light comes ONLY in coloured/metallised colours (light chrome = silver, light chrome red/yellow/violet/blue, and light scale white). The maker gives one mass for the whole product, approx. 18 g/m2 at approx. 12 um (oracover.de item pages show 18 for the chrome, chrome yellow, chrome blue and scale white items). The lanitz-aviation technical-data page lumps AIR INDOOR and AIR LIGHT together at 'ca. 17 g/m2', 12 um. There is NO clear variant of Air Light: the clear film is a different product, ORACOVER AIR INDOOR 'light transparent' 331-000 (approx. 17 g/m2). White exists (light scale white 331-099). No grey exists; the nearest is the silver 'light chrome' 331-090. No black exists in Air Light.",
+  "catalogue_entry_correction": {
+    "entry_id": "film-oracover-air-light",
+    "problem": "The entry merges two maker products. Per the maker's 2010 catalogue and current oracover.de item pages, AIR INDOOR (light transparent colours, 331-000..331-059, approx. 17 g/m2) and AIR LIGHT (light chrome colours + light scale white, 331-090..331-099, approx. 18 g/m2) are separate products. Both are approx. 12 um. A colourless (clear) render is only correct for AIR INDOOR 331-000 'light transparent'. No Air Light article is clear.",
+    "mass_discrepancy": "lanitz-aviation.com/sites2/7/technical-data-sheets gives 'ca. 17 g/m2' for 'AIR INDOOR and AIR LIGHT' together; the 2010 maker catalogue technical table gives INDOOR 'approx. 17' and LIGHT 'approx. 18'; oracover.de item pages (seen via search index only) give 'Weight in g/m2 · 18' for Air Light items. Recommend 18 g/m2 for Air Light colours and 17 g/m2 for Air Indoor, with the 17 g/m2 combined datasheet figure noted as the maker's rounded group value."
+  },
+  "colours": [
+    {
+      "name": "light scale white",
+      "order_number": "331-099-002 (2 m roll); 331-099-010 (10 m roll)",
+      "order_numbers_20m": "not confirmed (oracover.de facet counts suggest 2/10/20 m lengths; exact 20 m number not seen)",
+      "colour_code": "099",
+      "areal_mass_g_m2": 18,
+      "areal_mass_note": "approx.; product-level figure (2010 catalogue 'approx. 18'); oracover.de item 331-099-002 shows 18 per search snippet; lanitz-aviation tech page group value 'ca. 17'",
+      "thickness_um": 12,
+      "opaque": null,
+      "opacity_note": "Opacity of Air Light colours is not published. The 2010 catalogue states ORACOVER/ORASTICK SCALE and CHROME colours carry a nanometre aluminium layer, and Air Light's He permeability (400) is 10x lower than Air Indoor's (4000), consistent with a metallised layer, but neither statement names Air Light opacity. In Oralight, the same-named 'light scale white' (31-099) is listed under 'TRANSPARENT / CHROME', not under 'OPAQUE'. Treat as possibly not fully opaque; unverified.",
+      "published_rgb_or_ral": null,
+      "approx_rgb_linear_or_srgb": [240, 240, 236],
+      "approx_rgb_space": "sRGB 8-bit",
+      "approx_rgb_note": "not published; renderer approximation of a slightly warm white",
+      "source_url": "https://www.hyperflight.co.uk/extras/Oracover-Product-Information_2010_engl.pdf",
+      "retrieved": "2026-11-03",
+      "quote": "light scale white              331-099-002        331-099-010  [under 'ORACOVER® AIR LIGHT  For light blimps up to 2 m length', catalogue p.11]; technical table: 'LIGHT ... approx. 18   approx. 12 µm   He 400 / H2 220'",
+      "corroboration": "Retailer (secondary): mhm-modellbau.de 'Bespann Folie Air Light light Scale weiss (Breite 600 mm, 2m Rolle)' LA-331-099-002, EAN 4041909158283; promodels.be 'Light Scale White OR-331-099-002 / -010'"
+    },
+    {
+      "name": "light chrome (silver metallic)",
+      "order_number": "331-090-002 (2 m roll); 331-090-010 (10 m roll)",
+      "order_numbers_20m": "not confirmed",
+      "colour_code": "090",
+      "areal_mass_g_m2": 18,
+      "areal_mass_note": "approx.; oracover.de item 331-090-002: 'Colour Code · 090; Colour · chrome; Colour Series · chrome light; Weight in g/m² · 18' (search snippet, page itself returned HTTP 403)",
+      "thickness_um": 12,
+      "opaque": null,
+      "opacity_note": "Metallised chrome finish (the catalogue says ORACOVER CHROME colours have an aluminium layer on the backside); Air Light opacity not published.",
+      "published_rgb_or_ral": null,
+      "approx_rgb_linear_or_srgb": [196, 198, 202],
+      "approx_rgb_space": "sRGB 8-bit (base colour; render as metallic, high specular, low roughness)",
+      "approx_rgb_note": "not published; renderer approximation of a silver chrome film. This is a mirror-like silver, not a flat grey.",
+      "source_url": "https://www.hyperflight.co.uk/extras/Oracover-Product-Information_2010_engl.pdf",
+      "retrieved": "2026-11-03",
+      "quote": "light chrome                   331-090-002        331-090-010",
+      "corroboration": "Retailer (secondary): mhm-modellbau.de 'Light chrom' LA-331-090-002/-010; promodels.be 'Light Chrome OR-331-090-002'; arrowmodels.com 'ORA331-090-002'"
+    },
+    {
+      "name": "light chrome red",
+      "order_number": "331-093-002 (2 m); 331-093-010 (10 m); 331-093-020 (20 m)",
+      "colour_code": "093",
+      "areal_mass_g_m2": 18,
+      "areal_mass_note": "approx.; product-level figure from the 2010 catalogue; no item-level weight seen for 093",
+      "thickness_um": 12,
+      "opaque": null,
+      "published_rgb_or_ral": null,
+      "approx_rgb_linear_or_srgb": [190, 30, 45],
+      "approx_rgb_space": "sRGB 8-bit (metallic)",
+      "approx_rgb_note": "not published; renderer approximation of a red chrome film",
+      "source_url": "https://www.hyperflight.co.uk/extras/Oracover-Product-Information_2010_engl.pdf",
+      "retrieved": "2026-11-03",
+      "quote": "light chrome red               331-093-002        331-093-010",
+      "corroboration": "20 m number from oracover.de search snippet ('ORACOVER AIR LIGHT iron-on film - width: 60 cm - length: 20 m - light chrome red', 331-093-020). Retailer: oracover-us.com 'Oracover Air Light 2M Chrome Red (093)' SKU ORA331-093-002"
+    },
+    {
+      "name": "light chrome yellow",
+      "order_number": "331-094-002 (2 m); 331-094-010 (10 m)",
+      "order_numbers_20m": "not confirmed",
+      "colour_code": "094",
+      "areal_mass_g_m2": 18,
+      "areal_mass_note": "approx.; oracover.de German item 331-094-002 'Gewicht in g/m² · 18' (search snippet)",
+      "thickness_um": 12,
+      "opaque": null,
+      "published_rgb_or_ral": null,
+      "approx_rgb_linear_or_srgb": [228, 196, 40],
+      "approx_rgb_space": "sRGB 8-bit (metallic)",
+      "approx_rgb_note": "not published; renderer approximation of a gold-yellow chrome film",
+      "source_url": "https://www.hyperflight.co.uk/extras/Oracover-Product-Information_2010_engl.pdf",
+      "retrieved": "2026-11-03",
+      "quote": "light chrome yellow            331-094-002        331-094-010"
+    },
+    {
+      "name": "light chrome violet",
+      "order_number": "331-096-002 (2 m); 331-096-010 (10 m); 331-096-020 (20 m)",
+      "colour_code": "096",
+      "areal_mass_g_m2": 18,
+      "areal_mass_note": "approx.; product-level figure; item page for violet shows no weight field per search snippet",
+      "thickness_um": 12,
+      "opaque": null,
+      "published_rgb_or_ral": null,
+      "approx_rgb_linear_or_srgb": [118, 60, 160],
+      "approx_rgb_space": "sRGB 8-bit (metallic)",
+      "approx_rgb_note": "not published; renderer approximation of a violet chrome film",
+      "source_url": "https://www.hyperflight.co.uk/extras/Oracover-Product-Information_2010_engl.pdf",
+      "retrieved": "2026-11-03",
+      "quote": "light chrome violet            331-096-002        331-096-010"
+    },
+    {
+      "name": "light chrome blue",
+      "order_number": "331-097-002 (2 m); 331-097-010 (10 m)",
+      "order_numbers_20m": "not confirmed",
+      "colour_code": "097",
+      "areal_mass_g_m2": 18,
+      "areal_mass_note": "approx.; oracover.de technical data for the blue 10 m roll 'Gewicht in g/m² · 18' (search snippet)",
+      "thickness_um": 12,
+      "opaque": null,
+      "published_rgb_or_ral": null,
+      "approx_rgb_linear_or_srgb": [40, 92, 190],
+      "approx_rgb_space": "sRGB 8-bit (metallic)",
+      "approx_rgb_note": "not published; renderer approximation of a blue chrome film",
+      "source_url": "https://www.hyperflight.co.uk/extras/Oracover-Product-Information_2010_engl.pdf",
+      "retrieved": "2026-11-03",
+      "quote": "light chrome blue              331-097-002        331-097-010"
+    }
+  ],
+  "colours_not_in_air_light": {
+    "clear_transparent": "Not offered in AIR LIGHT. Clear is ORACOVER AIR INDOOR 'light transparent' 331-000-002 / 331-000-010, approx. 17 g/m2, approx. 12 um (2010 catalogue p.11; oracover.de; retailer mhm-modellbau.de LA-331-000-002, EAN 4041909157842).",
+    "grey": "Not offered in AIR LIGHT (no grey or flat silver). Nearest real option in the same film: 'light chrome' 331-090 (silver metallised, approx. 18 g/m2).",
+    "black": "Not offered in AIR LIGHT. No dark neutral exists in the film; the darkest colours are light chrome violet 331-096 and light chrome blue 331-097, which are not honest black substitutes."
+  },
+  "same_datasheet_line_air_indoor": {
+    "note": "The lanitz-aviation datasheet groups AIR INDOOR with AIR LIGHT, so it is listed here; in the catalogue it is a separate product with transparent (tinted) colours only.",
+    "areal_mass_g_m2": 17,
+    "thickness_um": 12,
+    "colours": [
+      {"name": "light transparent (clear)", "order_number": "331-000-002 / 331-000-010"},
+      {"name": "light tr. white", "order_number": "331-010-002 / 331-010-010"},
+      {"name": "light tr. red", "order_number": "331-029-002 / 331-029-010"},
+      {"name": "light tr. yellow", "order_number": "331-039-002 / 331-039-010"},
+      {"name": "light tr. purple", "order_number": "331-058-002 / 331-058-010"},
+      {"name": "light tr. blue", "order_number": "331-059-002 / 331-059-010"}
+    ],
+    "source_url": "https://www.hyperflight.co.uk/extras/Oracover-Product-Information_2010_engl.pdf",
+    "quote": "ORACOVER® AIR INDOOR  For extremely light aircraft ... light transparent 331-000-002 331-000-010 ... INDOOR ... approx. 17   approx. 12 µm   He 4000 / H2 2200",
+    "corroboration": "Retailer (secondary): mhm-modellbau.de Air Indoor listing, LA-331-000/010/029/039/058/059 in 2 m and 10 m; oracover-us.com 'Oracover Air Indoor 2M Light Trans (000)' SKU ORA331-000-002"
+  },
+  "mass_by_colour_note": "The maker does not give per-colour masses for AIR LIGHT; it publishes one product figure, approx. 18 g/m2 at approx. 12 um, in the 2010 catalogue technical table. Current oracover.de item pages show 18 for each colour where a weight field was visible (090, 094, 097, 099). The lanitz-aviation technical-data page gives 'ca. 17 g/m2' / 'Stärke: 12 µm' for AIR INDOOR and AIR LIGHT as one group. So the coloured/metallised Air Light variants weigh the same as each other (approx. 18), about 1 g/m2 above the clear AIR INDOOR (approx. 17). Contrast: standard ORACOVER and ORALIGHT opaque colours do vary by colour (e.g. Oralight opaque 42-48 g/m2 in the 2010 weight table).",
+  "livery_proposal": {
+    "underside_and_body": {
+      "colour": "light scale white",
+      "order_number": "331-099-002 (2 m) / 331-099-010 (10 m)",
+      "areal_mass_g_m2": 18,
+      "surfaces": "wing lower surfaces, pod, tail (both faces)",
+      "status": "real colour in Air Light"
+    },
+    "upper_wing": {
+      "colour": "light chrome (silver) as the nearest substitute for gull grey",
+      "order_number": "331-090-002 / 331-090-010",
+      "areal_mass_g_m2": 18,
+      "surfaces": "wing upper surfaces inboard of the tips",
+      "status": "substitute: a reflective silver chrome, not a matte grey. It reads as mirror-silver in strong light. No grey exists in Air Light."
+    },
+    "wing_tips": {
+      "colour": "none available in Air Light",
+      "order_number": null,
+      "areal_mass_g_m2": null,
+      "status": "black cannot be done in Air Light. Honest options: (a) leave the tips in light scale white or light chrome and drop the black tips; (b) use a sibling film for the tips only, ORACOVER AIR OUTDOOR 'matt design-black' 334-072-002 / -010 / -020 at approx. 33 g/m2, approx. 23 um (seen only through oracover.de search snippets; nearly twice Air Light's mass on the tip area). Same adhesive-free AIR system, so the same AIR hotmelt applies, but the black item is not independently verified."
+    },
+    "feasible": false,
+    "notes": "A true white/grey/black gull livery cannot be done in ORACOVER Air Light. Within the film, the closest honest version is white (331-099) with a silver-chrome upper wing (331-090) and no black tips; every panel stays at approx. 18 g/m2. Adding black tips means bringing in a heavier sibling film (Air Outdoor matt design-black, approx. 33 g/m2) or paint (paint mass not researched). If renders must show grey rather than chrome, the honest label is 'light chrome (silver)'."
+  },
+  "bom_lines_needed": [
+    "Split the current entry 'film-oracover-air-light' into product-correct entries: 'film-oracover-air-indoor-clear' (331-000, approx. 17 g/m2, 12 um, clear) and one Air Light entry per colour used.",
+    "film-oracover-air-light-scale-white: 331-099-002/-010, 18 g/m2 (approx.), 12 um, colour light scale white, approx sRGB [240,240,236] (renderer approximation). BOM surfaces: wing lower surfaces, pod, tail.",
+    "film-oracover-air-light-chrome: 331-090-002/-010, 18 g/m2 (approx.), 12 um, silver metallic, approx sRGB [196,198,202] metallic (renderer approximation). BOM surfaces: wing upper surfaces (grey substitute).",
+    "Wing tips: either no separate line (tips folded into the white or chrome line), or, if black tips are kept, a sibling-film entry 'film-oracover-air-outdoor-matt-design-black' 334-072-002/-010/-020, approx. 33 g/m2, approx. 23 um. Mark it unverified until the oracover.de item page is read directly.",
+    "Area split per surface: wing area must be counted twice (upper chrome + lower white). Tail and pod area go on the white line. Mass = area x 18 g/m2 for Air Light lines, plus overlap allowance and brushed-on ORACOVER AIR hotmelt adhesive (0961, 100 ml; adhesive mass not researched).",
+    "Record the mass provenance on each line: 18 g/m2 is from the 2010 catalogue technical table and oracover.de item pages; the lanitz-aviation datasheet's 'ca. 17' is a grouped INDOOR+LIGHT value."
+  ],
+  "sibling_films_context": [
+    {
+      "film": "ORACOVER AIR OUTDOOR",
+      "areal_mass_g_m2": 33,
+      "thickness_um": 23,
+      "colours": "2010 catalogue: transparent 321-000 and transparent red 029, yellow 039, light green 049, purple 058, blue 059, orange 069, magenta 073, violet 074, green 075, fluor. red 026, fluor. yellow 035 (2 m -002 / 10 m -010). Current oracover.de facets (search snippet only) also list 'design-black' and 'matt design-black'; matt design-black items 334-072-002 / -010 / -020. No white or grey found.",
+      "source": "lanitz-aviation datasheet 'AIR OUTDOOR ... 33 g/m²', 'Stärke: 23 µm'; 2010 catalogue p.11; oracover.de via search snippets"
+    },
+    {
+      "film": "ORACOVER AIR MEDIUM",
+      "areal_mass_g_m2": "ca. 33 (lanitz datasheet) / approx. 34 (2010 catalogue)",
+      "thickness_um": 23,
+      "colours": "chrome 321-090 (silver), chrome red 093, chrome yellow 094, chrome light green 095, chrome purple 096, chrome blue 097, chrome orange 098, chrome violet 100, chrome green 103, chrome magenta 104. No white, grey or black; chrome 321-090 is the silver.",
+      "source": "2010 catalogue p.11 'ORACOVER® AIR MEDIUM For blimps and airships up to 4 m length'; lanitz-aviation datasheet"
+    },
+    {
+      "film": "ORACOVER AIR HEAVY DUTY",
+      "areal_mass_g_m2": "ca. 56-70 (je nach Farbe / depending on colour)",
+      "thickness_um": "approx. 34-44 (2010 catalogue)",
+      "colours": "scale white 322-010, scale red 020, scale bright red 022, scale ferri red 023, scale cub yellow 030, scale golden yellow 032, scale yellow 033. No grey or black listed.",
+      "source": "2010 catalogue p.11; lanitz-aviation datasheet 'AIR HAVY DUTY ... ca. 56-70 g/m² (je nach Farbe)'"
+    },
+    {
+      "film": "ORALIGHT (different system: iron-on, with heat-activated adhesive)",
+      "areal_mass_g_m2": "transparent/chrome 36 incl. adhesive; opaque colours 42-48 per 2010 weight table",
+      "colours": "Opaque: white 31-110 (46 g/m2), grey 31-011 (47), black 31-071 (43), silver 31-091 (46), among others. The only ORACOVER light film found with a real grey and black, but at roughly 2.5x Air Light's mass and a different application method. Current availability not checked.",
+      "source": "2010 catalogue p.9 and weight table p.21"
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets",
+      "retrieved": "2026-11-03",
+      "what": "Maker technical-data page, read directly. Section 'ORACOVER AIR: AIR INDOOR and AIR LIGHT': 'Stärke: 12 µm', 'ca. 17 g/m²'. Section 'AIR OUTDOOR, AIR MEDIUM and AIR HEAVY DUTY': 'Stärke: 23 µm'; AIR OUTDOOR '33 g/m²'; AIR MEDIUM 'ca. 33 g/m²'; AIR HAVY DUTY 'ca. 56-70 g/m² (je nach Farbe)'. No colours, no order numbers, no PDF links on the page."
+    },
+    {
+      "url": "https://www.hyperflight.co.uk/extras/Oracover-Product-Information_2010_engl.pdf",
+      "retrieved": "2026-11-03",
+      "what": "Maker's own 2010 English product catalogue ('COVERING and FINISH ... ORACOVER THE COVERING AUTHORITY'), hosted by a UK retailer. Downloaded and text-extracted. p.11 lists every AIR range with 2 m/10 m order numbers and the technical table ('LIGHT ... approx. 18 ... approx. 12 µm ... He 400 / H2 220'; 'INDOOR ... approx. 17 ... approx. 12 µm ... He 4000 / H2 2200'). p.9 and p.21 give the Oralight colours and weights. 2010 edition: the current range was cross-checked against oracover.de search snippets, which show the same six Air Light colours."
+    },
+    {
+      "url": "https://www.oracover.de/film/oracover-air/oracover-air-light/1",
+      "retrieved": "2026-11-03",
+      "what": "Maker shop listing for Air Light. Direct fetch returned HTTP 403. Content seen only through search-engine index snippets: 'Colour Series: chrome light (15) scale light (3)'; colours 'blue (3) chrome (3) yellow (3) red (3) violet (3) white (3)'; 'Weight in g/m² · 18'; 'ORACOVER® AIR LIGHT (approx.12 µm), for light blimps up to 2 m length.'"
+    },
+    {
+      "url": "https://www.oracover.de/film/oracover-air/oracover-air-light/oracover-air-light-iron-on-film---width_-60-cm--",
+      "retrieved": "2026-11-03",
+      "what": "Maker item page (light chrome 331-090-002), search snippet only (HTTP 403): 'Width in mm · 600; Colour Code · 090; Colour · chrome; Colour Series · chrome light; Weight in g/m² · 18; Length in m · 2'."
+    },
+    {
+      "url": "https://www.oracover.de/katalog/artikelinfo/4434/oracover-air-light--breite_-60-cm-laenge_-2-m",
+      "retrieved": "2026-11-03",
+      "what": "Maker item page (light scale white 331-099-002), search snippet only (HTTP 403): 600 mm, 18 g/m², 42.45 EUR. The lanitz-aviation.com mirror of article 4434 returned 'Article number not found', but its language-link slugs read '.../oracover-air/air-light/light-scale-white/...'."
+    },
+    {
+      "url": "https://www.mhm-modellbau.de/oracover-air-light.php",
+      "retrieved": "2026-11-03",
+      "what": "Retailer (secondary), read directly with page 2 (?page=2). Air Light: LA-331-090/093/094/096/097/099 in -002 and -010; 'Light chrom', 'Chrom rot', 'Chrom gelb', 'Chrom violett', 'Chrom blau', 'light Scale weiss'. No weight stated."
+    },
+    {
+      "url": "https://www.mhm-modellbau.de/oracover-air-indoor.php",
+      "retrieved": "2026-11-03",
+      "what": "Retailer (secondary), read directly with page 2. Air Indoor: LA-331-000/010/029/039/058/059 in -002/-010, 'light transparent' colours, with EANs."
+    },
+    {
+      "url": "https://promodels.be/en/catalog/by-category/airplanes/building-materials/finishing-materials/oracover-air/oracover-air-light",
+      "retrieved": "2026-11-03",
+      "what": "Retailer (secondary), read directly. 12 Air Light items: Light Chrome, Light Chrome Red/Yellow/Violet/Blue and Light Scale White, OR-331-0xx-002/-010. No weight stated."
+    },
+    {
+      "url": "https://www.oracover-us.com/oracover-air-light-2m-chrome-red-093/",
+      "retrieved": "2026-11-03",
+      "what": "Retailer (secondary), read directly. 'Oracover Air Light 2M Chrome Red (093)', SKU ORA331-093-002; 'In contrast to regular ORACOVER®, ORACOVER® AIR has no adhesive layer.'"
+    },
+    {
+      "url": "https://www.oracover-us.com/oracover-air-indoor-2m-light-trans-000/",
+      "retrieved": "2026-11-03",
+      "what": "Retailer (secondary), read directly. 'Oracover Air Indoor 2M Light Trans (000)', SKU ORA331-000-002; 'ORACOVER® AIR INDOOR (approx. 12 µm), for extremly light aircraft.'"
+    }
+  ],
+  "unverified": [
+    "All oracover.de pages (product listings, item pages, colour chart https://www.oracover.de/colour-chart/colour-chart, ULTRACOTE-ORACOVER.pdf, ORACOVER-Produktinfo.pdf) returned HTTP 403 to direct fetch. Their figures here (18 g/m2 per item, colour facets, 20 m numbers 331-093-020 and 331-096-020, Air Outdoor matt design-black 334-072-xxx at 33 g/m2) come from search-engine index snippets, not pages read directly.",
+    "Opacity of Air Light colours (scale white and the chromes) is not published. Opaque flag left null.",
+    "No maker RGB/RAL/hex values found for any Air Light colour (the oracover.de colour chart could not be read). All RGB values are renderer approximations.",
+    "Item-level weights for light chrome red (093) and light chrome violet (096) not seen; 18 g/m2 for them is the product-level catalogue figure.",
+    "20 m order numbers for 090, 094, 097 and 099 not seen (facet counts suggest a 20 m length exists for each).",
+    "The current maker catalogue PDF ('new model making catalogue' on oracover.de) could not be located or read; the 2010 edition was used. The six Air Light colours match current oracover.de facets.",
+    "Air Outdoor non-matt 'design-black' order number not found; matt design-black 334-072 seen only via snippets.",
+    "Mass of brushed-on ORACOVER AIR hotmelt adhesive and of any paint for wing tips not researched."
+  ]
+}

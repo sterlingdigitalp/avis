@@ -10,6 +10,8 @@
 //            --stills DIR (one Blender still per flight shot at its log start and one mid-shot, at the edit's resolution
 //                     and samples, the camera solved over the whole shot as in the film; PNGs into DIR, then stop)
 //            --threads N (Blender CPU threads; default Blender's own)
+//            --livery NAME (a covering livery from sims/avis-shared/materials.js LIVERIES, overriding the edit's
+//                     "livery"; default none, the clear film; a livery the catalogue does not record is labelled)
 //
 // The corridor flight logs come from the design and the flight model: film/flight_log.mjs flies one again whenever
 // the design file, the flight model's sources or the corridor changed since the log on disk was flown.
@@ -60,6 +62,7 @@ const log = (...m) => console.log('[render]', ...m);
 const edit = readJson(editFile);
 const fps = edit.fps ?? 30;
 const design = edit.design ?? 'larus-gl-2';
+const livery = opt('livery', edit.livery ?? null) || null;
 fs.mkdirSync(path.join(OUT, 'logs'), { recursive: true });
 const stateFile = path.join(OUT, proxy ? 'state-proxy.json' : stillsDir ? 'state-stills.json' : 'state.json');
 const state = readJson(stateFile, { plates: {}, chunks: {} });
@@ -72,12 +75,15 @@ for (const sc of new Set(edit.segments.filter((x) => x.kind === 'bl').map((x) =>
 }
 const designSha = readJson(path.join(OUT, 'gen', 'model-data.json')).design_sha256;
 buildPages();
-// the bird is the design plus the code that builds it: a change to either re-exports it and re-renders its plates
-const birdSig = hashOf(designSha, ...['bird.js', 'model.js'].map((f) => fs.readFileSync(path.join(ROOT, 'sims', 'avis-shared', f), 'utf8')));
-const glb = path.join(OUT, 'bird', `${design}.glb`);
-if (!fs.existsSync(glb) || readJson(path.join(OUT, 'bird', 'sig.json'), {}).sig !== birdSig) {
-  node('film/export_glb.mjs', [design]);
-  fs.writeFileSync(path.join(OUT, 'bird', 'sig.json'), JSON.stringify({ sig: birdSig }));
+// the bird is the design, the catalogue entries it names (a part's dimensions size its drawing) and the code that
+// builds it: a change to any of them re-exports it and re-renders its plates. A livery (--livery, or the edit's
+// "livery"; materials.js LIVERIES) is its own GLB, so switching it never leaves a stale bird behind.
+const birdSig = hashOf(designSha, readJson(path.join(OUT, 'gen', 'model-data.json')).parts, livery, ...['bird.js', 'model.js', 'materials.js'].map((f) => fs.readFileSync(path.join(ROOT, 'sims', 'avis-shared', f), 'utf8')));
+const glb = path.join(OUT, 'bird', `${design}${livery ? `-${livery}` : ''}.glb`);
+const sigFile = path.join(OUT, 'bird', livery ? `sig-${livery}.json` : 'sig.json');
+if (!fs.existsSync(glb) || readJson(sigFile, {}).sig !== birdSig) {
+  node('film/export_glb.mjs', [design, livery ?? '']);
+  fs.writeFileSync(sigFile, JSON.stringify({ sig: birdSig }));
 }
 // plates depend on what Blender sees: the GLB's bytes and the bake, not on page-only code
 const glbSha = createHash('sha256').update(fs.readFileSync(glb)).digest('hex').slice(0, 16);
@@ -100,10 +106,11 @@ const segs = edit.segments.map((s) => {
   return r;
 });
 const duration = t;
-const resolved = { ...edit, fps, duration, segments: segs };
+const resolved = { ...edit, fps, duration, livery, segments: segs };
 fs.mkdirSync(path.join(SITE, 'data'), { recursive: true });
 fs.writeFileSync(path.join(SITE, 'data', `${editName}.json`), JSON.stringify(resolved));
-for (const s of segs.filter((x) => x.kind === 'bl')) writeSegData(s);
+// a marker shot also carries where its bird is on screen, frame by frame
+for (const s of segs.filter((x) => x.kind === 'bl')) writeSegData(s, s.marker ? birdOnScreen(s) : {});
 const blFrames = segs.filter((s) => s.kind === 'bl').reduce((p, s) => p + s.plate.n, 0);
 const samples = +opt('samples', proxy ? 8 : edit.blender?.samples ?? 64);
 const res = proxy ? '640x360' : edit.blender?.res ?? '1920x1080';
@@ -178,7 +185,7 @@ function buildPages() {
   node('film/site_data.mjs', [design]);
 }
 
-function writeSegData(s) {
+function writeSegData(s, marker = {}) {
   const L = readJson(path.join(ROOT, 'out', 'flight', `${s.scenario}.json`));
   const c = L.columns;
   const step = 1 / (fps * s.plate.slow);
@@ -196,7 +203,18 @@ function writeSegData(s) {
     out.climb_m_s.push(+meanOf(vy, a, b).toFixed(3));
     out.battery_pct.push(c.battery_pct[k]);
   }
-  fs.writeFileSync(path.join(SITE, 'data', `seg-${s.id}.json`), JSON.stringify(out));
+  fs.writeFileSync(path.join(SITE, 'data', `seg-${s.id}.json`), JSON.stringify({ ...out, ...marker }));
+}
+
+/** A marker segment's bird on screen, per plate frame (film/bird_px.py: the shot's own rig and Blender's camera):
+ * px [x, y, distance m] and its wingtip-to-wingtip size, so the page can ring a bird too small to read. */
+function birdOnScreen(s) {
+  const p = s.plate;
+  const file = path.join(OUT, 'logs', `px-${s.id}.json`);
+  guarded(300, path.join(OUT, 'logs', `px-${s.id}.log`), [path.join(ROOT, 'out', 'env', '.venv', 'bin', 'python'), '-I', 'film/bird_px.py', `scenario=${s.scenario}`, `shot=${s.shot}`,
+    `fps=${fps}`, `slow=${p.slow}`, `i0=${p.i0}`, `n=${p.n}`, `out=${file}`, ...(s.lens ? [`lens=${s.lens}`] : [])], false);
+  const r = readJson(file);
+  return { px: r.px, span_px: r.span_px };
 }
 
 /** Sample range [a, b] of the flap cycle around sample k: half a turn of the (wrapped) phase either side. */

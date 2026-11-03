@@ -89,8 +89,63 @@ const filmR1 = ((FILM_IOR - 1) / (FILM_IOR + 1)) ** 2;
 export const FILM_REFLECTANCE = (2 * filmR1) / (1 + filmR1); // ~0.111 at normal incidence
 const filmSpecularIntensity = FILM_REFLECTANCE / filmR1; // ~1.89, see test/materials.test.mjs
 
-/** All materials, by name. `accent` is the single colour that marks the part working. */
-export function makeMaterials({ textures = true, envIntensity = 0.6 } = {}) {
+// The covering's colour, per surface: the one place it is set (film/blender_bird.py reads it from the GLB). The
+// default is no livery: the clear film, as catalogued. A livery gives each covered surface a real colour of the
+// covering film from the maker's published range, with its order number and areal mass, and linear RGB for the
+// renderers (the maker publishes no colour values, so the RGB is a renderer's approximation of the named colour).
+// The film labels any livery the catalogue does not record yet (`liveryInBom`), so a preview never passes for the
+// built bird. A surface set to null keeps the colour of the face it lies on.
+export const COVERING_SURFACES = ['wing_upper', 'wing_lower', 'wing_tip', 'tail', 'pod'];
+// ORACOVER Air Light (Lanitz-Prena), 12 um, approx. 18 g/m2 in every colour (maker's 2010 catalogue p. 21, and its
+// shop pages): light scale white 331-099 and the light chromes 331-090 (silver), -093, -094, -096, -097. There is no
+// clear Air Light (the clear 17 g/m2 film is Air Indoor 331-000), no grey and no black, so the gull livery is white
+// below with the silver chrome standing in for gull grey above, and no black tips.
+const AIR_LIGHT_WHITE = { colour: 'light scale white', order: '331-099', g_m2: 18, rgb: [0.871, 0.871, 0.84] };
+const AIR_LIGHT_CHROME = { colour: 'light chrome', order: '331-090', g_m2: 18, rgb: [0.55, 0.565, 0.59], metallic: true };
+export const LIVERIES = {
+  gull: {
+    name: 'gull',
+    film: 'film-oracover-air-light',
+    // where a tip colour would start: the rib nearest this fraction of the wing's length from the root (a film panel
+    // joins at a rib, where it is ironed down); unused while wing_tip is null
+    tipFrom: 0.8,
+    surfaces: { wing_upper: AIR_LIGHT_CHROME, wing_lower: AIR_LIGHT_WHITE, wing_tip: null, tail: AIR_LIGHT_WHITE, pod: AIR_LIGHT_WHITE },
+  },
+};
+/** The livery switched on for the film: null (clear, the default) or a key of LIVERIES. */
+export const COVERING_LIVERY = null;
+
+/** A livery by name (null for none, the clear film); unknown names throw rather than quietly drawing clear. */
+export function livery(name = COVERING_LIVERY) {
+  if (name == null || name === '' || name === 'clear') return null;
+  const l = LIVERIES[name];
+  if (!l) throw new Error(`no livery "${name}" (known: clear, ${Object.keys(LIVERIES).join(', ')})`);
+  return l;
+}
+
+/** True when every surface's colour is a colour the catalogue records for the livery's film (none do yet). */
+export function liveryInBom(l, parts) {
+  if (!l) return true;
+  const recorded = [parts?.[l.film]?.specs?.colour, ...(parts?.[l.film]?.specs?.colours ?? [])].filter(Boolean);
+  return COVERING_SURFACES.every((s) => !l.surfaces[s] || recorded.includes(l.surfaces[s].colour));
+}
+
+/** A livery film: colour from the vertex colours, and metal (0..1, the `metal` vertex attribute bird.js writes) turning
+ * a face into a metallised chrome film, which reflects like metal and passes no light. */
+function liveryFilm(mat) {
+  mat.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('void main() {', 'attribute float metal;\nvarying float vMetal;\nvoid main() {\n  vMetal = metal;');
+    sh.fragmentShader = sh.fragmentShader.replace('void main() {', 'varying float vMetal;\nvoid main() {')
+      .replace('float metalnessFactor = metalness;', 'float metalnessFactor = metalness * vMetal;')
+      .replace('material.transmission = transmission;', 'material.transmission = transmission * (1.0 - vMetal);');
+  };
+  mat.customProgramCacheKey = () => 'avis-livery-film';
+  return mat;
+}
+
+/** All materials, by name. `accent` is the single colour that marks the part working. With a livery the two film
+ * materials take the per-surface colour from the meshes' vertex colours (bird.js writes them) as a pigmented film. */
+export function makeMaterials({ textures = true, envIntensity = 0.6, livery: l = null } = {}) {
   const T = textures ? (f, o) => canvasTex(256, f, o) : () => null;
   const weaveTex = T((g, n) => weave(g, n), { repeat: [6, 1] });
   const uniTex = T((g, n) => streaks(g, n), { repeat: [1, 1] });
@@ -115,6 +170,9 @@ export function makeMaterials({ textures = true, envIntensity = 0.6 } = {}) {
   std('film_wing', { color: 0xffffff, roughness: 0.08, metalness: 0.0, transmission: 0.97, thickness: 0, ior: FILM_IOR, specularIntensity: filmSpecularIntensity, side: THREE.DoubleSide });
   // fuselage pod covering and tail film: the same Oracover Air Light, so the same optical parameters
   std('film_shell', { color: 0xffffff, roughness: 0.08, metalness: 0.0, transmission: 0.97, thickness: 0, ior: FILM_IOR, specularIntensity: filmSpecularIntensity, side: THREE.DoubleSide });
+  // a pigmented film: the colour scatters, so it reads as a thin coloured skin passing a little light, not a window;
+  // the same glossy polyester face (same IOR and two-face reflectance) as the clear film
+  if (l) for (const k of ['film_wing', 'film_shell']) liveryFilm(std(k, { color: 0xffffff, vertexColors: true, roughness: 0.08, metalness: 1.0, transmission: 1 / 6, thickness: 0, ior: FILM_IOR, specularIntensity: filmSpecularIntensity, side: THREE.DoubleSide }));
   std('steel_ground', { color: 0xb9bcc0, map: brushTex, roughness: 0.3, metalness: 1.0, anisotropy: 0.65, anisotropyRotation: 0 });
   // a turned/ground shaft: CylinderGeometry's U wraps the circumference and V runs the length, so the machining
   // marks (and the anisotropic highlight they cause) run along V -- rotate the default U-aligned anisotropy 90 deg.

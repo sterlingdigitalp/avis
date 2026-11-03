@@ -32,7 +32,7 @@ workstream asked. Blender occasionally aborts while Metal loads its kernels (cra
 | # | id | kind | source | s | what it shows |
 |---|---|---|---|---|---|
 | 1 | title | studio | `title` | 4.0 | The bird flapping at its real cruise frequency, slow push in. "Avis", the design name, the claim. |
-| 2 | wide | Blender | `wide_valley`, corridor log from 20 s | 5.0 | The wall of Rundle, the bird a speck on its corridor. |
+| 2 | wide | Blender | `wide_valley`, corridor log from 20 s | 5.0 | The wall of Rundle, the bird a speck on its corridor: 3-4 px at 1.24 km, so a ring marks it with its span and distance (`film/bird_px.py`, the shot's own rig and camera). |
 | 3 | track | Blender | `track_side`, corridor log from 50 s | 4.0 | Cruise beside the bird, sun over the shoulder. HUD: airspeed, power, battery from the log. |
 | 4 | assembly | studio | `assembly` | 8.0 | Every subsystem flies in from its exploded position; the mass counts up from the BOM to the total, margin last. |
 | 5 | drive | studio | `drive` | 8.0 | Cutaway of the gearbox from behind and below at ¼ speed: crank, couplers, rockers, gears at the true tooth ratios; with a stroke servo it then walks the amplitude through the drive's range (a fixed-stroke drive, v14 on, holds it and points at the crank angle encoder its governor reads). Panel: ratio, motor rpm, crank Hz, live stroke angle, transmission angle. |
@@ -42,10 +42,13 @@ workstream asked. Blender occasionally aborts while Metal loads its kernels (cra
 | 9 | under | Blender | `under_wing_full`, from 98 s, 2x slow motion | 4.0 | Below and behind the sun-side wing on a 20 mm lens, the whole bird high in the frame and Rundle's skyline low in it; labelled "2× slow motion". |
 | 10 | treetop | Blender | `treetop_pass`, from 112 s | 4.0 | Hovering over the forest beside the path; the bird flies past below the camera with the canopy behind it. |
 | 11 | topdown | Blender | `top_down`, from 36 s | 3.5 | From above over the bench: planform and the wing's stroke. |
-| 12 | ridge | Blender | `ridge_rise`, from 104 s | 5.0 | The bank near the end of the corridor, 135 mm from a stand on the slope solved from the terrain: the bird against forest. |
-| 13 | river | Blender | `river_pass`, from 24 s | 4.0 | Hovering beside the bird where it crosses the Bow, the river behind it. |
+| 12 | ridge | Blender | `ridge_rise`, from 104 s, 200 mm | 5.0 | The bank near the end of the corridor, from a stand on the slope solved from the terrain for a 135 mm lens, filmed on 200 mm so the bird spans 250-340 px: the bird against forest. |
+| 13 | river | Blender | `river_pass`, from 24 s, 80 mm | 4.0 | Hovering beside the bird where it crosses the Bow, the river behind it; 80 mm on the rig's stand (200-400 px). |
 | 14 | gates | studio | `gates` | 6.0 | Every gate as written in `out/verification`, failures in their own words and numbers. |
 | 15 | credits | studio | `credits` | 7.0 | Data and software credits from `data/references/credits.md`, the claim, the parts statement. |
+
+Changes of segment cut, or dip to black for at most 0.45 s (0.2 s out, 0.25 s in; `film/test/edit.test.mjs` holds every
+dip under 0.5 s). A contact sheet sampled on whole seconds lands on those dips at 4 s and 13 s, so those tiles are black.
 
 Flight shots come only from flight logs: the camera is env/shots.py's function of the log; the bird's pose is
 baked from the same log by `film/bake_pose.mjs` (phase, amplitude, twist and tail columns through
@@ -78,8 +81,21 @@ catalogue entry records no colour, so the film draws it clear: untinted, a thin 
 polyester face (IOR 1.64, about 11% head on, a mirror at grazing), 3% haze, a little roughness. Through it the balsa
 ribs and formers show, as they would. Between ribs the film takes the shape a taut membrane must (equal tension,
 no air load: Laplace's equation over each bay, `model.membraneDip`), a dip of at most about 2% of the chord near the
-nose. When the catalogue records a colour, set it in one place: `COVERING_RGB` in `film/blender_bird.py` (or
-`AVIS_FILM_RGB=r,g,b`), and the matching film materials in `sims/avis-shared/materials.js`.
+nose.
+
+**Livery.** The covering's colours are set in one place, `LIVERIES` in `sims/avis-shared/materials.js`, per surface
+(upper wing, lower wing, tip, tail, pod). The default is none, the clear film. `node film/render.mjs --livery gull`
+(or `"livery": "gull"` in an edit) draws one: bird.js writes each covering mesh's surface colour as vertex colours
+(the geometry and the bake are unchanged), the GLB is its own file (`<design>-<livery>.glb`) whose meta names the
+livery, and `film/blender_bird.py` pigments the film from those colours, the chrome faces as metal. Until the catalogue
+records the livery's colours for the film (`liveryInBom`), every frame carries "preview, livery not yet in BOM".
+`AVIS_FILM_RGB=r,g,b` still paints a clear GLB one colour in Blender.
+
+The maker's range (2026-11-03): ORACOVER Air Light is sold only in colours, all about 18 g/m2 and 12 um: light scale
+white 331-099 and the light chromes 331-090 (silver), -093 red, -094 yellow, -096 violet, -097 blue. The clear film at
+about 17 g/m2 is a different product, Air Indoor "light transparent" 331-000; the catalogue entry lumps the two. Air
+Light has no grey and no black, so the gull livery is white 331-099 under the wings and on the pod and tail, the silver
+chrome 331-090 standing in for gull grey on top, and no black tips. `film/edit.livery.json` renders the preview stills.
 
 ## Sound
 

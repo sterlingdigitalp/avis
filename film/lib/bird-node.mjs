@@ -1,6 +1,6 @@
 // The three.js bird in node, for the GLB export and the pose bake: same model.js and bird.js as the page.
 import { loadModel } from '../../sims/avis-shared/node-load.js';
-import { makeMaterials } from '../../sims/avis-shared/materials.js';
+import { makeMaterials, livery as liveryOf } from '../../sims/avis-shared/materials.js';
 import { buildBird } from '../../sims/avis-shared/bird.js';
 import { strokeAngle } from '../../src/physics/kinematics.js';
 
@@ -17,13 +17,15 @@ export function levelPhase(model, amp) {
   return 0.5 * (lo + hi);
 }
 
-export function nodeBird(name = 'larus-gl-2') {
+/** The bird in node; `livery` (a LIVERIES key, default none: the clear film) paints the covering's vertex colours. */
+export function nodeBird(name = 'larus-gl-2', { livery = null } = {}) {
   const { model, design, sha256, path } = loadModel(name);
-  const mats = makeMaterials({ textures: false });
-  const bird = buildBird(model, mats);
+  const l = liveryOf(livery);
+  const mats = makeMaterials({ textures: false, livery: l });
+  const bird = buildBird(model, mats, { livery: l });
   const amp = model.law.ampNominal ?? design.cruise.amp;
   const rest = { phase: levelPhase(model, amp), amp, symmetric: true, twistL: 0, twistR: 0, tailL: 0, tailR: 0 };
-  return { bird, model, design, sha256, path, rest };
+  return { bird, model, design, sha256, path, rest, livery: l };
 }
 
 /** Every node whose matrix the pose drives: update()'s posed list plus servo horns (matrixAutoUpdate). */

@@ -19,6 +19,14 @@ export function loadParts(design) {
   return partsIndex(design, catalog);
 }
 
+/** The catalogue entries as the page bundles them (film/gen_data.mjs): long notes stay in the catalogue, the numbers
+ * travel. A part's printed size always travels, however long, so the page draws it as the GLB does. */
+export function bundleParts(parts) {
+  const keep = (k, v) => /^dimension/.test(k) || !((typeof v === 'string' && v.length > 90) || /note|basis_text|rating_basis|warning/i.test(k));
+  const terse = (o) => (Array.isArray(o) ? o.map(terse) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).filter(([k, v]) => keep(k, v)).map(([k, v]) => [k, terse(v)])) : o);
+  return terse(parts);
+}
+
 export function loadModel(name = 'larus-gl-2') {
   const { design, path, sha256 } = loadDesign(name);
   const parts = loadParts(design);
