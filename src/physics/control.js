@@ -98,6 +98,54 @@ export function tecsWeights(T, V) {
   return { wH, wV: 2 - wH };
 }
 
+const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+
+/**
+ * Round 12: the belly-landing approach-and-flare law, flight-controller code (SPEC ruling after physics round 11:
+ * "controller laws are design"). It runs inside the controller at its rate, on its own estimates (pitot airspeed,
+ * baro/IMU height and climb rate), and its pitch command goes through the controller's delay line like any other.
+ * Wings parked. L = design.control.landing; row = the glide table at L.Vapp_m_s (the feed-forward comes from the
+ * approach speed's own row); s = the law's state { flare, th0, iV, iS, last }; e = the estimate; h = the belly's height
+ * above the field (m); dt = the controller period.
+ *  - Approach: pitch holds the approach airspeed, theta = row.theta + kV (V - Vapp) + integral of kIV (V - Vapp).
+ *  - Flare, latched when h first falls below flareH_m: an exponential flare on the climb rate, vy_cmd =
+ *    -max(sinkTd, h / tau), pitch = the pitch at flare entry + kS (vy_cmd - vy) + integral of kIS (vy_cmd - vy).
+ *  - Stall guard: below Vfloor_m_s the pitch backs off kFloor per m/s short.
+ *  - Bounds: row.theta + dThetaMin_rad .. row.theta + dThetaMax_rad.
+ */
+export function landingLaw(L, row, s, e, h, dt) {
+  if (!s.flare && h < L.flareH_m) {
+    s.flare = true;
+    s.th0 = s.last ?? row.theta;
+  }
+  let th;
+  if (!s.flare) {
+    const ev = e.V - L.Vapp_m_s;
+    s.iV = clamp((s.iV ?? 0) + dt * L.kIV * ev, -L.iMax_rad, L.iMax_rad);
+    th = row.theta + L.kV * ev + s.iV;
+  } else {
+    const es = -Math.max(L.sinkTd_m_s, Math.max(h, 0) / L.tau_s) - e.vy;
+    s.iS = clamp((s.iS ?? 0) + dt * L.kIS * es, -L.iMax_rad, L.iMax_rad);
+    th = s.th0 + L.kS * es + s.iS;
+  }
+  if (e.V < L.Vfloor_m_s) th -= L.kFloor * (L.Vfloor_m_s - e.V);
+  th = clamp(th, row.theta + L.dThetaMin_rad, row.theta + L.dThetaMax_rad);
+  s.last = th;
+  return th;
+}
+
+/**
+ * Round 12: the hand-launch pitch law, flight-controller code like landingLaw. L = design.control.launchLaw; row =
+ * the trim table at L.V_m_s; s = state { iV }. Pitch holds the climb-out airspeed L.V_m_s: theta = row.theta +
+ * kV (V - V_L) + integral of kIV (V - V_L) (fast -> nose up), bounded to row.theta + dThetaMin_rad .. dThetaMax_rad.
+ * The stroke runs at the envelope's best (the launch branch of the stroke law).
+ */
+export function launchPitch(L, row, s, e, dt) {
+  const ev = e.V - L.V_m_s;
+  s.iV = clamp((s.iV ?? 0) + dt * L.kIV * ev, -L.iMax_rad, L.iMax_rad);
+  return clamp(row.theta + L.kV * ev + s.iV, row.theta + L.dThetaMin_rad, row.theta + L.dThetaMax_rad);
+}
+
 /**
  * ctl config (design.control): { trim: [{V, theta, freq, tail, amp, sym, dyn}], Iz, Ix, Iy, Md, Ld, Nd, Vcruise,
  *   Vmin, freqMax, freqMin, ampMax, climbMax, sinkMax, maxBank, lead }.
@@ -176,6 +224,8 @@ export function createController(design, opts = {}) {
   }
   let phiCmdF = 0;
   let thCmdFilt = cfg.trim[0].theta;
+  const landState = { flare: false }; // round 12: landingLaw's state
+  const launchState = {}; // round 12: launchPitch's state
 
   const guidance = {
     mode: 'cruise', // cruise | climb | glide | flare | launch
@@ -337,8 +387,17 @@ export function createController(design, opts = {}) {
     let climbC = 0;
     let steErr = null; // total energy rate error (m/s), when tecs is on
     const glideRow = cfg.glide && cfg.glide.length ? interpTable(cfg.glide, Math.max(g.speed, cfg.glide[0].V)) : null;
-    if (g.mode === 'glide' || g.mode === 'flare') {
+    const parked = g.mode === 'glide' || g.mode === 'flare' || g.mode === 'land';
+    if (g.mode === 'land' && cfg.landing && glideRow) {
+      // Round 12: the approach-and-flare law (landingLaw), on the belly height above the field.
+      const hBelly = e.h - (g.groundH ?? 0) + (design.body?.bottom_y_m ?? -0.04);
+      thetaC = landingLaw(cfg.landing, glideRow, landState, e, hBelly, dt);
+      landState.h = hBelly;
+    } else if (g.mode === 'glide' || g.mode === 'flare') {
       thetaC = g.pitchCmd ?? (glideRow ? glideRow.theta : tr.theta - 0.1);
+    } else if (g.mode === 'launch' && cfg.launchLaw?.pitch === 'speed') {
+      // Round 12: the hand-launch pitch law (launchPitch), on the pitot airspeed.
+      thetaC = launchPitch(cfg.launchLaw, interpTable(cfg.trim, Math.max(cfg.launchLaw.V_m_s, cfg.trim[0].V)), launchState, e, dt);
     } else if (cfg.tecs && g.mode !== 'launch') {
       // Total energy control. Pitch closes the energy balance rate: wH (climb error) against wV (speed rate error).
       // Balanced (1, 1) above Vfloor + band; speed only (0, 2) at Vfloor and below.
@@ -375,9 +434,11 @@ export function createController(design, opts = {}) {
     thCmdFilt += dt * 4 * (thetaC - thCmdFilt);
     // Trim feed-forward from the commanded speed. Scheduling it on measured speed would feed the phugoid:
     // slower -> more nose-up trim -> slower.
-    const tailTrim = (g.mode === 'glide' || g.mode === 'flare') && glideRow ? glideRow.tail : tr.tail;
+    const tailTrim = parked && glideRow ? glideRow.tail : tr.tail;
     // Elevator: positive tailPitch brings the nose up (tail trailing edge up).
-    const tp = tailTrim + cfg.kTheta * (thCmdFilt - e.theta) - cfg.kQ * e.wz;
+    // Round 12: the launch law may scale the attitude gain (launchLaw.kThetaScale), as gain scheduling for low airspeed.
+    const kTh = cfg.kTheta * (g.mode === 'launch' && cfg.launchLaw?.kThetaScale ? cfg.launchLaw.kThetaScale : 1);
+    const tp = tailTrim + kTh * (thCmdFilt - e.theta) - cfg.kQ * e.wz;
     c.tailPitch = Math.max(-0.5, Math.min(0.5, tp));
     // Speed via flap frequency: total energy rate
     let freq = 0;
@@ -404,9 +465,9 @@ export function createController(design, opts = {}) {
         freq = (tr.freq * ratio * tr.amp) / c.amp;
       } else c.amp = tr.amp;
       if (g.mode === 'launch' && best) {
-        // Launch: the most stroke speed the ratings allow.
+        // Launch: the most stroke speed the ratings allow, or (round 12) the launch law's stroke frequency.
         c.amp = Math.min(cfg.ampMax, best.amp);
-        freq = best.freqMax;
+        freq = Number.isFinite(cfg.launchLaw?.freq_Hz) ? Math.min(cfg.launchLaw.freq_Hz, best.freqMax) : best.freqMax;
       }
       freq = Math.max(cfg.freqMin, Math.min(envelopeFreq(c.amp, e.V), freq));
       // Battery current limit, as flight controllers apply it: back the stroke off above the continuous rating.
@@ -519,6 +580,10 @@ export function createController(design, opts = {}) {
     get gpsPos() { return gpsPos; },
     get gnd() { return gnd; },
     get VEst() { return VasEst; },
+    /** The filtered pitch command (rad), for traces. */
+    get thetaCmd() { return thCmdFilt; },
+    /** Round 12: the landing law's state (flare latched, belly height estimate). */
+    get landing() { return landState; },
     /** The last battery current reading, as the flight controller's current sense delivers it (A). */
     get sensedAmps() { return lastAmps; },
     rate: fs,

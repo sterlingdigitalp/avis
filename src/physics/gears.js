@@ -114,6 +114,48 @@ export function duraconKv(v) {
   return null;
 }
 
+/**
+ * Round 12 (SPEC ruling after physics round 11, design life): JGMA 401-01 life factor K_L and JGMA 402-01 K_HL as
+ * KHK's technical reference prints them (Tables 10.2 and 10.10; KHK's Japanese PDF gives the same K_L as text; the
+ * SDP/SI-numbered copy, Tables 17-2 and 17-10, agrees; scratchpad research/round12-parts.json Q1). Rows by the number
+ * of loaded meshing cycles in the life; K_L columns HB 120-220, over HB 220, carburized or nitrided (induction
+ * hardened: the core hardness). The tables cap at 1.5 and give 1.0 at 1e7 and over. No source states a rule between
+ * rows, so a count takes the row of the smallest tabulated count at or above it (conservative): 1e4, 1e5, 1e6, else
+ * the 1e7 row.
+ */
+export const LIFE_ROWS = [1e4, 1e5, 1e6];
+export const KL_TABLE = { hb120_220: [1.4, 1.2, 1.1], hb_over_220: [1.5, 1.4, 1.1], carburized_nitrided: [1.5, 1.5, 1.1] };
+export const KHL_TABLE = [1.5, 1.3, 1.15];
+
+/** Index of the life row a cycle count reads (smallest tabulated count >= n), or -1 for the 1e7 row (factor 1). */
+export function lifeRow(n) {
+  if (!(n >= 0)) return -1;
+  return LIFE_ROWS.findIndex((r) => n <= r);
+}
+
+/** K_L and K_HL at n cycles for a K_L column; 1 and 1 where the count is unknown (KHK: "assumed to be 1.0"). */
+export function jgmaLifeFactors(n, column = 'hb120_220') {
+  const i = lifeRow(n);
+  const col = KL_TABLE[column] ?? KL_TABLE.hb120_220;
+  return { row: i < 0 ? '1e7 and over' : LIFE_ROWS[i], KL: i < 0 ? 1 : col[i], KHL: i < 0 ? 1 : KHL_TABLE[i] };
+}
+
+/**
+ * KHK's plastic gear method (Fig. 11.3, Duracon allowable bending stress against cycles, 40 C, grease): read off the
+ * printed curves (no printed numbers; reading +-0.05 kgf/mm2, so 0.05 is taken off), m 0.8 / 1 / 2 at 1e5 and 1e6
+ * cycles (kgf/mm2). KHK's catalogue figure for m 1 is 3.5, which the m 1 curve reaches at about 1.3e7 cycles.
+ */
+export const DURACON_LIFE = { rows: [1e5, 1e6], m: { 0.8: [5.03, 4.45], 1: [4.54, 3.97], 2: [2.07, 1.53] }, catalogue: { 0.8: 4.0, 1: 3.5 }, reading_allowance: 0.05 };
+
+/** The Duracon life factor at n cycles for module m: (chart stress at the row - allowance) / catalogue stress; else 1. */
+export function duraconLifeFactor(n, m) {
+  const curve = DURACON_LIFE.m[m], cat = DURACON_LIFE.catalogue[m];
+  if (!curve || !cat || !(n >= 0)) return { row: null, factor: 1 };
+  const i = DURACON_LIFE.rows.findIndex((r) => n <= r);
+  if (i < 0) return { row: '1e7 level (catalogue)', factor: 1 };
+  return { row: DURACON_LIFE.rows[i], factor: Math.max(1, (curve[i] - DURACON_LIFE.reading_allowance) / cat) };
+}
+
 /** Pitch-line speed (m/s) of a gear of z teeth, module m (mm), at n rpm. */
 export const pitchLineSpeed = (m, z, rpm) => (Math.PI * (m / 1000) * z * rpm) / 60;
 
@@ -173,9 +215,16 @@ export function jgmaGearRating(cat, mesh, rated = {}) {
   const dirOk = r.bidirectional || !mesh.reversing;
   conds.push({ condition: 'load direction', rated: r.bidirectional ? 'bidirectional (2/3 of sigma_Flim)' : 'unidirectional', actual: mesh.reversing ? 'reversing (the wing back-drives the train)' : 'one direction', holds: dirOk, correction: dirOk ? 'none needed' : 'JGMA 401-01: 2/3 of sigma_Flim', bending_factor: dirOk ? 1 : 2 / 3 });
   if (!dirOk) fB *= 2 / 3;
-  // Cycles and impact: rated over 1e7 cycles (KL = KHL = 1) and uniform load (KO = 1); no life credit is taken, and
-  // the rating is applied to the simulated instantaneous peak torque, gusts included.
-  conds.push({ condition: 'cycles', rated: 'over 1e7 (KL = KHL = 1)', actual: 'not limited; no life credit', holds: true, correction: 'none' });
+  // Cycles and impact: rated over 1e7 cycles (KL = KHL = 1) and uniform load (KO = 1); the rating is applied to the
+  // simulated instantaneous peak torque, gusts included. Round 12: with a stated design life (mesh.cycles, this gear's
+  // own revolutions over it, every one at the peak), JGMA's own life factors: K_L on bending, K_HL squared on surface
+  // (torque goes as the square of the Hertz stress).
+  if (Number.isFinite(mesh.cycles)) {
+    const lf = jgmaLifeFactors(mesh.cycles, mesh.lifeColumn);
+    conds.push({ condition: 'cycles', rated: 'over 1e7 (KL = KHL = 1)', actual: `${mesh.cycles.toExponential(3)} cycles (design life, every cycle at the peak)`, holds: lf.KL === 1 && lf.KHL === 1, correction: `JGMA 401-01 K_L ${lf.KL} (${mesh.lifeColumn ?? 'hb120_220'}), JGMA 402-01 K_HL ${lf.KHL} (row ${lf.row}; a count takes the row at or above it)`, bending_factor: lf.KL, surface_factor: lf.KHL * lf.KHL, life: lf });
+    fB *= lf.KL;
+    fS *= lf.KHL * lf.KHL;
+  } else conds.push({ condition: 'cycles', rated: 'over 1e7 (KL = KHL = 1)', actual: 'not limited; no life credit', holds: true, correction: 'none' });
   conds.push({ condition: 'impact', rated: 'uniform load (KO = 1)', actual: 'applied to the time-resolved peak torque of the M7 population', holds: true, correction: 'none' });
   const k = half ? 0.5 : 1;
   const bending = Number.isFinite(cat.bending_Nm) ? cat.bending_Nm * fB * k : null;
@@ -210,7 +259,11 @@ export function lewisDuraconRating(cat, mesh, rated = {}) {
   const tOk = Number.isFinite(mesh.temperature_C) && mesh.temperature_C <= r.temperature_C;
   conds.push({ condition: 'temperature', rated: `${r.temperature_C} C`, actual: Number.isFinite(mesh.temperature_C) ? `${mesh.temperature_C} C (stated design limit)` : 'not stated', holds: tOk, correction: tOk ? 'KT not below the rated: no credit' : 'no correction applied: half', factor: tOk ? 1 : null });
   if (!tOk) half = true;
-  conds.push({ condition: 'cycles', rated: 'sigma_b 3.5 kgf/mm2 (the 1e7-cycle level of KHK\'s chart)', actual: 'no life credit', holds: true, correction: 'none' });
+  if (Number.isFinite(mesh.cycles)) {
+    const lf = duraconLifeFactor(mesh.cycles, mesh.m);
+    conds.push({ condition: 'cycles', rated: 'the catalogue stress (the m 1 curve of KHK Fig. 11.3 reaches 3.5 kgf/mm2 near 1.3e7 cycles)', actual: `${mesh.cycles.toExponential(3)} cycles (design life, every cycle at the peak)`, holds: lf.factor === 1, correction: `KHK Fig. 11.3 read at the row at or above the count (${lf.row}), less 0.05 kgf/mm2 for the reading`, factor: lf.factor, life: lf });
+    f *= lf.factor;
+  } else conds.push({ condition: 'cycles', rated: 'sigma_b 3.5 kgf/mm2 (the 1e7-cycle level of KHK\'s chart)', actual: 'no life credit', holds: true, correction: 'none' });
   const k = half ? 0.5 : 1;
   const bending = Number.isFinite(cat.bending_Nm) ? cat.bending_Nm * f * k : null;
   return { method: 'Lewis (KHK plastic gear method)', catalogue: { bending_Nm: cat.bending_Nm ?? null, surface_Nm: null }, bending_factor: f * k, half_rule: half, bending_Nm: bending, surface_Nm: null, allowable_Nm: bending, conditions: conds };

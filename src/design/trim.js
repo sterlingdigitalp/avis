@@ -3,6 +3,7 @@ import { buildBird, createFlight, quatFromEuler } from '../physics/flight.js';
 import { designAtmosphere, G0 } from '../physics/atmosphere.js';
 import { couplerCheck } from '../physics/structure.js';
 import { checkJoints, jointsRatio } from '../physics/bearings.js';
+import { checkMembers, memberPeaks } from '../physics/members.js';
 
 const TWO_PI = 2 * Math.PI;
 const DEG = Math.PI / 180;
@@ -370,11 +371,29 @@ export function flightRatios(design, pk, allowance = {}) {
     motor_speed: pk.dutySat > 0.1 ? 2 : 0,
     // Round 5: bearings and bushings against their static ratings (FoS 1.5 inside the ratio) and speed limits.
     bearings: (pk.bearingRatio ?? 0) / al('bearing'),
+    // Round 12 (opt-in, allowance.member): every rated linkage and airframe member (src/physics/members.js) at the
+    // hold's peaks, FoS 1.5 inside the ratio, as for the bearings; the airframe members are not otherwise in the test.
+    members: Number.isFinite(allowance.member) ? (pk.memberRatio ?? 0) / allowance.member : 0,
     diverged: [pk.crankTorque, pk.rootBend, pk.couplerForce].every(Number.isFinite) && pk.loadFactor < 20 ? 0 : 2,
   };
   let worst = 'gear';
   for (const k of Object.keys(r)) if (r[k] > r[worst]) worst = k;
   return { ok: r[worst] <= 1, worst, ratio: r[worst], ratios: r };
+}
+
+/**
+ * Round 12: a design's rated members at a flight's support peaks as one ratio, 1.5 / the lowest factor of safety
+ * (1 at FoS 1.5); 2 when a member fails without a factor (an RC-practice fixing over its published figure, an
+ * unrated seat); 0 without members.
+ */
+export function membersRatio(design, supports) {
+  const mem = design.structure?.members;
+  if (!mem || !supports) return 0;
+  const nJ = (design.structure.joints ?? []).reduce((a, j) => a + j.supports.length, 0);
+  const r = checkMembers(mem, memberPeaks(mem, supports, nJ));
+  const unratedFail = r.members.some((m) => !m.ok && !Number.isFinite(m.fos));
+  if (unratedFail) return 2;
+  return Number.isFinite(r.fos_min) && r.fos_min > 0 ? 1.5 / r.fos_min : 0;
 }
 
 /**
@@ -422,10 +441,11 @@ export async function strokeFlightTest(design, { V, freq, amp, ramp = 2, settle 
   }
   // Round 5: the drive's bearings, bushings and rod ends at the hold's peak loads (their worst rating use as a ratio).
   const bearingRatio = design.structure?.joints ? jointsRatio(checkJoints(design.structure.joints, sim.peaks.supports, { crankRate: sim.peaks.crankRate })) : 0;
+  const memberRatio = membersRatio(design, sim.peaks.supports);
   return {
     crankTorque: sim.peaks.crankTorque, rootBend: sim.peaks.rootBend, elbowBend: sim.peaks.elbowBend, couplerForce: sim.peaks.couplerForce,
     twistTorque: sim.peaks.twistTorque, loadFactor: sim.peaks.loadFactor, motorRms: Math.sqrt(I2 / n), battMean: Ib / n,
-    crankFreqRatio: crankSum / n / (TWO_PI * freq), airspeed: Vsum / n, dutySat: sat / n, bearingRatio,
+    crankFreqRatio: crankSum / n / (TWO_PI * freq), airspeed: Vsum / n, dutySat: sat / n, bearingRatio, memberRatio,
   };
 }
 

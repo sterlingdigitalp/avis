@@ -1,3 +1,4 @@
+// Round 12: the design-file fixture is v20 (test/fixtures/larus-gl-2-v20.json, the committed HEAD design), the design these hand calculations were written for; v21 has its own tests (round12).
 // Round 11: the candidate span bands and the housing length each joint support is judged on.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -74,7 +75,7 @@ test('jointHousings: thin parts, parts without dimensions, and plate joints with
 
 test('a built Larus v20: bossed seats as long as the igus GFM-1012-10 (b1 10 mm), unbossed ones the plate', () => {
   const catalog = JSON.parse(readFileSync(new URL('../../data/parts/catalog.json', import.meta.url), 'utf8'));
-  const v20 = JSON.parse(readFileSync(new URL('../../data/designs/larus-gl-2.json', import.meta.url), 'utf8'));
+  const v20 = JSON.parse(readFileSync(new URL('../fixtures/larus-gl-2-v20.json', import.meta.url), 'utf8'));
   const d = buildDesign(v20.params, catalog);
   const seat = (n) => d.structure.members.find((m) => m.name === n);
   const sup = (j, s) => d.structure.joints.find((q) => q.name === j).supports.find((q) => q.name === s);
@@ -88,7 +89,7 @@ test('a built Larus v20: bossed seats as long as the igus GFM-1012-10 (b1 10 mm)
 });
 
 test('finishDesign: the named 8 m/s release, the round-11 selection and both round-11 assumptions', () => {
-  const v20 = JSON.parse(readFileSync(new URL('../../data/designs/larus-gl-2.json', import.meta.url), 'utf8'));
+  const v20 = JSON.parse(readFileSync(new URL('../fixtures/larus-gl-2-v20.json', import.meta.url), 'utf8'));
   const d = finishDesign(structuredClone(v20), { cand: 'larus', base: v20, set: { launch: { release_speed_m_s: 7.5 } }, opt: ROUND11_OPT });
   assert.equal(d.launch.release_speed_m_s, 7.5);
   assert.equal(finishDesign(structuredClone(v20), { cand: 'larus', base: v20, opt: ROUND11_OPT }).launch.release_speed_m_s, 8);
@@ -101,7 +102,7 @@ test('finishDesign: the named 8 m/s release, the round-11 selection and both rou
 
 test('fittedBuild without the body fit: the v20 parameters rebuild to v20\'s BOM, with its own calibration record', () => {
   const catalog = JSON.parse(readFileSync(new URL('../../data/parts/catalog.json', import.meta.url), 'utf8'));
-  const v20 = JSON.parse(readFileSync(new URL('../../data/designs/larus-gl-2.json', import.meta.url), 'utf8'));
+  const v20 = JSON.parse(readFileSync(new URL('../fixtures/larus-gl-2-v20.json', import.meta.url), 'utf8'));
   const { p, d } = fittedBuild(v20.params, catalog, false);
   assert.equal(p, v20.params);
   assert.equal(d.name, 'larus-gl-2');

@@ -100,8 +100,10 @@ function buildInducedMatrix(wing, st, offsetFrac) {
 
 /**
  * Round 6 design hook: eta_s as a function of a strip's effective-angle amplitude (the half range of its effective
- * angle over a flap cycle). table: [[amplitude_rad, eta], ...] in any order; linear between points, clamped at the
- * ends to the nearest measured value. Not used unless a caller passes a table: the default stays SUCTION.eta.
+ * angle over a flap cycle). table: [[amplitude_rad, eta], ...] in any order; linear between points. Below the smallest
+ * amplitude: that point's value. Beyond the largest (SPEC ruling after cfd round 3): the last segment's slope continued
+ * where it lowers eta_s, the last value held where it would raise it, so eta_s never exceeds a measured value; never
+ * below 0. Not used unless a caller passes a table: the default stays SUCTION.eta.
  */
 export function suctionEtaAt(table, amplitude) {
   const t = [...table].sort((a, b) => a[0] - b[0]);
@@ -113,15 +115,19 @@ export function suctionEtaAt(table, amplitude) {
       return a1 > a0 ? e0 + ((e1 - e0) * (amplitude - a0)) / (a1 - a0) : e1;
     }
   }
-  return t[t.length - 1][1];
+  const [aN, eN] = t[t.length - 1];
+  if (t.length < 2) return eN;
+  const [aM, eM] = t[t.length - 2];
+  const slope = aN > aM ? (eN - eM) / (aN - aM) : 0;
+  return slope < 0 ? Math.max(0, eN + slope * (amplitude - aN)) : eN;
 }
 
 /**
  * The eta_s table from data/calibration/suction.json (parsed; the cfd workstream's file, read only): every complete
- * point's eta_s_strip (the form strip.js uses) against its effective-angle amplitude. The amplitude is the point's own
+ * point marked settled: true (SPEC ruling after cfd round 3), its eta_s_strip (the form strip.js uses) against its effective-angle amplitude. The amplitude is the point's own
  * alpha_eff_amplitude_deg when it states one; a pure-plunge point (k, h_over_c and no pitch or twist field) has the
  * plunge-induced amplitude atan(2 k h/c) (k = omega b / U, so hdot_max / U = 2 k h / c). Points with equal amplitudes
- * are averaged. Returns { table: [[amplitude_rad, eta]], used: [names], skipped: [{ name, why }] }.
+ * are an error (no averaging). Returns { table: [[amplitude_rad, eta]], used: [names], skipped: [{ name, why }] }.
  */
 export function suctionTableFrom(json) {
   const byAmp = new Map();
@@ -129,6 +135,9 @@ export function suctionTableFrom(json) {
   for (const p of json?.points ?? []) {
     const eta = p.eta_s_strip;
     if (!p.complete || !Number.isFinite(eta)) { skipped.push({ name: p.name, why: 'incomplete or no eta_s_strip' }); continue; }
+    // SPEC ruling after cfd round 3: only points marked settled: true enter; no verdict means out (the pure-plunge
+    // protocol points, the v14 points), and a superseded shorter run (settled false) is never averaged with its extension.
+    if (p.settled !== true) { skipped.push({ name: p.name, why: p.settled === false ? 'unsettled (settled false)' : 'no settled verdict' }); continue; }
     let amp = Number.isFinite(p.alpha_eff_amplitude_deg) ? (p.alpha_eff_amplitude_deg * Math.PI) / 180 : null;
     if (amp === null) {
       const moving = Object.keys(p).some((k) => /pitch|twist/i.test(k));
@@ -136,13 +145,12 @@ export function suctionTableFrom(json) {
     }
     if (amp === null) { skipped.push({ name: p.name, why: 'no effective-angle amplitude stated and not a pure plunge' }); continue; }
     const key = amp.toFixed(9);
-    const e = byAmp.get(key) ?? { amp, sum: 0, n: 0 };
-    e.sum += eta;
-    e.n += 1;
-    byAmp.set(key, e);
+    // Two settled points of one amplitude would be one case run twice: the file must say which supersedes the other.
+    if (byAmp.has(key)) throw new Error(`two settled eta_s points at one amplitude: ${byAmp.get(key).name} and ${p.name}`);
+    byAmp.set(key, { amp, eta, name: p.name });
     used.push(p.name);
   }
-  const table = [...byAmp.values()].map((e) => [e.amp, e.sum / e.n]).sort((a, b) => a[0] - b[0]);
+  const table = [...byAmp.values()].map((e) => [e.amp, e.eta]).sort((a, b) => a[0] - b[0]);
   return { table, used, skipped };
 }
 

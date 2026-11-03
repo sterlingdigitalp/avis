@@ -33,6 +33,28 @@ export function supportClass(x, xA, xB, tol = 0.05) {
 }
 
 /** Each stage's pinion and wheel speeds (rpm) from the crank's rpm: stage k's wheel turns at the crank's times the later stages' ratios. */
+/**
+ * Round 12 (SPEC ruling after physics round 11): a gear's load cycles over the design life life = { flights,
+ * flight_s } at rpm (the gear's own speed at the rating crank frequency, which bounds the flown crank rate): flights x
+ * flight_s x rpm / 60, every cycle counted at the peak. Null without a stated life (no life credit).
+ */
+export function lifeCycles(life, rpm) {
+  if (!life || !Number.isFinite(life.flights) || !Number.isFinite(life.flight_s) || !Number.isFinite(rpm)) return null;
+  return (life.flights * life.flight_s * rpm) / 60;
+}
+
+/**
+ * The JGMA 401-01 K_L column for a metal gear: carburized or nitrided teeth; otherwise a steel gear on its core
+ * hardness, HB 120-220 (induction-hardened teeth take the core; no KHK steel gear here states a core over HB 220);
+ * null (no life credit) for brass, stainless and anything else the table does not cover.
+ */
+export function lifeColumnOf(part) {
+  const ht = String(part.specs?.heat_treatment ?? ''), mat = String(part.specs?.material ?? '');
+  if (/carburi|nitrid/i.test(ht) || /carburi/i.test(mat)) return 'carburized_nitrided';
+  if (/S45C|SCM\d|SCM4|AISI 1045|AISI 41/i.test(mat)) return 'hb120_220';
+  return null;
+}
+
 export function stageSpeeds(stages, crankRpm) {
   return stages.map((s, k) => {
     const wheel = crankRpm * stages.slice(k + 1).reduce((a, q) => a * q.ratio, 1);
@@ -60,10 +82,14 @@ export function rateStages(stages, catalog, layout, gr) {
     const one = (part, z, zMate, mate) => {
       const sp_ = part.specs;
       const cat = { bending_Nm: sp_.allowable_torque_bending_nm ?? null, surface_Nm: sp_.allowable_torque_surface_durability_nm ?? sp_.allowable_torque_surface_nm ?? null };
-      if (isDuracon(part)) return lewisDuraconRating(cat, { m, z, v_m_s: v, mateDuracon: isDuracon(mate), reversing: gr.reversing, grease: gr.plastic_lubricant?.grease === true, temperature_C: gr.max_temperature_C });
+      // Round 12: this gear's own revolutions over the design life (gr.life), counted at the rating crank frequency.
+      const rpm = part === pin ? sp[k].pinion_rpm : sp[k].wheel_rpm;
+      const cycles = lifeCycles(gr.life, rpm);
+      if (isDuracon(part)) return lewisDuraconRating(cat, { m, z, v_m_s: v, mateDuracon: isDuracon(mate), reversing: gr.reversing, grease: gr.plastic_lubricant?.grease === true, temperature_C: gr.max_temperature_C, cycles });
       const hardened = /harden|carburi/i.test(sp_.heat_treatment ?? '');
       const lub = gr.metal_lubricant;
-      return jgmaGearRating(cat, { m, z, zMate, b_mm: Math.min(ps.face_width_mm ?? Infinity, gs.face_width_mm ?? Infinity), v_m_s: v, support, lubricant_cSt_50C: lub?.cSt_50C ?? null, reversing: gr.reversing, hardened, kv_row: kvRowOf(part, gr.accuracy) });
+      const column = lifeColumnOf(part);
+      return jgmaGearRating(cat, { m, z, zMate, b_mm: Math.min(ps.face_width_mm ?? Infinity, gs.face_width_mm ?? Infinity), v_m_s: v, support, lubricant_cSt_50C: lub?.cSt_50C ?? null, reversing: gr.reversing, hardened, kv_row: kvRowOf(part, gr.accuracy), ...(column ? { cycles, lifeColumn: column } : {}) });
     };
     const rp = one(pin, ps.teeth, gs.teeth, gear), rg = one(gear, gs.teeth, ps.teeth, pin);
     return {

@@ -1,3 +1,4 @@
+// Round 12: the design-file fixture is v20 (test/fixtures/larus-gl-2-v20.json, the committed HEAD design), the design these hand calculations were written for; v21 has its own tests (round12).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -12,7 +13,7 @@ import { linkageAt } from '../../sims/avis-shared/model.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const catalog = JSON.parse(readFileSync(join(ROOT, 'data/parts/catalog.json'), 'utf8'));
-const base = () => JSON.parse(readFileSync(join(ROOT, 'data/designs/larus-gl-2.json'), 'utf8'));
+const base = () => JSON.parse(readFileSync(join(ROOT, 'test/fixtures/larus-gl-2-v20.json'), 'utf8'));
 const near = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol, `${msg ?? ''} ${a} vs ${b}`);
 const built = (() => { let d = null; return () => (d ??= buildDesign(round6Params(base(), {}, catalog), catalog)); })();
 

@@ -180,6 +180,10 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
   - **The rule underneath.** η_s never goes above a value that was measured. Below the smallest amplitude, hold that point's value, as before.
   - **Reporting.** Report every strip that falls outside the measured band, with its amplitude.
   - **New CFD needed.** If any strip lies more than 1° beyond the band, the gates are not final until a new CFD point covers it.
+- **Below the smallest measured amplitude** (added 2026-11-03, after round 12).
+  - **Hold rule.** The 1° rule above covers only the high side. Below the band, the round 8 hold rule stands.
+  - **Final verdicts.** A gate verdict counts as final only if the same verdict holds with η_s at the 0.6 default everywhere. A strip held at the smallest point's value therefore cannot decide a gate.
+  - **v21.** Its verdicts are the same under the table and at 0.6, and M4 still passes at a uniform 0.50.
 
 ### Public repository
 

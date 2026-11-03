@@ -101,7 +101,7 @@ function motorBearingInfo(d, crankT) {
 }
 // ---- M7 structure at the worst load seen in M1-M3, M5 and the M4 seeds that pass (SPEC ruling) ----------------
 const population = (nom, m4runs) => [nom.M1, nom.M2, nom.M3, nom.M5, ...m4runs.filter((r) => r && !r.error && r.passed)];
-const PEAK_KEYS = ['rootBend', 'elbowBend', 'crankTorque', 'crankDrive', 'crankBack', 'couplerForce', 'twistTorque', 'tailTorque', 'loadFactor', 'shoulderTorque', 'motorI', 'battI', 'servoI', 'becI', 'crankRate', 'slotPair', 'motorIDrive', 'motorIBrake'];
+const PEAK_KEYS = ['rootBend', 'elbowBend', 'crankTorque', 'crankDrive', 'crankBack', 'couplerForce', 'twistTorque', 'tailTorque', 'loadFactor', 'shoulderTorque', 'motorI', 'battI', 'servoI', 'becI', 'regI', 'crankRate', 'slotPair', 'motorIDrive', 'motorIBrake'];
 const worstOf = (runs) => Object.fromEntries(PEAK_KEYS.map((k) => [k, Math.max(0, ...runs.map((r) => r.peaks[k] ?? 0))]));
 // Round 5: worst load on every support of design.structure.joints over a population (radial, axial, ISO 76 P0).
 const worstSupports = (runs) => {
@@ -201,19 +201,24 @@ const rmsHalf = { motor: Math.max(0, ...popHalf.map((r) => r.rms.motorRmsMax)), 
 const motorRms = Math.max(...all.map((r) => r.rms.motorRmsMax));
 const battRms = Math.max(...all.map((r) => r.rms.battRmsMax));
 const servosOnBattery = design.electrical?.servo_source === 'battery';
+// Round 12: servos behind a step-down regulator: their peak current against its published continuous rating, and the
+// FC's BEC carries the avionics only.
+const servoReg = design.electrical?.servo_source === 'regulator' ? design.electrical.servo_supply : null;
+const regPeak = servoReg ? Math.max(...all.map((r) => r.peaks.regI ?? 0)) : null;
 // The BEC's load: servos and avionics (rounds 1-3), or the avionics only when the HV servos run off the pack (round 4).
-const servo5 = Math.max(...all.map((r) => (servosOnBattery ? r.peaks.becI ?? 0 : r.peaks.servoI)));
+const servo5 = Math.max(...all.map((r) => (servosOnBattery || servoReg ? r.peaks.becI ?? 0 : r.peaks.servoI)));
 const m8 = {
   motor_rms_2s_max_A: motorRms, motor_continuous_A: design.motor.I_cont, motor_rule: design.motor.I_cont_rule, motor_peak_A: Math.max(...all.map((r) => r.peaks.motorI)),
   // Round 5: what the drive clamp and the braking limit did, by sign (the clamp is the governor's, gate-independent).
   motor_peak_driving_A: worst('motorIDrive'), motor_peak_braking_A: worst('motorIBrake'), drive_clamp_A: design.drive.governor?.clamp_A ?? design.drive.escCurrentClamp_A ?? null, clamp_location: design.drive.governor?.location ?? (Number.isFinite(design.drive.escCurrentClamp_A) ? 'ESC (round 4 model)' : null), braking_limit_A: design.motor.regenLimit_A ?? null,
   esc_rms_2s_max_A: motorRms, esc_continuous_A: design.esc.I_cont,
   battery_rms_2s_max_A: battRms, battery_continuous_A: design.battery.I_cont, battery_peak_A: Math.max(...all.map((r) => r.peaks.battI)),
-  servo_bus_peak_A: servo5, bec_rating_A: design.esc.bec_A, bec_carries: servosOnBattery ? 'avionics only (servos on the pack, in the battery current)' : 'servos and avionics', servo_and_avionics_peak_A: Math.max(...all.map((r) => r.peaks.servoI)), servo_model: 'stall current x torque/stall torque + published idle',
+  servo_bus_peak_A: servo5, bec_rating_A: design.esc.bec_A, bec_carries: servosOnBattery ? 'avionics only (servos on the pack, in the battery current)' : servoReg ? 'avionics only (servos on their regulator)' : 'servos and avionics',
+  ...(servoReg ? { servo_regulator: { part: servoReg.part, servo_peak_A: regPeak, continuous_A: servoReg.I_cont_A, within: regPeak <= servoReg.I_cont_A, rule: 'peak servo current (stall current x torque / stall torque + idle) against the published continuous output current' } } : {}), servo_and_avionics_peak_A: Math.max(...all.map((r) => r.peaks.servoI)), servo_model: 'stall current x torque/stall torque + published idle',
   population: { scenarios: ['M1', 'M2', 'M3', 'M5'], m4_seeds_passing: m4passRuns.length },
   timestep_check: { motor_rms_dt_half_A: rmsHalf.motor, battery_rms_dt_half_A: rmsHalf.batt, motor_change_pct: (rmsHalf.motor / motorRms - 1) * 100, battery_change_pct: (rmsHalf.batt / battRms - 1) * 100, servo_peak_change_pct: dtCheck.servoI.change_pct },
 };
-const m8ok = motorRms <= design.motor.I_cont && motorRms <= design.esc.I_cont && battRms <= (design.battery.I_cont ?? 0) && servo5 <= (design.esc.bec_A ?? 0) && m4passRuns.length > 0;
+const m8ok = motorRms <= design.motor.I_cont && motorRms <= design.esc.I_cont && battRms <= (design.battery.I_cont ?? 0) && servo5 <= (design.esc.bec_A ?? 0) && (!servoReg || regPeak <= servoReg.I_cont_A) && m4passRuns.length > 0;
 writeGate({ gate: 'M8', design: name, passed: m8ok && seeds >= 100, measured: m8, limit: { continuous: 'rms over 2 s windows within published continuous ratings (SPEC rule where none published)' }, evidence: rel(ev4) });
 
 }

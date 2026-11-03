@@ -1,3 +1,4 @@
+// Round 12: the design-file fixture is v20 (test/fixtures/larus-gl-2-v20.json, the committed HEAD design), the design these hand calculations were written for; v21 has its own tests (round12).
 // Round 9 design wiring: the gear train re-rated under the design's conditions (src/design/gearing.js), by hand.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -98,7 +99,7 @@ test('round-9 parameters: v18 with ROUND9 merged into the linkage blocks it name
   assert.equal(q.linkage.rocker.hub_od_mm, 16);
   assert.equal(q.linkage.rocker.boss_od_mm, 19.5);
   assert.deepEqual(q.parts.gears, base.params.parts.gears);
-  const d = JSON.parse(readFileSync(`${ROOT}data/designs/larus-gl-2.json`, 'utf8'));
+  const d = JSON.parse(readFileSync(`${ROOT}test/fixtures/larus-gl-2-v20.json`, 'utf8'));
   const a = round9Assumptions(base, { ...d, drive: { ...d.drive, gear_rating_conditions: { crank_Hz: 3 } }, launch: { release_speed_m_s: 8 } });
   assert.ok(a.some((x) => /^Round 9: hand release at 8 m\/s/.test(x)));
   assert.ok(a.some((x) => /Rating crank frequency 3 Hz/.test(x)));

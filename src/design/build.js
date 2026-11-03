@@ -352,7 +352,11 @@ export function buildDesign(params, catalog) {
   // on the flight pack, as is usual for HV servos on 2S; no regulator, so the supply is the pack itself, in the BOM with
   // its mass. Its voltage moves with charge and load, so torque and speed are taken at the lowest terminal voltage in
   // use (20% charge, the M2 reserve, sagging at the pack's continuous rating) and stall current at full charge.
-  const supply = batteryServoSupply(p.servoSupply, batt);
+  // Round 12: servos behind a catalogue step-down regulator (p.servoSupply 'regulator', parts.servoRegulator), so the
+  // pack's own voltage no longer has to sit inside the servo rows (3S packs become eligible).
+  const regP = p.servoSupply === 'regulator' ? byId(catalog, parts.servoRegulator) : null;
+  if (p.servoSupply === 'regulator' && !regP) throw new Error('servoSupply regulator needs parts.servoRegulator');
+  const supply = regP ? regulatorServoSupply(regP, batt) : batteryServoSupply(p.servoSupply, batt);
   const supplyV = supply ? supply.performance_V : (p.servoSupply_V ?? bec.volts);
   if (!Number.isFinite(supplyV)) throw new Error(`ESC ${escP.id} publishes no BEC voltage: no servo supply`);
   const esc = { id: escP.id, I_cont: escP.specs.continuous_current_a, bec_A: bec.amps, bec_V: bec.volts, bec_kind: bec.kind, eta: 0.95, eta_assumed: true, regenerative: false, regenerative_basis: 'no regenerative operation stated in the ESC documentation read for the catalogue', cells_text: escP.specs.cells_text ?? null };
@@ -428,7 +432,7 @@ export function buildDesign(params, catalog) {
     motor, esc, battery: batt, servos,
     structure: { items: structure, spar_inner: sparInner, spar_outer: sparOuter, gear_stages: gearStages, coupler: couplerSpec(couplerRod, bMm), ...(twistRod ? { twist_rod: twistRodSpec(twistRod, twistRodLen) } : {}) },
     bom: { parts: bom, structure, parts_g: partsG, structure_g: structG, margin_g: marginG, total_g: totalG },
-    electrical: { ...electricalOf({ supply, supplyV, batP, becPart, bec, fcBec, extraA: p.avionicsExtra_A ?? 0, extraNote: p.avionicsExtraNote }), ...(p.currentSense ? { current_sense: p.currentSense } : {}) },
+    electrical: { ...electricalOf({ supply, supplyV, batP, regP, becPart, bec, fcBec, extraA: p.avionicsExtra_A ?? 0, extraNote: p.avionicsExtraNote }), ...(p.currentSense ? { current_sense: p.currentSense } : {}) },
     cruise: {},
     assumptions: [
       `Section polar ${polarName}: ${pol.assumed ?? 'measured table'}`,
@@ -482,11 +486,31 @@ export function batteryServoSupply(kind, batt) {
   return { performance_V, current_V, rule: `torque and speed at ${performance_V} V: rested ${ocv20.toFixed(2)} V at 20% charge less ${sag.toFixed(2)} V sag at the pack's ${batt.I_cont} A continuous rating; stall current at the ${Number.isFinite(limit) ? `charge-limited ${current_V} V (${limit} V per cell)` : `full-charge ${current_V} V`}` };
 }
 
+/**
+ * Round 12: servo supply through a catalogue step-down regulator (category 'regulator'). Its input is the pack, from
+ * the lowest terminal voltage in use (as batteryServoSupply: 20% charge, sagging at the continuous rating) to full
+ * charge; both must lie inside the regulator's published input range. Torque and speed are taken at the lowest output:
+ * the published voltage less its accuracy, or the lowest input less the dropout read at the continuous current,
+ * whichever is lower; stall current at the published voltage plus its accuracy. The battery sees the servos' power at
+ * that highest output through the lower end of the published typical efficiency.
+ */
+export function regulatorServoSupply(reg, batt) {
+  const s = reg.specs;
+  const pack = batteryServoSupply('battery', batt);
+  if (pack.performance_V < s.min_input_v) throw new Error(`regulator ${reg.id}: the pack's lowest terminal voltage ${pack.performance_V} V is below its published minimum input ${s.min_input_v} V`);
+  if (pack.current_V > s.max_input_v) throw new Error(`regulator ${reg.id}: full charge ${pack.current_V} V is above its published maximum input ${s.max_input_v} V`);
+  const lo = s.output_v * (1 - s.output_accuracy_frac), hi = s.output_v * (1 + s.output_accuracy_frac);
+  const performance_V = +Math.min(lo, pack.performance_V - s.dropout_v_max).toFixed(3);
+  const current_V = +hi.toFixed(3);
+  return { performance_V, current_V, output_V: s.output_v, I_cont_A: s.continuous_current_a, eta: s.efficiency_min_frac, input_V: [pack.performance_V, pack.current_V], rule: `regulated ${s.output_v} V +-${(100 * s.output_accuracy_frac).toFixed(0)}%: torque and speed at ${performance_V} V (the lower of ${lo.toFixed(3)} V and the lowest input ${pack.performance_V} V less ${s.dropout_v_max} V dropout), stall current at ${current_V} V; battery draw at ${current_V} V output through ${s.efficiency_min_frac} efficiency (lower end of the published typical range); continuous ${s.continuous_current_a} A (published)` };
+}
+
 /** The design's electrical block: servo supply and the 5 V regulator for the avionics (ESC's BEC or the FC's). */
-function electricalOf({ supply, supplyV, batP, becPart, bec, fcBec, extraA, extraNote }) {
+function electricalOf({ supply, supplyV, batP, regP = null, becPart, bec, fcBec, extraA, extraNote }) {
   const where = fcBec ? 'built into the flight controller; its mass is in the BOM with the FC' : 'built into the flap ESC; its mass is in the BOM with the ESC';
   const avionics = { avionics_A_5V: +(0.35 + extraA).toFixed(4), avionics_note: `FC, GPS, receiver at 5 V, 0.35 A assumed (catalogue lists no current draw)${extraA ? ` plus ${extraA} A published (${extraNote ?? 'sensors'})` : ''}` };
   const becBlock = (carries) => ({ part: becPart.id, volts: bec.volts, amps: bec.amps, kind: bec.kind, published: bec.text, carries, note: where });
+  if (regP) return { ...avionics, servo_source: 'regulator', servo_supply_V: supplyV, servo_supply: { part: regP.id, ...supply }, bec: becBlock('avionics only') };
   return supply
     ? { ...avionics, servo_source: 'battery', servo_supply_V: supplyV, servo_supply: { part: batP.id, ...supply }, bec: becBlock('avionics only') }
     : { ...avionics, servo_source: 'bec', servo_supply_V: supplyV, bec: becBlock('servos and avionics') };

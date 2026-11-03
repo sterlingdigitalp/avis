@@ -702,13 +702,16 @@ export function createFlight(design, opts = {}) {
     // Round 4: HV servos may run straight off the pack (electrical.servo_source 'battery'); then only the avionics
     // load the BEC, and the servo current is battery current at pack voltage.
     const servosOnBattery = design.electrical?.servo_source === 'battery';
-    const Ibec = servosOnBattery ? iAvionics : I5;
+    // Round 12: servos behind a step-down regulator: its output power at the highest output voltage, through its
+    // published (lower-end) efficiency, from the pack; the FC's BEC then carries the avionics only.
+    const reg = design.electrical?.servo_source === 'regulator' ? design.electrical.servo_supply : null;
+    const Ibec = servosOnBattery || reg ? iAvionics : I5;
     // SPEC ruling: no regeneration credit. When the crank drives the motor (aero or inertia doing work on it), the
     // drive's braking stays in the dynamics but its energy is not returned to the battery, unless the chosen ESC's
     // own documentation states regenerative operation (design.esc.regenerative with its stated efficiency).
     const etaEsc = design.esc?.eta ?? 0.95;
     const Iesc = escBatteryCurrent(IbM, design.esc);
-    const I5batt = (5.0 * Ibec) / (0.85 * Vbus) + (servosOnBattery ? iServos : 0);
+    const I5batt = (5.0 * Ibec) / (0.85 * Vbus) + (servosOnBattery ? iServos : 0) + (reg ? (reg.current_V * iServos) / (reg.eta * Vbus) : 0);
     const Ibatt = Iesc + I5batt;
     out[20] = Ibatt; // coulombs per second
     let bendR = 0, bendL = 0, elbowR = 0, elbowL = 0, chordR = 0, chordL = 0;
@@ -795,6 +798,7 @@ export function createFlight(design, opts = {}) {
       tel.duty = dutyNow;
       tel.servo_I = I5;
       tel.bec_I = Ibec;
+      tel.reg_I = reg ? iServos : 0;
       tel.aux_power_w = Vbus * I5batt; // servos and avionics, battery side
       tel.servo_each = Math.max(iTwR, iTwL, iTlR, iTlL);
       tel.airspeed = relU * -1;
@@ -969,6 +973,7 @@ export function createFlight(design, opts = {}) {
     if (Math.abs(tel.batt_I) > peaks.battI) peaks.battI = Math.abs(tel.batt_I);
     if (tel.servo_I > peaks.servoI) peaks.servoI = tel.servo_I;
     if ((tel.bec_I ?? 0) > peaks.becI) peaks.becI = tel.bec_I;
+    if ((tel.reg_I ?? 0) > (peaks.regI ?? 0)) peaks.regI = tel.reg_I;
     if ((tel.servo_each ?? 0) > peaks.servoEach) peaks.servoEach = tel.servo_each;
     if (Math.abs(tel.twistTorque[0]) > peaks.twistTorque) peaks.twistTorque = Math.abs(tel.twistTorque[0]);
     if (Math.abs(tel.twistTorque[1]) > peaks.twistTorque) peaks.twistTorque = Math.abs(tel.twistTorque[1]);

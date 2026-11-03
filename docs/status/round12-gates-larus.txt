@@ -1,0 +1,63 @@
+design: larus-gl-2 v21 (data/designs/larus-gl-2.json), 1708.3 g, built by src/design/round12.mjs with the measured eta_s
+table (SPEC "Rulings after CFD round 3"). FINAL GATE SET: missions.mjs --seeds 100 --corners, flight step 1/3840 s, half-step
+check, 12 workers (out/verification/*-larus-gl-2.json and robust-larus-gl-2.json, ran 2026-11-03T06:19Z). The same design
+at the eta_s 0.6 default is kept as the comparison (out/sweep/round12/v21-eta0.6/, flown in a scratch copy).
+
+eta_s table (src/physics/strip.js, settled points only): 5.908 deg 0.732, 6.237 deg 0.699, 6.875 deg 0.659 (the three
+cfd round-3 points); below 5.908 held at 0.732; beyond 6.875 the -0.063 per degree slope continued (not used: no v21 strip
+is above the band). v21's strips (right wing; left within 0.4 deg), cruise 10 m/s at 1.891 Hz, k 0.198:
+  semispan  0.06  0.19  0.31  0.44  0.56  0.69  0.81  0.94
+  v21 deg   1.73  2.96  4.32  5.48  5.96  5.67  4.91  3.57   eta_s 0.732 everywhere but 0.56 (0.727)
+  v17 deg   1.85  3.23  4.83  6.25  6.98  6.65  5.71  4.26   (v17's own file under today's model; 9 m/s, 1.805 Hz, k 0.180)
+  Outside the 5.91-6.88 deg band: every strip but 0.56, all BELOW it; none above. More than 1 deg below: 0.06, 0.19, 0.31,
+  0.81, 0.94 (1.73-4.91 deg), held at the smallest point's 0.732. If "more than 1 deg beyond the band" includes below it,
+  these make the gates not final until a lower-amplitude cfd point covers them (the coordinator's call; v17's inboard and
+  tip strips sat below the band the same way). out/sweep/round12/v21-v17-alpha-eff.json.
+
+What changed from v20 (1598.3 g; docs/status/round12-levers.json):
+  - M5: the controller's own approach-and-flare law (control.js landingLaw, SPEC ruling after round 11): approach at VREF =
+    1.23 x the slowest steady glide over the 9 corners (14 CFR 25.125), 9.071 from 7.375 m/s, feed-forward from that speed's
+    glide row, exponential flare (tau 1.5 s); M5 now also fails on a stall departure.
+  - gear life factors at 200 flights of 1500 s (JGMA K_L / K_HL, KHK Duracon chart; every M2 endurance <= 1297 s): no credit
+    at the binding members.
+  - drive: 3S Gens ace 2200 mAh 35C, Scorpion SII-3008-1090 (95 g, 26 A), ratio-41.67 train with no steel-on-Duracon mesh
+    (DS1-20/DS1-60, MSGA1-18/SSAG1-40J10, MSGA1-18/MSGB1-45 x2; 437 g of gears) rated at 4 Hz; SKF 628/8-2Z on the fast
+    shaft; servos behind a Pololu D36V50F7 7.5 V regulator (7 g), tail servos Hitec MD89MW; governor drive clamp 26 A;
+    linkage and airframe members resized to the 3S loads; stroke envelope keeps 0.6 of every member rating (3.32 Hz,
+    member-limited); hand launch at 2.6 Hz (control.launchLaw).
+  - found on the way: v20 flew a 3.20 Hz peak crank rate against its 3.0 Hz rating condition; v19-v20 (and the first v21)
+    meshed steel pinions with Duracon wheels, which the round-4 mixed-mesh ruling cannot judge (and Hertz 72-79 MPa against
+    KHK's Duracon curve near 32 MPa would fail anyway); missions.mjs had not been run on them since v17.
+
+V1  pass      unchanged from round 7          V2  FAIL  unchanged (ruling)      V3  pass  unchanged
+V4  pass      unchanged                       V5  pass  unchanged from round 8 (v18 wing and stroke; not rerun on the 3S drive)
+V6  pass      unchanged                       V7  FAIL  unchanged (ruling)
+M1  FAIL      8 m/s release (named speed) at 5 deg, the gate's case: nominal loses 0.977 m and climbs 0.722 m/s (pass); the two
+              aero 0.9 / mass 1.05 corners fail; the other six pass. Over 0 / 5 / 10 deg at all 9 (scratchpad
+              r12/v21-final-m1m2.json): 9 of 27 fail, nominal worst 1.058 m, worst 2.554 m (aero 0.9 / mass 1.05 / CG +5 mm at
+              10 deg). Half-step: height lost +3.96%. At eta_s 0.6: four aero-0.9 corners failed, worst 2.921 m.
+              Lowest passing release speed, for information (above the 8 m/s cap, at eta_s 0.6, worst over the 27): 8.5 m/s
+              loses 2.01 m; 9 m/s at most 1.02 m but some cases still sink over 2-3 s; 10 m/s nothing lost but one case sinks
+              -0.13 m/s: none up to 10 m/s passes both criteria. Launch stroke 2.3-2.9 Hz: worst 2.915-2.942 m (no lever left).
+M2  pass      nominal 19.69 min, power ratio 4.35; corners 17.83-21.61 min; half-step 0.04%
+M3  pass      altitude deviation 0.44 m nominal; every corner passes; half-step -1.9%
+M4  pass      nominal 100/100; corners 100, 100, 99, 99, 100, 100, 100, 100 (aero 0.9 / mass 1.05 at 99); worst H 5 m; half-step on
+              the 100 passing seeds: 100/100, worst roll -0.4%, pitch -0.3%, altitude +0.2%. At eta_s 0.6: corners 98-100;
+              lowest passing eta_s by bisection 0.50 (0.46 fails, 97/100 at aero 0.9 / mass 1.05; out/sweep/round12/eta/).
+M5  pass      nominal touchdown 8.295 m/s, sink 0.645 m/s, slowest airspeed 8.24 m/s, max stalled fraction 1.1%, no departure;
+              every corner passes; half-step +0.04% on speed
+M6  1708.3 g  every part cited, 15% margin 222.8 g
+M7  pass      population M1-M3, M5 and the 100 passing M4 seeds (nominal): FoS min 1.678 (shoulder rail right, torsion lock screws
+              in the plate); spars 1.92 / 2.62, coupler buckling 1.88 / stress 2.71, bearings min 1.89, members min 1.678; gear
+              torque at the crank 15.26 N m against 16.24 rated (last-stage MSGA1-18 surface), every stage within rating; rating
+              conditions hold (peak crank rate 24.23 rad/s = 3.86 Hz within 4.0 Hz; reversing declared); no mixed-material
+              mesh; RC-practice fixings within their published figures (DS1-60 bonded 1.10 of 8.44 N m, DS1-20 on the motor
+              shaft 0.37 of 3.30 N m); servos twist 0.592 / 1.020 N m, tail 0.151 / 0.804; half-step: every M7 channel within
+              2.98%, every support within 8.33%.
+M8  pass      motor 2 s RMS max 22.6 A of 26 A continuous (published), ESC 45 A, battery RMS 15.6 of 77 A (claimed 35C), FC BEC
+              0.415 of 2 A (avionics only), servo regulator peak 2.73 of 5 A; half-step -0.3%
+
+Verdict: v21 passes M2-M8 with the measured eta_s table and fails only M1, at the two aero 0.9 / mass 1.05 corners (worst
+2.55 m against 1.5 m over the 0-10 deg release range; 0.98 m nominal at 5 deg). The M1 shortfall is the energy to reach
+the flapping floor from an 8 m/s release (round12-levers.json row 4). Whether the gates are final depends on how the
+coordinator reads "more than 1 deg beyond the band" for the inboard and tip strips below it.

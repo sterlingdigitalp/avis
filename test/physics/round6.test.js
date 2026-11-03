@@ -129,35 +129,42 @@ test('flight controller current sense: readings at the ADC resolution, raw witho
   for (const v of senseRun(0.5, 10.1, { noise: true, steps: 50 })) near(v / 0.5, Math.round(v / 0.5), 1e-9, 'counts');
 });
 
-test('eta_s table: linear in the effective-angle amplitude between points, clamped to the end values', () => {
+// SPEC ruling after cfd round 3: beyond the largest amplitude a lowering last slope continues (floored at 0), a raising
+// one is held; below the smallest, held as before.
+test('eta_s table: linear in the effective-angle amplitude between points, held below, extrapolated downward only', () => {
   const t = [[0.4, 0.1], [0.2, 0.3]]; // any order
   near(suctionEtaAt(t, 0.3), 0.2, 1e-12);
   near(suctionEtaAt(t, 0.25), 0.25, 1e-12);
   assert.equal(suctionEtaAt(t, 0.1), 0.3);
-  assert.equal(suctionEtaAt(t, 0.9), 0.1);
+  near(suctionEtaAt(t, 0.45), 0.05, 1e-12); // slope -1 per rad continued
+  assert.equal(suctionEtaAt(t, 0.9), 0); // floored at 0
+  assert.equal(suctionEtaAt([[0.2, 0.1], [0.4, 0.3]], 0.9), 0.3); // a raising last segment is held
   assert.equal(suctionEtaAt([[0.3, 0.5]], 0.1), 0.5);
   assert.throws(() => suctionEtaAt([], 0.2));
 });
 
-test('eta_s table from the cfd file: stated amplitudes, pure plunge from atan(2 k h/c), others skipped, ties averaged', () => {
+// SPEC ruling after cfd round 3 replaced this test's rule (every complete point, ties averaged): only settled: true
+// points enter, no verdict means out, and two settled points at one amplitude are an error.
+test('eta_s table from the cfd file: settled points only, pure plunge from atan(2 k h/c), no verdict out, ties an error', () => {
   const json = {
     points: [
-      { name: 'plunge', complete: true, k: 0.35, h_over_c: 0.75, eta_s_strip: 0.136 },
-      { name: 'stated', complete: true, k: 0.3, h_over_c: 0.5, twist_amplitude_deg: 10, alpha_eff_amplitude_deg: 15, eta_s_strip: 0.3 },
-      { name: 'stated-2', complete: true, alpha_eff_amplitude_deg: 15, eta_s_strip: 0.5 },
-      { name: 'twist-no-amplitude', complete: true, k: 0.3, h_over_c: 0.5, twist_amplitude_deg: 10, eta_s_strip: 0.2 },
-      { name: 'unfinished', complete: false, k: 0.3, h_over_c: 0.5, eta_s_strip: 0.9 },
+      { name: 'plunge', complete: true, settled: true, k: 0.35, h_over_c: 0.75, eta_s_strip: 0.136 },
+      { name: 'stated', complete: true, settled: true, k: 0.3, h_over_c: 0.5, twist_amplitude_deg: 10, alpha_eff_amplitude_deg: 15, eta_s_strip: 0.3 },
+      { name: 'no-verdict', complete: true, alpha_eff_amplitude_deg: 12, eta_s_strip: 0.5 },
+      { name: 'twist-no-amplitude', complete: true, settled: true, k: 0.3, h_over_c: 0.5, twist_amplitude_deg: 10, eta_s_strip: 0.2 },
+      { name: 'unfinished', complete: false, settled: true, k: 0.3, h_over_c: 0.5, eta_s_strip: 0.9 },
     ],
   };
   const r = suctionTableFrom(json);
-  assert.deepEqual(r.skipped.map((s) => s.name), ['twist-no-amplitude', 'unfinished']);
+  assert.deepEqual(r.skipped.map((s) => s.name), ['no-verdict', 'twist-no-amplitude', 'unfinished']);
   assert.equal(r.table.length, 2);
   near(r.table[0][0], 15 * DEG, 1e-12);
-  near(r.table[0][1], 0.4, 1e-12);
+  near(r.table[0][1], 0.3, 1e-12);
   // hdot_max / U = h0 omega / U = 2 k h0 / c with k = omega c / (2 U): 0.525, i.e. 27.7 deg.
   near(r.table[1][0], Math.atan(0.525), 1e-12);
   near(r.table[1][0] / DEG, 27.7, 0.05);
   near(r.table[1][1], 0.136, 1e-12);
+  assert.throws(() => suctionTableFrom({ points: [json.points[1], { ...json.points[1], name: 'stated-2' }] }), /two settled eta_s points/);
 });
 
 test('strip model with an eta_s table: each strip takes the table at its amplitude; a flat table equals the constant', () => {
@@ -167,7 +174,9 @@ test('strip model with an eta_s table: each strip takes the table at its amplitu
   const table = [[10 * DEG, 0.5], [30 * DEG, 0.1]];
   const amp = [5, 10, 15, 20, 30, 40].map((a) => a * DEG);
   const m = createStrip(wing, { n: 6, suction: { table, amplitude: amp } });
-  [0.5, 0.5, 0.4, 0.3, 0.1, 0.1].forEach((e, i) => { near(m.suctionEtaOf(i), e, 1e-12, `right ${i}`); near(m.suctionEtaOf(i + 6), e, 1e-12, `left ${i}`); });
+  // 40 deg lies beyond the last point: its lowering slope (-0.4 per 20 deg) continues, to -0.1, floored at 0 (SPEC
+  // ruling after cfd round 3; before it, the last value was held).
+  [0.5, 0.5, 0.4, 0.3, 0.1, 0].forEach((e, i) => { near(m.suctionEtaOf(i), e, 1e-12, `right ${i}`); near(m.suctionEtaOf(i + 6), e, 1e-12, `left ${i}`); });
   assert.throws(() => createStrip(wing, { n: 6, suction: { table, amplitude: [0.1, 0.2] } }));
   // Inviscid keeps full suction whatever is passed.
   assert.equal(createStrip(wing, { n: 6, inviscid: true, suction: { table, amplitude: amp } }).suctionEtaOf(3), 1);

@@ -134,6 +134,16 @@ export function m1Passed({ climb3, lost, speed }) {
   return climb3 > 0 && lost < LIMITS.M1.height_lost_m && speed <= LIMITS.M1.release_speed_m_s;
 }
 
+/**
+ * M5's pass rule: a touchdown with sink at most 1.5 m/s and speed at most 9 m/s, after a controlled descent; round 12
+ * reads "controlled" as no stall departure (M4's definition: over half the wing stalled through a whole second).
+ */
+export function m5Passed(touchdown, departure = false) {
+  return !!touchdown && touchdown.sink <= LIMITS.M5.sink_m_s && touchdown.speed <= LIMITS.M5.speed_m_s && !departure;
+}
+
+const s0y = (sim) => sim.snapshot().pos[1];
+
 // ---- M1 hand launch: released at the design's named speed (at most the gate's 8 m/s) and the angle limits. ------
 export function runM1(design, { seed = 1, perturb = {}, speed = releaseSpeedOf(design), pitchDeg = 5, sensorNoise = true, delay = 0.02, log = false, servoSpeedScale, dt = null } = {}) {
   dt = dt ?? design.control?.dt ?? 1 / 240;
@@ -309,57 +319,83 @@ export function runM4Seed(design, seed, { perturb = {}, sensorNoise = true, dela
 }
 
 // ---- M5 belly landing ------------------------------------------------------------------------------------------
+/**
+ * The scenario-side glide law of rounds 1-11 (designs without control.landing): pitch holds the approach speed from
+ * the least-sink row's pitch, plus a flare ramp below flareHeight. Returns the pitch command (rad).
+ */
+export function legacyGlidePitch(land, thApp, Vapp, est, v) {
+  let pitch = thApp + (land.kV ?? 0.03) * (v - Vapp);
+  const flareH = land.flareHeight ?? 1.5;
+  if (est < flareH) pitch += (1 - Math.max(est, 0) / flareH) * (land.flareTheta ?? 10 * DEG);
+  return pitch;
+}
+
+/**
+ * Round 12: the controlled-descent record of M5 once the wings are parked: slowest true airspeed (and when), most
+ * stalled fraction, and the longest run with over half the wing stalled (M4's departure definition: a whole second).
+ */
+export function descentTracker() {
+  const r = { minV: Infinity, tMinV: null, maxStalled: 0, run: 0, longest: 0 };
+  return {
+    add(t, airspeed, stalled, dtStep) {
+      if (airspeed < r.minV) { r.minV = airspeed; r.tMinV = t; }
+      r.maxStalled = Math.max(r.maxStalled, stalled);
+      r.run = stalled > 0.5 ? r.run + dtStep : 0;
+      r.longest = Math.max(r.longest, r.run);
+    },
+    get departure() { return r.longest > 1.0; },
+    summary: () => ({ min_airspeed_m_s: r.minV, min_airspeed_t_s: r.tMinV, max_stalled_fraction: r.maxStalled, longest_stall_s: r.longest, stall_departure: r.longest > 1.0 }),
+  };
+}
+
+/** M5's approach speed: the controller's landing law's, else design.landing.Vapp, else the least-sink glide row's. */
+function m5Approach(design) {
+  const ctlC = design.control;
+  const gl = ctlC.glide ?? [];
+  const app = gl.length ? gl.reduce((p, q) => (q.sink < p.sink && q.V >= gl[0].V * 1.1 ? q : p), gl[gl.length - 1]) : null;
+  const law = ctlC.landing ?? null;
+  const Vapp = law ? law.Vapp_m_s : design.landing?.Vapp ?? (app ? app.V : ctlC.Vmin * 1.1);
+  return { law, Vapp, thApp: app ? app.theta : -0.05 };
+}
+
 export function runM5(design, { seed = 1, perturb = {}, sensorNoise = true, delay = 0.02, log = false, startHeight = 20, servoSpeedScale, dt = null } = {}) {
   dt = dt ?? design.control?.dt ?? 1 / 240;
   const HZ = Math.round(1 / dt);
   const groundY = 0;
-  const ctlC = design.control;
-  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, sensorNoise, delay, servoSpeedScale, dt, init: { y: startHeight, V: ctlC.Vcruise } });
+  const { sim, ctl, tick } = setupFlight(design, { seed, perturb, sensorNoise, delay, servoSpeedScale, dt, init: { y: startHeight, V: design.control.Vcruise } });
   const L = log ? makeLog(sim, design, 'M5') : null;
   ctl.guidance.altitude = startHeight;
   const bottom = design.body.bottom_y_m ?? -0.04;
-  let t = 0;
-  // Settle, then park the wings and glide at the approach speed from the glide table, flaring near the ground.
-  let touchdown = null;
-  let flareStart = null;
-  const gl = ctlC.glide ?? [];
+  // Settle, then park the wings and glide at the approach speed, flaring near the ground. Round 12: a design whose
+  // controller carries a landing law (control.landing, control.js landingLaw) flies it in the controller ('land' mode);
+  // older designs keep the scenario-side law (legacyGlidePitch).
+  const { law, Vapp, thApp } = m5Approach(design);
   const land = design.landing ?? {};
-  // Approach speed: the glide-table speed of least sink with a margin over the slowest trimmed glide.
-  let app = gl.length ? gl.reduce((p, q) => (q.sink < p.sink && q.V >= gl[0].V * 1.1 ? q : p), gl[gl.length - 1]) : null;
-  const Vapp = land.Vapp ?? (app ? app.V : ctlC.Vmin * 1.1);
-  const thApp = app ? app.theta : -0.05;
   ctl.guidance.speed = Vapp;
+  ctl.guidance.groundH = groundY;
+  const track = descentTracker();
+  let t = 0, touchdown = null, flareAt = null;
   while (t < 90) {
     if (t > 3) {
       ctl.guidance.flapping = false;
-      ctl.guidance.mode = 'glide';
+      ctl.guidance.mode = law ? 'land' : 'glide';
     }
-    const est = ctl.hEst - groundY;
-    const v = ctl.VEst;
-    if (ctl.guidance.mode === 'glide') {
-      // Hold approach speed with pitch: fast -> nose up.
-      let pitch = thApp + (land.kV ?? 0.03) * (v - Vapp);
-      // Flare: arrest the sink as the belly nears the ground.
-      const flareH = land.flareHeight ?? 1.5;
-      if (est < flareH) {
-        if (flareStart === null) flareStart = t;
-        const f = 1 - Math.max(est, 0) / flareH;
-        pitch += f * (land.flareTheta ?? 10 * DEG);
-      }
-      ctl.guidance.pitchCmd = pitch;
-    }
+    if (law) {
+      if (flareAt === null && ctl.landing.flare) flareAt = { t, V: sim.tel.airspeed, h: s0y(sim) };
+    } else if (ctl.guidance.mode === 'glide') ctl.guidance.pitchCmd = legacyGlidePitch(land, thApp, Vapp, ctl.hEst - groundY, ctl.VEst);
     tick();
     if (L && Math.round(t * HZ) % Math.max(1, Math.round(HZ / 120)) === 0) L.add();
     t += 1 / HZ;
     const s2 = sim.snapshot();
+    if (t > 4) track.add(t, sim.tel.airspeed, sim.tel.stalled, 1 / HZ);
     if (s2.pos[1] + bottom <= groundY && t > 3) {
-      const speed = Math.hypot(s2.vel[0], s2.vel[1], s2.vel[2]);
-      touchdown = { t, sink: -s2.vel[1], speed, pitch: attitude(sim).theta / DEG, roll: attitude(sim).phi / DEG, Vapp };
+      touchdown = { t, sink: -s2.vel[1], speed: Math.hypot(s2.vel[0], s2.vel[1], s2.vel[2]), pitch: attitude(sim).theta / DEG, roll: attitude(sim).phi / DEG, Vapp };
       break;
     }
   }
-  const passed = !!touchdown && touchdown.sink <= 1.5 && touchdown.speed <= 9;
-  return { passed, measured: touchdown ? { touchdown_sink_m_s: touchdown.sink, touchdown_speed_m_s: touchdown.speed, pitch_deg: touchdown.pitch, roll_deg: touchdown.roll, time_s: touchdown.t, from_height_m: startHeight } : { touchdown: false }, peaks: { ...sim.peaks }, rms: { ...sim.rms }, log: L?.output() };
+  const passed = m5Passed(touchdown, track.departure);
+  const descent = { approach_cmd_m_s: Vapp, ...track.summary(), ...(law ? { law: 'control.landing (control.js landingLaw)', flare_entry: flareAt } : { law: 'scenario-side glide law (before round 12)' }) };
+  return { passed, measured: touchdown ? { touchdown_sink_m_s: touchdown.sink, touchdown_speed_m_s: touchdown.speed, pitch_deg: touchdown.pitch, roll_deg: touchdown.roll, time_s: touchdown.t, from_height_m: startHeight, ...descent } : { touchdown: false, ...descent }, peaks: { ...sim.peaks }, rms: { ...sim.rms }, log: L?.output() };
 }
 
 // ---- Corridor: same controller and wind, following data/env/corridor.json ----------------------------------------

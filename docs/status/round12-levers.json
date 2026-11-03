@@ -1,0 +1,109 @@
+{
+ "note": "Round 12 (Larus GL-2). Not gate files. Every number was measured by the scripts named (scratchpad r12/ is the physics agent's scratch directory; evidence copied under out/sweep/round12/). eta_s 0.6 default unless stated.",
+ "rows": [
+  {
+   "tag": "1 M5 approach-and-flare law (controller law, SPEC ruling after round 11)",
+   "method": "src/physics/control.js landingLaw in the controller (\"land\" mode) at its 240 Hz rate, on pitot airspeed and baro/IMU height and climb rate, through the 20 ms delay line: approach PI on airspeed with the feed-forward from the approach speed's own glide row; exponential flare latched below flareH = tau x approach sink (tau 1.5 s, touchdown sink command 0.3 m/s, kS 0.3); stall guard at 1.1 Vs. Approach speed VREF = 1.23 x the reference stall speed (14 CFR 25.125(b)(2)(i)), the stall speed being the slowest converged steady parked-wing glide trim over nominal and the 8 corners (src/design/round12.mjs landingLawFor, to 0.05 m/s). runM5 adds \"no stall departure\" (M4's definition) to its pass rule.",
+   "on_v20": "v20 with the law (Vapp 8.92 = 1.23 x 7.25): touchdown 7.99-8.55 m/s, sink <= 0.71 m/s at all 9 corners x 2 seeds, no stall departure (scratchpad r12/m5runs-v2.log); the old law touched down at 9.76 m/s. Approach at 9.43 (1.3 Vs) failed 18/18 at 9.15-9.48 m/s; the flare gains were chosen on this sweep (r12/m5b.log).",
+   "tests": "test/physics/round12.test.js (approach, flare, guard, bounds, pass rule against hand calculations)"
+  },
+  {
+   "tag": "2 gear life factors (SPEC ruling after round 11)",
+   "method": "src/physics/gears.js KL_TABLE / KHL_TABLE (JGMA 401-01 / 402-01 as KHK Tables 10.2 / 10.10 print them; KHK Japanese PDF and the SDP/SI-numbered copy agree; scratchpad research/round12-parts.json Q1), a count taking the row at or above it (no source states a rule between rows); K_L on bending, K_HL squared on surface; Duracon from KHK Fig. 11.3 read off the curve less 0.05 kgf/mm2 (no printed numbers). src/design/gearing.js lifeCycles: 200 flights x flight_s x the gear's own rpm at the rating crank frequency.",
+   "result": "no credit where it matters: the binding members are the fast Duracon stages (> 1e6 cycles: 8.9e6-1.5e7) and the last-stage MSGA1-18 pinion (1.1e6 cycles at 3 Hz and 743 s, just past the 1e6 row); only the slow crank wheels (4.5e5 cycles) gain K_L 1.1 / K_HL 1.15, and they are not binding. v20's train stays 16.24 N m at the crank. Every lighter or stronger train found by r12/trainsearch12.mjs with life factors is set by the same members.",
+   "cycles_v20": {
+    "MSGB1-45 crank wheel": 445800,
+    "MSGA1-18 last pinion": 1115000,
+    "DS1-64": 2786000,
+    "DS1-36": 8916000,
+    "DSF1-24 motor pinion": 13370000
+   },
+   "tests": "test/design/round12.test.js"
+  },
+  {
+   "tag": "2b latent M7 rating-condition failure on v20",
+   "finding": "v20's M4 population reaches a peak crank rate of 3.20 Hz (r12/m4a.log) against the 3.0 Hz its train was rated at; missions.mjs M7 checks speed_within, so v20 would have failed M7 on the rating condition. v21 rates its train at 4.0 Hz; its flown peak is 3.83 Hz."
+  },
+  {
+   "tag": "2c mixed-material meshes (SPEC ruling after round 4)",
+   "finding": "src/physics/structure.js mixedMeshCheck fails a steel-on-Duracon mesh unless both members carry a published allowable surface stress, and no catalogue gear does. v19/v20's trains (MSGA1-20 / DS1-64, and DSF1-24's SUS303 hub read as steel against DS1-36) and the first v21 (SSG1-15 / DS1-64) all mesh steel with Duracon; missions.mjs was last run on v17 (no mixed mesh), so it was never reported. The first v21 failed M7 on it alone (scratchpad r12/v21a-M7-nominal.json: everything else in M7 passed, FoS >= 1.72). trainsearch12.mjs --no-mixed: the lightest train with no mixed mesh is 432.5 g (G 41.7), 86 g more than the 346 g mixed train."
+  },
+  {
+   "tag": "3 servo regulator, 3S packs and the motor",
+   "method": "build.js regulatorServoSupply (p.servoSupply \"regulator\", parts.servoRegulator): torque and speed at the published output less its 4% accuracy, or the lowest pack voltage less the dropout read off the curve; stall current at output + 4% (existing V/V_top rule above the top current row); battery draw at that voltage through the lower end of the published typical efficiency. flight.js draws the regulator's power from the pack; missions.mjs M8 checks the servo peak against its published continuous output. Catalogue: 4 Pololu regulators (S/r12/cat12.py, research/round12-parts.json Q3).",
+   "what_if": "v20 with its pack at 3 cells (scratchpad r12/whatif3s-*): stroke cap x1.1 / x1.2 gave M4 98 / 100 nominal; M1 3.03 / 4.46 m (worse: more frequency at the 8 m/s release stalls the outer wing).",
+   "screens": "r12/b/: sc47 (Scorpion SII-3008-1090, G 47.4) M4 100/98/100 but crank 16.8/17.9 N m; sc40 (G 40) M4 100/99/100, crank 15.3/16.2, coupler 1714 N (FoS 1.25); lower stroke caps RAISE the crank peak (16.13 at x0.94); the drive clamp at 26 A cuts it to 14.0/15.3 with M4 100/99 (r12/b/sc40-clamp.log)."
+  },
+  {
+   "tag": "4 M1 launch law",
+   "method": "control.js launchLaw: pitch \"speed\" (PI on a climb-out airspeed) or the existing climb law, and a launch stroke frequency freq_Hz.",
+   "result_v20": "speed-hold laws 2.76-4.25 m worst (worse than the climb law, 2.38); climb command 1.5 / 6 m/s, stall-pitch gain 0.03 / 0.2, twist cap 45 / 52 deg: 2.38-2.48; launch frequency 1.9-2.45 Hz: best 2.338 at 2.45 (r12/m1a-c.log, m1b.log).",
+   "result_v21": "v21 (envelope 3.33 Hz): own law 2.92 m; launch at 2.4 / 2.6 / 2.8 / 3.0 Hz on the 1588 g build: 2.18 / 2.15 / 2.32 / 2.48 m (r12/b/sc40m4-m1.log); v21 flies 2.6 Hz. On the final 1708 g v21 the launch frequency no longer matters: 2.3 / 2.45 / 2.6 / 2.75 / 2.9 Hz give a worst 2.942 / 2.935 / 2.921 / 2.915 / 2.926 m (r12/v21-m1-launch.log).",
+   "physics": "Static flapping trims (r12/flaptrim*.log): level flight needs >= 9.25 m/s nominal even at 38 deg twist (9.0 m/s needs 4.8 Hz); the worst corner cannot trim at 9.5. From an 8 m/s release the kinetic energy to reach that floor alone is (9.25^2 - 8^2)/2g = 1.1 m nominal and about 1.5-1.7 m at aero 0.9 / mass 1.05."
+  },
+  {
+   "tag": "5 M4",
+   "finding": "Failures are sustained Dryden downdrafts beyond the climb power (seed 15: -2.5 m/s for 7 s, r12/m4trace.mjs). Vrough 16 / 17 and TECS spdWeight 0.2 did not help (93-96/100, r12/m4a.log). The 3S drive closes it (see 3 and the gate table)."
+  },
+  {
+   "tag": "6 mass",
+   "finding": "Nothing the rules do not require was found to remove: the round-12 member probes show the 3S stroke speeds load the shoulder rails, lock screws, brackets, side panels, coupler and crank 1.3-1.6x harder, so v21 sizes them up (+27 g with margin) and the stroke envelope now keeps 0.6 of every member rating (trim.js membersRatio, opt-in). Members sit at FoS 1.66 and up on the nominal population (M7). Against v20: tail servos HV6160 -> Hitec MD89MW (-18 g), motor C-2820 -> Scorpion SII-3008-1090 (-45 g), 3S pack +39 g, regulator +7 g, gears +66 g (no-mixed train, 437 g), drive linkage and plates +50 g, margin +15 g: 1708.3 g."
+  },
+  {
+   "tag": "2d steel-on-Duracon contact, for information (research/round12-contact.json)",
+   "finding": "KHK publishes Duracon's maximum allowable surface stress only as a curve for a Duracon/Duracon pair (Technical Reference Fig. 11.7, m 2, 12 m/s, room temperature, unlubricated basis), read at about 32 MPa at 1e6 and 24 MPa at 1e7 cycles; no maker rates the steel/Duracon pair. Hertz (structure.js hertzSpur, steel 205.9 GPa / 0.3, Duracon 2.7 GPa / 0.35, b 6 mm) at the flown pinion torques gives 78.9 MPa on the first v21's SSG1-15/DS1-64 and 72.0 MPa on v20's MSGA1-20/DS1-64: even if the curve were admitted, both meshes would fail by 2-3x. The no-mixed train is therefore required, not only a reading of the rule."
+  },
+  {
+   "tag": "v21 (built: src/design/round12.mjs --no-suction; ROUND12.set / opt / launchLaw)",
+   "mass_g": 1708.3,
+   "groups_g": {
+    "motor": 95,
+    "avionics": 38,
+    "battery": 143,
+    "servos": 111,
+    "gears": 437,
+    "drive linkage and gearbox": 376,
+    "wing": 166,
+    "airframe": 119,
+    "margin": 223
+   },
+   "drive": "3S Gens ace 2200 mAh 35C; Scorpion SII-3008-1090; DS1-20/DS1-60, MSGA1-18/SSAG1-40J10, MSGA1-18/MSGB1-45 x2, ratio 41.67, 16.24 N m at the crank rated at 4 Hz; SKF 628/8-2Z on the fast shaft; governor clamp 26 A; envelope 3.33 Hz (member-limited at 0.6)",
+   "servos": "Pololu D36V50F7 7.5 V regulator: twist MKS HV6160 at 7.2 V (1.02 N m at the wing), tail Hitec MD89MW (0.804 N m)",
+   "landing": "Vapp 9.071 m/s (1.23 x 7.375), Vfloor 8.11",
+   "gates_eta_0.6": "out/sweep/round12/v21-eta0.6/ (missions.mjs in a scratch copy): M1 FAIL (nominal 1.149 m at 5 deg; 4 aero-0.9 corners fail; 12/27 over 0/5/10, worst 2.921 m), M2 17.9 min, M3 0.43 m, M4 100 / corners 98-100, M5 8.19 m/s (corners pass), M6 1708.3 g, M7 FoS 1.663 / crank 15.72 of 16.24 / rate 3.84 of 4.0 Hz, M8 23.0 of 26 A",
+   "eta_s_M4": "lowest passing 0.50 (0.46 fails at 97/100); out/sweep/round12/eta/",
+   "kinematics": "k 0.208, alpha_eff amplitudes 5.65 / 6.20 / 5.96 deg at 0.44 / 0.56 / 0.69 semispan (v20 5.60 / 6.13 / 5.89)"
+  },
+  {
+   "tag": "launch interpretation, not used",
+   "note": "M1 releases the bird with pitch equal to the flight-path angle (zero angle of attack), as every round since round 1. That reading was not changed: changing it is the orchestrator's call, and it was not flown this round."
+  },
+  {
+   "tag": "code checks (out/sweep/round12/checks*/)",
+   "tests": "213/213 (node --test, test/**). 13 round 4-9 and 11 design tests had read the live design file as their base and broke on v21's 3S/regulator/train parameters; they now read a frozen copy of the committed v20 (test/fixtures/larus-gl-2-v20.json), the design their hand calculations were written for, with no assertion changed.",
+   "mutator": "scratch copy, 6 workers, --mutate-all on the touched files, round-12 tests: control.js 91.1% (5 survivors, all equivalent: '?? 0' on an undefined integral, '<' to '<=' where both sides give the same command), gears.js 90.9% (10 survivors, all in pre-existing lines or the Math.max(1, ...) floor no tabulated row reaches), gearing.js 64.3% (pre-existing kvRowOf and equivalent '??' to '||' on strings), build.js regulatorServoSupply 100%, trim.js membersRatio 75% (4 equivalent), round12.mjs 60% (8: equivalent tolerances, ties and an error-message filter). Checks2 run; the first run's survivors were killed by the added boundary and record tests. strip.js suctionTableFrom / suctionEtaAt (round12 + round6 tests, 12 workers, out/sweep/round12/checks-final/mutator-strip.log): 84.7%, the 9 survivors in these functions equivalent (interpolation boundaries where both sides give the same value, the slope guard for equal amplitudes that the ties error excludes, slope 0 at \"<\" vs \"<=\") or pre-existing.",
+   "crapper": "functions written this round all below 30 (landingLaw 8.1, launchPitch 2, lifeRow 2, jgmaLifeFactors 5, duraconLifeFactor 5, lifeCycles 5, lifeColumnOf 8, regulatorServoSupply 3, membersRatio 9.3, slowestGlide 11.2, landingLawFor 6, m5Passed 4, legacyGlidePitch 5, descentTracker 3, m5Approach 17.9); runM5 split from CRAP 1420 to 42.4 (CC 22, 65% covered by a coarse-step M5 flight test); still over 30 and touched by one or a few lines: rateStages 51.9, flightRatios 34.1, strokeFlightTest 103.8 and the pre-existing giants buildDesign, createFlight, createController, missions writeAll (not refactored this round).",
+   "dryer": "the pinned dryer reports 'No source files to analyze' for these .js/.mjs files, as in every round since round 8."
+  },
+  {
+   "tag": "eta_s table (SPEC ruling after cfd round 3)",
+   "method": "src/physics/strip.js suctionTableFrom: only settled: true points (no verdict out: the pure-plunge and v14 points; the round-2 runs settled false, never averaged with their round-3 extensions; two settled points at one amplitude an error); suctionEtaAt: held below the smallest amplitude, linear between, beyond the largest the last slope continued where it lowers eta_s (-0.063 per degree today) and held where it would raise it, floored at 0. src/design/round7.mjs suctionModel accepts the skip reasons. Tests pin the three-row table read from data/calibration/suction.json, the r2/r3 exclusion and both extrapolation cases (test/physics/round12.test.js, round6.test.js updated to the ruling).",
+   "table": [
+    [
+     5.908,
+     0.732
+    ],
+    [
+     6.237,
+     0.699
+    ],
+    [
+     6.875,
+     0.659
+    ]
+   ],
+   "v21_strips": "right wing, cruise 10 m/s, 1.891 Hz, k 0.198 (pi f cbar / V): 0.06 / 0.19 / 0.31 / 0.44 / 0.56 / 0.69 / 0.81 / 0.94 semispan at 1.73 / 2.96 / 4.32 / 5.48 / 5.96 / 5.67 / 4.91 / 3.57 deg (out/sweep/round12/v21-v17-alpha-eff.json); eta_s 0.732 on every strip but 0.56 (0.727). No strip above the 5.91-6.88 band (no extrapolation used). Below it: all but the 0.56 strip; 0.06, 0.19, 0.31, 0.81 and 0.94 lie more than 1 deg below (1.73-4.91 deg), held at 0.732 by the hold-below rule.",
+   "v17_strips": "v17's own file under today's model (git d239017, cruise 9 m/s, 1.805 Hz, k 0.180): 1.85 / 3.23 / 4.83 / 6.25 / 6.98 / 6.65 / 5.71 / 4.26 deg at the same stations; the cfd stations s0.4 / s0.6 / s0.75 carry 5.908 / 6.875 / 6.237 deg (round-9 cruiseEffectiveAngles on v17). v21 sits 0.6-1.0 deg below v17 across the span at a higher k."
+  }
+ ]
+}

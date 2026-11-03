@@ -63,10 +63,10 @@ export function round7Params(base, set, catalog) {
  */
 export function suctionModel(json, design, amplitudes) {
   const t = suctionTableFrom(json);
-  const unplaced = t.skipped.filter((s) => !/incomplete/.test(s.why));
+  const unplaced = t.skipped.filter((s) => !/incomplete|unsettled|no settled verdict/.test(s.why));
   if (unplaced.length) throw new Error(`suction points without an effective-angle amplitude: ${unplaced.map((s) => s.name).join(', ')}`);
   if (!t.table.length) throw new Error('no measured eta_s point');
-  return { source: 'data/calibration/suction.json', points_used: t.used, points_incomplete: t.skipped.map((s) => s.name), table: t.table, amplitude_rad: amplitudes, rule: 'linear in effective-angle amplitude between measured points, held at the end values (no extrapolation); SPEC eta_s default 0.6 not used' };
+  return { source: 'data/calibration/suction.json', points_used: t.used, points_incomplete: t.skipped.map((s) => s.name), points_skipped: t.skipped, table: t.table, amplitude_rad: amplitudes, rule: 'SPEC ruling after cfd round 3: settled points only; linear in effective-angle amplitude between them; held below the smallest; beyond the largest the last slope continued where it lowers eta_s, held where it would raise it; SPEC eta_s default 0.6 not used' };
 }
 
 export function round7Assumptions(base, d) {
