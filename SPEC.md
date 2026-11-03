@@ -190,7 +190,7 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
 
 ### Design freeze (2026-11-03, operator decision after physics round 13)
 
-- **Frozen design.** Larus GL-2 v21 is the final design. No v22 is built, and the gates stay exactly as declared. (Later the same day, the assembly findings below made v22, and then v23, out of corrections only. The gates did not move.)
+- **Frozen design.** Larus GL-2 v21 is the final design. No v22 is built, and the gates stay exactly as declared. (Later the same day, the assembly findings below made v22, v23 and v24, out of corrections only. The gates did not move.)
 - **M1 stands as a fail.** M1 fails at its worst corners, and it is reported that way in the film's gates card, the README and `tools/verify.mjs`, with its own numbers.
 - **Why no closure.** Round 13 showed the conflict. Closing M1 at an 8 m/s release needs wing loading ≤ about 20.4 N/m², and that breaks M4 and M7 at the gear train. A train strong enough for that adds mass that breaks M1 again.
 - **What may still change.** Only freeze verification: V5 and its calibration on v21 itself, and the gate set re-flown if that calibration changes. Everything else stays as built.
@@ -225,6 +225,21 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
     - **Containment.** 188 enclosed solids are at least 0.5 mm clear of the skin. The openings (wing roots, horn slots, boom posts, pitot) and three outside fittings (the boom and two boom clamps) are declared. The material outside the loft adds 37% to the body's CdA.
     - **The motor fixing did not exist.** The maker's drawing puts the motor's M3 threads on its back face, behind the rotating bell. So v23 hangs the motor by its back face on a bracket on the shoulder rails.
     - **Totals.** 0 clashes. Mass is 1805.6 g, 43.7 g more than v22.
+- **Completeness and assembly order** (2026-11-03, found by the film's solids test on v23). A check can only clear the parts it can see, and a bird that cannot be put together is not built.
+  - **Completeness.**
+    - Every BOM line that is a physical object has solids in the check, each tagged with its BOM id. Their count and size match the BOM line.
+    - Only glue, wire and the unlisted margin are exempt, and the build lists each exemption.
+    - The build refuses if any BOM line lacks solids or disagrees with them.
+  - **Assembly order.**
+    - The build states an assembly sequence. Each step is one part or a sub-assembly, together with the straight line it moves along to reach its place.
+    - The build checks that every step arrives without passing through anything already placed; touching is allowed.
+    - The film's assembly sequence is this one.
+  - **v23 breaks both.**
+    - **The one-piece crank.** It cannot pass the aft plate's seat or its bushing in either direction.
+    - **Parts with no solid.** The formers, doublers, most M3 screws and nuts, seven of the twelve T18R ties, and the rail aft-seat bosses. The formers cross the trays.
+    - **Lengths that disagree.** The boom is 1075 mm in the BOM but 1028 mm as a solid. The panels' BOM length is the plates' centre spacing, and their flanges have no solid.
+    - **A lock-flange land.** It leaves 0.5 mm between the flange and the motor can, with no room for its M3×8.
+  - **Correction.** These are corrected as v24 = v23 plus completeness and assembly corrections, under the same layout freedom and the same rules. A part is replaced or split only where it cannot fit or cannot be assembled, using catalogue fixings sized by the existing rules. The full gate set is flown again on v24, and v24 becomes the frozen design.
 
 ### Public repository
 
