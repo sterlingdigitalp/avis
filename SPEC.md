@@ -141,6 +141,13 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
   - Either edge distance below 1.2·d0 makes the seat unrated.
   - The old fallback to tensile yield could give a higher allowable at a smaller edge distance. That was a bug.
 - **Springs.** A catalogue spring may carry load up to its maker's published maximum load, deflection or torque, read like a rated value. Its seats and mounts are linkage at FoS 1.5.
+- **RC practice for joints no one can rate (operator's decision, 2026-11-02).**
+  - **Scope.**
+    - It covers only a shaft-to-hub fixing: a gear, pulley or coupling held to its shaft by set screw, clamp hub, D-flat or bond. The fixing must be standard RC model practice.
+    - It applies only where no maker or standard publishes a rating for that fixing; set screws are the example, since ISO 898-5 gives them no shear strength.
+    - It never covers structural members, bearings, gear teeth, seats, lugs or fasteners in tension or shear. Those keep every rule above.
+  - **Published figures still bind.** If the maker publishes any figure for the fixing, even a reference one such as KHK DSF slipping torque or a set-screw holding-torque table, the fixing must stay within that figure at full value.
+  - **Disclosure.** M7 reports each such joint as "unrated, RC practice", with its peak torque. The README lists every one.
 - **Launch speed.** M1's "8 m/s or less" caps the release speed. The design names its release speed, which must be 8 m/s or less, and M1 is gated at that speed. Report the lowest passing speed for information.
 
 ### Public repository
