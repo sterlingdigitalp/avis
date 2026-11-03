@@ -1,0 +1,78 @@
+design: falco-pf-2 (Falco PF-2, 1.0-1.2 m span band). NOT REBUILT: no round-11 build converged, so
+data/designs/falco-pf-2.json stays at v2 (round 2, built under round-2 rules) and no Falco gate file was written.
+src/design/round11.mjs refuses to write a design whose free-flight trim did not converge (SPEC ruling after round 1:
+"A trim that does not converge is reported as a failure, never as a result"), and missions.mjs needs the converged
+controller table to fly anything. Every number below is a build or probe measurement, not a gate file.
+
+Rules applied (the round-10 rule set, unchanged, through src/design/round11.mjs --design falco over round 10's
+pipeline on the Larus v18 base, which carries the rule parameters): rated linkage and airframe members with the M7
+bearing and edge-distance rules; KHK gear ratings under their stated conditions (JGMA KV on the accuracy row, reversing
+load, "weak shaft" KH-beta) and the train search (scratchpad r11/trainsearch11.mjs, every module-1 KHK gear in the
+catalogue); RC-practice shaft-to-hub fixings within their published figures; controller at 240 Hz with the 20 ms delay
+and TECS; flight step 1/3840 s; 15% margin; catalogue parts only; span inside 1.0-1.2 m (round11.mjs checkSpan).
+Round 11's two model fixes apply: the E387 negative stall at the measured -6.3 deg, and bushings judged on their
+supported length.
+
+Search (36 Falco builds, out/sweep/round11/falco-columba-screens.json):
+  planform   span 1.2 m (the band's top; every lever below favours span), AR 3, 3.5, 4, 4.5, 5, 5.5, taper 0.6
+  stroke     half-amplitude 38, 44, 46, 48 deg (fixed stroke, frequency by the governor inside the rated envelope)
+  motor      Cobra C-2808-30 (kv 1000, 20 A), C-2808-22 (kv 1330, 24 A), C-2814-16 (kv 1050, 30 A); every eligible
+             motor needs a 5 mm shaft for a KHK pinion bore
+  battery    Nexus 2S1P P30B Li-ion 3.0 Ah (104 g), Gens ace 1300 mAh 2S LiPo (90 g); 3S packs are ineligible with
+             the MKS HV6160 servos on the pack (no published row at 9.6-12.3 V; the round-10 rule set has no modelled
+             servo regulator)
+  reduction  lightest rated trains for 4, 6, 7 and 9 N m at the crank (159-281 g of gears, ratio 16.7-21.9)
+  trim       cruise trial speeds 9-15 m/s, trim tables 10-18 m/s
+
+Result: NO Falco design trims. Two failure families:
+  - Low wing loading (AR 3-3.5, S 0.41-0.48 m2, 1220-1434 g, WL 29-33 N/m2): the static trim at 10-11 m/s asks
+    8.4 Hz at 11 deg body pitch, above every rated envelope (4.3-4.8 Hz: motor current, motor voltage on 2S, gear
+    rating or twist-servo torque, whichever binds); in free flight at the envelope's top the bird sinks 1.0-1.3 m/s
+    at 10-11 m/s and 90-120 W, and the trims at 10-12 m/s diverge (altitude leaves +-30 m within 25 s, rolling to
+    20-70 deg). Closest of this family: AR 3.5, C-2808-22, 6 N m train (DS1-18/30, SSG1-15/DS1-60,
+    MSGA1-18/MSGB1-45, ratio 16.67), 1220 g, WL 29.1: sinks 1.04 m/s at 11.1 m/s, 4.83 Hz (motor continuous current),
+    107 W.
+  - High aspect ratio, fast (AR 4.5-5.5, S 0.26-0.32 m2, 1160-1310 g, WL 36-48 N/m2): free flight comes closest to
+    level at 12.4-14.7 m/s (sink 0.25-0.6 m/s at the envelope's top, 106-118 W), but never converges. Closest: AR 5.5,
+    C-2808-22, 9 N m train (DS1-20/32, MSGA1-18/DS1-50, MSGA1-18/MSGB1-40 x2, ratio 21.95), 1292 g, WL 48.4: sinks
+    0.25 m/s at 14.7 m/s, 5.62 Hz, 118 W. At WL 36-48 and rho 1.00 kg/m3 the 1 g stall speed is 7.7-9.0 m/s at
+    CL 1.2, so an 8 m/s release (M1) and a 9 m/s touchdown (M5) are out of reach whatever the drive.
+  Where the mass goes (closest AR 5.5 build, g): drive linkage and gearbox plates 317, gears 285, margin 169,
+  servos 123 (4 x MKS HV6160, the lightest eligible on the 2S pack), battery 104, airframe 91, wing and tail 86,
+  motor 81, avionics 38. Larus v20 for comparison: 326, 371, 208, 123, 104, 122, 166, 140, 38 (1598 g on 0.667 m2).
+  The fixed items (servos, battery, avionics, the drive's linkage sized by the Larus base) do not shrink with the
+  wing, so Falco carries 73-90% of Larus's mass on 39-72% of its area.
+
+Gate set (eta_s 0.6 would have been the default; nothing was flown as a gate):
+V1-V4, V6 unchanged (method gates; wing-independent or SmartBird); V2, V7 FAIL by ruling.
+V5  not run   needs a design (V5 fits the strip multipliers on the finalist's own wing and kinematics)
+M1  FAIL      no converged trim, nothing to launch; at WL 29-48 the release CL at 8 m/s is 0.91-1.51
+M2  FAIL      no converged trim; the near-level free flights draw 106-120 W, so the P30B 2S pack's 14.9 Wh usable
+              (3.0 Ah x 7.2 V x 0.861 charge limit x 0.8) lasts 7.5-8.4 min (< 10)
+M3  FAIL      no converged trim
+M4  FAIL      no converged trim
+M5  FAIL      no converged trim; at WL 36-48 the glide stall speed alone is 7.7-9.0 m/s at CL 1.2
+M6  1158-1434 g across the screen (BOM with cited masses and the 15% margin); not a gate file
+M7  FAIL      not evaluable (no flown load population)
+M8  FAIL      not evaluable; the envelopes are already at the motor's continuous current
+Half-step and the M4 eta_s bisection: not possible without a converged design.
+
+Item 4 (section, Re, k, strip alpha_eff), measured in the closest builds' free flight at the envelope's top
+(descending, NOT trims; scratchpad r11/alpha11.mjs; nu = mu/rho = 1.765e-5/1.0026 m2/s):
+  AR 3.5 (cbar 0.343 m): section e387-film; Re 2.16e5; k = pi f cbar / V = 0.47 (4.83 Hz, 11.1 m/s);
+    alpha_eff amplitudes 4.96 / 5.79 / 6.62 deg at 0.44 / 0.56 / 0.69 semispan (range 1.6-8.9), minima -3.1/-4.0/-4.7.
+  AR 5.5 (cbar 0.218 m): e387-film; Re 1.82e5; k = 0.26 (5.62 Hz, 14.7 m/s); amplitudes 5.39 / 6.51 / 8.69 deg
+    (range 1.3-11.5), minima -4.0 / -5.4 / -8.5 deg (the outer station goes past the -6.3 deg negative stall).
+  The cfd workstream's eta_s points (E387 on Larus v17 kinematics, Re 146-176k, k 0.15-0.19, alpha_eff 5.9-6.9 deg)
+  do NOT apply: same section, Re 3-48% higher, but k 1.4-3.1 times higher. Points that would be needed: E387 at
+  Re 1.8-2.2e5, k 0.26 (AR 5.5) or 0.47 (AR 3.5), alpha_eff amplitudes about 5-9 deg at 0.4 / 0.6 / 0.75 semispan.
+  None is worth running while no Falco trims.
+
+Unverified lever (not built): the drive linkage, gearbox plates and airframe carry the Larus base's dimensions
+(rockers, couplers, crank, shoulder housings and rails, 9.2 mm seat rings, 8.5 mm bosses; about 280-320 g). Sized to
+Falco's own loads they might lose 100-150 g (estimate, no flown loads to check them against). That is 8-12% of the mass:
+the AR 3.5 build would sit near 1.08 kg and WL 25.7 N/m2, still above Larus v20's 23.5, which fails M1 by 0.88 m and
+M5 by 0.76 m/s, and still on a 2S pack that lasts about 8 minutes at the power it needs.
+
+Verdict: Falco PF-2 does not close under the current rules. It fails earlier than Larus: no catalogue-part Falco
+holds level flight within its ratings, so no mission gate can even be flown.

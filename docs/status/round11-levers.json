@@ -1,0 +1,101 @@
+{
+ "note": "Round 11 (shared model fixes, then Falco PF-2 and Columba RP-2 under the round-10 rule set). Not gate files. Every number was measured by the scripts named (scratchpad r11/ is the physics agent's scratch directory; evidence copied under out/sweep/round11/). eta_s 0.6 default throughout; no settled cfd eta_s table exists.",
+ "rows": [
+  {
+   "tag": "1a negative stall refit (shared model bug, lenient)",
+   "method": "src/design/fit-polars.mjs: the negative stall angle may not lie below the lowest measured angle of the UIUC sweep (the positive side already had its 13.5 deg guard), the negative transition gets its own fitted half-width wNeg in 0.5-3 deg (src/physics/polar-model.js; W = 2 deg when absent), two Nelder-Mead passes; src/physics/polar-fit.js regenerated. UIUC data stays local and gitignored; the test holds only the reference rows it pins, with their citation.",
+   "before": "E387 aStallNeg -253 / -73 / -53 deg at Re 6e4 / 1e5 / 2e5 (-4.42 / -1.27 / -0.93 rad, fitted with W 2 deg): attached at any negative angle",
+   "after": "E387 aStallNeg -4.91 / -6.28 / -6.29 deg, wNeg 0.50 / 0.50 / 0.95 deg; AG24 -5.55 / -5.88 / -5.85 deg (-5.45 / -6.43 / -12.46 before)",
+   "fit_at_measured_negative_rows": "E387 Re 1e5 at -6.27 deg: cl -0.27 vs -0.359, cd 0.0759 vs 0.0756; at -5.24: cl -0.21 vs -0.299, cd 0.0573 vs 0.0577. Re 2e5 at -6.28: cl -0.26 vs -0.385, cd 0.0709 vs 0.0771. Worst below -3 deg: dCl 0.036 / 0.093 / 0.128, dCd 26 / 3 / 27 %. The single linear lift slope cannot follow the tables' steeper slope between -5 and -2 deg; the drag rise, which is the stall the tables show, is reproduced.",
+   "tests": "test/physics/round11.test.js: negative stall between the drag-rise rows and half a degree past the sweep (UIUC vol. 5 rows typed in with citation), cd and cl at the lowest rows, attached/separated either side, AG24 within 1 deg of its sweep, flight polar at Re 1.5e5, attached fraction in 0..1 at every angle and the positive stall a transition through 0.5"
+  },
+  {
+   "tag": "1b bushings on their supported length (shared model bug, lenient)",
+   "method": "src/physics/bearings.js supportedLength(b1, housing_mm) and bushingCheck on Fr / (d1 b); src/design/linkage.js plateSeatLength (shared with plateSeats) and jointHousings, which gives every joint support its housing_mm (unbossed plate seat: the plate's thickness; bossed: the part's length; shoulder housings and coupler eyes are rings as long as the part); build.js writes it into structure.joints.",
+   "larus_v20_effect": "unbossed bushings: gear shaft 1 forward FoS 21.6 -> 4.31 (1.2 mm plate), gear shaft 2 aft 16.5 -> 4.39 (1.6 mm), gear shaft 2 forward 25.4 -> 5.08 (1.2 mm); all still >= 1.5, so no boss or seat change was needed on v20; joints minimum unchanged at 2.17 (the motor shaft outboard bearing). out/sweep/round11/v20-members{,-nohousing}.{json,txt}",
+   "tests": "test/physics/round11.test.js hand calculations (GFM-0810-06-like part in a 1.2 mm plate, a 0.8 mm part, missing dimensions); test/design/round11.test.js plateSeatLength, jointHousings and a built v20 (GFM-1012-10 bossed seat 10 mm, 1.2 / 1.6 mm plates)"
+  },
+  {
+   "tag": "1c Larus v20 re-probed after both fixes (design file unchanged, v20)",
+   "command": "scratchpad r11/reprobe-v20.sh (r10/eval10.mjs all nine corners, 100 M4 seeds each; r11/members-probe11.mjs 30 seeds)",
+   "M1": "worst corner aero 0.9 / mass 1.05 / CG +5 mm at 10 deg: 2.382 m lost (round 10: 2.31), 7 of 27 cases fail",
+   "M2": "12.38 min worst corner (12.3)",
+   "M3": "0.844 m (0.85)",
+   "M4": "nominal 96/100 (96), corners 95-97 (93-97); crank torque max 16.42 N m (16.44)",
+   "M5": "touchdown 9.761 m/s at aero 0.9 / mass 1.05 / CG +5 mm (9.76), sink 0.497 m/s",
+   "members": "min FoS 1.76 (shoulder rail torsion-lock screw seats), joints 2.17",
+   "reading": "both fixes move Larus by little: the refit costs 0.07 m in M1 and gains up to 2 seeds at two M4 corners; the bushing fix lowers three FoS without failing any. v20 still fails M1, M4 and M5.",
+   "evidence": "out/sweep/round11/v20-eval-corners.json"
+  },
+  {
+   "tag": "2 pipeline for any bird",
+   "method": "src/design/round11.mjs --design falco|columba|larus: ROUND11.candidates (starting planforms), checkSpan (SPEC bands, refuses a span outside them), round11Params over round10Params on the Larus v18 base (which carries every rule's parameters: linkage, joints, governor, current sense, airframe), buildRound11 in-process, finishDesign; an official write only for a converged build.",
+   "tests": "test/design/round11.test.js"
+  },
+  {
+   "tag": "3 Falco PF-2 search (36 builds)",
+   "space": "span 1.2 m; AR 3, 3.5, 4, 4.5, 5, 5.5; stroke 38-48 deg; Cobra C-2808-30, C-2808-22, C-2814-16; Nexus 2S P30B, Gens ace 1300 2S (3S packs ineligible with the HV6160 servos on the pack); rated trains for 4, 6, 7, 9 N m (159-281 g of gears, ratio 16.7-21.9); cruise trial speeds 9-15 m/s",
+   "result": "no build trims in free flight. Mass 1160-1434 g (WL 29-48 N/m2). Low-AR builds sink 1.0-1.3 m/s at the envelope's top (motor current, motor voltage, gear or twist-servo torque); high-AR builds come closest, AR 5.5 sinking 0.25 m/s at 14.7 m/s and 118 W, but at WL 48 stall at about 9 m/s. M2 on the 2S pack would last 7.5-8.4 min at the 106-120 W these free flights draw.",
+   "closest": [
+    {
+     "name": "AR 5.5, C-2808-22, 9 N m train, 2S P30B",
+     "mass_g": 1292.4,
+     "WL_N_m2": 48.4,
+     "free_flight": "14.7 m/s, 5.62 Hz, sink 0.25 m/s, 118 W",
+     "Re": 182000.0,
+     "k": 0.26,
+     "alpha_eff_amp_deg_0.44_0.56_0.69": [
+      5.39,
+      6.51,
+      8.69
+     ]
+    },
+    {
+     "name": "AR 3.5, C-2808-22, 6 N m train, 2S P30B",
+     "mass_g": 1220.5,
+     "WL_N_m2": 29.1,
+     "free_flight": "11.1 m/s, 4.83 Hz (motor continuous current), sink 1.04 m/s, 107 W",
+     "Re": 216000.0,
+     "k": 0.47,
+     "alpha_eff_amp_deg_0.44_0.56_0.69": [
+      4.96,
+      5.79,
+      6.62
+     ]
+    }
+   ],
+   "evidence": "out/sweep/round11/falco-columba-screens.json; docs/status/round11-gates-falco.txt"
+  },
+  {
+   "tag": "3 Columba RP-2 search (15 builds)",
+   "space": "span 0.9 m; AR 3, 3.5, 4, 4.5; stroke 38-48 deg; the same motors, packs and trains; cruise trial speeds 9-18 m/s",
+   "result": "no static cruise trim at any point; mass 1090-1348 g on 0.18-0.27 m2 (WL 49-60 N/m2), stall speed 9.0-10.0 m/s at CL 1.2. Several low-AR builds also fail the film's packing check.",
+   "evidence": "out/sweep/round11/falco-columba-screens.json; docs/status/round11-gates-columba.txt"
+  },
+  {
+   "tag": "why the small birds fail: fixed mass",
+   "numbers": "grouped BOM (g), closest Falco AR 5.5 / closest Falco AR 3.5 / Columba AR 3.5 / Larus v20: drive linkage and gearbox plates 317 / 283 / 289 / 326; gears 285 / 193 / 193 / 371; servos 123 each (4 x MKS HV6160); battery 104 each; avionics 38 each; motor 81 / 81 / 81 / 140; wing and tail 86 / 102 / 69 / 166; airframe 91 / 138 / 111 / 122; margin 169 / 159 / 151 / 208; total 1292 / 1220 / 1158 / 1598. The rated drive, the servos the 2S pack can feed and the avionics do not scale with the wing.",
+   "script": "scratchpad r11/groups.mjs"
+  },
+  {
+   "tag": "levers not built (for the orchestrator)",
+   "items": [
+    "Falco's drive linkage, plates and airframe still carry the Larus base's dimensions (about 280-320 g). Sizing them to Falco's own loads might save 100-150 g (estimate; no flown loads exist to check it): AR 3.5 would sit near 1.08 kg, WL 25.7, still above Larus v20's 23.5 and on a pack that lasts about 8 min.",
+    "A servo regulator (for example the flight controller's own Vx BEC with its published rating, which the round-10 rule set does not model) would let a 3S pack and 13-16 g servos in: about -60 g on servos and +50 g on the pack; not enough for M1/M5 at these wing loadings.",
+    "M5 approach law (observation, not explored): runM5 approaches at the least-sink glide speed (Larus v20: 9.5 m/s) although the glide table reaches 7 m/s with 3.6% of the span stalled; and when design.landing.Vapp is given, runM5 still takes the pitch feed-forward from the least-sink row, not from the row at Vapp. A slower approach is a flight-controller choice that would act on Larus's 0.76 m/s M5 shortfall; it was not tried, because it is a new controller law that the orchestrator should rule on first."
+   ]
+  },
+  {
+   "tag": "test/design/flight-loop.test.js",
+   "finding": "failed after the refit (mean vertical force / weight 1.054). Diagnosis (subagent, scratchpad r11/diag-loop/): the round-2 test article is statically unstable in pitch (CG 2.8 cm behind the neutral point, static margin -11% of the root chord); buildControl's pitch law assumes a stable airframe, so the article tumbled (pitch +-80 deg, -26 m in 12 s) under the old fit as well and had passed by chance.",
+   "change": "test setup only: battery at x 0.30 m (static margin +12.6%), averaging over 40-50 s once the speed loop has settled, and a new assertion that the window is steady level flight (FLIGHT_TRIM_TOL climb and speed, pitch band under 10 deg). The 5% Newton tolerance and every other assertion are unchanged. Now: force/weight 0.981, climb +0.02 m/s, pitch band 2.1 deg. Under the old fit the patched test fails its new level-flight guard (descends 0.5 m/s, envelope-limited)."
+  },
+  {
+   "tag": "code checks",
+   "tests": "194/194 pass (out/sweep/round11/checks4/tests.log), including the patched flight-loop test and 15 new round-11 tests",
+   "mutator": "scratch copy, 6 workers, changed lines: bearings.js 18 killed / 2 survived, linkage.js 8/3, polar-model.js 14/4 (out/sweep/round11/checks2/mutator); round11.mjs 7/11 (checks4/mutator). Equivalent survivors: '??' -> '||' where the left side is never 0 or '' (t_fwd_mm, bossed lists, housing_mm, parts, span, launch), the span band's 1e-9 tolerance edges, 'p > 0' -> '>=' where p = 0 gives Infinity either way, the sigmoid's 'exp > 30' clamp where 1/(1+e^30) is already 1e-13. Not equivalent and not killed: buildRound11's default flags (fit, noSuction, perf) and its failure return, which only the minutes-long builds of the screens exercise.",
+   "crapper": "after splitting buildRound11 into fittedBuild (tested) / finishDesign (tested) / buildRound11: fittedBuild 24.9, complete 20.0, buildRound11 15.7, round11Params 12.4, bushingCheck 11.0, supportCheck 11.0, jointHousings 9.0, calibrationOf 5.9, sectionModel 5.1, plateSeatLength 5.0, checkSpan 4.0, finishDesign 3.3, supportedLength 3.0: none of the changed functions at 30 or more (out/sweep/round11/checks4/crapper.txt)",
+   "dryer": "pinned dryer reports 'No source files to analyze' for this repo's .js/.mjs (as in rounds 8-10)"
+  }
+ ]
+}

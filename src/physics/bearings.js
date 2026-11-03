@@ -2,8 +2,9 @@
 // against its published static rating, and the reactions of a shaft on two supports. Pure functions.
 //
 // Rolling bearings: ISO 76 static equivalent load P0 = X0 Fr + Y0 Fa, and P0 = Fr when that is larger, with the maker's
-// X0 and Y0; static safety factor C0 / P0 >= 1.5. Plain bushings: projected surface pressure Fr / (d1 b1) against the
-// maker's published static surface pressure, factor of safety 1.5; a flange takes the axial load on its own ring area.
+// X0 and Y0; static safety factor C0 / P0 >= 1.5. Plain bushings: projected surface pressure Fr / (d1 b) on the length b
+// the housing actually supports (round 11; b1 when the housing is as long as the bushing) against the maker's
+// published static surface pressure, factor of safety 1.5; a flange takes the axial load on its own ring area.
 // A joint part without a published static rating is ineligible for a loaded joint (fos null: the check cannot pass).
 
 export const FOS_STATIC = 1.5;
@@ -50,12 +51,12 @@ export function jointKind(part) {
  * two separate peaks only if they did not coincide: it never does, but the larger is used). Returns
  * { kind, fos, ok, ... } with fos null when the part publishes no static rating.
  */
-export function supportCheck(part, loads) {
+export function supportCheck(part, loads, { housing_mm = null } = {}) {
   const kind = jointKind(part);
   const s = part?.specs ?? {};
   const L = { Fr: Math.max(0, loads.Fr ?? 0), Fa: Math.max(0, loads.Fa ?? 0), P0: loads.P0 ?? 0, v_m_s: loads.v_m_s };
   if (kind === 'deep-groove' || kind === 'rolling' || kind === 'needle') return rollingCheck(kind, s, L);
-  if (kind === 'bushing') return bushingCheck(s, L);
+  if (kind === 'bushing') return bushingCheck(s, L, housing_mm);
   if (kind === 'rod-end') return rodEndCheck(s, L);
   return { kind: null, fos: null, ok: false, basis: 'no bearing or bushing part: a loaded joint without a rated part is ineligible' };
 }
@@ -85,18 +86,30 @@ function flangeCheck(s, Fa, p0) {
   return ring > 0 ? { area_mm2: ring, p_MPa: Fa / ring, fos: p0 / (Fa / ring) } : { area_mm2: 0, p_MPa: Infinity, fos: 0, note: 'sleeve bushing under axial load (no flange)' };
 }
 
-/** Plain bushing: projected pressure Fr / (d1 b1) against the published static surface pressure, and its speed limit. */
-function bushingCheck(s, { Fr, Fa, v_m_s }) {
+/**
+ * Supported length of a bushing (mm): its b1, or the housing's length where the housing holds it over less (round 11:
+ * a 6 mm bushing in a 1.2 mm plate bears on 1.2 mm, not 6). A housing length that is not a positive number leaves b1.
+ */
+export function supportedLength(b1, housing_mm) {
+  return Number.isFinite(housing_mm) && housing_mm > 0 ? Math.min(b1, housing_mm) : b1;
+}
+
+/**
+ * Plain bushing: projected pressure Fr / (d1 b) on its supported length b against the published static surface
+ * pressure, and its speed limit.
+ */
+function bushingCheck(s, { Fr, Fa, v_m_s }, housing_mm = null) {
   const p0 = s.static_surface_pressure_mpa;
   const d1 = s.d1_mm, b1 = s.b1_mm;
   if (!Number.isFinite(p0) || !(d1 > 0) || !(b1 > 0)) return { kind: 'bushing', fos: null, ok: false, basis: 'no published static surface pressure or size: ineligible for a loaded joint' };
-  const p = Fr / (d1 * b1); // N/mm^2 = MPa on the projected area
+  const b = supportedLength(b1, housing_mm);
+  const p = Fr / (d1 * b); // N/mm^2 = MPa on the projected area
   const fos = p > 0 ? p0 / p : Infinity;
   const flange = flangeCheck(s, Fa, p0);
   const vMax = s.max_surface_speed_rotating_m_s;
   const speed = Number.isFinite(v_m_s) ? { v_m_s, max_m_s: vMax ?? null, ok: Number.isFinite(vMax) ? v_m_s <= vMax : false } : null;
   const fosAll = Math.min(fos, flange ? flange.fos : Infinity);
-  return { kind: 'bushing', Fr_N: Fr, Fa_N: Fa, p_MPa: p, allowable_MPa: p0, fos: fosAll, radial_fos: fos, flange, speed, ok: fosAll >= FOS_STATIC && (speed ? speed.ok : true), basis: `projected pressure Fr/(d1 b1) against the published static surface pressure ${p0} MPa; FoS >= ${FOS_STATIC}` };
+  return { kind: 'bushing', Fr_N: Fr, Fa_N: Fa, p_MPa: p, allowable_MPa: p0, b1_mm: b1, supported_mm: b, fos: fosAll, radial_fos: fos, flange, speed, ok: fosAll >= FOS_STATIC && (speed ? speed.ok : true), basis: `projected pressure Fr/(d1 b) on the supported length b = ${b} mm (b1 ${b1} mm) against the published static surface pressure ${p0} MPa; FoS >= ${FOS_STATIC}` };
 }
 
 /** Rod end: its published static load along the shank (the coupler's own force); no axial (pin-direction) load. */
@@ -121,7 +134,7 @@ export function checkJoints(joints, supPeaks, { crankRate = 0 } = {}) {
     for (const s of j.supports) {
       const p = supPeaks?.[k++] ?? { Fr: 0, Fa: 0, P0: 0 };
       const v = Number.isFinite(s.surface_m_s_per_crank_rad_s) ? s.surface_m_s_per_crank_rad_s * crankRate : undefined;
-      const c = supportCheck(s.part, { Fr: p.Fr, Fa: p.Fa, P0: p.P0, v_m_s: v });
+      const c = supportCheck(s.part, { Fr: p.Fr, Fa: p.Fa, P0: p.P0, v_m_s: v }, { housing_mm: s.housing_mm ?? null });
       sups.push({ name: s.name, ...c });
       const f = c.fos ?? 0;
       if (f < fosMin) { fosMin = f; worst = `${j.name}/${s.name}`; }

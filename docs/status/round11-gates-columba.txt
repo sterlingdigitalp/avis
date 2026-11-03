@@ -1,0 +1,42 @@
+design: columba-rp-2 (Columba RP-2, 0.7-0.9 m span band). NOT REBUILT: no round-11 build reached even a static
+cruise trim, so data/designs/columba-rp-2.json stays at v2 (round 2, round-2 rules) and no Columba gate file was
+written (src/design/round11.mjs writes no design without a converged trim; missions.mjs needs its controller table).
+Every number below is a build measurement, not a gate file.
+
+Rules applied: as for Falco (docs/status/round11-gates-falco.txt): the round-10 rule set unchanged through
+src/design/round11.mjs --design columba, round 11's negative-stall refit and bushing supported-length fix, span inside
+0.7-0.9 m.
+
+Search (15 Columba builds, out/sweep/round11/falco-columba-screens.json):
+  planform   span 0.9 m (the band's top), AR 3, 3.5, 4, 4.5 (S 0.18-0.27 m2), taper 0.6
+  stroke     38, 44, 46, 48 deg
+  motor      Cobra C-2808-30, C-2808-22, C-2814-16 (5 mm shafts for the KHK pinion)
+  battery    Gens ace 1300 mAh 2S LiPo, Nexus 2S1P P30B; 3S ineligible with the HV6160 servos on the pack
+  reduction  rated trains for 4, 6, 7 and 9 N m at the crank (ratio 16.7-21.9)
+  trim       cruise trial speeds 9-18 m/s
+
+Result: NO Columba design trims.
+  - Mass 1090-1348 g on 0.18-0.27 m2: wing loading 49-60 N/m2 (Larus v20 23.5, Falco's screen 29-48). The fixed items
+    (four MKS HV6160 servos 123 g, 2S pack 90-104 g, avionics 38 g, a rated train of 160-285 g, the Larus-base drive
+    linkage and plates about 290-315 g) are the same as Falco's, on a third of Larus's wing.
+    Lowest wing loading: AR 3, C-2814-16, 9 N m train, 1348 g, WL 48.9; AR 3.5, C-2808-22, 6 N m train, 1158 g,
+    WL 49.1.
+  - No static level trim converges at any speed tried, 9-18 m/s, at any of round 3's dynamic-twist trials (22, 30,
+    38 deg; pickCruiseTrim): the wing cannot carry the weight and make the thrust at once.
+  - AR 3.5 and 4 with the 4 N m train also fail the film's packing check (crank axis or tail servos outside the pod
+    loft) before any trim; the later screens were built without the packing fit to reach the trim at all.
+  - At WL 49-60 and rho 1.00 kg/m3 the 1 g stall speed at CL 1.2 is 9.0-10.0 m/s: an 8 m/s release (M1) is below
+    the stall and a 9 m/s touchdown (M5) is at or below it, whatever the drive.
+
+Gate set: nothing can be flown.
+V1-V4, V6 unchanged; V2, V7 FAIL by ruling; V5 not run (no design).
+M1-M5 FAIL   no converged trim (no controller table, nothing to fly)
+M6           1090-1348 g across the screen (BOM, cited masses, 15% margin); not a gate file
+M7, M8 FAIL  not evaluable (no flown loads or currents)
+Half-step and the M4 eta_s bisection: not possible.
+
+Item 4: section e387-film; mean chord 0.20-0.30 m, so Re 1.4-3.1e5 over the 12-18 m/s the trims were tried at; no
+flapping frequency or strip alpha_eff exists without a trim. The cfd workstream's Larus points cannot be judged against
+a bird that does not fly, and no new points are worth running for it.
+
+Verdict: Columba RP-2 does not close; it cannot be trimmed with catalogue parts under the current rules.

@@ -2,7 +2,8 @@
 // Fits our low-order section model to the measured UIUC tables held locally (gitignored, licence unclear)
 // and writes only the fitted parameters to src/physics/polar-fit.js. No table row leaves the local files.
 // Model, per Reynolds number: linear lift to a stall angle, then a flat-plate branch; a quadratic drag bucket
-// with separate curvature above and below the lift of minimum drag.
+// with separate curvature above and below the lift of minimum drag; round 11: the negative stall kept inside the
+// measured sweep, with its own transition width.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -54,40 +55,55 @@ function nelderMead(f, x0, steps, iters = 3000) {
 
 const DEG = Math.PI / 180;
 const out = [0, 0, 0, 0];
+const params = (x) => ({ a: x[0], aL0: x[1], aStall: x[2], aStallNeg: x[3], cdMin: Math.abs(x[4]), clD: x[5], kUp: Math.abs(x[6]), kLo: Math.abs(x[7]), wNeg: Math.abs(x[8]) });
+/** Quadratic penalty outside [lo, hi]. */
+const outside = (v, lo, hi) => (v < lo ? 1e6 * (v - lo) ** 2 : v > hi ? 1e6 * (v - hi) ** 2 : 0);
+
+/**
+ * Least squares on the ascending sweep. A stall angle beyond the measured sweep is unidentified, so both stall angles
+ * are kept where the data can speak: the positive one at most 13.5 deg, the negative one (round 11) no lower than the
+ * sweep's lowest angle. Without that guard the E387 fit put the negative stall at -53 to -253 deg (-0.93 to -4.42 rad)
+ * and the section stayed attached through the upstroke, while the tables show the drag doubling between -5.2 and -6.3 deg
+ * and the cfd workstream's sections stall near alpha_E -6 deg. The negative transition half-width wNeg is fitted
+ * within 0.5-3 deg (the tables' 1 deg spacing resolves no less).
+ */
 function fit(rows) {
   const up = upSweep(rows);
+  const aMin = up[0][0] * DEG;
   const obj = (x) => {
-    const p = { a: x[0], aL0: x[1], aStall: x[2], aStallNeg: x[3], cdMin: Math.abs(x[4]), clD: x[5], kUp: Math.abs(x[6]), kLo: Math.abs(x[7]) };
-    // A stall angle beyond the measured sweep is unidentified; keep it where the data can speak.
+    const p = params(x);
     let s = x[2] > 13.5 * DEG ? 1e6 * (x[2] - 13.5 * DEG) ** 2 : 0;
+    s += outside(x[3], aMin, 0) + outside(p.wNeg, 0.5 * DEG, 3 * DEG);
     for (const [al, cl, cd] of up) {
       sectionModel(p, al * DEG, out);
       s += ((out[0] - cl) / 0.05) ** 2 + ((out[1] - cd) / (0.15 * cd + 0.002)) ** 2;
     }
     return s;
   };
-  const x = nelderMead(obj, [5.5, -3.5 * DEG, 11 * DEG, -7 * DEG, 0.015, 0.5, 0.02, 0.05], [0.5, 0.02, 0.03, 0.03, 0.003, 0.1, 0.01, 0.02]);
-  const p = { a: x[0], aL0: x[1], aStall: x[2], aStallNeg: x[3], cdMin: Math.abs(x[4]), clD: x[5], kUp: Math.abs(x[6]), kLo: Math.abs(x[7]) };
-  // Fit quality, reported as summary numbers only
-  let eCl = 0, eCd = 0, n = 0;
+  const steps = [0.5, 0.02, 0.03, 0.03, 0.003, 0.1, 0.01, 0.02, 0.005];
+  // Two passes: the restart from the first optimum re-spans the simplex, which a 9-parameter fit needs to settle.
+  const x1 = nelderMead(obj, [5.5, -3.5 * DEG, 11 * DEG, -7 * DEG, 0.015, 0.5, 0.02, 0.05, 2 * DEG], steps, 6000);
+  const x = nelderMead(obj, x1, steps.map((v) => v / 3), 6000);
+  const p = params(x);
+  // Fit quality, reported as summary numbers only: -3..10 deg as before, and the negative angles below -3 deg.
+  let eCl = 0, eCd = 0, eClN = 0, eCdN = 0;
   for (const [al, cl, cd] of up) {
-    if (al < -3 || al > 10) continue;
+    if (al > 10) continue;
     sectionModel(p, al * DEG, out);
-    eCl = Math.max(eCl, Math.abs(out[0] - cl));
-    eCd = Math.max(eCd, Math.abs(out[1] / cd - 1));
-    n++;
+    const dl = Math.abs(out[0] - cl), dd = Math.abs(out[1] / cd - 1);
+    if (al >= -3) { eCl = Math.max(eCl, dl); eCd = Math.max(eCd, dd); } else { eClN = Math.max(eClN, dl); eCdN = Math.max(eCdN, dd); }
   }
-  return { p, eCl, eCd };
+  return { p, eCl, eCd, eClN, eCdN, aMin };
 }
 
 const round = (v) => +v.toPrecision(4);
 const rec = (name, camber, camberPos, sets) => {
   const entries = sets.map((s) => {
-    const { p, eCl, eCd } = fit(s.rows);
-    console.log(`${name} Re ${Math.round(s.re)}: a ${p.a.toFixed(2)} aL0 ${(p.aL0 / DEG).toFixed(2)} stall ${(p.aStall / DEG).toFixed(1)} cdMin ${p.cdMin.toFixed(4)} | worst in -3..10 deg: dCl ${eCl.toFixed(3)} dCd ${(eCd * 100).toFixed(0)}%`);
+    const { p, eCl, eCd, eClN, eCdN, aMin } = fit(s.rows);
+    console.log(`${name} Re ${Math.round(s.re)}: a ${p.a.toFixed(2)} aL0 ${(p.aL0 / DEG).toFixed(2)} stall ${(p.aStall / DEG).toFixed(1)} / ${(p.aStallNeg / DEG).toFixed(2)} (w ${(p.wNeg / DEG).toFixed(2)}, sweep from ${(aMin / DEG).toFixed(2)}) cdMin ${p.cdMin.toFixed(4)} | worst in -3..10 deg: dCl ${eCl.toFixed(3)} dCd ${(eCd * 100).toFixed(0)}% | below -3 deg: dCl ${eClN.toFixed(3)} dCd ${(eCdN * 100).toFixed(0)}%`);
     const o = {};
     for (const k of Object.keys(p)) o[k] = round(p[k]);
-    return { re: Math.round(s.re / 1000) * 1000, ...o, worst_dCl: round(eCl), worst_dCd_frac: round(eCd) };
+    return { re: Math.round(s.re / 1000) * 1000, ...o, worst_dCl: round(eCl), worst_dCd_frac: round(eCd), worst_dCl_below_m3deg: round(eClN), worst_dCd_frac_below_m3deg: round(eCdN) };
   });
   return { name, camber, camberPos, fits: entries };
 };

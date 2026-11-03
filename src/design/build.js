@@ -8,7 +8,7 @@ import { POLARS } from '../physics/polars.js';
 import { podAndBoomLoft, loftVolume, loftWettedArea } from '../physics/geometry.js';
 import { CLAIM } from './schema.js';
 import { driveJoints, driveLayout } from './joints.js';
-import { driveMembers } from './linkage.js';
+import { driveMembers, jointHousings } from './linkage.js';
 
 const DEG = Math.PI / 180;
 export const MARGIN = 0.15; // M6: unlisted margin for wire, glue and fasteners
@@ -454,6 +454,8 @@ export function buildDesign(params, catalog) {
     if (p.linkage) {
       // Round 6: every loaded part of the drive (src/design/linkage.js), checked in M7 (src/physics/members.js).
       const lm = driveMembers(d, catalog, p.linkage, driveLayout(d, catalog), jp.joints);
+      // Round 11: each support's housing length, so a bushing is judged on the length its seat actually holds.
+      d.structure.joints = jointHousings(jp.joints, p.linkage, catalog);
       d.structure.members = lm.members;
       d.structure.members_unchecked = lm.unchecked;
       d.structure.coupler = lm.coupler;

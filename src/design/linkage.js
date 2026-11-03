@@ -201,6 +201,42 @@ function couplerLinks(cx) {
   return coupler;
 }
 
+/**
+ * Length (mm) over which a plate seat holds its part: the plate's own thickness (round 8: the forward plate may be
+ * thinner, L.plates.t_fwd_mm; the aft plate's seats are 'aft'), or the part's length B where L.plates.bossed names
+ * the seat ('joint/support'), whose boss is as long as the part.
+ */
+export function plateSeatLength(plates, jointName, supportName, B_mm) {
+  const tp = supportName === 'aft' ? plates.t_mm : (plates.t_fwd_mm ?? plates.t_mm);
+  const boss = (plates.bossed ?? []).includes(`${jointName}/${supportName}`);
+  return { plate_mm: tp, bossed: boss, length_mm: boss ? Math.max(tp, B_mm) : tp };
+}
+
+const PLATE_JOINT = /^(crank shaft|gear shaft|motor shaft outboard)/;
+
+/**
+ * Round 11: each joint support with the length its housing actually holds it over (housing_mm), so a bushing is
+ * judged on its supported length, not its full b1. Plate seats per plateSeatLength; the shoulder housings and coupler
+ * eyes are rings as long as their part (wingSideMembers, couplerLinks), so they hold it over its full length.
+ * Returns new joint objects; the input is not changed.
+ */
+export function jointHousings(joints, L, catalog) {
+  return (joints ?? []).map((j) => {
+    const pd = partDims(byId(catalog, j.part_id));
+    const B = pd ? pd.B * 1000 : null;
+    return { ...j, supports: j.supports.map((sp) => {
+      if (!(B > 0)) return sp;
+      if (PLATE_JOINT.test(j.name)) {
+        // Without the design's plates the seat length is unknown: the support is left as it was (judged on b1).
+        if (!L?.plates) return sp;
+        const r = plateSeatLength(L.plates, j.name, sp.name, B);
+        return { ...sp, housing_mm: +Math.min(B, r.length_mm).toFixed(3), housing: r.bossed ? 'plate boss as long as the part' : `${r.plate_mm} mm plate, no boss` };
+      }
+      return { ...sp, housing_mm: +B.toFixed(3), housing: /^shoulder/.test(j.name) ? 'shoulder housing ring as long as the part' : 'coupler eye ring as long as the part' };
+    }) };
+  });
+}
+
 /** Gearbox plates and their seats: every shaft support in a plate, bossed where L.plates.bossed names it. */
 function plateSeats(cx) {
   const { catalog, L, joints, members, mat, item } = cx;
@@ -212,16 +248,14 @@ function plateSeats(cx) {
   // Seats named in L.plates.bossed ('joint/support') have a boss of the part's own length and boss_wall_mm wall; the
   // others sit in the plate alone, judged as a ring of edge_mm round the part.
   const bossed = new Set(L.plates.bossed ?? []);
-  for (const jt of joints.filter((q) => /^(crank shaft|gear shaft|motor shaft outboard)/.test(q.name))) {
+  for (const jt of joints.filter((q) => PLATE_JOINT.test(q.name))) {
     const prt = byId(catalog, jt.part_id);
     const pd = partDims(prt);
     for (const sp of jt.supports) {
       const key = `${jt.name}/${sp.name}`;
       const boss = bossed.has(key);
       const D = pd.D * 1000 + 2 * (boss ? L.plates.boss_wall_mm : L.plates.edge_mm);
-      // Round 8: the forward plate may be thinner (L.plates.t_fwd_mm); the aft plate's seats are 'aft'.
-      const tp = sp.name === 'aft' ? L.plates.t_mm : (L.plates.t_fwd_mm ?? L.plates.t_mm);
-      const t = boss ? Math.max(tp, pd.B * 1000) : tp;
+      const { plate_mm: tp, length_mm: t } = plateSeatLength(L.plates, jt.name, sp.name, pd.B * 1000);
       if (boss) bossV += ringV(D / 1000, pd.D, Math.max(0, t / 1000 - tp / 1000));
       members.push({ name: `plate seat ${jt.name} ${sp.name}`, kind: 'seat', check: 'lug', material: pm, dims: { d_mm: +(pd.D * 1000).toFixed(3), D_mm: +D.toFixed(3), t_mm: +t.toFixed(3) }, sections: [sect('F', sp.radial.map((q) => ({ ch: q.ch, k: q.k })))], uses: { F: 'F' }, note: boss ? `a boss ${D.toFixed(1)} mm round the ${prt.id}, as long as the part` : `the plate alone, judged as a ${L.plates.edge_mm} mm ring round the ${prt.id}` });
     }
