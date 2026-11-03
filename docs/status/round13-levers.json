@@ -1,0 +1,472 @@
+{
+ "note": "Round 13 (Larus GL-2). Not gate files. Every number was measured by the scripts named (scratchpad r13/ is the physics agent's scratch directory; candidates and evidence copied under out/sweep/round13/). Verdict: no candidate passes M1-M8; v21 stays in data/designs and out/verification.",
+ "rows": [
+  {
+   "tag": "1 wing loading (aspect ratio at the 2.0 m span cap)",
+   "method": "src/design/round13.mjs candidates over v21 (ROUND12.set): AR 5.5 / 5 / 4.75 / 4.5 with the spar moved forward in the chord (sparFrac) so the battery stays in v21's pod; built --no-suction (eta_s 0.6) with the trim-refine retry; M1 = scratchpad r13/m1probe.mjs (27 cases, the design's own launch law, 1/3840 s); M4 = r13/m4probe.mjs seeds 1-30 at nominal. Not gate files.",
+   "sensitivity_eta0.6": [
+    {
+     "candidate": "v21",
+     "AR": 6,
+     "area_m2": 0.667,
+     "mass_g": 1708.3,
+     "wing_loading_N_m2": 25.13,
+     "sparFrac": 0.35,
+     "train_Nm": 16.24,
+     "envelope_Hz": 3.32,
+     "envelope_limited_by": "members",
+     "best_sustained_climb_m_s": 1.45,
+     "M1": {
+      "fails_of_27": 12,
+      "worst_lost_m": 2.921,
+      "worst_case": "aero0.9 mass1.05 cg5mm 10",
+      "min_climb_2_3s_m_s": -0.32,
+      "source": "round 12 at eta_s 0.6 (scratchpad r12/v21-m1.log, v21-m1-launch.log v0)"
+     },
+     "M4_nominal_30_seeds": {
+      "passed": 30,
+      "of": 30,
+      "failed_by": {},
+      "crank_max_Nm": 14.83,
+      "crank_p50_Nm": 13.96
+     }
+    },
+    {
+     "candidate": "c55r",
+     "AR": 5.5,
+     "area_m2": 0.727,
+     "mass_g": 1722.8,
+     "wing_loading_N_m2": 23.23,
+     "sparFrac": 0.33,
+     "train_Nm": 16.24,
+     "envelope_Hz": 3.09,
+     "envelope_limited_by": "members",
+     "best_sustained_climb_m_s": 1.051,
+     "M1": {
+      "fails_of_27": 6,
+      "worst_lost_m": 2.125,
+      "worst_case": "aero0.9 mass1.05 cg5mm 10",
+      "nominal_worst_m": 0.733,
+      "min_climb_2_3s_m_s": -0.216
+     },
+     "M4_nominal_30_seeds": {
+      "passed": 29,
+      "of": 30,
+      "failed_by": {
+       "alt": 1
+      },
+      "crank_max_Nm": 16.65,
+      "crank_p50_Nm": 14.95
+     }
+    },
+    {
+     "candidate": "c50r",
+     "AR": 5,
+     "area_m2": 0.8,
+     "mass_g": 1738.6,
+     "wing_loading_N_m2": 21.31,
+     "sparFrac": 0.3,
+     "train_Nm": 16.24,
+     "envelope_Hz": 2.9,
+     "envelope_limited_by": "members",
+     "best_sustained_climb_m_s": 0.825,
+     "M1": {
+      "fails_of_27": 1,
+      "worst_lost_m": 1.284,
+      "worst_case": "aero0.9 mass1.05 cg-5mm 10",
+      "nominal_worst_m": 0.294,
+      "min_climb_2_3s_m_s": -0.044
+     },
+     "M4_nominal_30_seeds": {
+      "passed": 27,
+      "of": 30,
+      "failed_by": {
+       "alt": 3
+      },
+      "crank_max_Nm": 17.5,
+      "crank_p50_Nm": 16.19
+     }
+    },
+    {
+     "candidate": "c475r",
+     "AR": 4.75,
+     "area_m2": 0.842,
+     "mass_g": 1749.4,
+     "wing_loading_N_m2": 20.37,
+     "sparFrac": 0.29,
+     "train_Nm": 16.24,
+     "envelope_Hz": 2.78,
+     "envelope_limited_by": "members",
+     "best_sustained_climb_m_s": 0.67,
+     "M1": {
+      "fails_of_27": 0,
+      "worst_lost_m": 0.917,
+      "worst_case": "aero0.9 mass1.05 cg5mm 0",
+      "nominal_worst_m": 0.201,
+      "min_climb_2_3s_m_s": 0.077
+     },
+     "M4_nominal_30_seeds": {
+      "passed": 26,
+      "of": 30,
+      "failed_by": {
+       "alt": 4
+      },
+      "crank_max_Nm": 18.61,
+      "crank_p50_Nm": 16.78,
+      "crank_rate_max_Hz": 3.24
+     }
+    },
+    {
+     "candidate": "c45r",
+     "AR": 4.5,
+     "area_m2": 0.889,
+     "mass_g": 1761.3,
+     "wing_loading_N_m2": 19.43,
+     "sparFrac": 0.28,
+     "train_Nm": 16.24,
+     "envelope_Hz": 2.66,
+     "envelope_limited_by": "members",
+     "best_sustained_climb_m_s": 0.555,
+     "M1": {
+      "fails_of_27": 0,
+      "worst_lost_m": 0.753,
+      "worst_case": "aero0.9 mass1.05 cg5mm 0",
+      "nominal_worst_m": 0.123,
+      "min_climb_2_3s_m_s": 0.181
+     },
+     "M4_nominal_30_seeds": {
+      "passed": 22,
+      "of": 30,
+      "failed_by": {
+       "alt": 8
+      },
+      "crank_max_Nm": 19.32,
+      "crank_p50_Nm": 17.61
+     }
+    },
+    {
+     "candidate": "c45t2",
+     "AR": 4.5,
+     "area_m2": 0.889,
+     "mass_g": 2041.6,
+     "wing_loading_N_m2": 22.52,
+     "sparFrac": 0.28,
+     "train_Nm": 20.12,
+     "envelope_Hz": 2.72,
+     "envelope_limited_by": "members",
+     "best_sustained_climb_m_s": 0.324,
+     "M1": {
+      "fails_of_27": 12,
+      "worst_lost_m": 2.161,
+      "worst_case": "aero0.9 mass1.05 cg5mm 10",
+      "nominal_worst_m": 0.444,
+      "min_climb_2_3s_m_s": -0.735
+     },
+     "M4_nominal_30_seeds": {
+      "passed": 18,
+      "of": 30,
+      "failed_by": {
+       "alt": 12
+      },
+      "crank_max_Nm": 19.4,
+      "crank_p50_Nm": 18.19,
+      "crank_rate_max_Hz": 3.22
+     }
+    }
+   ],
+   "reading": "M1 closes at WL <= 20.4 N/m2 (AR <= 4.75 at 2.0 m): every case loses under 1.5 m and climbs over 2-3 s. AR 5 (WL 21.3) loses at most 1.28 m but one case (aero 0.9 / mass 1.05 / CG -5 mm, 10 deg) sinks 0.04 m/s over 2-3 s. The same area costs M4 and M7: nominal M4 falls from 30/30 (v21) to 29, 27, 26, 22 of 30 (all on altitude, the downdraft climb), and the M4 crank peak rises with area from 14.83 to 16.65, 17.50, 18.61, 19.32 N m against the 16.24 N m train (the M7 gear limit). No point of the sweep passes both."
+  },
+  {
+   "tag": "1b best candidate c475 (AR 4.75), eta_s table and its own V5 calibration",
+   "design": "out/sweep/round13/c475.json (node src/design/round13.mjs --cand c475 --cal <V5 multipliers of its own wing>)",
+   "AR": 4.75,
+   "area_m2": 0.842,
+   "mass_g": 1749.4,
+   "wing_loading_N_m2": 20.37,
+   "sparFrac": 0.29,
+   "train_Nm": 16.24,
+   "envelope_Hz": 2.82,
+   "envelope_limited_by": "members",
+   "best_sustained_climb_m_s": 0.923,
+   "V5": "PASS on its own wing: worst held-out lift 2.1%, thrust 2.7% (out/sweep/round13/evidence/V5-c475r.json; flown in a scratch copy, not out/verification)",
+   "eval": {
+    "M1": {
+     "worst": {
+      "c": "aero0.9 mass1.05 cg5mm",
+      "p": 0,
+      "lost": 0.49117066942026155,
+      "climb3": 0.3613432704172588,
+      "passed": true
+     },
+     "failing": 0,
+     "nominal_worst": 3.770231844500662e-07
+    },
+    "M2": {
+     "min": 16.242051502722184,
+     "worst": {
+      "c": "aero1.1 mass1.05 cg5mm",
+      "min": 16.242051502722184,
+      "ratio": 3.5787213300633325,
+      "passed": true
+     },
+     "failing": 0
+    },
+    "M3": {
+     "max_dev": 0.7359582807696429,
+     "failing": 0
+    },
+    "M5": {
+     "max_speed": 7.566047642938953,
+     "max_sink": 0.6920807964441247,
+     "failing": []
+    },
+    "M4": {
+     "nominal": {
+      "passed": 96,
+      "of": 100,
+      "crank_max_pass": 18.33943263817602,
+      "crank_p50_pass": 16.701475950154695
+     },
+     "aero0.9 mass1.05 cg5mm": {
+      "passed": 96,
+      "of": 100,
+      "crank_max_pass": 17.4997089568014,
+      "crank_p50_pass": 15.829011576272622
+     }
+    }
+   },
+   "M1_table": {
+    "fails_of_27": 0,
+    "worst_lost_m": 0.491,
+    "worst_case": "aero0.9 mass1.05 cg5mm 0",
+    "nominal_worst_m": 0.0,
+    "min_climb_2_3s_m_s": 0.048
+   },
+   "M1_eta0.6": {
+    "fails_of_27": 10,
+    "worst_lost_m": 1.146,
+    "worst_case": "aero0.9 mass1.05 cg5mm 10",
+    "nominal_worst_m": 0.0,
+    "min_climb_2_3s_m_s": -0.421
+   },
+   "verdict": "FAIL, not a v22. M1 passes with the table (0/27, worst 0.491 m, slowest 2-3 s climb 0.05 m/s) but fails at the uniform 0.6 default (10/27, worst 1.146 m, a case sinking 0.42 m/s), so by the CFD round-3 addition its M1 verdict is not final: every strip sits below the measured band and is held at 0.732. M4 96/100 at nominal and at aero 0.9 / mass 1.05 / CG +5 (needs 98; seeds 8, 15, 27, 45, all altitude). M7: the passing nominal M4 seeds peak at 18.34 N m at the crank against the 16.24 N m train (13% over). M2 16.24 min, M3 0.74 m, M5 7.57 m/s / 0.69 m/s pass at every corner. Shortfall to v22: about 2.1 N m of crank torque (a train 13% stronger costs 179-215 g, which the sweep shows breaks M1), 2+ M4 seeds, and a lower-amplitude CFD point or M1 margin that survives eta_s 0.6.",
+   "strips": {
+    "k": 0.271,
+    "amplitudes_deg_right": [
+     1.57,
+     2.71,
+     3.94,
+     4.97,
+     5.43,
+     5.32,
+     4.84,
+     3.77
+    ],
+    "outside_band": [
+     "0.06: 1.57 deg below >1",
+     "0.19: 2.71 deg below >1",
+     "0.31: 3.94 deg below >1",
+     "0.44: 4.97 deg below",
+     "0.56: 5.43 deg below",
+     "0.69: 5.32 deg below",
+     "0.81: 4.84 deg below >1",
+     "0.94: 3.77 deg below >1"
+    ],
+    "above_band": 0
+   }
+  },
+  {
+   "tag": "2 low-speed lift: twist, symmetric twist, lead (static level flapping trims)",
+   "method": "scratchpad r13/vmin.mjs: trimLevel (the build's own cycle trim, twist servo through its real speed model) walked down 0.25 m/s then bisected to 0.05; the floor is the slowest trim with stroke frequency within the envelope.",
+   "v21_worst_corner": "aero 0.9 / mass 1.05 / CG +5: 10.25 m/s at the 38 deg twist cap; 45 / 50 deg 10.25 / 10.375; horn ratio 2.2 (faster twist) 10.125 / 10.25; symmetric twist -8 / -4 / +4 / +8 / +12 deg 10.25 / 10.25 / 10.22 / 10.22 / 10.5; lead -20 / +20 deg 10.625 / 10.25.",
+   "reading": "None moves the floor by more than 0.13 m/s. At the floor the trim jumps from 2.4 Hz with 16% of the wing stalled to above 5.7 Hz with 60% stalled: below it no stroke within any rating balances drag, so stroke speed, pack voltage (3S or 4S) and the launch frequency cannot help (round 12: launch 2.3-2.9 Hz gave 2.915-2.942 m).",
+   "floor_before_v21_table": {
+    "aero0.9 mass0.95 cg-5mm": 9.625,
+    "aero0.9 mass0.95 cg5mm": 9.688,
+    "aero0.9 mass1.05 cg-5mm": 10.125,
+    "aero0.9 mass1.05 cg5mm": 10.25,
+    "aero1.1 mass0.95 cg-5mm": 8.75,
+    "aero1.1 mass0.95 cg5mm": 8.688,
+    "aero1.1 mass1.05 cg-5mm": 9.25,
+    "aero1.1 mass1.05 cg5mm": 9.219,
+    "nominal": 9.375
+   },
+   "floor_after_c475_table": {
+    "aero0.9 mass0.95 cg-5mm": 8.5,
+    "aero0.9 mass0.95 cg5mm": 8.469,
+    "aero0.9 mass1.05 cg-5mm": 9.063,
+    "aero0.9 mass1.05 cg5mm": 9.063,
+    "aero1.1 mass0.95 cg-5mm": 7.5,
+    "aero1.1 mass0.95 cg5mm": 7.5,
+    "aero1.1 mass1.05 cg-5mm": 8,
+    "aero1.1 mass1.05 cg5mm": 8.094,
+    "nominal": 8.563
+   }
+  },
+  {
+   "tag": "3 M4 and M7 levers on the large wing (c45r, AR 4.5)",
+   "rough_speed": {
+    "Vrough 15": {
+     "passed": 22,
+     "of": 30,
+     "failed_by": {
+      "alt": 8
+     },
+     "crank_max_Nm": 19.32,
+     "crank_p50_Nm": 17.61
+    },
+    "Vrough 13": {
+     "passed": 20,
+     "of": 30,
+     "failed_by": {
+      "alt": 10
+     },
+     "crank_max_Nm": 18.98,
+     "crank_p50_Nm": 16.93
+    },
+    "Vrough 12": {
+     "passed": 14,
+     "of": 30,
+     "failed_by": {
+      "alt": 16
+     },
+     "crank_max_Nm": 18.36,
+     "crank_p50_Nm": 16.54
+    },
+    "Vrough 11": {
+     "passed": 14,
+     "of": 30,
+     "failed_by": {
+      "alt": 16
+     },
+     "crank_max_Nm": 18.43,
+     "crank_p50_Nm": 16.77
+    }
+   },
+   "gust_load_alleviation": {
+    "k 0.15 rad/g, deadband 0.3 g": {
+     "passed": 22,
+     "of": 30,
+     "failed_by": {
+      "alt": 8
+     },
+     "crank_max_Nm": 18.9,
+     "crank_p50_Nm": 17.74
+    },
+    "k 0.3 rad/g, deadband 0.2 g": {
+     "passed": 23,
+     "of": 30,
+     "failed_by": {
+      "alt": 7
+     },
+     "crank_max_Nm": 19.22,
+     "crank_p50_Nm": 17.39
+    }
+   },
+   "governor_clamp": {
+    "22 A": {
+     "passed": 17,
+     "of": 30,
+     "failed_by": {
+      "alt": 13
+     },
+     "crank_max_Nm": 18.18,
+     "crank_p50_Nm": 17.01
+    },
+    "18 A": {
+     "passed": 11,
+     "of": 30,
+     "failed_by": {
+      "pitch": 1,
+      "alt": 19
+     },
+     "crank_max_Nm": 17.56,
+     "crank_p50_Nm": 16.03
+    }
+   },
+   "stroke_amplitude": {
+    "32 deg (train re-rated at 4.5 Hz: 15.33 N m)": {
+     "M1": {
+      "fails_of_27": 8,
+      "worst_lost_m": 1.098,
+      "worst_case": "aero0.9 mass1.05 cg5mm 10",
+      "nominal_worst_m": 0.107,
+      "min_climb_2_3s_m_s": -0.327
+     },
+     "M4": {
+      "passed": 21,
+      "of": 30,
+      "failed_by": {
+       "alt": 9
+      },
+      "crank_max_Nm": 17.87,
+      "crank_p50_Nm": 16.31,
+      "crank_rate_max_Hz": 3.49
+     }
+    },
+    "30 deg (5 Hz: 14.30 N m)": {
+     "M1": {
+      "fails_of_27": 20,
+      "worst_lost_m": 1.264,
+      "worst_case": "aero0.9 mass1.05 cg5mm 10",
+      "nominal_worst_m": 0.271,
+      "min_climb_2_3s_m_s": -0.442
+     },
+     "M4": {
+      "passed": 19,
+      "of": 30,
+      "failed_by": {
+       "alt": 11
+      },
+      "crank_max_Nm": 18.44,
+      "crank_p50_Nm": 15.52,
+      "crank_rate_max_Hz": 3.6
+     }
+    }
+   },
+   "stronger_train": {
+    "design": "c45t2: the lightest no-mixed-mesh train for 20 N m at 4 Hz (r12/trainsearch12.mjs: 652 g of gears against 437 g; 17 N m needs 616 g, 22 N m 765 g)",
+    "AR": 4.5,
+    "area_m2": 0.889,
+    "mass_g": 2041.6,
+    "wing_loading_N_m2": 22.52,
+    "sparFrac": 0.28,
+    "train_Nm": 20.12,
+    "envelope_Hz": 2.72,
+    "envelope_limited_by": "members",
+    "best_sustained_climb_m_s": 0.324,
+    "M1": {
+     "fails_of_27": 12,
+     "worst_lost_m": 2.161,
+     "worst_case": "aero0.9 mass1.05 cg5mm 10",
+     "nominal_worst_m": 0.444,
+     "min_climb_2_3s_m_s": -0.735
+    },
+    "M4": {
+     "passed": 18,
+     "of": 30,
+     "failed_by": {
+      "alt": 12
+     },
+     "crank_max_Nm": 19.4,
+     "crank_p50_Nm": 18.19,
+     "crank_rate_max_Hz": 3.22
+    }
+   },
+   "reading": "The crank peak is aerodynamic (about 1.33 x the crank torque at the peak, inertia -0.3): rough-air speed, GLA and lower clamps move it by at most 1.8 N m and each costs M4 seeds; smaller strokes cut the peak less than the speed-derated train and break M1; the 20 N m train carries the peak (19.40 of 20.12) but its 280 g puts the wing loading back to 22.5 N/m2, where M1 fails 12 of 27."
+  },
+  {
+   "tag": "4 body fit and spar position",
+   "finding": "At v21's spar position (0.35 chord) a lower aspect ratio moves the neutral point forward relative to the hinge and enlarges the tail moment (tail area x arm goes as S x mac), so the CG target puts the battery 0.2 m further forward (0.457 m at AR 5 against 0.256 m): its gears then sit in the pod's aft taper and the body fit fails, and lengthening the pod puts the battery on a forward tray that fails its own rating (FoS 1.35-2.3 at the calm cruise). Moving the spar forward to 0.28-0.33 of the chord moves the neutral point aft with it and returns the battery to 0.24-0.32 m in v21's pod (r13/fitprobe.mjs)."
+  },
+  {
+   "tag": "5 free-flight trim refine (pipeline)",
+   "finding": "The low-aspect-ratio wings fly about 30% more stroke frequency in free flight than their frozen-body trims, and on the first refine pass every row but one missed only the 2% frequency-drift tolerance (2.1-2.4%), so the old refine dropped them and left a one-row table (c45: 9.5 m/s only). src/design/trim.js keptTrimRows (opt.trimFlight { passes: 3, retry: true }, round 13 only) carries such a row into the next pass with its flight means and keeps converged rows only at the last pass. Default behaviour unchanged. For the code checks refineTrimByFlight was split into flyTrimRow / trimRowRecord / keptTrimRows and completeDesign into trimTable / finishControl (CRAP 360 and 141 before, every touched function under 30 after); v21 rebuilt by round12.mjs with the split code and the committed film checker reproduces data/designs v21 exactly (mass 1708.274 g, trim table, free-flight rows, envelope 3.3226 Hz, Vapp 9.071; scratchpad r13/headcheck).",
+   "tests": "test/design/round13.test.js (8: hand sums for the row verdict and tolerances, the window counts and bounds on the v20 fixture, the pass hand-on, cruise selection, candidate sets)"
+  },
+  {
+   "tag": "6 mass",
+   "finding": "To pass M1 at v21's area the sweep needs WL <= 20.4 N/m2, i.e. at most 1387 g against 1708 g (-321 g, -19%); 437 g of it is the gear train that sets the M7 limit and 164 g the battery. No saving of that size is allowed by the rules; it was not pursued part by part."
+  }
+ ]
+}

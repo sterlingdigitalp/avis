@@ -105,8 +105,12 @@ async function applyFlightEnvelope(d, opt) {
   return true;
 }
 
-/** Trim, control table, free-flight trim, round-3 options and the flight-test envelope. Mutates d. */
-export async function completeDesign(d, { sched = null, opt = {} } = {}) {
+/**
+ * The frozen-body trim table: the cruise schedule (pickCruiseTrim) and the control table at the cruise speed and the
+ * speeds above it (opt.speeds, default Vc .. Vc + 4). -> { ctl, best, amp } or { failed }. Split out of completeDesign
+ * in round 13, unchanged.
+ */
+function trimTable(d, sched, opt) {
   const bird = buildBird(d);
   const amp = d.params.amp_deg * DEG;
   const best = pickCruiseTrim(d, bird, amp, sched, opt);
@@ -115,21 +119,40 @@ export async function completeDesign(d, { sched = null, opt = {} } = {}) {
   const speeds = opt.speeds ?? [Vc, Vc + 0.5, Vc + 1, Vc + 2, Vc + 3, Vc + 4];
   const ctl = buildControl(d, { amp, sym: 0, dyn: best.dyn * DEG, lead: 0, V: Vc }, { speeds, bird });
   if (!ctl) return { failed: 'no trim table' };
-  d.control = ctl;
-  applyRound4Options(d, opt);
-  // The flight trim is a property of the bird: flown with the round-2 law, then the round-3 options go on top (at a
-  // trim row the twist schedule returns the row's own twist, so the table holds for both).
-  await refineTrimByFlight(d);
+  return { ctl, best, amp };
+}
+
+/**
+ * After the free-flight refine: the round-3 controller options go on, then (if any row converged) cruise at the
+ * flyable row of least flight power, the rough-air speed (opt.Vrough, default 13: speed is the energy the bird trades
+ * for height in sinking air, and a gust of length H passes in H / V; measured best of 12 and 13 over 30 M4 seeds),
+ * opt.roughMaxBank_deg, Vmin no higher than the TECS floor, and the cruise record. Mutates d. -> null, or { failed }
+ * naming each row's verdict when no row converged. Split out of completeDesign in round 13, unchanged.
+ */
+export function finishControl(d, opt, amp, dyn) {
   Object.assign(d.control, round3ControlOptions(d, opt));
   if (!d.control.trimConverged) return { failed: `no free-flight trim converged: ${JSON.stringify((d.control.trimFlight ?? []).map((r) => [r.V, r.reason]))}` };
   const tf = (d.control.trimFlight ?? []).filter((r) => !r.unflyable);
   d.control.Vcruise = tf.reduce((a, b) => (b.flight_power_w < a.flight_power_w ? b : a)).V;
-  // Rough air fast (13 m/s, measured best of 12 and 13 over 30 M4 seeds): speed is the energy the bird trades for
-  // height in sinking air, and a gust of length H passes in H / V.
   d.control.Vrough = opt.Vrough ?? 13;
   if (opt.roughMaxBank_deg) d.control.roughMaxBank = opt.roughMaxBank_deg * DEG;
   d.control.Vmin = Math.min(d.control.Vmin, d.control.tecs.Vfloor);
-  d.cruise = { V: d.control.Vcruise, amp, dyn: best.dyn * DEG, sym: 0, lead: 0 };
+  d.cruise = { V: d.control.Vcruise, amp, dyn, sym: 0, lead: 0 };
+  return null;
+}
+
+/** Trim, control table, free-flight trim, round-3 options and the flight-test envelope. Mutates d. */
+export async function completeDesign(d, { sched = null, opt = {} } = {}) {
+  const t = trimTable(d, sched, opt);
+  if (t.failed) return t;
+  d.control = t.ctl;
+  applyRound4Options(d, opt);
+  // The flight trim is a property of the bird: flown with the round-2 law, then the round-3 options go on top (at a
+  // trim row the twist schedule returns the row's own twist, so the table holds for both).
+  // Round 13 (opt.trimFlight, e.g. { passes: 3, retry: true }): refine options; absent, the round-3 defaults.
+  await refineTrimByFlight(d, opt.trimFlight);
+  const f = finishControl(d, opt, t.amp, t.best.dyn * DEG);
+  if (f) return f;
   if (!(await applyFlightEnvelope(d, opt))) return { failed: 'no stroke within ratings in flight' };
   return { ok: true };
 }

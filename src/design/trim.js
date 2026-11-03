@@ -675,56 +675,87 @@ export function buildControl(design, sched, { speeds, bird: given = null, omegaT
  */
 export const FLIGHT_TRIM_TOL = { climb_m_s: 0.1, speed_m_s: 0.3, freq_drift_frac: 0.02, tail_drift_rad: 0.01 };
 
-export async function refineTrimByFlight(design, { passes = 2, settle = 15, average = 10 } = {}) {
+/**
+ * Round 13: the rows one refine pass hands on (flight records stripped). A row that diverged is dropped. A row that
+ * flew but missed a tolerance is dropped as well, unless `retry` is on and another pass follows (`last` false): then
+ * it goes on with its flight means as the next pass's start, because the frozen-body row it started from can sit well
+ * off the free-flight trim (the round-13 low-aspect-ratio wings fly 30% more stroke frequency than their frozen-body
+ * trims and missed only the 2% drift tolerance on the first pass). The last pass keeps converged rows only, so no
+ * unconverged row ever reaches the table.
+ */
+export function keptTrimRows(rows, { retry = false, last = true } = {}) {
+  return rows
+    .filter((r) => r.converged || (retry && !last && r.reason === 'not converged'))
+    .map(({ flight_power_w, flight_power_regen_credit_w, flight_V, unflyable, converged, convergence, reason, ...r }) => r);
+}
+
+/** One free-flight sample of a trim row's averaging window into its sums s (second: the window's second half). */
+function addTrimSample(s, sim, snap, eulerFromQuat, second) {
+  if (s.y0 === null) s.y0 = snap.pos[1];
+  const h = s.half[second ? 1 : 0];
+  h.f += sim.cmd.freq; h.tail += sim.cmd.tailPitch; h.n++;
+  s.tail += sim.cmd.tailPitch;
+  s.th += eulerFromQuat(snap.quat).theta;
+  s.P += sim.tel.power_w;
+  s.PC += sim.tel.power_regen_credit_w ?? sim.tel.power_w;
+  s.V += sim.tel.airspeed;
+  s.n++;
+}
+
+/**
+ * One trim row flown closed loop from its speed, settle seconds then average seconds, as refineTrimByFlight has since
+ * round 3: the window's sums (whole and by half), the height at its start (y0) and end (y1); ok false once the bird
+ * leaves +-30 m of its start or the state goes non-finite. Round 13 split it out of refineTrimByFlight unchanged.
+ */
+export async function flyTrimRow(design, row, { settle = 15, average = 10 } = {}) {
   const { setupFlight } = await import('../physics/scenarios.js');
   const { eulerFromQuat } = await import('../physics/flight.js');
+  const { sim, ctl: c, tick } = setupFlight(design, { sensorNoise: false, init: { V: row.V, y: 0 } });
+  c.guidance.speed = row.V;
+  const s = { ok: true, n: 0, tail: 0, th: 0, P: 0, PC: 0, V: 0, half: [{ f: 0, tail: 0, n: 0 }, { f: 0, tail: 0, n: 0 }], y0: null, y1: null, average };
+  const HZ = Math.round(1 / sim.dt);
+  const N = Math.round((settle + average) * HZ);
+  for (let k = 0; k < N; k++) {
+    tick();
+    const snap = sim.snapshot();
+    if (!Number.isFinite(snap.pos[1]) || Math.abs(snap.pos[1]) > 30) { s.ok = false; break; }
+    if (k >= settle * HZ) addTrimSample(s, sim, snap, eulerFromQuat, k >= (settle + average / 2) * HZ);
+  }
+  s.y1 = sim.snapshot().pos[1];
+  return s;
+}
+
+/**
+ * A flown trim row's record from its window sums (flyTrimRow): 'diverged' when the flight left its bounds or a sum is
+ * not finite; otherwise the window means and the four criteria against tol (FLIGHT_TRIM_TOL): climb over the window,
+ * speed error, stroke-frequency drift between the halves (relative to their mean) and tail drift; 'not converged' when
+ * any criterion is outside its tolerance.
+ */
+export function trimRowRecord(row, s, tol = FLIGHT_TRIM_TOL) {
+  const good = s.ok && s.n && [s.half[0].f, s.half[1].f, s.tail, s.th, s.P, s.V].every(Number.isFinite);
+  if (!good) return { ...row, unflyable: true, converged: false, reason: 'diverged' };
+  const [a, b] = s.half;
+  const f0 = a.f / a.n, f1 = b.f / b.n;
+  const crit = {
+    climb_m_s: (s.y1 - s.y0) / s.average,
+    speed_err_m_s: s.V / s.n - row.V,
+    freq_drift_frac: Math.abs(f1 - f0) / Math.max(0.5 * (f0 + f1), 1e-6),
+    tail_drift_rad: Math.abs(b.tail / b.n - a.tail / a.n),
+  };
+  const converged = Math.abs(crit.climb_m_s) <= tol.climb_m_s && Math.abs(crit.speed_err_m_s) <= tol.speed_m_s && crit.freq_drift_frac <= tol.freq_drift_frac && crit.tail_drift_rad <= tol.tail_drift_rad;
+  return { ...row, freq: (a.f + b.f) / (a.n + b.n), tail: s.tail / s.n, theta: s.th / s.n, flight_power_w: s.P / s.n, flight_power_regen_credit_w: s.PC / s.n, flight_V: s.V / s.n, converged, convergence: crit, ...(converged ? {} : { unflyable: true, reason: 'not converged' }) };
+}
+
+export async function refineTrimByFlight(design, { passes = 2, settle = 15, average = 10, retry = false } = {}) {
   const ctl = design.control;
-  const tol = FLIGHT_TRIM_TOL;
   for (let pass = 0; pass < passes; pass++) {
     const rows = [];
-    for (const row of ctl.trim) {
-      const { sim, ctl: c, tick } = setupFlight(design, { sensorNoise: false, init: { V: row.V, y: 0 } });
-      c.guidance.speed = row.V;
-      let tail = 0, th = 0, P = 0, PC = 0, V = 0, n = 0, ok = true;
-      const half = [{ f: 0, tail: 0, n: 0 }, { f: 0, tail: 0, n: 0 }];
-      const HZ = Math.round(1 / sim.dt);
-      const N = Math.round((settle + average) * HZ);
-      let y0 = null;
-      for (let k = 0; k < N; k++) {
-        tick();
-        const s = sim.snapshot();
-        if (!Number.isFinite(s.pos[1]) || Math.abs(s.pos[1]) > 30) { ok = false; break; }
-        if (k >= settle * HZ) {
-          if (y0 === null) y0 = s.pos[1];
-          const h = half[k >= (settle + average / 2) * HZ ? 1 : 0];
-          h.f += sim.cmd.freq; h.tail += sim.cmd.tailPitch; h.n++;
-          tail += sim.cmd.tailPitch;
-          th += eulerFromQuat(s.quat).theta;
-          P += sim.tel.power_w;
-          PC += sim.tel.power_regen_credit_w ?? sim.tel.power_w;
-          V += sim.tel.airspeed;
-          n++;
-        }
-      }
-      const good = ok && n && [half[0].f, half[1].f, tail, th, P, V].every(Number.isFinite);
-      if (!good) { rows.push({ ...row, unflyable: true, converged: false, reason: 'diverged' }); continue; }
-      const f0 = half[0].f / half[0].n, f1 = half[1].f / half[1].n;
-      const climb = (sim.snapshot().pos[1] - y0) / average;
-      const crit = {
-        climb_m_s: climb,
-        speed_err_m_s: V / n - row.V,
-        freq_drift_frac: Math.abs(f1 - f0) / Math.max(0.5 * (f0 + f1), 1e-6),
-        tail_drift_rad: Math.abs(half[1].tail / half[1].n - half[0].tail / half[0].n),
-      };
-      const converged = Math.abs(crit.climb_m_s) <= tol.climb_m_s && Math.abs(crit.speed_err_m_s) <= tol.speed_m_s && crit.freq_drift_frac <= tol.freq_drift_frac && crit.tail_drift_rad <= tol.tail_drift_rad;
-      const fm = (half[0].f + half[1].f) / (half[0].n + half[1].n);
-      rows.push({ ...row, freq: fm, tail: tail / n, theta: th / n, flight_power_w: P / n, flight_power_regen_credit_w: PC / n, flight_V: V / n, converged, convergence: crit, ...(converged ? {} : { unflyable: true, reason: 'not converged' }) });
-    }
-    const flyable = rows.filter((r) => !r.unflyable).map(({ flight_power_w, flight_power_regen_credit_w, flight_V, unflyable, converged, convergence, reason, ...r }) => r);
+    for (const row of ctl.trim) rows.push(trimRowRecord(row, await flyTrimRow(design, row, { settle, average })));
+    const flyable = keptTrimRows(rows, { retry, last: pass === passes - 1 });
     if (flyable.length) ctl.trim = flyable;
     ctl.trimFlight = rows;
     // No converged row: the frozen-body table must not stand in for a flight trim.
-    ctl.trimConverged = flyable.length > 0;
+    ctl.trimConverged = rows.some((r) => r.converged);
     if (!flyable.length) break;
   }
   return design;
