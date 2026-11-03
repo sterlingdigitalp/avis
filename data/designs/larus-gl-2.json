@@ -14,8 +14,8 @@
   "amp_deg": 38,
   "ampMax_deg": 48,
   "phiMean_deg": 5,
-  "gearRatio": 31.25,
-  "crankRating": 15.168287580024002,
+  "gearRatio": 30.000000000000004,
+  "crankRating": 16.237595419847327,
   "staticMargin": 0.1,
   "sparFrac": 0.35,
   "crank_mm": 12,
@@ -40,10 +40,10 @@
    "film": "film-oracover-air-light",
    "keel": "tube-rockwest-pultruded-10x8",
    "gears": [
-    "gear-khk-dsf1-20",
-    "gear-khk-ds1-30",
-    "gear-khk-msga1-18",
-    "gear-khk-ds1-60",
+    "gear-khk-dsf1-24",
+    "gear-khk-ds1-36",
+    "gear-khk-msga1-20",
+    "gear-khk-ds1-64",
     "gear-khk-msga1-18",
     "gear-khk-msgb1-45",
     "gear-khk-msga1-18",
@@ -68,14 +68,14 @@
    "quote": "AM32 'Complementary PWM: Applies PWM to the complementary output during the PWM off time. This acts as a brake slowing the motor when going from a higher duty cycle to lower duty cycle'; default on (EEPROM byte 20 = 1)",
    "source": "https://github.com/AlkaMotors/AM32-MultiRotor-ESC-firmware/wiki/ESC-Settings-Explained"
   },
-  "bodyWidth_m": 0.09,
+  "bodyWidth_m": 0.1,
   "bodyHeight_m": 0.12,
   "bodyY_m": -0.03,
   "lumpPos": {
    "flap motor": [
     0.097,
-    0.0007,
-    -0.0005
+    0.0024,
+    -0.0058
    ],
    "ESC": [
     0.078,
@@ -99,7 +99,7 @@
    ],
    "tail servos": [
     -0.08,
-    -0.012,
+    -0.009,
     0
    ],
    "stroke servo": [
@@ -108,9 +108,9 @@
     0
    ],
    "gears and bearings": [
-    0.0255,
-    -0.0366,
-    0.0089
+    0.0263,
+    -0.0344,
+    0.0073
    ],
    "crank, rockers, plates": [
     0.0015,
@@ -147,7 +147,7 @@
    "shafts": [
     "bushing-igus-GFM-0810-06",
     "bushing-igus-GFM-0810-06",
-    "bearing-skf-619-5-2z"
+    "bearing-skf-628-6-2z"
    ],
    "couplerEyes": "bushing-igus-GFM-0810-06",
    "motorOutboard": "bearing-skf-619-5-2z"
@@ -189,13 +189,13 @@
     {
      "material": "metal-al-7075-t6",
      "d_mm": 8,
-     "seat_od_mm": 10,
+     "seat_od_mm": 15,
      "wheelKey": {
       "material": "metal-ti-6al-4v-annealed-bar",
-      "b_mm": 4,
-      "h_mm": 4,
+      "b_mm": 5,
+      "h_mm": 5,
       "L_mm": 10,
-      "shaft_depth_mm": 2.5
+      "shaft_depth_mm": 3
      },
      "pinionKey": {
       "material": "metal-ti-6al-4v-annealed-bar",
@@ -218,8 +218,15 @@
     },
     {
      "material": "metal-al-7075-t6",
-     "d_mm": 5,
-     "mass_d_mm": 6
+     "d_mm": 6,
+     "mass_d_mm": 8,
+     "pinionKey": {
+      "material": "metal-ti-6al-4v-annealed-bar",
+      "b_mm": 3,
+      "h_mm": 3,
+      "L_mm": 10,
+      "shaft_depth_mm": 1.8
+     }
     }
    ],
    "shoulderPin": {
@@ -269,6 +276,12 @@
      "seat_D_mm": 29,
      "id_mm": 9.6
     }
+   },
+   "fixings": {
+    "bond": {
+     "pom": "adhesive-loctite-406-sf770",
+     "steel": "adhesive-loctite-638"
+    }
    }
   },
   "gearRating": {
@@ -283,7 +296,16 @@
     "id": "grease-molykote-em-30l",
     "grease": true
    },
-   "max_temperature_C": 40
+   "max_temperature_C": 40,
+   "accuracy": {
+    "old_grade_of": {
+     "N5": 1,
+     "N7": 3,
+     "N8": 4
+    },
+    "modified": false,
+    "basis": "KHK Japanese technical reference khk416_1 Table 8.4 groups \"N5,N6 (old JIS 1,2)\", \"N7,N8 (old JIS 3,4)\"; khk472: new grade ~ old + 4 (rule of thumb). MSGA/MSGB: \"Standard full depth\", no tooth modification stated: unmodified rows (scratchpad research/round10-parts.json Q2)."
+   }
   }
  },
  "atmosphere": {
@@ -338,7 +360,7 @@
   "chord_elbow_m": 0.37439345796694495,
   "chord_tip_m": 0.22463607478016698,
   "tail_arm_m": 0.9458361043375452,
-  "wing_loading_N_m2": 23.180784215946485,
+  "wing_loading_N_m2": 23.510740000552605,
   "x_np_m": -0.018995305438456157,
   "x_cg_m": 0.015995784639878233,
   "static_margin": 0.1
@@ -352,14 +374,14 @@
   "ampMax": 0.6632251157578453,
   "ampNominal": 0.6632251157578453,
   "phiMean": 0.08726646259971647,
-  "gearRatio": 31.25,
+  "gearRatio": 30.000000000000004,
   "gearEfficiency": 0.85,
   "crankFriction_Nm": 0.01,
   "gears": [
-   "gear-khk-dsf1-20",
-   "gear-khk-ds1-30",
-   "gear-khk-msga1-18",
-   "gear-khk-ds1-60",
+   "gear-khk-dsf1-24",
+   "gear-khk-ds1-36",
+   "gear-khk-msga1-20",
+   "gear-khk-ds1-64",
    "gear-khk-msga1-18",
    "gear-khk-msgb1-45",
    "gear-khk-msga1-18",
@@ -390,7 +412,7 @@
    {
     "where": "gear shaft 3",
     "count": 2,
-    "id": "bearing-skf-619-5-2z"
+    "id": "bearing-skf-628-6-2z"
    },
    {
     "where": "coupler eyes, two per coupler",
@@ -433,7 +455,16 @@
     "id": "grease-molykote-em-30l",
     "grease": true
    },
-   "max_temperature_C": 40
+   "max_temperature_C": 40,
+   "accuracy": {
+    "old_grade_of": {
+     "N5": 1,
+     "N7": 3,
+     "N8": 4
+    },
+    "modified": false,
+    "basis": "KHK Japanese technical reference khk416_1 Table 8.4 groups \"N5,N6 (old JIS 1,2)\", \"N7,N8 (old JIS 3,4)\"; khk472: new grade ~ old + 4 (rule of thumb). MSGA/MSGB: \"Standard full depth\", no tooth modification stated: unmodified rows (scratchpad research/round10-parts.json Q2)."
+   }
   }
  },
  "tail": {
@@ -457,91 +488,91 @@
    "kind": "elliptic-loft",
    "sections": [
     {
-     "x_m": 0.3874671173233209,
+     "x_m": 0.3852082282193493,
      "y_m": -0.03,
      "width_m": 0,
      "height_m": 0
     },
     {
-     "x_m": 0.34654439931126574,
+     "x_m": 0.34428551020729414,
      "y_m": -0.03,
-     "width_m": 0.051328026715729225,
+     "width_m": 0.0570311407952547,
      "height_m": 0.06843736895430563
     },
     {
-     "x_m": 0.3056216812992105,
+     "x_m": 0.30336279219523893,
      "y_m": -0.03,
-     "width_m": 0.06893874832348033,
+     "width_m": 0.07659860924831148,
      "height_m": 0.09191833109797377
     },
     {
-     "x_m": 0.26469896328715536,
+     "x_m": 0.26244007418318377,
      "y_m": -0.03,
-     "width_m": 0.07971169350623943,
+     "width_m": 0.08856854834026603,
      "height_m": 0.10628225800831922
     },
     {
-     "x_m": 0.22377624527510018,
+     "x_m": 0.22151735617112858,
      "y_m": -0.03,
-     "width_m": 0.08624833627499189,
+     "width_m": 0.09583148474999098,
      "height_m": 0.11499778169998917
     },
     {
-     "x_m": 0.182853527263045,
+     "x_m": 0.1805946381590734,
      "y_m": -0.03,
-     "width_m": 0.0894819272597682,
+     "width_m": 0.09942436362196468,
      "height_m": 0.11930923634635761
     },
     {
-     "x_m": 0.1419308092509898,
+     "x_m": 0.1396719201470182,
      "y_m": -0.03,
-     "width_m": 0.09,
+     "width_m": 0.1,
      "height_m": 0.12
     },
     {
-     "x_m": 0.10100809123893462,
+     "x_m": 0.09874920213496302,
      "y_m": -0.03,
-     "width_m": 0.09,
+     "width_m": 0.1,
      "height_m": 0.12
     },
     {
-     "x_m": 0.06008537322687946,
+     "x_m": 0.05782648412290786,
      "y_m": -0.03,
-     "width_m": 0.09,
+     "width_m": 0.1,
      "height_m": 0.12
     },
     {
-     "x_m": 0.019162655214824242,
+     "x_m": 0.016903766110852647,
      "y_m": -0.03,
-     "width_m": 0.09,
+     "width_m": 0.1,
      "height_m": 0.12
     },
     {
-     "x_m": -0.021760062797230917,
+     "x_m": -0.024018951901202512,
      "y_m": -0.024489795918367346,
-     "width_m": 0.07346938775510203,
+     "width_m": 0.0816326530612245,
      "height_m": 0.09795918367346938
     },
     {
-     "x_m": -0.06268278080928613,
+     "x_m": -0.06494166991325773,
      "y_m": -0.018367346938775512,
-     "width_m": 0.05510204081632653,
+     "width_m": 0.06122448979591837,
      "height_m": 0.07346938775510203
     },
     {
-     "x_m": -0.10360549882134129,
+     "x_m": -0.10586438792531289,
      "y_m": -0.012244897959183678,
-     "width_m": 0.03673469387755103,
+     "width_m": 0.04081632653061226,
      "height_m": 0.048979591836734705
     },
     {
-     "x_m": -0.1445282168333965,
+     "x_m": -0.1467871059373681,
      "y_m": -0.006122448979591834,
-     "width_m": 0.0183673469387755,
+     "width_m": 0.020408163265306114,
      "height_m": 0.024489795918367332
     },
     {
-     "x_m": -0.18545093484545166,
+     "x_m": -0.18770982394942326,
      "y_m": 0,
      "width_m": 0.009982,
      "height_m": 0.009982
@@ -554,11 +585,11 @@
     }
    ]
   },
-  "loft_wetted_area_m2": 0.17003589150141712,
-  "CdA_front_m2": 0.0021205750411731105,
-  "CdA_top_m2": 0.041250099756151626,
+  "loft_wetted_area_m2": 0.1764754903025913,
+  "CdA_front_m2": 0.002356194490192345,
+  "CdA_top_m2": 0.04583344417350181,
   "CdA_side_m2": 0.05500013300820217,
-  "volume_m3": 0.0031131920283700427,
+  "volume_m3": 0.003450806478033887,
   "kMunk": 0.8,
   "cp": [
    0.05,
@@ -566,17 +597,17 @@
    0
   ],
   "length_m": 0.5729180521687726,
-  "width_m": 0.09,
+  "width_m": 0.1,
   "height_m": 0.12,
   "bottom_y_m": -0.09,
   "centre_y_m": -0.03
  },
  "mass": {
-  "total_kg": 1.575854766302899,
-  "total_g": 1575.854766302899,
-  "parts_g": 775.0474,
-  "structure_g": 595.2610924373037,
-  "margin_g": 205.54627386559557,
+  "total_kg": 1.5982855171781465,
+  "total_g": 1598.2855171781464,
+  "parts_g": 786.0974,
+  "structure_g": 603.7160931983884,
+  "margin_g": 208.47202397975826,
   "margin_frac": 0.15,
   "lumps": [
    {
@@ -584,24 +615,24 @@
     "mass_kg": 0.161,
     "pos": [
      0.097,
-     0.0007,
-     -0.0005
+     0.0024,
+     -0.0058
     ],
     "gyration_m": 0
    },
    {
     "name": "gears and bearings",
-    "mass_kg": 0.42589951,
+    "mass_kg": 0.43860700999999996,
     "pos": [
-     0.0255,
-     -0.0366,
-     0.0089
+     0.0263,
+     -0.0344,
+     0.0073
     ],
     "gyration_m": 0
    },
    {
     "name": "crank, rockers, plates",
-    "mass_kg": 0.3913063788854326,
+    "mass_kg": 0.3998538795244348,
     "pos": [
      0.0015,
      -0.056,
@@ -664,7 +695,7 @@
     "mass_kg": 0.07060999999999999,
     "pos": [
      -0.08,
-     -0.012,
+     -0.009,
      0
     ],
     "gyration_m": 0
@@ -701,7 +732,7 @@
    },
    {
     "name": "fuselage shell and formers",
-    "mass_kg": 0.012270754961152281,
+    "mass_kg": 0.013446505197397632,
     "pos": [
      -0.05,
      0,
@@ -723,7 +754,7 @@
     "name": "battery",
     "mass_kg": 0.11959999999999998,
     "pos": [
-     0.3374671173233209,
+     0.3352082282193493,
      -0.005,
      0
     ],
@@ -755,7 +786,7 @@
    ],
    "one_wing_kg": 0.12066896979783037
   },
-  "x_battery_m": 0.3374671173233209
+  "x_battery_m": 0.3352082282193493
  },
  "motor": {
   "id": "motor-cobra-c-2820-14",
@@ -898,15 +929,15 @@
     "name": "fuselage film shell",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 2.5702217053498124,
-    "basis": "0.151 m2",
+    "mass_g": 2.6926132151283753,
+    "basis": "0.158 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "fuselage formers",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 8.099999999999998,
+    "mass_g": 9.000000000000002,
     "basis": "5 off, 50% lightened, 2 mm",
     "source_url": "https://www.wood-database.com/balsa/"
    },
@@ -930,16 +961,16 @@
     "name": "gear shaft 1",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 11.10546719858685,
-    "basis": "8 mm x 73.0 mm with a 10 mm wheel seat for the gear-khk-msgb1-45 (15 mm bore, keyed); 2.81 g/cm3",
+    "mass_g": 13.864178247520387,
+    "basis": "8 mm x 73.0 mm with a 15 mm wheel seat for the gear-khk-msgb1-45 (15 mm bore, keyed); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "key, wheel gear-khk-msgb1-45 on gear shaft 1",
     "material_id": "metal-ti-6al-4v-annealed-bar",
     "material": "Titanium Ti-6Al-4V (Grade 5) annealed bar",
-    "mass_g": 0.7088,
-    "basis": "4 x 4 x 10 mm; 4.43 g/cm3",
+    "mass_g": 1.1075000000000002,
+    "basis": "5 x 5 x 10 mm; 4.43 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf"
    },
    {
@@ -970,9 +1001,17 @@
     "name": "gear shaft 3",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 5.799914109277869,
-    "basis": "6 mm x 73.0 mm; 2.81 g/cm3",
+    "mass_g": 10.31095841649399,
+    "basis": "8 mm x 73.0 mm; 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
+   },
+   {
+    "name": "key, pinion gear-khk-msga1-20 on gear shaft 3",
+    "material_id": "metal-ti-6al-4v-annealed-bar",
+    "material": "Titanium Ti-6Al-4V (Grade 5) annealed bar",
+    "mass_g": 0.39869999999999994,
+    "basis": "3 x 3 x 10 mm; 4.43 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf"
    },
    {
     "name": "shoulder pin right",
@@ -1050,8 +1089,8 @@
     "name": "gearbox plates, 2 off",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 65.63730829207888,
-    "basis": "solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft 89.3 cm2 x 1.6 mm, forward 83.5 cm2 x 1.2 mm; 2.7 g/cm3",
+    "mass_g": 65.25897089698705,
+    "basis": "solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft 88.8 cm2 x 1.6 mm, forward 83.0 cm2 x 1.2 mm; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
@@ -1130,8 +1169,8 @@
     "name": "forward tray",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 19.820321602286594,
-    "basis": "channel 22 x 7 x 0.8 mm sheet (28.8 mm2) x 255 mm (to 245 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
+    "mass_g": 19.564112892535018,
+    "basis": "channel 22 x 7 x 0.8 mm sheet (28.8 mm2) x 252 mm (to 242 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
@@ -1223,97 +1262,83 @@
   },
   "gear_stages": [
    {
-    "pinion": "gear-khk-dsf1-20",
-    "gear": "gear-khk-ds1-30",
+    "pinion": "gear-khk-dsf1-24",
+    "gear": "gear-khk-ds1-36",
     "ratio": 1.5,
-    "pinion_allowable_Nm": 0.49490337086155434,
-    "gear_allowable_Nm": 0.9933019883736378,
+    "pinion_allowable_Nm": 0.5525929855069047,
+    "gear_allowable_Nm": 0.9246728854932907,
     "pinion_material": "Polyacetal (Hub: SUS303)",
     "gear_material": "Duracon (R) acetal M90-44",
-    "pinion_rp_m": 0.01,
-    "gear_rp_m": 0.015,
+    "pinion_rp_m": 0.012,
+    "gear_rp_m": 0.018,
     "pinion_face_m": 0.006,
     "gear_face_m": 0.006,
     "alpha_rad": 0.3490658503988659,
-    "catalogue_pinion_allowable_Nm": 0.96,
-    "catalogue_gear_allowable_Nm": 1.61,
+    "catalogue_pinion_allowable_Nm": 1.22,
+    "catalogue_gear_allowable_Nm": 2.04,
     "rating_check": {
      "crank_Hz": 3,
-     "pinion_rpm": 5625.000000000001,
-     "wheel_rpm": 3750.0000000000005,
-     "pitch_line_m_s": 5.890486225480864,
+     "pinion_rpm": 5400,
+     "wheel_rpm": 3600,
+     "pitch_line_m_s": 6.785840131753954,
      "support": "weak",
      "plane_x_m": 0.063,
      "pinion": {
-      "method": "JGMA 401-01 / 402-01 (KHK)",
+      "method": "Lewis (KHK plastic gear method)",
       "catalogue": {
-       "bending_Nm": 0.96,
+       "bending_Nm": 1.22,
        "surface_Nm": null
       },
-      "bending_factor": 0.5155243446474524,
-      "surface_factor": 0.5,
-      "half_rule": true,
-      "bending_Nm": 0.49490337086155434,
+      "bending_factor": 0.4529450700876268,
+      "half_rule": false,
+      "bending_Nm": 0.5525929855069047,
       "surface_Nm": null,
-      "allowable_Nm": 0.49490337086155434,
+      "allowable_Nm": 0.5525929855069047,
       "conditions": [
        {
-        "condition": "mating gear",
-        "rated": "20 teeth",
-        "actual": "30 teeth",
-        "holds": false,
-        "correction": "JGMA 402-01 eq. 10.17: d01 i / (i + 1) (d01 the pinion, i = z2 / z1); JGMA 401-01: Y-epsilon = 1 / eps_alpha",
-        "surface_factor": 1.2,
-        "bending_factor": 1.031048689294905,
-        "eps_alpha": {
-         "rated": 1.5568383033751576,
-         "actual": 1.6051760921390599
-        }
-       },
-       {
-        "condition": "gear support",
-        "rated": "equidistant, b/d01 0.300, KH-beta 1.000",
-        "actual": "weak, b/d01 0.300, KH-beta 1.200",
-        "holds": false,
-        "correction": "JGMA 402-01 KH-beta (KHK Table 10.11, contact not predictable)",
-        "surface_factor": 0.8333333333333334
-       },
-       {
         "condition": "speed",
-        "rated": "600 rpm (0.628 m/s on this gear)",
-        "actual": "5.890 m/s",
+        "rated": "100 rpm (0.126 m/s)",
+        "actual": "6.786 m/s",
         "holds": false,
-        "correction": "KV: a higher speed band than rated and the KHK grade-to-JGMA row is not resolved: no correction, half",
-        "bending_factor": null,
-        "surface_factor": null
+        "correction": "KHK plastic gear speed factor KV (chart reading)",
+        "factor": 0.9058901401752536
        },
        {
-        "condition": "lubricant",
-        "rated": "100 cSt at 50 C",
-        "actual": "127 cSt at 50 C",
-        "holds": true,
-        "correction": "ZL at or above the rated value: no credit",
-        "surface_factor": 1
+        "condition": "mating material",
+        "rated": "not stated (taken as metal, KM 1)",
+        "actual": "Duracon",
+        "holds": false,
+        "correction": "KHK plastic gear material factor KM",
+        "factor": 0.75
        },
        {
         "condition": "load direction",
-        "rated": "bidirectional (2/3 of sigma_Flim)",
-        "actual": "reversing (the wing back-drives the train)",
+        "rated": "not stated",
+        "actual": "reversing",
+        "holds": false,
+        "correction": "JGMA 401-01 2/3 (the plastic gear method has no reversing rule)",
+        "factor": 0.6666666666666666
+       },
+       {
+        "condition": "lubrication",
+        "rated": "grease",
+        "actual": "grease",
         "holds": true,
-        "correction": "none needed",
-        "bending_factor": 1
+        "correction": "none",
+        "factor": 1
+       },
+       {
+        "condition": "temperature",
+        "rated": "40 C",
+        "actual": "40 C (stated design limit)",
+        "holds": true,
+        "correction": "KT not below the rated: no credit",
+        "factor": 1
        },
        {
         "condition": "cycles",
-        "rated": "over 1e7 (KL = KHL = 1)",
-        "actual": "not limited; no life credit",
-        "holds": true,
-        "correction": "none"
-       },
-       {
-        "condition": "impact",
-        "rated": "uniform load (KO = 1)",
-        "actual": "applied to the time-resolved peak torque of the M7 population",
+        "rated": "sigma_b 3.5 kgf/mm2 (the 1e7-cycle level of KHK's chart)",
+        "actual": "no life credit",
         "holds": true,
         "correction": "none"
        }
@@ -1322,30 +1347,30 @@
      "gear": {
       "method": "Lewis (KHK plastic gear method)",
       "catalogue": {
-       "bending_Nm": 1.61,
+       "bending_Nm": 2.04,
        "surface_Nm": null
       },
-      "bending_factor": 0.6169577567538123,
+      "bending_factor": 0.4532710223006327,
       "half_rule": false,
-      "bending_Nm": 0.9933019883736378,
+      "bending_Nm": 0.9246728854932907,
       "surface_Nm": null,
-      "allowable_Nm": 0.9933019883736378,
+      "allowable_Nm": 0.9246728854932907,
       "conditions": [
        {
         "condition": "speed",
-        "rated": "100 rpm (0.157 m/s)",
-        "actual": "5.890 m/s",
+        "rated": "100 rpm (0.188 m/s)",
+        "actual": "6.786 m/s",
         "holds": false,
         "correction": "KHK plastic gear speed factor KV (chart reading)",
-        "factor": 0.9254366351307184
+        "factor": 0.9065420446012654
        },
        {
         "condition": "mating material",
         "rated": "not stated (taken as metal, KM 1)",
-        "actual": "metal",
-        "holds": true,
+        "actual": "Duracon",
+        "holds": false,
         "correction": "KHK plastic gear material factor KM",
-        "factor": 1
+        "factor": 0.75
        },
        {
         "condition": "load direction",
@@ -1383,69 +1408,75 @@
     }
    },
    {
-    "pinion": "gear-khk-msga1-18",
-    "gear": "gear-khk-ds1-60",
-    "ratio": 3.3333333333333335,
-    "pinion_allowable_Nm": 3.9729729729729724,
-    "gear_allowable_Nm": 2.42692601280384,
+    "pinion": "gear-khk-msga1-20",
+    "gear": "gear-khk-ds1-64",
+    "ratio": 3.2,
+    "pinion_allowable_Nm": 10.00742014085087,
+    "gear_allowable_Nm": 2.6064120921356833,
     "pinion_material": "SCM415",
     "gear_material": "Duracon (R) acetal M90-44",
-    "pinion_rp_m": 0.009,
-    "gear_rp_m": 0.03,
+    "pinion_rp_m": 0.01,
+    "gear_rp_m": 0.032,
     "pinion_face_m": 0.01,
     "gear_face_m": 0.006,
     "alpha_rad": 0.3490658503988659,
-    "catalogue_pinion_allowable_Nm": 6.37,
-    "catalogue_gear_allowable_Nm": 3.78,
+    "catalogue_pinion_allowable_Nm": 8.04,
+    "catalogue_gear_allowable_Nm": 4.07,
     "rating_check": {
      "crank_Hz": 3,
-     "pinion_rpm": 3750,
+     "pinion_rpm": 3600,
      "wheel_rpm": 1125,
-     "pitch_line_m_s": 3.5342917352885173,
+     "pitch_line_m_s": 3.769911184307752,
      "support": "weak",
      "plane_x_m": 0.0455,
      "pinion": {
       "method": "JGMA 401-01 / 402-01 (KHK)",
       "catalogue": {
-       "bending_Nm": 12.1,
-       "surface_Nm": 6.37
+       "bending_Nm": 14.2,
+       "surface_Nm": 8.04
       },
-      "bending_factor": 0.5416647043361993,
-      "surface_factor": 0.6237006237006236,
-      "half_rule": true,
-      "bending_Nm": 6.554142922468011,
-      "surface_Nm": 3.9729729729729724,
-      "allowable_Nm": 3.9729729729729724,
+      "bending_factor": 1.0251013514550922,
+      "surface_factor": 1.2447039976182677,
+      "half_rule": false,
+      "bending_Nm": 14.556439190662308,
+      "surface_Nm": 10.00742014085087,
+      "allowable_Nm": 10.00742014085087,
       "conditions": [
        {
         "condition": "mating gear",
-        "rated": "18 teeth",
-        "actual": "60 teeth",
+        "rated": "20 teeth",
+        "actual": "64 teeth",
         "holds": false,
         "correction": "JGMA 402-01 eq. 10.17: d01 i / (i + 1) (d01 the pinion, i = z2 / z1); JGMA 401-01: Y-epsilon = 1 / eps_alpha",
-        "surface_factor": 1.5384615384615383,
-        "bending_factor": 1.0833294086723986,
+        "surface_factor": 1.5238095238095237,
+        "bending_factor": 1.0763564190278467,
         "eps_alpha": {
-         "rated": 1.529765630830678,
-         "actual": 1.657240096255157
+         "rated": 1.5568383033751576,
+         "actual": 1.675712901226273
         }
        },
        {
         "condition": "gear support",
-        "rated": "equidistant, b/d01 0.333, KH-beta 1.000",
-        "actual": "weak, b/d01 0.333, KH-beta 1.233",
+        "rated": "equidistant, b/d01 0.300, KH-beta 1.000",
+        "actual": "weak, b/d01 0.300, KH-beta 1.200",
         "holds": false,
         "correction": "JGMA 402-01 KH-beta (KHK Table 10.11, contact not predictable)",
-        "surface_factor": 0.8108108108108107
+        "surface_factor": 0.8333333333333334
        },
        {
         "condition": "speed",
-        "rated": "600 rpm (0.565 m/s on this gear)",
-        "actual": "3.534 m/s",
+        "rated": "600 rpm (0.628 m/s on this gear)",
+        "actual": "3.770 m/s",
         "holds": false,
-        "correction": "KV: a higher speed band than rated and the KHK grade-to-JGMA row is not resolved: no correction, half",
-        "bending_factor": null,
-        "surface_factor": null
+        "kv_row": 1,
+        "kv": {
+         "rated": 1,
+         "actual": 1.05
+        },
+        "zv_surface_factor": 1.0292146180306052,
+        "correction": "JGMA KV (KHK Table 10.3, row 1) 1 rated / 1.05 actual on both strengths; ZV (Fig. 10.5) squared on surface",
+        "bending_factor": 0.9523809523809523,
+        "surface_factor": 0.9802043981243859
        },
        {
         "condition": "lubricant",
@@ -1482,22 +1513,22 @@
      "gear": {
       "method": "Lewis (KHK plastic gear method)",
       "catalogue": {
-       "bending_Nm": 3.78,
+       "bending_Nm": 4.07,
        "surface_Nm": null
       },
-      "bending_factor": 0.6420439187311746,
+      "bending_factor": 0.6403960914338288,
       "half_rule": false,
-      "bending_Nm": 2.42692601280384,
+      "bending_Nm": 2.6064120921356833,
       "surface_Nm": null,
-      "allowable_Nm": 2.42692601280384,
+      "allowable_Nm": 2.6064120921356833,
       "conditions": [
        {
         "condition": "speed",
-        "rated": "100 rpm (0.314 m/s)",
-        "actual": "3.534 m/s",
+        "rated": "100 rpm (0.335 m/s)",
+        "actual": "3.770 m/s",
         "holds": false,
         "correction": "KHK plastic gear speed factor KV (chart reading)",
-        "factor": 0.963065878096762
+        "factor": 0.9605941371507433
        },
        {
         "condition": "mating material",
@@ -1546,7 +1577,7 @@
     "pinion": "gear-khk-msga1-18",
     "gear": "gear-khk-msgb1-45",
     "ratio": 2.5,
-    "pinion_allowable_Nm": 3.2475190839694656,
+    "pinion_allowable_Nm": 6.499139021814169,
     "gear_allowable_Nm": 17.32732946043794,
     "pinion_material": "SCM415",
     "gear_material": "SCM415",
@@ -1570,12 +1601,12 @@
        "bending_Nm": 12.1,
        "surface_Nm": 6.37
       },
-      "bending_factor": 0.5336788725433473,
-      "surface_factor": 0.509814612868048,
-      "half_rule": true,
-      "bending_Nm": 6.457514357774502,
-      "surface_Nm": 3.2475190839694656,
-      "allowable_Nm": 3.2475190839694656,
+      "bending_factor": 1.0673577450866947,
+      "surface_factor": 1.0202730018546575,
+      "half_rule": false,
+      "bending_Nm": 12.915028715549004,
+      "surface_Nm": 6.499139021814169,
+      "allowable_Nm": 6.499139021814169,
       "conditions": [
        {
         "condition": "mating gear",
@@ -1603,9 +1634,15 @@
         "rated": "600 rpm (0.565 m/s on this gear)",
         "actual": "1.060 m/s",
         "holds": false,
-        "correction": "KV: a higher speed band than rated and the KHK grade-to-JGMA row is not resolved: no correction, half",
-        "bending_factor": null,
-        "surface_factor": null
+        "kv_row": 1,
+        "kv": {
+         "rated": 1,
+         "actual": 1
+        },
+        "zv_surface_factor": 1.000631382567616,
+        "correction": "JGMA KV (KHK Table 10.3, row 1) 1 rated / 1 actual on both strengths; ZV (Fig. 10.5) squared on surface",
+        "bending_factor": 1,
+        "surface_factor": 1.000631382567616
        },
        {
         "condition": "lubricant",
@@ -1678,7 +1715,13 @@
         "rated": "600 rpm (1.414 m/s on this gear)",
         "actual": "1.060 m/s",
         "holds": false,
-        "correction": "KV: the actual speed band (1) is not above the rated one (1), so KV is not larger: no credit taken; ZV (Fig. 10.5) squared",
+        "kv_row": 1,
+        "kv": {
+         "rated": 1,
+         "actual": 1
+        },
+        "zv_surface_factor": 0.9963105790833706,
+        "correction": "JGMA KV (KHK Table 10.3, row 1) 1 rated / 1 actual on both strengths; ZV (Fig. 10.5) squared on surface",
         "bending_factor": 1,
         "surface_factor": 0.9963105790833706
        },
@@ -1777,7 +1820,13 @@
         "rated": "600 rpm (0.565 m/s on this gear)",
         "actual": "0.424 m/s",
         "holds": false,
-        "correction": "KV: the actual speed band (0) is not above the rated one (0), so KV is not larger: no credit taken; ZV (Fig. 10.5) squared",
+        "kv_row": 1,
+        "kv": {
+         "rated": 1,
+         "actual": 1
+        },
+        "zv_surface_factor": 1,
+        "correction": "JGMA KV (KHK Table 10.3, row 1) 1 rated / 1 actual on both strengths; ZV (Fig. 10.5) squared on surface",
         "bending_factor": 1,
         "surface_factor": 1
        },
@@ -1852,7 +1901,13 @@
         "rated": "600 rpm (1.414 m/s on this gear)",
         "actual": "0.424 m/s",
         "holds": false,
-        "correction": "KV: the actual speed band (0) is not above the rated one (1), so KV is not larger: no credit taken; ZV (Fig. 10.5) squared",
+        "kv_row": 1,
+        "kv": {
+         "rated": 1,
+         "actual": 1
+        },
+        "zv_surface_factor": 0.9956819228743773,
+        "correction": "JGMA KV (KHK Table 10.3, row 1) 1 rated / 1 actual on both strengths; ZV (Fig. 10.5) squared on surface",
         "bending_factor": 1,
         "surface_factor": 0.9956819228743773
        },
@@ -2325,8 +2380,8 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 2.385403,
-        "what": "stage 2 mesh, wheel gear-khk-ds1-60"
+        "k": 2.236316,
+        "what": "stage 2 mesh, wheel gear-khk-ds1-64"
        },
        {
         "ch": "crank_torque",
@@ -2364,8 +2419,8 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 3.290211,
-        "what": "stage 2 mesh, wheel gear-khk-ds1-60"
+        "k": 3.084573,
+        "what": "stage 2 mesh, wheel gear-khk-ds1-64"
        },
        {
         "ch": "crank_torque",
@@ -2401,7 +2456,7 @@
    },
    {
     "name": "gear shaft 3",
-    "part_id": "bearing-skf-619-5-2z",
+    "part_id": "bearing-skf-628-6-2z",
     "count": 2,
     "span_m": 0.069,
     "reacts": "stage 1 and stage 2 meshes",
@@ -2412,31 +2467,31 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.567561,
-        "what": "stage 1 mesh, wheel gear-khk-ds1-30"
+        "k": 0.492675,
+        "what": "stage 1 mesh, wheel gear-khk-ds1-36"
        },
        {
         "ch": "crank_torque",
-        "k": 2.385403,
-        "what": "stage 2 mesh, pinion gear-khk-msga1-18"
+        "k": 2.236316,
+        "what": "stage 2 mesh, pinion gear-khk-msga1-20"
        }
       ],
       "axial": [],
       "X0": 0.6,
       "Y0": 0.5,
       "part": {
-       "id": "bearing-skf-619-5-2z",
+       "id": "bearing-skf-628-6-2z",
        "category": "bearing",
-       "name": "619/5-2Z deep groove ball bearing",
+       "name": "628/6-2Z deep groove ball bearing",
        "kind": "deep-groove",
-       "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-619%2F5-2Z",
+       "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-628%2F6-2Z",
        "specs": {
-        "dimensions_mm_d_D_B": "5x13x4",
-        "static_load_rating_kn": 0.335,
-        "dynamic_load_rating_kn": 0.884
+        "dimensions_mm_d_D_B": "6x13x5",
+        "static_load_rating_kn": 0.35,
+        "dynamic_load_rating_kn": 0.88
        }
       },
-      "surface_m_s_per_crank_rad_s": 0.052083
+      "surface_m_s_per_crank_rad_s": 0.06
      },
      {
       "name": "forward",
@@ -2444,31 +2499,31 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 2.837807,
-        "what": "stage 1 mesh, wheel gear-khk-ds1-30"
+        "k": 2.463374,
+        "what": "stage 1 mesh, wheel gear-khk-ds1-36"
        },
        {
         "ch": "crank_torque",
-        "k": 3.290211,
-        "what": "stage 2 mesh, pinion gear-khk-msga1-18"
+        "k": 3.084573,
+        "what": "stage 2 mesh, pinion gear-khk-msga1-20"
        }
       ],
       "axial": [],
       "X0": 0.6,
       "Y0": 0.5,
       "part": {
-       "id": "bearing-skf-619-5-2z",
+       "id": "bearing-skf-628-6-2z",
        "category": "bearing",
-       "name": "619/5-2Z deep groove ball bearing",
+       "name": "628/6-2Z deep groove ball bearing",
        "kind": "deep-groove",
-       "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-619%2F5-2Z",
+       "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-628%2F6-2Z",
        "specs": {
-        "dimensions_mm_d_D_B": "5x13x4",
-        "static_load_rating_kn": 0.335,
-        "dynamic_load_rating_kn": 0.884
+        "dimensions_mm_d_D_B": "6x13x5",
+        "static_load_rating_kn": 0.35,
+        "dynamic_load_rating_kn": 0.88
        }
       },
-      "surface_m_s_per_crank_rad_s": 0.052083
+      "surface_m_s_per_crank_rad_s": 0.06
      }
     ]
    },
@@ -2640,14 +2695,14 @@
     "name": "motor shaft outboard",
     "part_id": "bearing-skf-619-5-2z",
     "count": 1,
-    "reacts": "stage 1 mesh at pinion gear-khk-dsf1-20, overhung 11.5 mm from this bearing",
+    "reacts": "stage 1 mesh at pinion gear-khk-dsf1-24, overhung 11.5 mm from this bearing",
     "supports": [
      {
       "name": "plate",
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 11.237717,
+        "k": 9.754963,
         "what": "stage 1 mesh x (a + s) / s, a 11.5 mm, s 5.0 mm (nearest a motor bearing can be)"
        }
       ],
@@ -2674,9 +2729,9 @@
   "joints_unchecked": [
    {
     "name": "motor shaft",
-    "carries": "stage 1 mesh, pinion gear-khk-dsf1-20",
-    "force_per_crank_Nm": 3.4054,
-    "motor_bearing_force_per_crank_Nm": 7.8323,
+    "carries": "stage 1 mesh, pinion gear-khk-dsf1-24",
+    "force_per_crank_Nm": 2.956,
+    "motor_bearing_force_per_crank_Nm": 6.7989,
     "lever": {
      "a_m": 0.0115,
      "s_min_m": 0.005,
@@ -2705,8 +2760,8 @@
    },
    "max_stroke_velocity_ratio": 0.6593,
    "mesh_force_per_crank_Nm": [
-    3.4054,
-    5.6756,
+    2.956,
+    5.3209,
     18.9187,
     47.2968
    ]
@@ -2728,6 +2783,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -2824,6 +2880,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -2883,6 +2940,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -2944,6 +3002,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -2960,6 +3019,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -3003,6 +3063,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -3018,6 +3079,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415.",
      "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/",
      "E_GPa": null
@@ -3061,6 +3123,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -3157,6 +3220,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -3173,14 +3237,15 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
     },
     "dims": {
-     "d_mm": 10,
-     "b_mm": 4,
-     "h_mm": 2.5,
+     "d_mm": 15,
+     "b_mm": 5,
+     "h_mm": 3,
      "L_mm": 10
     },
     "sections": [
@@ -3216,6 +3281,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -3232,6 +3298,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -3275,6 +3342,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -3290,13 +3358,14 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415.",
      "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/",
      "E_GPa": null
     },
     "dims": {
-     "d_mm": 10,
-     "b_mm": 4,
+     "d_mm": 15,
+     "b_mm": 5,
      "h_mm": 2.3,
      "L_mm": 10
     },
@@ -3333,6 +3402,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -3348,6 +3418,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415.",
      "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/",
      "E_GPa": null
@@ -3391,6 +3462,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -3404,7 +3476,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.34922853
+        "k": 0.34572497
        }
       ],
       "axial": []
@@ -3414,7 +3486,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.28227273
+        "k": 0.27630922
        }
       ],
       "axial": []
@@ -3434,7 +3506,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 2.385403
+        "k": 2.236316
        },
        {
         "ch": "crank_torque",
@@ -3448,7 +3520,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 3.290211
+        "k": 3.084573
        },
        {
         "ch": "crank_torque",
@@ -3469,7 +3541,7 @@
       "V forward"
      ]
     },
-    "note": "wheel gear-khk-ds1-60 and pinion gear-khk-msga1-18; checked at 8 mm everywhere"
+    "note": "wheel gear-khk-ds1-64 and pinion gear-khk-msga1-18; checked at 8 mm everywhere"
    },
    {
     "name": "key, pinion gear-khk-msga1-18 on gear shaft 2",
@@ -3487,6 +3559,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -3503,6 +3576,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -3546,6 +3620,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
      "E_GPa": 114
@@ -3561,6 +3636,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415.",
      "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/",
      "E_GPa": null
@@ -3589,12 +3665,14 @@
     "note": "bearing on the gear-khk-msga1-18 keyway (1.4 mm deep), Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415."
    },
    {
-    "name": "gear-khk-ds1-60 on gear shaft 2, fixing",
+    "name": "gear-khk-ds1-64 on gear shaft 2, fixing",
     "kind": "gear fixing",
-    "check": "unrated",
-    "why": "Duracon gear on a plain bore: KHK advises against secondary operations on DS gears and publishes no keyway, set screw or adhesive fixing; Polyplastics M90-44 data could not be read; KHK DSF clamp hubs publish a reference slipping torque without a basis; Loctite 638 is not for plastics. No published rating for its torque to the shaft.",
+    "check": "rc practice",
     "material": null,
-    "dims": {},
+    "dims": {
+     "d_mm": 8,
+     "L_mm": 6
+    },
     "sections": [
      {
       "name": "T",
@@ -3609,6 +3687,11 @@
     ],
     "uses": {
      "T": "T"
+    },
+    "rc": {
+     "method": "bonded with LOCTITE 406 cyanoacrylate with LOCTITE SF 770 polyolefin primer on acetal (plain bore)",
+     "published_Nm": 8.444601052849364,
+     "published_basis": "14 MPa x pi x 8 x 6.0 mm x 8 / 2 (LOCTITE SF 770 TDS (May 2021): \"Substrates treated with primer LOCTITE SF 770 Cured for 24 hours @ 23 C / 50% RH: Block Shear Strength, ISO 13445: ... Acetal and LOCTITE 406 N/mm2 14 (psi) (2,000)\". Acetal to acetal: the only published figure for this adhesive on acetal, applied to the acetal side of a gear-to-shaft bond at full value. The same TDS scopes the primer to polyethylene, polypropylene, PTFE and thermoplastic rubber, yet publishes the acetal value; LOCTITE 406 TDS: \"designed for bonding of plastics and elastomeric materials\", no acetal exclusion.)"
     }
    },
    {
@@ -3627,12 +3710,13 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
     },
     "dims": {
-     "d_mm": 5
+     "d_mm": 6
     },
     "sections": [
      {
@@ -3640,7 +3724,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.11811859
+        "k": 0.10915962
        }
       ],
       "axial": []
@@ -3650,7 +3734,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.07047222
+        "k": 0.0638014
        }
       ],
       "axial": []
@@ -3660,7 +3744,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.048
+        "k": 0.05
        }
       ],
       "axial": []
@@ -3670,11 +3754,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.567561
+        "k": 0.492675
        },
        {
         "ch": "crank_torque",
-        "k": 2.385403
+        "k": 2.236316
        }
       ],
       "axial": []
@@ -3684,11 +3768,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 2.837807
+        "k": 2.463374
        },
        {
         "ch": "crank_torque",
-        "k": 3.290211
+        "k": 3.084573
        }
       ],
       "axial": []
@@ -3705,22 +3789,59 @@
       "V forward"
      ]
     },
-    "note": "wheel gear-khk-ds1-30 and pinion gear-khk-msga1-18; checked at 5 mm everywhere"
+    "note": "wheel gear-khk-ds1-36 and pinion gear-khk-msga1-20; checked at 6 mm everywhere"
    },
    {
-    "name": "gear-khk-ds1-30 on gear shaft 3, fixing",
-    "kind": "gear fixing",
-    "check": "unrated",
-    "why": "Duracon gear on a plain bore: KHK advises against secondary operations on DS gears and publishes no keyway, set screw or adhesive fixing; Polyplastics M90-44 data could not be read; KHK DSF clamp hubs publish a reference slipping torque without a basis; Loctite 638 is not for plastics. No published rating for its torque to the shaft.",
-    "material": null,
-    "dims": {},
+    "name": "key, pinion gear-khk-msga1-20 on gear shaft 3",
+    "kind": "key",
+    "check": "key",
+    "material": {
+     "id": "metal-ti-6al-4v-annealed-bar",
+     "name": "Titanium Ti-6Al-4V (Grade 5) annealed bar",
+     "density_g_cm3": 4.43,
+     "yield_MPa": 827,
+     "shear_MPa": null,
+     "shear_yield_MPa": 477.5,
+     "bearing_yield_MPa": 740,
+     "bearing_e_over_d_min": 2,
+     "bearing_counted_at_half": true,
+     "ultimate_MPa": null,
+     "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
+     "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
+     "E_GPa": 114
+    },
+    "side_material": {
+     "id": "metal-al-7075-t6",
+     "name": "Aluminium 7075-T6 / T651",
+     "density_g_cm3": 2.81,
+     "yield_MPa": 485,
+     "shear_MPa": null,
+     "shear_yield_MPa": 280,
+     "bearing_yield_MPa": null,
+     "bearing_e_over_d_min": null,
+     "bearing_counted_at_half": false,
+     "ultimate_MPa": 540,
+     "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
+     "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
+     "E_GPa": 71.7
+    },
+    "dims": {
+     "d_mm": 6,
+     "b_mm": 3,
+     "h_mm": 1.8,
+     "L_mm": 10
+    },
     "sections": [
      {
       "name": "T",
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.048
+        "k": 0.05
        }
       ],
       "axial": []
@@ -3728,22 +3849,59 @@
     ],
     "uses": {
      "T": "T"
-    }
+    },
+    "note": "shear and bearing on the shaft keyseat; the gear's keyway is KHK's (SCM415, no strength published in what was read)"
    },
    {
-    "name": "gear-khk-dsf1-20 on the motor shaft, fixing",
-    "kind": "gear fixing",
-    "check": "unrated",
-    "why": "Duracon gear on a plain bore: KHK advises against secondary operations on DS gears and publishes no keyway, set screw or adhesive fixing; Polyplastics M90-44 data could not be read; KHK DSF clamp hubs publish a reference slipping torque without a basis; Loctite 638 is not for plastics. No published rating for its torque to the shaft.",
-    "material": null,
-    "dims": {},
+    "name": "key, pinion gear-khk-msga1-20 on gear shaft 3, gear side",
+    "kind": "key",
+    "check": "key",
+    "material": {
+     "id": "metal-ti-6al-4v-annealed-bar",
+     "name": "Titanium Ti-6Al-4V (Grade 5) annealed bar",
+     "density_g_cm3": 4.43,
+     "yield_MPa": 827,
+     "shear_MPa": null,
+     "shear_yield_MPa": 477.5,
+     "bearing_yield_MPa": 740,
+     "bearing_e_over_d_min": 2,
+     "bearing_counted_at_half": true,
+     "ultimate_MPa": null,
+     "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
+     "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf",
+     "E_GPa": 114
+    },
+    "side_material": {
+     "id": "metal-khk-scm415",
+     "name": "SCM415 alloy steel as KHK states it (gear material)",
+     "yield_MPa": 207.5,
+     "shear_MPa": null,
+     "shear_yield_MPa": null,
+     "bearing_yield_MPa": null,
+     "bearing_e_over_d_min": null,
+     "bearing_counted_at_half": false,
+     "ultimate_MPa": null,
+     "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
+     "basis": "Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415.",
+     "source_url": "https://khkgears.net/new/gear_knowledge/gear_technical_reference/",
+     "E_GPa": null
+    },
+    "dims": {
+     "d_mm": 6,
+     "b_mm": 3,
+     "h_mm": 1.4,
+     "L_mm": 10
+    },
     "sections": [
      {
       "name": "T",
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.032
+        "k": 0.05
        }
       ],
       "axial": []
@@ -3751,7 +3909,68 @@
     ],
     "uses": {
      "T": "T"
+    },
+    "note": "bearing on the gear-khk-msga1-20 keyway (1.4 mm deep), Round 8 (crushing ruling after round 7). JIS G4053:2016 specifies no mechanical properties (kikakurui.com G4053); the old JIS-style table for the carburizing heat treatment KHK states (MSGA, MSGB: \"Carburized\") gives no yield and tensile 830 N/mm2 as a reference value (Furuike stockist sheet). Tensile only: half (the crushing ruling), and a reference value with no basis: half again (the round-7 ruling on values with no basis): 830 / 4 = 207.5 MPa. Under the crushing sentence alone it would be 415."
+   },
+   {
+    "name": "gear-khk-ds1-36 on gear shaft 3, fixing",
+    "kind": "gear fixing",
+    "check": "rc practice",
+    "material": null,
+    "dims": {
+     "d_mm": 6,
+     "L_mm": 6
+    },
+    "sections": [
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "crank_torque",
+        "k": 0.05
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "T": "T"
+    },
+    "rc": {
+     "method": "bonded with LOCTITE 406 cyanoacrylate with LOCTITE SF 770 polyolefin primer on acetal (plain bore)",
+     "published_Nm": 4.750088092227767,
+     "published_basis": "14 MPa x pi x 6 x 6.0 mm x 6 / 2 (LOCTITE SF 770 TDS (May 2021): \"Substrates treated with primer LOCTITE SF 770 Cured for 24 hours @ 23 C / 50% RH: Block Shear Strength, ISO 13445: ... Acetal and LOCTITE 406 N/mm2 14 (psi) (2,000)\". Acetal to acetal: the only published figure for this adhesive on acetal, applied to the acetal side of a gear-to-shaft bond at full value. The same TDS scopes the primer to polyethylene, polypropylene, PTFE and thermoplastic rubber, yet publishes the acetal value; LOCTITE 406 TDS: \"designed for bonding of plastics and elastomeric materials\", no acetal exclusion.)"
     }
+   },
+   {
+    "name": "gear-khk-dsf1-24 on the motor shaft, fixing",
+    "kind": "gear fixing",
+    "check": "rc practice",
+    "material": null,
+    "dims": {
+     "d_mm": 5
+    },
+    "sections": [
+     {
+      "name": "T",
+      "radial": [
+       {
+        "ch": "crank_torque",
+        "k": 0.03333333
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "T": "T"
+    },
+    "rc": {
+     "method": "KHK F-Loc clamp hub (M2.5 at KHK's standard tightening torque 0.45 N m)",
+     "published_Nm": 0.62,
+     "published_basis": "KHK reference slipping torque 0.62 N m (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf)"
+    },
+    "note": "clamp hub: no rating with a basis; KHK publishes a reference slipping torque, which binds at full value"
    },
    {
     "name": "shoulder pin right",
@@ -3769,6 +3988,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -3878,6 +4098,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -3919,6 +4140,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "38,600 psi (266 MPa) transverse compressive yield, a classical-lamination-theory estimate on the product page (typical): counted at half, 133 MPa",
      "source_url": "https://www.rockwestcomposites.com/t-rnd-393.html",
      "E_GPa": null
@@ -4004,6 +4226,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -4061,6 +4284,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -4112,6 +4336,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -4164,6 +4389,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -4206,6 +4432,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -4255,6 +4482,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -4304,6 +4532,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -4413,6 +4642,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -4454,6 +4684,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": null,
      "bearing_standard": null,
+     "bearing_standard_lists_alloy": null,
      "basis": "38,600 psi (266 MPa) transverse compressive yield, a classical-lamination-theory estimate on the product page (typical): counted at half, 133 MPa",
      "source_url": "https://www.rockwestcomposites.com/t-rnd-393.html",
      "E_GPa": null
@@ -4539,6 +4770,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -4596,6 +4828,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -4647,6 +4880,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -4699,6 +4933,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -4741,6 +4976,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -4790,6 +5026,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -4839,6 +5076,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -4889,6 +5127,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -4939,6 +5178,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -4985,6 +5225,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5031,6 +5272,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5046,7 +5288,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 2.385403
+        "k": 2.236316
        },
        {
         "ch": "crank_torque",
@@ -5077,6 +5319,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5092,7 +5335,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 3.290211
+        "k": 3.084573
        },
        {
         "ch": "crank_torque",
@@ -5123,6 +5366,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5138,11 +5382,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.567561
+        "k": 0.492675
        },
        {
         "ch": "crank_torque",
-        "k": 2.385403
+        "k": 2.236316
        }
       ],
       "axial": []
@@ -5151,7 +5395,7 @@
     "uses": {
      "F": "F"
     },
-    "note": "the plate alone, judged as a 9.2 mm ring round the bearing-skf-619-5-2z"
+    "note": "the plate alone, judged as a 9.2 mm ring round the bearing-skf-628-6-2z"
    },
    {
     "name": "plate seat gear shaft 3 forward",
@@ -5169,6 +5413,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5184,11 +5429,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 2.837807
+        "k": 2.463374
        },
        {
         "ch": "crank_torque",
-        "k": 3.290211
+        "k": 3.084573
        }
       ],
       "axial": []
@@ -5197,7 +5442,7 @@
     "uses": {
      "F": "F"
     },
-    "note": "the plate alone, judged as a 9.2 mm ring round the bearing-skf-619-5-2z"
+    "note": "the plate alone, judged as a 9.2 mm ring round the bearing-skf-628-6-2z"
    },
    {
     "name": "plate seat motor shaft outboard plate",
@@ -5215,6 +5460,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5230,7 +5476,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 11.237717
+        "k": 9.754963
        }
       ],
       "axial": []
@@ -5257,6 +5503,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -5386,6 +5633,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5435,6 +5683,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5533,6 +5782,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5632,6 +5882,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5744,6 +5995,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5794,6 +6046,7 @@
      "bearing_counted_at_half": false,
      "ultimate_MPa": 540,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": false,
      "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf",
      "E_GPa": 71.7
@@ -5923,6 +6176,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -5972,6 +6226,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -6070,6 +6325,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -6169,6 +6425,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -6281,6 +6538,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -6563,6 +6821,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -6617,6 +6876,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -6826,6 +7086,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -6880,6 +7141,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -6986,6 +7248,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -7002,15 +7265,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.03168667
+        "k": 0.03141774
        },
        {
         "ch": "wdot",
-        "k": 0.01064614
+        "k": 0.01048489
        },
        {
         "ch": "w2",
-        "k": 0.01064614
+        "k": 0.01048489
        }
       ],
       "axial": []
@@ -7020,15 +7283,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.03168667
+        "k": 0.03141774
        },
        {
         "ch": "wdot",
-        "k": 0.01064614
+        "k": 0.01048489
        },
        {
         "ch": "w2",
-        "k": 0.01064614
+        "k": 0.01048489
        }
       ],
       "axial": []
@@ -7066,11 +7329,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.04147136
+        "k": 0.04120122
        },
        {
         "ch": "w2",
-        "k": 0.04147136
+        "k": 0.04120122
        }
       ],
       "axial": []
@@ -7084,11 +7347,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00091237
+        "k": 0.00090643
        },
        {
         "ch": "w2",
-        "k": 0.00091237
+        "k": 0.00090643
        }
       ],
       "axial": []
@@ -7098,15 +7361,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.03168667
+        "k": 0.03141774
        },
        {
         "ch": "wdot",
-        "k": 0.01064614
+        "k": 0.01048489
        },
        {
         "ch": "w2",
-        "k": 0.01064614
+        "k": 0.01048489
        }
       ],
       "axial": []
@@ -7120,11 +7383,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.04147136
+        "k": 0.04120122
        },
        {
         "ch": "w2",
-        "k": 0.04147136
+        "k": 0.04120122
        }
       ],
       "axial": []
@@ -7154,6 +7417,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -7173,11 +7437,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.0714229
+        "k": 0.07095783
        },
        {
         "ch": "w2",
-        "k": 0.0714229
+        "k": 0.07095783
        }
       ],
       "axial": []
@@ -7204,6 +7468,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -7218,15 +7483,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.03168667
+        "k": 0.03141774
        },
        {
         "ch": "wdot",
-        "k": 0.01064614
+        "k": 0.01048489
        },
        {
         "ch": "w2",
-        "k": 0.01064614
+        "k": 0.01048489
        }
       ],
       "axial": []
@@ -7258,11 +7523,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.0403655
+        "k": 0.04009536
        },
        {
         "ch": "w2",
-        "k": 0.0403655
+        "k": 0.04009536
        }
       ],
       "axial": []
@@ -7361,6 +7626,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -7377,15 +7643,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.00910671
+        "k": 0.00923648
        },
        {
         "ch": "wdot",
-        "k": 0.00065031
+        "k": 0.00065783
        },
        {
         "ch": "w2",
-        "k": 0.00065031
+        "k": 0.00065783
        }
       ],
       "axial": []
@@ -7395,15 +7661,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.00910671
+        "k": 0.00923648
        },
        {
         "ch": "wdot",
-        "k": 0.00065031
+        "k": 0.00065783
        },
        {
         "ch": "w2",
-        "k": 0.00065031
+        "k": 0.00065783
        }
       ],
       "axial": []
@@ -7441,11 +7707,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00624842
+        "k": 0.00622085
        },
        {
         "ch": "w2",
-        "k": 0.00624842
+        "k": 0.00622085
        }
       ],
       "axial": []
@@ -7459,11 +7725,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00018745
+        "k": 0.00018663
        },
        {
         "ch": "w2",
-        "k": 0.00018745
+        "k": 0.00018663
        }
       ],
       "axial": []
@@ -7473,15 +7739,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.00910671
+        "k": 0.00923648
        },
        {
         "ch": "wdot",
-        "k": 0.00065031
+        "k": 0.00065783
        },
        {
         "ch": "w2",
-        "k": 0.00065031
+        "k": 0.00065783
        }
       ],
       "axial": []
@@ -7495,11 +7761,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00624842
+        "k": 0.00622085
        },
        {
         "ch": "w2",
-        "k": 0.00624842
+        "k": 0.00622085
        }
       ],
       "axial": []
@@ -7529,6 +7795,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -7548,11 +7815,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.01483984
+        "k": 0.0147748
        },
        {
         "ch": "w2",
-        "k": 0.01483984
+        "k": 0.0147748
        }
       ],
       "axial": []
@@ -7579,6 +7846,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -7593,15 +7861,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.00910671
+        "k": 0.00923648
        },
        {
         "ch": "wdot",
-        "k": 0.00065031
+        "k": 0.00065783
        },
        {
         "ch": "w2",
-        "k": 0.00065031
+        "k": 0.00065783
        }
       ],
       "axial": []
@@ -7633,11 +7901,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.005712
+        "k": 0.00568443
        },
        {
         "ch": "w2",
-        "k": 0.005712
+        "k": 0.00568443
        }
       ],
       "axial": []
@@ -7746,15 +8014,15 @@
        },
        {
         "ch": "wdot",
-        "k": 0.01561761
+        "k": 0.01564966
        },
        {
         "ch": "w2",
-        "k": 0.01561761
+        "k": 0.01564966
        },
        {
         "ch": "crank_torque",
-        "k": 3.40536887
+        "k": 2.95604937
        }
       ],
       "axial": []
@@ -7764,7 +8032,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.03764705882352941
+        "k": 0.039215686274509796
        }
       ],
       "axial": []
@@ -7778,15 +8046,15 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00034359
+        "k": 0.00034429
        },
        {
         "ch": "w2",
-        "k": 0.00034359
+        "k": 0.00034429
        },
        {
         "ch": "crank_torque",
-        "k": 0.04256711
+        "k": 0.03695062
        }
       ],
       "axial": []
@@ -7800,11 +8068,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.01561761
+        "k": 0.01564966
        },
        {
         "ch": "w2",
-        "k": 0.01561761
+        "k": 0.01564966
        }
       ],
       "axial": []
@@ -7816,7 +8084,7 @@
      "M": "M",
      "F": "F"
     },
-    "note": "2 M3 in the motor's own threads on a 16 mm circle: the motor's inertia and the first mesh force (gear-khk-dsf1-20) in shear, the motor torque (crank torque / G / efficiency) as torsion, both forces at their offsets as prying"
+    "note": "2 M3 in the motor's own threads on a 16 mm circle: the motor's inertia and the first mesh force (gear-khk-dsf1-24) in shear, the motor torque (crank torque / G / efficiency) as torsion, both forces at their offsets as prying"
    },
    {
     "name": "motor mount screws in the plate",
@@ -7834,6 +8102,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -7853,15 +8122,15 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00780881
+        "k": 0.00782483
        },
        {
         "ch": "w2",
-        "k": 0.00780881
+        "k": 0.00782483
        },
        {
         "ch": "crank_torque",
-        "k": 4.05562562
+        "k": 3.92900508
        }
       ],
       "axial": []
@@ -7888,6 +8157,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -7906,15 +8176,15 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00034359
+        "k": 0.00034429
        },
        {
         "ch": "w2",
-        "k": 0.00034359
+        "k": 0.00034429
        },
        {
         "ch": "crank_torque",
-        "k": 0.04256711
+        "k": 0.03695062
        }
       ],
       "axial": []
@@ -7971,7 +8241,7 @@
     },
     "dims": {
      "n": 5,
-     "extra_N": 0.6644
+     "extra_N": 0.7382
     },
     "sections": [
      {
@@ -7979,15 +8249,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.01227075
+        "k": 0.01344651
        },
        {
         "ch": "wdot",
-        "k": 0.00061354
+        "k": 0.00067233
        },
        {
         "ch": "w2",
-        "k": 0.00061354
+        "k": 0.00067233
        }
       ],
       "axial": []
@@ -7996,7 +8266,7 @@
     "uses": {
      "F": "F"
     },
-    "note": "5 x tie-hellermanntyton-t18r (balsa formers to the boom and trays: no published bond strength on balsa); the pod's inertia plus its drag at 25 m/s (0.66 N)"
+    "note": "5 x tie-hellermanntyton-t18r (balsa formers to the boom and trays: no published bond strength on balsa); the pod's inertia plus its drag at 25 m/s (0.74 N)"
    },
    {
     "name": "pitot-static probe ties",
@@ -8091,12 +8361,13 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
     "dims": {
-     "b_mm": 81.55,
+     "b_mm": 81.8,
      "t_mm": 1.6
     },
     "sections": [
@@ -8181,7 +8452,7 @@
      "F": "F",
      "M": "M"
     },
-    "note": "the section 17.0 mm up, 81.6 mm wide: both rails' reactions and the boom clamp force, the rails' at their 29 mm offset as in-plane bending"
+    "note": "the section 17.0 mm up, 81.8 mm wide: both rails' reactions and the boom clamp force, the rails' at their 29 mm offset as in-plane bending"
    },
    {
     "name": "aft plate post to the boom clamp",
@@ -8199,6 +8470,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -8275,6 +8547,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -8293,11 +8566,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00624842
+        "k": 0.00622085
        },
        {
         "ch": "w2",
-        "k": 0.00624842
+        "k": 0.00622085
        }
       ],
       "axial": []
@@ -8311,11 +8584,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00003003
+        "k": 0.0000299
        },
        {
         "ch": "w2",
-        "k": 0.00003003
+        "k": 0.0000299
        }
       ],
       "axial": []
@@ -8343,12 +8616,13 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
     },
     "dims": {
-     "b_mm": 81.55,
+     "b_mm": 81.8,
      "t_mm": 1.2
     },
     "sections": [
@@ -8433,7 +8707,7 @@
      "F": "F",
      "M": "M"
     },
-    "note": "the section 17.0 mm up, 81.6 mm wide: both rails' reactions and the boom clamp force, the rails' at their 29 mm offset as in-plane bending"
+    "note": "the section 17.0 mm up, 81.8 mm wide: both rails' reactions and the boom clamp force, the rails' at their 29 mm offset as in-plane bending"
    },
    {
     "name": "forward plate post to the boom clamp",
@@ -8451,6 +8725,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -8527,6 +8802,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -8550,7 +8826,7 @@
        },
        {
         "ch": "crank_torque",
-        "k": 14.57807041
+        "k": 14.14168969
        },
        {
         "ch": "root_yz_R",
@@ -8574,15 +8850,15 @@
        },
        {
         "ch": "sf_origin",
-        "k": 1.64080771
+        "k": 1.64596254
        },
        {
         "ch": "wdot",
-        "k": 0.9141244
+        "k": 0.91442246
        },
        {
         "ch": "w2",
-        "k": 0.9141244
+        "k": 0.91442246
        }
       ],
       "axial": []
@@ -8620,7 +8896,7 @@
        },
        {
         "ch": "crank_torque",
-        "k": 14.57807041
+        "k": 14.14168969
        },
        {
         "ch": "root_yz_R",
@@ -8644,15 +8920,15 @@
        },
        {
         "ch": "sf_origin",
-        "k": 1.64080771
+        "k": 1.64596254
        },
        {
         "ch": "wdot",
-        "k": 0.9141244
+        "k": 0.91442246
        },
        {
         "ch": "w2",
-        "k": 0.9141244
+        "k": 0.91442246
        }
       ],
       "axial": []
@@ -8679,6 +8955,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -8702,7 +8979,7 @@
        },
        {
         "ch": "crank_torque",
-        "k": 14.57807041
+        "k": 14.14168969
        },
        {
         "ch": "root_yz_R",
@@ -8726,15 +9003,15 @@
        },
        {
         "ch": "sf_origin",
-        "k": 1.64080771
+        "k": 1.64596254
        },
        {
         "ch": "wdot",
-        "k": 0.9141244
+        "k": 0.91442246
        },
        {
         "ch": "w2",
-        "k": 0.9141244
+        "k": 0.91442246
        }
       ],
       "axial": []
@@ -8772,7 +9049,7 @@
        },
        {
         "ch": "crank_torque",
-        "k": 14.57807041
+        "k": 14.14168969
        },
        {
         "ch": "root_yz_R",
@@ -8796,15 +9073,15 @@
        },
        {
         "ch": "sf_origin",
-        "k": 1.64080771
+        "k": 1.64596254
        },
        {
         "ch": "wdot",
-        "k": 0.9141244
+        "k": 0.91442246
        },
        {
         "ch": "w2",
-        "k": 0.9141244
+        "k": 0.91442246
        }
       ],
       "axial": []
@@ -8831,6 +9108,7 @@
      "bearing_counted_at_half": true,
      "ultimate_MPa": 260,
      "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
      "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
      "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
      "E_GPa": 68.9
@@ -8854,7 +9132,7 @@
        },
        {
         "ch": "crank_torque",
-        "k": 3.40536887
+        "k": 2.95604937
        },
        {
         "ch": "root_yz_R",
@@ -8882,11 +9160,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.41242365
+        "k": 0.41218556
        },
        {
         "ch": "w2",
-        "k": 0.41242365
+        "k": 0.41218556
        }
       ],
       "axial": []
@@ -8924,7 +9202,7 @@
        },
        {
         "ch": "crank_torque",
-        "k": 3.40536887
+        "k": 2.95604937
        },
        {
         "ch": "root_yz_R",
@@ -8952,11 +9230,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.41242365
+        "k": 0.41218556
        },
        {
         "ch": "w2",
-        "k": 0.41242365
+        "k": 0.41218556
        }
       ],
       "axial": []
@@ -8988,7 +9266,7 @@
     "trays": {
      "forward": {
       "y_m": -0.03,
-      "length_m": 0.29696711732332093
+      "length_m": 0.2947082282193493
      },
      "aft": {
       "y_m": -0.076,
@@ -8997,8 +9275,8 @@
     },
     "plates": {
      "aft": {
-      "area_m2": 0.008929760329712268,
-      "hull_area_m2": 0.007910081378926508,
+      "area_m2": 0.008879715700731866,
+      "hull_area_m2": 0.007860036749946106,
       "posts": [
        {
         "to": "boom clamp",
@@ -9012,11 +9290,11 @@
        }
       ],
       "cut_y_m": 0.017,
-      "cut_width_m": 0.08155119140138839
+      "cut_width_m": 0.08180082625413329
      },
      "fwd": {
-      "area_m2": 0.008352081378926507,
-      "hull_area_m2": 0.007910081378926508,
+      "area_m2": 0.008302036749946106,
+      "hull_area_m2": 0.007860036749946106,
       "posts": [
        {
         "to": "boom clamp",
@@ -9025,7 +9303,7 @@
        }
       ],
       "cut_y_m": 0.017,
-      "cut_width_m": 0.08155119140138839
+      "cut_width_m": 0.08180082625413329
      }
     },
     "counts": {
@@ -9037,31 +9315,31 @@
    },
    "clearances_mm": {
     "right": {
-     "gear-khk-ds1-30 (stage 0)": 15.1,
-     "gear-khk-dsf1-20 (stage 0)": 25.6,
-     "gear-khk-ds1-60 (stage 1)": 30.9,
-     "gear-khk-msga1-18 (stage 1)": 21.1,
-     "gear-khk-msgb1-45 (stage 2)": 34.2,
-     "gear-khk-msga1-18 (stage 2)": 51.9,
+     "gear-khk-ds1-36 (stage 0)": 10.5,
+     "gear-khk-dsf1-24 (stage 0)": 26.4,
+     "gear-khk-ds1-64 (stage 1)": 29.9,
+     "gear-khk-msga1-20 (stage 1)": 18.5,
+     "gear-khk-msgb1-45 (stage 2)": 32.5,
+     "gear-khk-msga1-18 (stage 2)": 52.9,
      "gear-khk-msgb1-45 (stage 3)": 62.7,
-     "gear-khk-msga1-18 (stage 3)": 47.7,
+     "gear-khk-msga1-18 (stage 3)": 46,
      "rocker hub": -1.1
     },
     "left": {
-     "gear-khk-ds1-30 (stage 0)": 42.3,
-     "gear-khk-dsf1-20 (stage 0)": 25,
-     "gear-khk-ds1-60 (stage 1)": 21.1,
-     "gear-khk-msga1-18 (stage 1)": 48.3,
-     "gear-khk-msgb1-45 (stage 2)": 50.3,
-     "gear-khk-msga1-18 (stage 2)": 42.1,
+     "gear-khk-ds1-36 (stage 0)": 38.2,
+     "gear-khk-dsf1-24 (stage 0)": 18.2,
+     "gear-khk-ds1-64 (stage 1)": 16.9,
+     "gear-khk-msga1-20 (stage 1)": 46.2,
+     "gear-khk-msgb1-45 (stage 2)": 46.6,
+     "gear-khk-msga1-18 (stage 2)": 39.9,
      "gear-khk-msgb1-45 (stage 3)": 62.7,
-     "gear-khk-msga1-18 (stage 3)": 63.8,
+     "gear-khk-msga1-18 (stage 3)": 60.1,
      "rocker hub": -1.1
     },
     "panels": {
      "side panel right": {
-      "clearance_mm": -5.1,
-      "nearest": "gear-khk-ds1-30 (stage 0)"
+      "clearance_mm": -9.1,
+      "nearest": "gear-khk-ds1-36 (stage 0)"
      },
      "side panel left": {
       "clearance_mm": 1.3,
@@ -9211,49 +9489,49 @@
     "pos": null
    },
    {
-    "id": "gear-khk-dsf1-20",
-    "name": "DSF1-20 acetal spur gear with SUS303 F-Loc hub",
+    "id": "gear-khk-dsf1-24",
+    "name": "DSF1-24 acetal spur gear with SUS303 F-Loc hub",
     "role": "gear",
     "count": 1,
-    "unit_mass_g": 12.6,
-    "mass_g": 12.6,
-    "source_url": "https://catalog.khkgears.us/item/spur-gears/acetal-f-loc-hub-spur-gears-dsf/dsf1-20",
+    "unit_mass_g": 13.9,
+    "mass_g": 13.9,
+    "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+    "verified": "datasheet",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
+    "id": "gear-khk-ds1-36",
+    "name": "DS1-36 injection-molded Duracon spur gear",
+    "role": "gear",
+    "count": 1,
+    "unit_mass_g": 7.01,
+    "mass_g": 7.01,
+    "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-36",
     "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
    },
    {
-    "id": "gear-khk-ds1-30",
-    "name": "DS1-30 injection-molded Duracon spur gear",
+    "id": "gear-khk-msga1-20",
+    "name": "MSGA1-20 ground carburized SCM415 spur gear",
     "role": "gear",
     "count": 1,
-    "unit_mass_g": 5.46,
-    "mass_g": 5.46,
-    "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-30",
+    "unit_mass_g": 27,
+    "mass_g": 27,
+    "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-20",
     "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
    },
    {
-    "id": "gear-khk-msga1-18",
-    "name": "MSGA1-18 ground carburized SCM415 spur gear",
+    "id": "gear-khk-ds1-64",
+    "name": "DS1-64 injection-molded Duracon spur gear",
     "role": "gear",
     "count": 1,
-    "unit_mass_g": 20,
-    "mass_g": 20,
-    "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-18",
-    "verified": "manufacturer-page",
-    "retrieved": "2026-11-02",
-    "pos": null
-   },
-   {
-    "id": "gear-khk-ds1-60",
-    "name": "DS1-60 injection-molded Duracon spur gear",
-    "role": "gear",
-    "count": 1,
-    "unit_mass_g": 17.6,
-    "mass_g": 17.6,
-    "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-60",
+    "unit_mass_g": 19.4,
+    "mass_g": 19.4,
+    "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-64",
     "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
     "pos": null
@@ -9343,12 +9621,24 @@
     "pos": null
    },
    {
+    "id": "bearing-skf-628-6-2z",
+    "name": "628/6-2Z deep groove ball bearing",
+    "role": "bearing: gear shaft 3 (2)",
+    "count": 2,
+    "unit_mass_g": 2.7,
+    "mass_g": 5.4,
+    "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-628%2F6-2Z",
+    "verified": "manufacturer-page",
+    "retrieved": "2026-11-02",
+    "pos": null
+   },
+   {
     "id": "bearing-skf-619-5-2z",
     "name": "619/5-2Z deep groove ball bearing",
-    "role": "bearing: gear shaft 3 (2), motor outboard, on the motor shaft in the forward plate (1)",
-    "count": 3,
+    "role": "bearing: motor outboard, on the motor shaft in the forward plate (1)",
+    "count": 1,
     "unit_mass_g": 3,
-    "mass_g": 9,
+    "mass_g": 3,
     "source_url": "https://www.skf.com/group/products/rolling-bearings/ball-bearings/deep-groove-ball-bearings/productid-619%2F5-2Z",
     "verified": "manufacturer-page",
     "retrieved": "2026-11-02",
@@ -9424,15 +9714,15 @@
     "name": "fuselage film shell",
     "material_id": "film-oracover-air-light",
     "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 2.5702217053498124,
-    "basis": "0.151 m2",
+    "mass_g": 2.6926132151283753,
+    "basis": "0.158 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "fuselage formers",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 8.099999999999998,
+    "mass_g": 9.000000000000002,
     "basis": "5 off, 50% lightened, 2 mm",
     "source_url": "https://www.wood-database.com/balsa/"
    },
@@ -9456,16 +9746,16 @@
     "name": "gear shaft 1",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 11.10546719858685,
-    "basis": "8 mm x 73.0 mm with a 10 mm wheel seat for the gear-khk-msgb1-45 (15 mm bore, keyed); 2.81 g/cm3",
+    "mass_g": 13.864178247520387,
+    "basis": "8 mm x 73.0 mm with a 15 mm wheel seat for the gear-khk-msgb1-45 (15 mm bore, keyed); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "key, wheel gear-khk-msgb1-45 on gear shaft 1",
     "material_id": "metal-ti-6al-4v-annealed-bar",
     "material": "Titanium Ti-6Al-4V (Grade 5) annealed bar",
-    "mass_g": 0.7088,
-    "basis": "4 x 4 x 10 mm; 4.43 g/cm3",
+    "mass_g": 1.1075000000000002,
+    "basis": "5 x 5 x 10 mm; 4.43 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf"
    },
    {
@@ -9496,9 +9786,17 @@
     "name": "gear shaft 3",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 5.799914109277869,
-    "basis": "6 mm x 73.0 mm; 2.81 g/cm3",
+    "mass_g": 10.31095841649399,
+    "basis": "8 mm x 73.0 mm; 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
+   },
+   {
+    "name": "key, pinion gear-khk-msga1-20 on gear shaft 3",
+    "material_id": "metal-ti-6al-4v-annealed-bar",
+    "material": "Titanium Ti-6Al-4V (Grade 5) annealed bar",
+    "mass_g": 0.39869999999999994,
+    "basis": "3 x 3 x 10 mm; 4.43 g/cm3",
+    "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf"
    },
    {
     "name": "shoulder pin right",
@@ -9576,8 +9874,8 @@
     "name": "gearbox plates, 2 off",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 65.63730829207888,
-    "basis": "solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft 89.3 cm2 x 1.6 mm, forward 83.5 cm2 x 1.2 mm; 2.7 g/cm3",
+    "mass_g": 65.25897089698705,
+    "basis": "solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft 88.8 cm2 x 1.6 mm, forward 83.0 cm2 x 1.2 mm; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
@@ -9656,8 +9954,8 @@
     "name": "forward tray",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 19.820321602286594,
-    "basis": "channel 22 x 7 x 0.8 mm sheet (28.8 mm2) x 255 mm (to 245 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
+    "mass_g": 19.564112892535018,
+    "basis": "channel 22 x 7 x 0.8 mm sheet (28.8 mm2) x 252 mm (to 242 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
@@ -9725,10 +10023,10 @@
     "source_url": "https://www.tigertitanium.com/Store/ProductTube/80617"
    }
   ],
-  "parts_g": 775.0474,
-  "structure_g": 595.2610924373037,
-  "margin_g": 205.54627386559557,
-  "total_g": 1575.8547663028994
+  "parts_g": 786.0974,
+  "structure_g": 603.7160931983884,
+  "margin_g": 208.47202397975826,
+  "total_g": 1598.2855171781466
  },
  "electrical": {
   "avionics_A_5V": 0.415,
@@ -9798,26 +10096,30 @@
   "Round 8: inertial loads on carried parts are bounded by m (|f_origin| + r |wdot| + r |w|^2) from the flight model at every step (load channels sf_origin, wdot, w2); the tail by its aerodynamic force tail_F.",
   "Round 8: TECS pitch weights height-first above the floor band (spdWeight 0.5); hand-launch climb command 3 m/s.",
   "Round 9: pin-in-hole bearing below the source's edge distance is the lesser of that source at half and EN 1999-1-1 / EN 1993-1-8 bolt bearing (k1 alpha_b fu / 1.25, specified-minimum fu) at the seat's own distances, every seat at e >= 1.2 d0; rings are judged with e = D / 2 in every direction. EN 1999-1-1 does not list EN AW-7075: its expression is applied with 7075-T6's specified minimum fu.",
-  "Round 9: gear ratings are KHK's catalogue values corrected to the design's conditions (structure.gear_stages[].rating_check): mating gear by JGMA 402-01 d01 i/(i+1) and KH-beta (the \"weak shaft\" column wherever a gear is not at mid-span: KHK states no criterion for \"rugged\"), JGMA 401-01 Y-epsilon; speed by the KV band and ZV (below 1 m/s the curve's first value, as KHK's own 600 rpm ratings need); the oil at or above 100 cSt (50 C) and over 1e7 cycles with no credit; Duracon by KHK's plastic method (KV, KM 0.75 Duracon on Duracon) and JGMA 401's 2/3 for the reversing load. KHK states the JGMA method for module 1.5 and up; these gears are module 1, as KHK's own ratings are. Rating crank frequency 3 Hz.",
-  "Round 9: hand release at 8 m/s, the design's named speed (SPEC ruling after round 8)."
+  "Round 9: gear ratings are KHK's catalogue values corrected to the design's conditions (structure.gear_stages[].rating_check): mating gear by JGMA 402-01 d01 i/(i+1) and KH-beta (the \"weak shaft\" column wherever a gear is not at mid-span: KHK states no criterion for \"rugged\"), JGMA 401-01 Y-epsilon; speed by JGMA's KV on the gear's accuracy row at both speeds (round 10) and ZV (below 1 m/s the curve's first value, as KHK's own 600 rpm ratings need); the oil at or above 100 cSt (50 C) and over 1e7 cycles with no credit; Duracon by KHK's plastic method (KV, KM 0.75 Duracon on Duracon) and JGMA 401's 2/3 for the reversing load. KHK states the JGMA method for module 1.5 and up; these gears are module 1, as KHK's own ratings are. Rating crank frequency 3 Hz.",
+  "Round 9: hand release at 8 m/s, the design's named speed (SPEC ruling after round 8).",
+  "Round 10: gear accuracy rows for JGMA KV: N5 as old JIS grade 1, N7 as 3, N8 as 4 (KHK Japanese reference Table 8.4), unmodified teeth (no modification stated); the KV ratio is applied at the actual speed and capped at 1 (no credit for running slower than rated).",
+  "Round 10: shaft-to-hub fixings without a published rating are standard RC practice (SPEC ruling): plain-bore acetal gears bonded with LOCTITE 406 on SF 770 primer, plain-bore steel with LOCTITE 638, F-Loc hubs at KHK's standard screw torque; each within the maker's published figure at full value, reported in M7 as unrated, RC practice.",
+  "Round 10: 7075-T6 seats take EN 1999-1-1's bolt-bearing expression at half (the standard does not list the alloy).",
+  "Round 10: flight step 3840 Hz: the airframe channel w2 moved 10.8% at half of 1/1920 s and 2.9% at half of 1/3840 s; the flight model's aerodynamic internal states (the lifting-line circulation, one frozen-Jacobian Newton step per flight step, and the strip lag states) advance once per step, so it converges at first order in the step."
  ],
  "packing": {
   "checker": "sims/avis-shared/model.js prepare/layoutParts/fitReport (film workstream), used as is",
   "body_m": {
-   "width": 0.09,
+   "width": 0.1,
    "height": 0.12,
    "centre_y": -0.03
   },
   "protrusions": [],
-  "residual_cg_shift_m": -0.001583902307098927,
+  "residual_cg_shift_m": -0.0014966036883217201,
   "slides": [
-   "battery moved -24 mm along x from its mass lump to fit"
+   "battery moved -23 mm along x from its mass lump to fit"
   ],
   "lump_positions": {
    "flap motor": [
     0.097,
-    0.0007,
-    -0.0005
+    0.0024,
+    -0.0058
    ],
    "ESC": [
     0.078,
@@ -9841,7 +10143,7 @@
    ],
    "tail servos": [
     -0.08,
-    -0.012,
+    -0.009,
     0
    ],
    "stroke servo": [
@@ -9850,9 +10152,9 @@
     0
    ],
    "gears and bearings": [
-    0.0255,
-    -0.0366,
-    0.0089
+    0.0263,
+    -0.0344,
+    0.0073
    ],
    "crank, rockers, plates": [
     0.0015,
@@ -9901,211 +10203,202 @@
   "envelope": [
    {
     "amp": 0.6632251157578453,
-    "freqMax": 2.4603430584005554,
+    "freqMax": 2.585638874439349,
     "limitedBy": "motor_speed",
-    "atV": 14,
+    "atV": 9.5,
     "method": "flight test",
     "edge_peaks": {
-     "crankTorque": 10.8644,
-     "rootBend": 9.5661,
-     "elbowBend": 2.3481,
-     "couplerForce": 570.1607,
-     "twistTorque": 0.269,
-     "loadFactor": 2.9197,
-     "motorRms": 19.7553,
-     "battMean": 16.473,
-     "crankFreqRatio": 0.9642,
-     "airspeed": 14.5488,
-     "dutySat": 0.0688,
-     "bearingRatio": 0.5467
+     "crankTorque": 10.4219,
+     "rootBend": 10.9729,
+     "elbowBend": 2.9089,
+     "couplerForce": 757.1066,
+     "twistTorque": 0.2489,
+     "loadFactor": 2.5301,
+     "motorRms": 19.5349,
+     "battMean": 15.6982,
+     "crankFreqRatio": 0.9629,
+     "airspeed": 10.5269,
+     "dutySat": 0.0601,
+     "bearingRatio": 0.4933
     }
    }
   ],
   "envelopeBest": {
    "amp": 0.6632251157578453,
-   "freqMax": 2.4603430584005554,
+   "freqMax": 2.585638874439349,
    "limitedBy": "motor_speed",
-   "atV": 14,
+   "atV": 9.5,
    "method": "flight test",
    "edge_peaks": {
-    "crankTorque": 10.8644,
-    "rootBend": 9.5661,
-    "elbowBend": 2.3481,
-    "couplerForce": 570.1607,
-    "twistTorque": 0.269,
-    "loadFactor": 2.9197,
-    "motorRms": 19.7553,
-    "battMean": 16.473,
-    "crankFreqRatio": 0.9642,
-    "airspeed": 14.5488,
-    "dutySat": 0.0688,
-    "bearingRatio": 0.5467
+    "crankTorque": 10.4219,
+    "rootBend": 10.9729,
+    "elbowBend": 2.9089,
+    "couplerForce": 757.1066,
+    "twistTorque": 0.2489,
+    "loadFactor": 2.5301,
+    "motorRms": 19.5349,
+    "battMean": 15.6982,
+    "crankFreqRatio": 0.9629,
+    "airspeed": 10.5269,
+    "dutySat": 0.0601,
+    "bearingRatio": 0.4933
    }
   },
-  "freqMax": 2.4603430584005554,
-  "dt": 0.0005208333333333333,
+  "freqMax": 2.585638874439349,
+  "dt": 0.00026041666666666666,
   "glide": [
    {
     "V": 7,
-    "theta": 0.009900056366590842,
-    "gamma": -0.16862346746180007,
-    "tail": 0.0853539550436814,
-    "sink": 1.1747784979544056,
-    "LD": 5.874057993555706,
-    "stalled": 0.03385042087458165
+    "theta": 0.011629067356710675,
+    "gamma": -0.17090009407145762,
+    "tail": 0.08799840879962184,
+    "sink": 1.1904857959375708,
+    "LD": 5.794293923646358,
+    "stalled": 0.036467813599491694
    },
    {
     "V": 7.5,
-    "theta": -0.012631916272505622,
-    "gamma": -0.15060122068321355,
-    "tail": 0.056385778192658775,
-    "sink": 1.1252443128928495,
-    "LD": 6.589775944300549,
-    "stalled": 0.016032995258745766
+    "theta": -0.007774673465219564,
+    "gamma": -0.1510937974656571,
+    "tail": 0.061978234229146736,
+    "sink": 1.1288966862281755,
+    "LD": 6.567963947670022,
+    "stalled": 0.01765445987176001
    },
    {
     "V": 8,
-    "theta": -0.02582003907455615,
-    "gamma": -0.1359535851525029,
-    "tail": 0.042139783023567974,
-    "sink": 1.084281267744295,
-    "LD": 7.310077684455128,
-    "stalled": 0.009690068718669193
+    "theta": -0.025040974409053243,
+    "gamma": -0.13773207004737167,
+    "tail": 0.04319755351956928,
+    "sink": 1.0983761374538266,
+    "LD": 7.214504318397853,
+    "stalled": 0.010141191892348694
    },
    {
     "V": 8.5,
-    "theta": -0.0381038137422717,
-    "gamma": -0.12460521930916751,
-    "tail": 0.029612065126229575,
-    "sink": 1.0564056971957565,
-    "LD": 7.9837678835247345,
-    "stalled": 0.006345492236440714
+    "theta": -0.03709222130342007,
+    "gamma": -0.12598046762933907,
+    "tail": 0.030784931562635235,
+    "sink": 1.0680036734833072,
+    "LD": 7.895700446704888,
+    "stalled": 0.006618750457679717
    },
    {
     "V": 9,
-    "theta": -0.048700997841031525,
-    "gamma": -0.11554375116093502,
-    "tail": 0.019587243065749167,
-    "sink": 1.037581478738781,
-    "LD": 8.616181357835654,
-    "stalled": 0.004472155676719675
+    "theta": -0.04783520168736173,
+    "gamma": -0.11680928451888553,
+    "tail": 0.020609127450042695,
+    "sink": 1.048894500647476,
+    "LD": 8.521991426377397,
+    "stalled": 0.004642833100836666
    },
    {
     "V": 9.5,
-    "theta": -0.05871531411438327,
-    "gamma": -0.1091111955497027,
-    "tail": 0.011448285269117398,
-    "sink": 1.0345008373979911,
-    "LD": 9.128563059675354,
-    "stalled": 0.0033425812106855205
+    "theta": -0.057947351759827105,
+    "gamma": -0.11026686191569815,
+    "tail": 0.012363605630813259,
+    "sink": 1.0454136865582575,
+    "LD": 9.032122313987736,
+    "stalled": 0.00345704240196582
    },
    {
     "V": 10,
-    "theta": -0.06821364436042923,
-    "gamma": -0.10468149538193139,
-    "tail": 0.004719608749349702,
-    "sink": 1.0449041304427604,
-    "LD": 9.517867380336167,
-    "stalled": 0.0026150954943927923
+    "theta": -0.0675315566901585,
+    "gamma": -0.10574829104938113,
+    "tail": 0.0055498485741210055,
+    "sink": 1.0555130929997976,
+    "LD": 9.421141856568548,
+    "stalled": 0.0026961270020399034
    },
    {
     "V": 10.5,
-    "theta": -0.07724833603563289,
-    "gamma": -0.10178617122018875,
-    "tail": -0.000936770123176456,
-    "sink": 1.0669102946374638,
-    "LD": 9.790565118188336,
-    "stalled": 0.0021207501040011617
+    "theta": -0.07664307142584996,
+    "gamma": -0.10278103762644426,
+    "tail": -0.000175653041322079,
+    "sink": 1.0773017958983298,
+    "LD": 9.695136638872686,
+    "stalled": 0.0021806382253806763
    },
    {
-    "V": 11,
-    "theta": -0.08577337749634108,
-    "gamma": -0.09998482136734176,
-    "tail": -0.005752597488540035,
-    "sink": 1.0980014521587123,
-    "LD": 9.968167586628779,
-    "stalled": 0.0017699127078726346
+    "V": 11.5,
+    "theta": -0.09527458472529136,
+    "gamma": -0.10181984208264558,
+    "tail": -0.00941190564960136,
+    "sink": 1.1689060090201424,
+    "LD": 9.787304995958296,
+    "stalled": 0.0015477520345725882
    },
    {
-    "V": 12,
-    "theta": -0.10370730695667674,
-    "gamma": -0.1010349454997756,
-    "tail": -0.013616757058716558,
-    "sink": 1.2103576569566,
-    "LD": 9.863864333512748,
-    "stalled": 0.0013181704186276794
+    "V": 12.5,
+    "theta": -0.11096955983344682,
+    "gamma": -0.10254202228014081,
+    "tail": -0.016129365461436226,
+    "sink": 1.2795301765537557,
+    "LD": 9.717894800510594,
+    "stalled": 0.0011923972474114648
    },
    {
-    "V": 13,
-    "theta": -0.1195869986696805,
-    "gamma": -0.1038360590713104,
-    "tail": -0.01948567327381312,
-    "sink": 1.347444377486894,
-    "LD": 9.595928882534935,
-    "stalled": 0.0010500427337133812
-   },
-   {
-    "V": 14,
-    "theta": -0.13845066655854346,
-    "gamma": -0.1122791112762842,
-    "tail": -0.02428381422138115,
-    "sink": 1.568606904392714,
-    "LD": 8.868918297706102,
-    "stalled": 0.0008764871085657853
+    "V": 13.5,
+    "theta": -0.12803611930722308,
+    "gamma": -0.1078354442242207,
+    "tail": -0.021459704987063982,
+    "sink": 1.4529587210872896,
+    "LD": 9.237415748590486,
+    "stalled": 0.0009719112702711627
    }
   ],
-  "dThetaPerG": 0.06814481975816708,
+  "dThetaPerG": 0.07525542852320062,
   "trim": [
    {
+    "V": 9.5,
+    "theta": 0.07240751228814159,
+    "freq": 1.9124783585004062,
+    "tail": 0.03726692599713771,
+    "amp": 0.6632251157578453,
+    "sym": 0,
+    "dyn": 0.5235987755982988
+   },
+   {
     "V": 10,
-    "theta": 0.05437672165231984,
-    "freq": 1.88193435394555,
-    "tail": 0.025649821943518794,
+    "theta": 0.05714488520910411,
+    "freq": 1.8949859709728025,
+    "tail": 0.027038470008879684,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 10.5,
-    "theta": 0.04121285976585666,
-    "freq": 1.8794203289864186,
-    "tail": 0.01734008085145219,
+    "theta": 0.04367488509864532,
+    "freq": 1.892094280285,
+    "tail": 0.018838369413341577,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
-    "V": 11,
-    "theta": 0.030181855812294735,
-    "freq": 1.888872714827544,
-    "tail": 0.010559102462004326,
+    "V": 11.5,
+    "theta": 0.020426543730560943,
+    "freq": 1.9285342662493454,
+    "tail": 0.005504356573915549,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
-    "V": 12,
-    "theta": 0.009238659281262654,
-    "freq": 1.9459152697122017,
-    "tail": -0.0008887693457878729,
+    "V": 12.5,
+    "theta": 0.003522214451944233,
+    "freq": 2.0020543560696735,
+    "tail": -0.004458789734268403,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
-    "V": 13,
-    "theta": -0.0037509475372319826,
-    "freq": 2.035319968427159,
-    "tail": -0.009547275559849727,
-    "amp": 0.6632251157578453,
-    "sym": 0,
-    "dyn": 0.5235987755982988
-   },
-   {
-    "V": 14,
-    "theta": -0.016902520744368998,
-    "freq": 2.1570130922963773,
-    "tail": -0.016294954798354896,
+    "V": 13.5,
+    "theta": -0.009859885578874518,
+    "freq": 2.1165920655991384,
+    "tail": -0.012199057031431093,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
@@ -10113,90 +10406,90 @@
   ],
   "trimDetail": [
    {
+    "V": 9.5,
+    "power_w": 37.998707513696125,
+    "Irms_A": 9.771866815934905,
+    "stalled": 0.05233554893650511,
+    "crankPeak_Nm": 4.868208277948394,
+    "freq": 1.6994240931965088,
+    "theta_deg": 4.7971240654769405,
+    "tail_deg": 2.8965980318134297
+   },
+   {
     "V": 10,
-    "power_w": 35.489201971263945,
-    "Irms_A": 9.36978603801486,
-    "stalled": 0.015352653243397778,
-    "crankPeak_Nm": 4.792750653366477,
-    "freq": 1.5824384480835172,
-    "theta_deg": 3.0998612139147976,
-    "tail_deg": 1.415004380679119
+    "power_w": 35.3144795667748,
+    "Irms_A": 9.544369618336521,
+    "stalled": 0.016265831500445836,
+    "crankPeak_Nm": 4.660756641258612,
+    "freq": 1.5941599663150448,
+    "theta_deg": 3.2286952996854565,
+    "tail_deg": 1.4254116492220525
    },
    {
     "V": 10.5,
-    "power_w": 35.85275376154675,
-    "Irms_A": 9.404894083591296,
-    "stalled": 0.010115444246062578,
-    "crankPeak_Nm": 4.809075316024135,
-    "freq": 1.578354069808337,
-    "theta_deg": 2.2458996912054157,
-    "tail_deg": 0.8470978820355425
+    "power_w": 36.010116256910386,
+    "Irms_A": 9.632459421116566,
+    "stalled": 0.010778468700912015,
+    "crankPeak_Nm": 4.707173199221598,
+    "freq": 1.5950543829688233,
+    "theta_deg": 2.362861344763211,
+    "tail_deg": 0.9219965174576731
    },
    {
-    "V": 11,
-    "power_w": 37.16145317358506,
-    "Irms_A": 9.55896008743642,
-    "stalled": 0.007513450354514865,
-    "crankPeak_Nm": 4.9053650748455055,
-    "freq": 1.5989432853011665,
-    "theta_deg": 1.5646545942203598,
-    "tail_deg": 0.45343495527771516
+    "V": 11.5,
+    "power_w": 38.344084356248665,
+    "Irms_A": 9.889648545948374,
+    "stalled": 0.0060265347989235584,
+    "crankPeak_Nm": 4.837557109329096,
+    "freq": 1.6329856034520132,
+    "theta_deg": 1.0484335649021352,
+    "tail_deg": 0.13933315125667436
    },
    {
-    "V": 12,
-    "power_w": 39.906078930117445,
-    "Irms_A": 9.829006163792029,
-    "stalled": 0.0045945146841600655,
-    "crankPeak_Nm": 5.038679822426822,
-    "freq": 1.6473199328670358,
-    "theta_deg": 0.4061083081844293,
-    "tail_deg": -0.23115318933594198
+    "V": 12.5,
+    "power_w": 42.27878524472884,
+    "Irms_A": 10.322821369457841,
+    "stalled": 0.0040257790658742455,
+    "crankPeak_Nm": 5.029848183873601,
+    "freq": 1.7016518707084725,
+    "theta_deg": 0.029720283427469806,
+    "tail_deg": -0.4314542079742161
    },
    {
-    "V": 13,
-    "power_w": 44.71429741927042,
-    "Irms_A": 10.350578981659625,
-    "stalled": 0.003292994012242607,
-    "crankPeak_Nm": 5.287481269205067,
-    "freq": 1.7301124812553768,
-    "theta_deg": -0.48432274294934263,
-    "tail_deg": -0.7245569658826055
-   },
-   {
-    "V": 14,
-    "power_w": 52.12073586958736,
-    "Irms_A": 11.203545051845227,
-    "stalled": 0.0026522244718973826,
-    "crankPeak_Nm": 5.6512193019461625,
-    "freq": 1.8437792970872957,
-    "theta_deg": -1.161472725547812,
-    "tail_deg": -1.0769149783347929
+    "V": 13.5,
+    "power_w": 48.23755029195107,
+    "Irms_A": 11.008510718754543,
+    "stalled": 0.0030531352569036696,
+    "crankPeak_Nm": 5.339864149739629,
+    "freq": 1.7989982778100893,
+    "theta_deg": -0.7586975823965031,
+    "tail_deg": -0.858047255661077
    }
   ],
   "Vcruise": 10,
   "Vmin": 9.5,
-  "Md": 33.1901320544417,
-  "Ld": -24.62680091842275,
-  "Nd": -23.580654494315283,
-  "Tf": 2.674285128864914,
-  "Mq": 2.1205512505766864,
-  "Lp": 4.060114796095673,
-  "Nr": 1.1995645763333138,
+  "Md": 30.44627578532966,
+  "Ld": -22.669950039106944,
+  "Nd": -21.556384980030096,
+  "Tf": 2.693027917605358,
+  "Mq": 2.0389158044217806,
+  "Lp": 3.8934870475816155,
+  "Nr": 1.1399398637079938,
   "inertia": {
-   "Ix": 0.08388677246360833,
-   "Iy": 0.12240316056321097,
-   "Iz": 0.04781395264594886,
-   "xCg": 0.01460419318510445,
-   "m": 1.5758547663028992
+   "Ix": 0.08388823619081735,
+   "Iy": 0.12227487627831983,
+   "Iz": 0.047662371749423796,
+   "xCg": 0.014623723138236525,
+   "m": 1.5982855171781467
   },
-  "kTheta": 0.2046385146766735,
+  "kTheta": 0.2149920996959557,
   "kQ": 0,
-  "kPhi": 0.4334537544481194,
+  "kPhi": 0.45249412007750284,
   "kP": 0,
-  "kR": 0.025435353726557915,
-  "kFv": 0.14731551520945732,
-  "kFc": 0.17677861825134877,
-  "kFcFf": 0.2407786162048041,
+  "kR": 0.02644088665061507,
+  "kFv": 0.14837253512389717,
+  "kFc": 0.17804704214867662,
+  "kFcFf": 0.2530500037517854,
   "kH": 0.5,
   "kGamma": 1,
   "kIGamma": 0.15,
@@ -10205,12 +10498,12 @@
   "kChi": 1,
   "maxBank": 0.6108652381980153,
   "diffMax": 0.3141592653589793,
-  "diffRate_rad_s": 7.872887795512311,
+  "diffRate_rad_s": 7.9553003867436445,
   "diffLimit": {
    "geometric_rad": 0.3141592653589793,
-   "servo_rad": 2.6632618725496777,
-   "twist_torque_trim_Nm": 0.18148123919477824,
-   "twist_torque_per_rad": 0.2828204836215076,
+   "servo_rad": 2.856284613546926,
+   "twist_torque_trim_Nm": 0.17359655614923922,
+   "twist_torque_per_rad": 0.26646843603782777,
    "servo_stall_Nm": 0.93470625,
    "servo_speed_rad_s": 9.769773072388084,
    "supply_V": 6.42
@@ -10230,117 +10523,117 @@
   "rate_Hz": 240,
   "trimFlight": [
    {
-    "V": 10,
-    "theta": 0.05437672165231984,
-    "freq": 1.88193435394555,
-    "tail": 0.025649821943518794,
+    "V": 9.5,
+    "theta": 0.07240751228814159,
+    "freq": 1.9124783585004062,
+    "tail": 0.03726692599713771,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 63.014614354571144,
-    "flight_power_regen_credit_w": 60.170927009363304,
-    "flight_V": 10.057111365629495,
+    "flight_power_w": 65.46226751393037,
+    "flight_power_regen_credit_w": 62.37353030651142,
+    "flight_V": 9.571340906960126,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.017211326069956172,
-     "speed_err_m_s": 0.05711136562949548,
-     "freq_drift_frac": 0.007903911217449145,
-     "tail_drift_rad": 0.0009331176065631545
+     "climb_m_s": 0.013821117309269038,
+     "speed_err_m_s": 0.07134090696012585,
+     "freq_drift_frac": 0.008081447111039385,
+     "tail_drift_rad": 0.0011139042016379205
+    }
+   },
+   {
+    "V": 10,
+    "theta": 0.05714488520910411,
+    "freq": 1.8949859709728025,
+    "tail": 0.027038470008879684,
+    "amp": 0.6632251157578453,
+    "sym": 0,
+    "dyn": 0.5235987755982988,
+    "flight_power_w": 64.58679980003944,
+    "flight_power_regen_credit_w": 61.66954923149319,
+    "flight_V": 10.056109103624056,
+    "converged": true,
+    "convergence": {
+     "climb_m_s": 0.009104559267420265,
+     "speed_err_m_s": 0.05610910362405619,
+     "freq_drift_frac": 0.004770805841347126,
+     "tail_drift_rad": 0.0006114780804451006
     }
    },
    {
     "V": 10.5,
-    "theta": 0.04121285976585666,
-    "freq": 1.8794203289864186,
-    "tail": 0.01734008085145219,
+    "theta": 0.04367488509864532,
+    "freq": 1.892094280285,
+    "tail": 0.018838369413341577,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 63.88878908706503,
-    "flight_power_regen_credit_w": 61.284324500851376,
-    "flight_V": 10.548506043553948,
+    "flight_power_w": 64.96455868048595,
+    "flight_power_regen_credit_w": 62.18023957501215,
+    "flight_V": 10.535118210592355,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.01859792039059228,
-     "speed_err_m_s": 0.04850604355394772,
-     "freq_drift_frac": 0.0038738767204667137,
-     "tail_drift_rad": 0.00052552326237763
+     "climb_m_s": 0.005273897741402867,
+     "speed_err_m_s": 0.03511821059235487,
+     "freq_drift_frac": 0.0041773319179699,
+     "tail_drift_rad": 0.0006324627275335858
     }
    },
    {
-    "V": 11,
-    "theta": 0.030181855812294735,
-    "freq": 1.888872714827544,
-    "tail": 0.010559102462004326,
+    "V": 11.5,
+    "theta": 0.020426543730560943,
+    "freq": 1.9285342662493454,
+    "tail": 0.005504356573915549,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 64.31592136249554,
-    "flight_power_regen_credit_w": 61.693013348793116,
-    "flight_V": 11.02573387876324,
+    "flight_power_w": 68.70181703300214,
+    "flight_power_regen_credit_w": 65.95586639631698,
+    "flight_V": 11.539032286634832,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.010952383064765137,
-     "speed_err_m_s": 0.025733878763240625,
-     "freq_drift_frac": 0.002956976386520585,
-     "tail_drift_rad": 0.0004453742518821958
+     "climb_m_s": 0.002211633245702094,
+     "speed_err_m_s": 0.03903228663483205,
+     "freq_drift_frac": 0.004108750583785102,
+     "tail_drift_rad": 0.0004584480477629934
     }
    },
    {
-    "V": 12,
-    "theta": 0.009238659281262654,
-    "freq": 1.9459152697122017,
-    "tail": -0.0008887693457878729,
+    "V": 12.5,
+    "theta": 0.003522214451944233,
+    "freq": 2.0020543560696735,
+    "tail": -0.004458789734268403,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 71.3675133927842,
-    "flight_power_regen_credit_w": 68.86575282122203,
-    "flight_V": 12.043439886036614,
+    "flight_power_w": 76.48866260581676,
+    "flight_power_regen_credit_w": 73.76250132035452,
+    "flight_V": 12.546313452900517,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.02069207857830481,
-     "speed_err_m_s": 0.043439886036614084,
-     "freq_drift_frac": 0.003519696485586515,
-     "tail_drift_rad": 0.0005158633999338092
+     "climb_m_s": 0.014590021527812327,
+     "speed_err_m_s": 0.046313452900516694,
+     "freq_drift_frac": 0.0035646314495631094,
+     "tail_drift_rad": 0.00045018135606642376
     }
    },
    {
-    "V": 13,
-    "theta": -0.0037509475372319826,
-    "freq": 2.035319968427159,
-    "tail": -0.009547275559849727,
+    "V": 13.5,
+    "theta": -0.009859885578874518,
+    "freq": 2.1165920655991384,
+    "tail": -0.012199057031431093,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 78.22569091869329,
-    "flight_power_regen_credit_w": 75.60798009943024,
-    "flight_V": 13.042483919071682,
+    "flight_power_w": 86.95892953594861,
+    "flight_power_regen_credit_w": 84.0792445970112,
+    "flight_V": 13.559318389659092,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.029796377543637575,
-     "speed_err_m_s": 0.0424839190716817,
-     "freq_drift_frac": 0.0034866439041337646,
-     "tail_drift_rad": 0.0003890792280444085
-    }
-   },
-   {
-    "V": 14,
-    "theta": -0.016902520744368998,
-    "freq": 2.1570130922963773,
-    "tail": -0.016294954798354896,
-    "amp": 0.6632251157578453,
-    "sym": 0,
-    "dyn": 0.5235987755982988,
-    "flight_power_w": 91.6784723535767,
-    "flight_power_regen_credit_w": 88.7913631579231,
-    "flight_V": 14.054411501360283,
-    "converged": true,
-    "convergence": {
-     "climb_m_s": 0.036113867219341754,
-     "speed_err_m_s": 0.054411501360283054,
-     "freq_drift_frac": 0.0004654783297447773,
-     "tail_drift_rad": 0.0002779495965737136
+     "climb_m_s": 0.02440916875582615,
+     "speed_err_m_s": 0.059318389659091864,
+     "freq_drift_frac": 0.0005246451037121364,
+     "tail_drift_rad": 0.0004581097924303973
     }
    }
   ],
@@ -10363,9 +10656,9 @@
   "envelopeFrozen": [
    {
     "amp": 0.6632251157578453,
-    "freqMax": 2.64224933651385,
+    "freqMax": 2.71895078389809,
     "limitedBy": "motor_voltage",
-    "atV": 14
+    "atV": 13.5
    }
   ],
   "envelopeAllowance": {
@@ -10384,7 +10677,7 @@
  },
  "round8_options": {
   "Vrough": 15,
-  "dt": 0.0005208333333333333,
+  "dt": 0.00026041666666666666,
   "allowance": {
    "gear": 0.75,
    "spar": 0.9,
@@ -10400,40 +10693,56 @@
   "launchClimb": 3
  },
  "selection": {
-  "pipeline": "src/design/round9.mjs",
-  "basis": "explicit round-9 parameters (ROUND9, ROUND9_OPT and --set/--opt) on Larus v18 through rounds 6-8's rules; screen not rerun",
-  "set": {},
+  "pipeline": "src/design/round10.mjs",
+  "basis": "explicit round-10 parameters (ROUND10, ROUND10_OPT and --set/--opt) over round 9's (ROUND9 on Larus v18); screen not rerun",
+  "set": {
+   "parts": {
+    "gears": [
+     "gear-khk-dsf1-24",
+     "gear-khk-ds1-36",
+     "gear-khk-msga1-20",
+     "gear-khk-ds1-64",
+     "gear-khk-msga1-18",
+     "gear-khk-msgb1-45",
+     "gear-khk-msga1-18",
+     "gear-khk-msgb1-45"
+    ]
+   },
+   "gearRating": {
+    "crank_Hz": 3
+   }
+  },
   "opt": {}
  },
  "performance": {
   "sustained_climb": [
    {
     "V_target_m_s": 10,
-    "sustained_climb_m_s": 0.747,
-    "mean_airspeed_m_s": 10.13,
+    "sustained_climb_m_s": 0.804,
+    "mean_airspeed_m_s": 10.19,
     "climb_cmd_m_s": 1,
-    "mean_batt_A": 13.95,
-    "motor_rms_2s_max_A": 18.99,
+    "mean_batt_A": 15.2,
+    "motor_rms_2s_max_A": 20.51,
     "altitude_m": 1404.37
    },
    {
     "V_target_m_s": 12,
-    "sustained_climb_m_s": 0.709,
-    "mean_airspeed_m_s": 11.1,
-    "climb_cmd_m_s": 1,
-    "mean_batt_A": 14.05,
-    "motor_rms_2s_max_A": 19.14,
+    "sustained_climb_m_s": 0.805,
+    "mean_airspeed_m_s": 10.63,
+    "climb_cmd_m_s": 1.5,
+    "mean_batt_A": 15.33,
+    "motor_rms_2s_max_A": 20.6,
     "altitude_m": 1404.37
    }
   ],
-  "best_sustained_climb_m_s": 0.747,
-  "best_climb_speed_m_s": 10.13,
+  "best_sustained_climb_m_s": 0.805,
+  "best_climb_speed_m_s": 10.63,
   "corridor_elevation_m": 1444.37,
   "method": "src/physics/scenarios.js runClimb: closed loop with the flight controller, its stroke envelope and current limit; climb from 15 s to 45 s of steady climb, no wind, battery full; best over commanded climb rates 0.5-3 m/s",
   "for_environment": "the corridor can be re-solved to this climb with a margin: a gradient at speed V is climb / V",
-  "ran_at": "2026-11-03T00:02:20.404Z"
+  "ran_at": "2026-11-03T01:07:12.809Z"
  },
- "version": 19,
- "version_written": "2026-11-03T00:02:20.406Z",
- "supersedes_sha256": "1a417867994240db54141c0cb4b48a71dca6e9422e0c95f1080316be88fb83c5"
+ "version": 20,
+ "version_written": "2026-11-03T01:07:12.812Z",
+ "supersedes_sha256": "3335da7039ba4b93284e6c0fd63cf89755c7cc088cdc887941d7ca5f77b0d9f2"
 }

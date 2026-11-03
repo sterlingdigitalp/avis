@@ -7049,19 +7049,17 @@
    "reference_slipping_torque_nm_text": "0.62/0.36 (page does not define the two values)",
    "note": "Keyless alternative to DS1-20 on a 5 mm shaft. Same bending rating as DS1-20 (0.96 N m), but 12.6 g vs 2.85 g. The hub slip torque, not the teeth, may govern.",
    "rating_conditions": {
-    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
-    "mating_gear": "same number of teeth",
-    "rotational_speed_rpm": 600,
-    "design_life": "over 1e7 cycles",
-    "impact": "uniform load from motor and load",
-    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
-    "lubricant": "100 cSt (50 C)",
-    "support": "symmetric support by bearings",
-    "SF": 1.2,
-    "SH": 1.15,
-    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
-    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
-   }
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   },
+   "reference_slipping_torque_nm": 0.62,
+   "screw_tightening_torque_nm": 0.45,
+   "slipping_torque_basis": "KHK 2025 spur gear catalogue (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf): \"Ref. slipping torque ... Standard screw tightening torque (N.m)\": 0.62 / 0.45 for the 5 mm bore (M2.5), 2.22 / 0.80 for the 8 mm bore (M3); KHK: \"F-Loc gears are attached to the shaft by a friction coupling. Recommended shaft tolerances are g6, h6, or h7. Torque slippage should be considered when making a selection.\" A reference figure with no stated basis: under the SPEC ruling \"RC practice for joints no one can rate\" it binds at full value (scratchpad research/round7.json).",
+   "rating_basis": "KHK plastic gear method (Lewis), as the DS series: same bending allowable as the DS gear of the same teeth"
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/acetal-f-loc-hub-spur-gears-dsf/dsf1-20",
@@ -7088,19 +7086,17 @@
    "reference_slipping_torque_nm_text": "2.22/0.63 (page does not define the two values)",
    "note": "8 mm bore, not 6 mm like DS1-32. 27 g vs 5.86 g for DS1-32.",
    "rating_conditions": {
-    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
-    "mating_gear": "same number of teeth",
-    "rotational_speed_rpm": 600,
-    "design_life": "over 1e7 cycles",
-    "impact": "uniform load from motor and load",
-    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
-    "lubricant": "100 cSt (50 C)",
-    "support": "symmetric support by bearings",
-    "SF": 1.2,
-    "SH": 1.15,
-    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
-    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
-   }
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   },
+   "reference_slipping_torque_nm": 2.22,
+   "screw_tightening_torque_nm": 0.8,
+   "slipping_torque_basis": "KHK 2025 spur gear catalogue (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf): \"Ref. slipping torque ... Standard screw tightening torque (N.m)\": 0.62 / 0.45 for the 5 mm bore (M2.5), 2.22 / 0.80 for the 8 mm bore (M3); KHK: \"F-Loc gears are attached to the shaft by a friction coupling. Recommended shaft tolerances are g6, h6, or h7. Torque slippage should be considered when making a selection.\" A reference figure with no stated basis: under the SPEC ruling \"RC practice for joints no one can rate\" it binds at full value (scratchpad research/round7.json).",
+   "rating_basis": "KHK plastic gear method (Lewis), as the DS series: same bending allowable as the DS gear of the same teeth"
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/acetal-f-loc-hub-spur-gears-dsf/dsf1-32",
@@ -7412,7 +7408,14 @@
    "compressive_shear_iso10123_15min_steel_mpa": 13.5,
    "max_gap_mm": 0.25,
    "tds_date": "May 2024",
-   "note": "Typical values, not a specification. Strength falls with gap (graph: 0.15 mm about 60%, 0.25 mm about 55% of 0.05 mm strength, read from the graph). Not recommended on thermoplastics (do not use on Duracon DS gears). The product page shows 31.0 N/mm2 on steel with no method; the TDS figure is used."
+   "note": "Typical values, not a specification. Strength falls with gap (graph: 0.15 mm about 60%, 0.25 mm about 55% of 0.05 mm strength, read from the graph). Not recommended on thermoplastics (do not use on Duracon DS gears). The product page shows 31.0 N/mm2 on steel with no method; the TDS figure is used.",
+   "substrates": {
+    "steel": {
+     "maker_states_suitable": true,
+     "shear_MPa": 29,
+     "basis": "LOCTITE 638 TDS: compressive shear strength ISO 10123, steel pins and collars, 72 h: 29 N/mm2 (catalogue compressive_shear_iso10123_72h_mpa); a retaining compound for cylindrical fits on metal"
+    }
+   }
   },
   "price_usd": null,
   "source_url": "https://datasheets.tdx.henkel.com/LOCTITE-638-en_GL.pdf",
@@ -7502,8 +7505,9 @@
     "ultimate_MPa": 540,
     "ultimate_basis": "specified minimum Rm 540 MPa, EN 754-2:2016 drawn 7075-T6 bar up to 80 mm (color-metal.ro table, https://color-metal.ro/en/mechanical-properties-drawn-round-square-hexagonal-and-flat-bars); EN 485-2 sheet 0.8-3 mm also 540 (Bikar). Round 9, EN bolt bearing.",
     "bearing_standard": "EN 1999-1-1",
-    "bearing_standard_note": "EN 1999-1-1 Table 3.2 does not list EN AW-7075; its bolt-bearing expression (Table 8.5) is applied with 7075-T6's specified minimum fu, as the round 8 ruling names EN 1999-1-1 for aluminium. Disclosed.",
-    "bearing_counted_at_half": false
+    "bearing_standard_note": "EN 1999-1-1 Table 3.2 does not list EN AW-7075; its Table 8.5 bolt-bearing expression with 7075-T6 specified minimum fu counts at half (orchestrator round-10 ruling on the SPEC round-8 rule).",
+    "bearing_counted_at_half": false,
+    "bearing_standard_lists_alloy": false
    },
    "standard_minimums": {
     "EN 754-2:2016 drawn bar T6 (<= 80 mm)": {
@@ -8146,5 +8150,129 @@
   "source_url": "https://www.dupont.com/products/molykote-em-30l-grease.html",
   "retrieved": "2026-11-02",
   "verified": "manufacturer-page"
+ },
+ {
+  "id": "gear-khk-dsf1-24",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DSF1-24 acetal spur gear with SUS303 F-Loc hub",
+  "mass_g": 13.9,
+  "specs": {
+   "mass_basis": "per part",
+   "module_mm": 1,
+   "teeth": 24,
+   "material": "Polyacetal (Hub: SUS303)",
+   "bore_mm": 5,
+   "face_width_mm": 6,
+   "allowable_torque_bending_nm": 1.22,
+   "source_note": "mass and bending allowable from the KHK 2025 spur gear catalogue (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); bore from the KHK DSF list (https://catalog.khkgears.us/viewitems/spur-gears/acetal-f-loc-hub-spur-gears-dsf) (scratchpad research/round7.json)",
+   "bore_type": "F-Loc (keyless clamp, M2.5 cap screw)",
+   "reference_slipping_torque_nm": 0.62,
+   "screw_tightening_torque_nm": 0.45,
+   "slipping_torque_basis": "KHK 2025 spur gear catalogue (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf): \"Ref. slipping torque ... Standard screw tightening torque (N.m)\": 0.62 / 0.45 for the 5 mm bore (M2.5), 2.22 / 0.80 for the 8 mm bore (M3); KHK: \"F-Loc gears are attached to the shaft by a friction coupling. Recommended shaft tolerances are g6, h6, or h7. Torque slippage should be considered when making a selection.\" A reference figure with no stated basis: under the SPEC ruling \"RC practice for joints no one can rate\" it binds at full value (scratchpad research/round7.json).",
+   "rating_basis": "KHK plastic gear method (Lewis), as the DS series: same bending allowable as the DS gear of the same teeth",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-dsf1-30",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DSF1-30 acetal spur gear with SUS303 F-Loc hub",
+  "mass_g": 26.5,
+  "specs": {
+   "mass_basis": "per part",
+   "module_mm": 1,
+   "teeth": 30,
+   "material": "Polyacetal (Hub: SUS303)",
+   "bore_mm": 8,
+   "face_width_mm": 6,
+   "allowable_torque_bending_nm": 1.61,
+   "source_note": "mass and bending allowable from the KHK 2025 spur gear catalogue (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); bore from the KHK DSF list (https://catalog.khkgears.us/viewitems/spur-gears/acetal-f-loc-hub-spur-gears-dsf) (scratchpad research/round7.json)",
+   "bore_type": "F-Loc (keyless clamp, M3 cap screw)",
+   "reference_slipping_torque_nm": 2.22,
+   "screw_tightening_torque_nm": 0.8,
+   "slipping_torque_basis": "KHK 2025 spur gear catalogue (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf): \"Ref. slipping torque ... Standard screw tightening torque (N.m)\": 0.62 / 0.45 for the 5 mm bore (M2.5), 2.22 / 0.80 for the 8 mm bore (M3); KHK: \"F-Loc gears are attached to the shaft by a friction coupling. Recommended shaft tolerances are g6, h6, or h7. Torque slippage should be considered when making a selection.\" A reference figure with no stated basis: under the SPEC ruling \"RC practice for joints no one can rate\" it binds at full value (scratchpad research/round7.json).",
+   "rating_basis": "KHK plastic gear method (Lewis), as the DS series: same bending allowable as the DS gear of the same teeth",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "gear-khk-dsf1-36",
+  "category": "gear",
+  "manufacturer": "KHK",
+  "name": "DSF1-36 acetal spur gear with SUS303 F-Loc hub",
+  "mass_g": 29.1,
+  "specs": {
+   "mass_basis": "per part",
+   "module_mm": 1,
+   "teeth": 36,
+   "material": "Polyacetal (Hub: SUS303)",
+   "bore_mm": 8,
+   "face_width_mm": 6,
+   "allowable_torque_bending_nm": 2.04,
+   "source_note": "mass and bending allowable from the KHK 2025 spur gear catalogue (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); bore from the KHK DSF list (https://catalog.khkgears.us/viewitems/spur-gears/acetal-f-loc-hub-spur-gears-dsf) (scratchpad research/round7.json)",
+   "bore_type": "F-Loc (keyless clamp, M3 cap screw)",
+   "reference_slipping_torque_nm": 2.22,
+   "screw_tightening_torque_nm": 0.8,
+   "slipping_torque_basis": "KHK 2025 spur gear catalogue (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf): \"Ref. slipping torque ... Standard screw tightening torque (N.m)\": 0.62 / 0.45 for the 5 mm bore (M2.5), 2.22 / 0.80 for the 8 mm bore (M3); KHK: \"F-Loc gears are attached to the shaft by a friction coupling. Recommended shaft tolerances are g6, h6, or h7. Torque slippage should be considered when making a selection.\" A reference figure with no stated basis: under the SPEC ruling \"RC practice for joints no one can rate\" it binds at full value (scratchpad research/round7.json).",
+   "rating_basis": "KHK plastic gear method (Lewis), as the DS series: same bending allowable as the DS gear of the same teeth",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "adhesive-loctite-406-sf770",
+  "category": "adhesive",
+  "manufacturer": "Henkel (LOCTITE)",
+  "name": "LOCTITE 406 cyanoacrylate with LOCTITE SF 770 polyolefin primer",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not counted (in the 15% margin with glue)",
+   "substrates": {
+    "pom": {
+     "maker_states_suitable": true,
+     "shear_MPa": 14,
+     "basis": "LOCTITE SF 770 TDS (May 2021): \"Substrates treated with primer LOCTITE SF 770 Cured for 24 hours @ 23 C / 50% RH: Block Shear Strength, ISO 13445: ... Acetal and LOCTITE 406 N/mm2 14 (psi) (2,000)\". Acetal to acetal: the only published figure for this adhesive on acetal, applied to the acetal side of a gear-to-shaft bond at full value. The same TDS scopes the primer to polyethylene, polypropylene, PTFE and thermoplastic rubber, yet publishes the acetal value; LOCTITE 406 TDS: \"designed for bonding of plastics and elastomeric materials\", no acetal exclusion."
+    }
+   },
+   "source_note": "scratchpad research/round10-parts.json Q6"
+  },
+  "price_usd": null,
+  "source_url": "https://datasheets.tdx.henkel.com/LOCTITE-SF-770-en_GL.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
  }
 ]

@@ -2,10 +2,24 @@
 // catalogue parts, the drive layout (gear planes between the plates) and the design's stated running conditions
 // (p.gearRating: the rating crank frequency, the lubricant on each kind of mesh, the gearbox temperature limit and
 // whether the load reverses). src/physics/gears.js holds the corrections; this file only gathers their inputs.
-import { jgmaGearRating, lewisDuraconRating, pitchLineSpeed } from '../physics/gears.js';
+import { jgmaGearRating, lewisDuraconRating, pitchLineSpeed, kvRow } from '../physics/gears.js';
 
 const byId = (catalog, id) => catalog.find((p) => p.id === id);
-const isDuracon = (part) => /duracon/i.test(part.specs?.material ?? '');
+// Duracon is Polyplastics' acetal (POM); KHK's DSF gears state 'Polyacetal' and take the same plastic method (round 10 fix:
+// they were rated by the metal method before).
+const isDuracon = (part) => /duracon|acetal/i.test(part.specs?.material ?? '');
+
+/**
+ * Round 10: a metal gear's row in JGMA's KV table (KHK Table 10.3, old JIS B 1702 grades) from its catalogue precision
+ * ("JIS grade N5 (JIS B1702-1:1998)") through the design's stated old-grade equivalence (gr.accuracy.old_grade_of,
+ * e.g. { N5: 1 }, with its basis) and tooth modification (gr.accuracy.modified, false unless the maker states it).
+ * No stated grade or no equivalence: null (the rating then takes the band-only rule).
+ */
+export function kvRowOf(part, accuracy) {
+  const n = /N(\d+)/.exec(part?.specs?.precision ?? '')?.[1];
+  const g = n !== undefined ? accuracy?.old_grade_of?.[`N${n}`] : undefined;
+  return Number.isFinite(g) ? kvRow(g, accuracy?.modified === true) : null;
+}
 
 /**
  * Support class of a gear at plane x between bearings at xA and xB (KHK Table 10.11). KHK states no criterion for its
@@ -49,7 +63,7 @@ export function rateStages(stages, catalog, layout, gr) {
       if (isDuracon(part)) return lewisDuraconRating(cat, { m, z, v_m_s: v, mateDuracon: isDuracon(mate), reversing: gr.reversing, grease: gr.plastic_lubricant?.grease === true, temperature_C: gr.max_temperature_C });
       const hardened = /harden|carburi/i.test(sp_.heat_treatment ?? '');
       const lub = gr.metal_lubricant;
-      return jgmaGearRating(cat, { m, z, zMate, b_mm: Math.min(ps.face_width_mm ?? Infinity, gs.face_width_mm ?? Infinity), v_m_s: v, support, lubricant_cSt_50C: lub?.cSt_50C ?? null, reversing: gr.reversing, hardened });
+      return jgmaGearRating(cat, { m, z, zMate, b_mm: Math.min(ps.face_width_mm ?? Infinity, gs.face_width_mm ?? Infinity), v_m_s: v, support, lubricant_cSt_50C: lub?.cSt_50C ?? null, reversing: gr.reversing, hardened, kv_row: kvRowOf(part, gr.accuracy) });
     };
     const rp = one(pin, ps.teeth, gs.teeth, gear), rg = one(gear, gs.teeth, ps.teeth, pin);
     return {

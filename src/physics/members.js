@@ -118,7 +118,10 @@ export function bearingAllowable(material, geom = {}) {
   // Below the source's e/D the EN resistance is required: without it nothing bounds the value at small distances.
   if (!(Number.isFinite(material.ultimate_MPa) && /^EN 199[39]/.test(material.bearing_standard ?? ''))) return { MPa: null, basis: 'unrated: below the bearing source\'s e/D (or no source), and no EN bolt-bearing standard for this material' };
   const en = enBoltBearing(g, material.ultimate_MPa, material.pin_ultimate_MPa ?? Infinity);
-  const c = [{ MPa: en.MPa, basis: `${material.bearing_standard}: ${en.basis}` }];
+  // Round 10 (orchestrator ruling on the round-8 rule): an alloy the standard does not list (EN 1999-1-1 has no
+  // EN AW-7075) takes the standard's expression at half.
+  const unlisted = material.bearing_standard_lists_alloy === false;
+  const c = [{ MPa: unlisted ? en.MPa / 2 : en.MPa, basis: `${material.bearing_standard}: ${en.basis}${unlisted ? ', at half (the standard does not list this alloy)' : ''}` }];
   if (Number.isFinite(pub)) c.push({ MPa: material.bearing_counted_at_half ? pub : pub / 2, basis: `published bearing below its e/D ${material.bearing_e_over_d_min}, at half` });
   return c.reduce((a, b) => (b.MPa < a.MPa ? b : a));
 }
@@ -340,7 +343,23 @@ const MEMBER_CHECKS = {
   beam: (m, l, val, u) => beamSectionCheck(m.dims, m.material, { F: l.F, M: l.M, Mo: val(u.Mo) }),
   'cfrp tube': (m, l) => cfrpTubeCheck(m.dims, m.material, { M: l.M, T: l.T, V: l.V }),
   unrated: (m) => ({ fos: null, ok: false, why: m.why ?? 'no published rating' }),
+  'rc practice': (m, l) => rcPracticeCheck(m, l.T),
 };
+
+/**
+ * Round 10 (SPEC ruling "RC practice for joints no one can rate"): a shaft-to-hub fixing (set screw, clamp hub, D-flat
+ * or bond on a gear, pulley or coupling) that no maker or standard rates is allowed as standard RC practice, reported
+ * as "unrated, RC practice" with its peak torque. Where the maker publishes any figure for it (even a reference one,
+ * such as KHK's DSF slipping torque), the peak must stay within that figure at full value. No factor of safety is
+ * computed (fos null), so it never sets the members' minimum.
+ * member: { rc: { method, published_Nm (or null), published_basis } }.
+ */
+export function rcPracticeCheck(member, T) {
+  const rc = member.rc ?? {};
+  const lim = Number.isFinite(rc.published_Nm) ? rc.published_Nm : null;
+  const within = lim === null ? null : T <= lim;
+  return { fos: null, ok: within !== false, status: 'unrated, RC practice', method: rc.method ?? null, peak_T_Nm: T, published_Nm: lim, published_basis: rc.published_basis ?? null, published_ratio: lim === null ? null : (T > 0 ? lim / T : Infinity), within_published: within, why: lim === null ? `${rc.method ?? 'fixing'}: no published figure; allowed as RC practice (SPEC ruling)` : `${rc.method ?? 'fixing'}: peak ${T.toFixed(3)} N m against the published ${lim} N m at full value` };
+}
 
 /**
  * Every member against its check. member: { name, kind, check, dims, material, sections: [...], uses: { M, T, V, F }

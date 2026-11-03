@@ -25,7 +25,7 @@ export function materialOf(catalog, id) {
   const s = m.specs ?? {};
   const dv = s.design_values ?? {};
   if (!Number.isFinite(dv.yield_MPa) && !Number.isFinite(dv.shear_MPa)) throw new Error(`${id}: no design yield stated in the catalogue`);
-  return { id: m.id, name: m.name, density_g_cm3: s.density_g_cm3, yield_MPa: dv.yield_MPa ?? null, shear_MPa: dv.shear_MPa ?? null, shear_yield_MPa: dv.shear_yield_MPa ?? null, bearing_yield_MPa: dv.bearing_yield_MPa ?? null, bearing_e_over_d_min: dv.bearing_e_over_d_min ?? null, bearing_counted_at_half: dv.bearing_counted_at_half ?? false, ultimate_MPa: dv.ultimate_MPa ?? null, bearing_standard: dv.bearing_standard ?? null, basis: dv.basis, source_url: m.source_url, E_GPa: s.elastic_modulus_gpa ?? null };
+  return { id: m.id, name: m.name, density_g_cm3: s.density_g_cm3, yield_MPa: dv.yield_MPa ?? null, shear_MPa: dv.shear_MPa ?? null, shear_yield_MPa: dv.shear_yield_MPa ?? null, bearing_yield_MPa: dv.bearing_yield_MPa ?? null, bearing_e_over_d_min: dv.bearing_e_over_d_min ?? null, bearing_counted_at_half: dv.bearing_counted_at_half ?? false, ultimate_MPa: dv.ultimate_MPa ?? null, bearing_standard: dv.bearing_standard ?? null, bearing_standard_lists_alloy: dv.bearing_standard_lists_alloy ?? null, basis: dv.basis, source_url: m.source_url, E_GPa: s.elastic_modulus_gpa ?? null };
 }
 
 const gOf = (mat, v) => v * 1e6 * mat.density_g_cm3; // m^3 -> g
@@ -70,7 +70,7 @@ export function driveMembers(d, catalog, L, lay, joints) {
   for (let j = 1; j < lay.n; j++) gearShaftMembers(cx, j);
   const s0 = lay.train.stages[0];
   // The first pinion on the motor shaft: its fixing is the same Duracon question.
-  cx.members.push(unrated(`${s0.pinion.id} on the motor shaft, fixing`, 'gear fixing', DS_WHY, [{ ch: 'crank_torque', k: +(1 / lay.below(0) / (s0.wheel.z / s0.pinion.z)).toFixed(8) }]));
+  cx.members.push(gearFixing(`${s0.pinion.id} on the motor shaft, fixing`, catalog, s0.pinion.id, L.fixings, byId(catalog, s0.pinion.id).specs?.bore_mm ?? null, [{ ch: 'crank_torque', k: +(1 / lay.below(0) / (s0.wheel.z / s0.pinion.z)).toFixed(8) }]));
   for (const [side, w] of [['right', 'R'], ['left', 'L']]) wingSideMembers(cx, side, w);
   const coupler = couplerLinks(cx);
   plateSeats(cx);
@@ -146,7 +146,8 @@ function gearShaftMembers(cx, j) {
     if (g.pinionKey) members.push(keyHubSide(`key, pinion ${train.stages[kp].pinion.id} on gear shaft ${j}, gear side`, catalog, g.pinionKey, train.stages[kp].pinion.id, g.d_mm, [{ ch: 'crank_torque', k: +Tk.toFixed(8) }]));
     for (const k of [kw, kp]) {
       const gid = k === kw ? wheel.id : train.stages[kp].pinion.id;
-      if (!/keyway/.test(byId(catalog, gid).specs?.fastening ?? '')) members.push(unrated(`${gid} on gear shaft ${j}, fixing`, 'gear fixing', DS_WHY, [{ ch: 'crank_torque', k: +Tk.toFixed(8) }]));
+      // A maker keyway only ("keyway 3 x 1.4 mm"); "plain bore, no keyway ..." is not one (round 10 fix).
+      if (!/^keyway\s/.test(byId(catalog, gid).specs?.fastening ?? '')) members.push(gearFixing(`${gid} on gear shaft ${j}, fixing`, catalog, gid, L.fixings, byId(catalog, gid).specs?.bore_mm ?? null, [{ ch: 'crank_torque', k: +Tk.toFixed(8) }]));
     }
 }
 
@@ -232,6 +233,57 @@ const DS_WHY = 'Duracon gear on a plain bore: KHK advises against secondary oper
 /** A load path without a published rating: it fails M7 (SPEC ruling after round 6). */
 function unrated(name, kind, why, terms) {
   return { name, kind, check: 'unrated', why, material: null, dims: {}, sections: [sect('T', terms)], uses: { T: 'T' } };
+}
+
+/**
+ * Round 10 (SPEC ruling "RC practice for joints no one can rate"): how a gear without a maker keyway is held to its
+ * shaft, as a member M7 reports as "unrated, RC practice" with its peak torque, within any figure the maker publishes:
+ *  - a KHK F-Loc clamp hub (DSF): within KHK's reference slipping torque (specs.reference_slipping_torque_nm) at full
+ *    value, the cap screw at KHK's standard tightening torque;
+ *  - a maker-tapped set screw: within the holding torque the design cites for it (fixings.set_screw), if any;
+ *  - a plain bore: bonded with the design's adhesive for its material (fixings.bond.pom / .steel) only if its maker states it bonds the
+ *    gear's material; the torque within the bond's published shear on that material (tau pi d L d / 2) when given.
+ * Anything else (no stated method, an adhesive its maker does not state for the material) stays unrated.
+ * d_mm: the bore; terms: the fixing's torque terms.
+ */
+export function gearFixing(name, catalog, gearId, fixings, d_mm, terms) {
+  const g = byId(catalog, gearId), s = g.specs ?? {};
+  const base = { name, kind: 'gear fixing', check: 'rc practice', material: null, dims: { d_mm }, sections: [sect('T', terms)], uses: { T: 'T' } };
+  if (/F-Loc/i.test(s.bore_type ?? '')) return flocFixing(base, g);
+  // A maker-tapped set screw ("tapped for M4 set screw ..."); "plain bore, no keyway or set screw" is not one.
+  if (/^tapped\b.*set screw/i.test(s.fastening ?? '')) return { ...base, rc: { method: `maker-tapped set screw (${s.fastening})`, published_Nm: Number.isFinite(fixings?.set_screw?.holding_Nm) ? fixings.set_screw.holding_Nm : null, published_basis: fixings?.set_screw?.basis ?? null } };
+  return bondFixing(base, catalog, g, fixings?.bond, d_mm) ?? unrated(name, 'gear fixing', DS_WHY, terms);
+}
+
+/** A KHK F-Loc clamp hub: within KHK's reference slipping torque at full value, the screw at its standard torque. */
+function flocFixing(base, g) {
+  const s = g.specs, slip = s.reference_slipping_torque_nm;
+  const screw = /M[\d.]+/.exec(s.bore_type)?.[0] ?? 'cap screw';
+  const tq = Number.isFinite(s.screw_tightening_torque_nm) ? ` ${s.screw_tightening_torque_nm} N m` : '';
+  const pub = Number.isFinite(slip);
+  return { ...base, rc: { method: `KHK F-Loc clamp hub (${screw} at KHK's standard tightening torque${tq})`, published_Nm: pub ? slip : null, published_basis: pub ? `KHK reference slipping torque ${slip} N m (${g.source_url})` : null }, note: 'clamp hub: no rating with a basis; KHK publishes a reference slipping torque, which binds at full value' };
+}
+
+/** The gear material's bond class: acetal (POM) or steel; null for anything else. */
+export function bondClass(material) {
+  if (/duracon|acetal|polyacetal/i.test(material ?? '')) return 'pom';
+  return /S45C|SCM|steel|SUS/i.test(material ?? '') ? 'steel' : null;
+}
+
+/**
+ * A plain bore bonded with the design's adhesive for the gear's material (bond: { pom, steel } adhesive ids), only if
+ * its maker states it for that material; within its published shear over the bore and face (tau pi d L d / 2). Null
+ * when no such adhesive is stated.
+ */
+function bondFixing(base, catalog, g, bond, d_mm) {
+  const s = g.specs, mat = bondClass(s.material);
+  const adh = mat && bond?.[mat] ? byId(catalog, bond[mat]) : null;
+  const sub = adh?.specs?.substrates?.[mat];
+  if (!sub?.maker_states_suitable) return null;
+  const L = (s.face_width_mm ?? s.hub_width_mm ?? 0) / 1000;
+  const lim = Number.isFinite(sub.shear_MPa) ? sub.shear_MPa * 1e6 * Math.PI * (d_mm / 1000) * L * (d_mm / 2000) : null;
+  const basis = lim === null ? null : `${sub.shear_MPa} MPa x pi x ${d_mm} x ${(L * 1000).toFixed(1)} mm x ${d_mm} / 2 (${sub.basis ?? adh.source_url})`;
+  return { ...base, dims: { d_mm, L_mm: L * 1000 }, rc: { method: `bonded with ${adh.name} on ${mat === 'pom' ? 'acetal' : 'steel'} (plain bore)`, published_Nm: lim, published_basis: basis } };
 }
 /** The gear's keyway side of a key: its depth from the catalogue fastening text, its material as KHK states it. */
 function keyHubSide(name, catalog, k, gearId, dSeat_mm, torqueTerms) {

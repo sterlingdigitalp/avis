@@ -1,0 +1,262 @@
+{
+ "note": "Round 10 (Larus GL-2) exploration and diagnosis under the orchestrator's round-10 rulings and the SPEC ruling \"RC practice for joints no one can rate\". Not gate files. Every number was measured by the file or log named with it (out/sweep/round10 unless a scratch path is given; S = /private/tmp/claude-501/-Users-sterlingdigital-avis/73ca93d6-9b09-4365-aabc-7e9ea7dc5b7b/scratchpad).",
+ "rows": [
+  {
+   "tag": "1 the torque lever: smaller, faster stroke (2S pack as v19)",
+   "method": "stroke half-amplitude 20-38 deg (params.amp_deg), the reduction scaled so the motor reaches the same rpm at the envelope top (G ~ sin(amp)); each train the lightest found by S/r10/trainsearch10.mjs at Tc ~ 15 sin(amp)/sin(38) + 10% and rating frequency 1.22 x the expected top; builds S/r10/screen1.sh (round 9 pipeline, eta_s 0.6, not keyed); probes S/r10/eval10.mjs (M1 at 8 m/s 0/5/10 deg and M2/M3/M5 at nominal and the 8 corners, M4 100 seeds at nominal and the two mass-1.05 cg+5 corners). Files out/sweep/round10/sweep/ev-*.json and design-*.json. k = pi f cbar / V at the cruise trim; motor rpm is reachable in every case (the envelope is motor-speed limited at the same rpm).",
+   "by_amplitude_deg": {
+    "38 (v19 as committed, train 355.7 g)": {
+     "mass_g": 1575.9,
+     "G": 31.25,
+     "M1_worst_lost_m": 2.18,
+     "M1_failing_of_27": 6,
+     "M2_min": 12.9,
+     "M3_max_dev_m": 0.87,
+     "M5_max_touchdown_m_s": 9.76,
+     "M4_pass_nominal_aero0.9m1.05cg5_aero1.1m1.05cg5": [
+      93,
+      90,
+      90
+     ],
+     "crank_max_M4_pass_Nm": 15.95,
+     "split_at_peak_nominal_median": {
+      "aero": 1.322,
+      "inertia": -0.271,
+      "gravity": -0.051
+     },
+     "motor_peak_A": 59.2,
+     "motor_rms2s_max_A": 22.8,
+     "k": 0.197,
+     "climb_m_s": 0.747,
+     "alpha_eff_amp_deg_0.44/0.56/0.69": "5.52/6.04/5.80"
+    },
+    "32": {
+     "mass_g": 1543.8,
+     "G": 29.63,
+     "M1_worst_lost_m": 2.03,
+     "M1_failing_of_27": 13,
+     "M2_min": 12.9,
+     "M3_max_dev_m": 1.15,
+     "M5_max_touchdown_m_s": 9.23,
+     "M4_pass_nominal_aero0.9m1.05cg5_aero1.1m1.05cg5": [
+      79,
+      71,
+      72
+     ],
+     "crank_max_M4_pass_Nm": 14.49,
+     "split_at_peak_nominal_median": {
+      "aero": 1.278,
+      "inertia": -0.229,
+      "gravity": -0.051
+     },
+     "motor_peak_A": 65.2,
+     "motor_rms2s_max_A": 20.4,
+     "k": 0.244,
+     "climb_m_s": 0.439,
+     "train": "DSF1-20/DS1-30, MSGA1-18/DS1-64, MSGA1-18/MSGB1-40, MSGA1-18/MSGB1-45 (327.5 g, 14.46 N m)",
+     "alpha_eff_amp_deg_0.44/0.56/0.69": "5.72/6.33/6.08"
+    },
+    "28": {
+     "mass_g": 1518.5,
+     "G": 26.34,
+     "M1_worst_lost_m": 1.98,
+     "M1_failing_of_27": 25,
+     "M2_min": 12.1,
+     "M3_max_dev_m": 1.67,
+     "M5_max_touchdown_m_s": 9.14,
+     "M4_pass_nominal_aero0.9m1.05cg5_aero1.1m1.05cg5": [
+      66,
+      55,
+      53
+     ],
+     "crank_max_M4_pass_Nm": 12.23,
+     "split_at_peak_nominal_median": {
+      "aero": 1.247,
+      "inertia": -0.197,
+      "gravity": -0.051
+     },
+     "motor_peak_A": 65.9,
+     "motor_rms2s_max_A": 20.5,
+     "k": 0.281,
+     "climb_m_s": 0.334,
+     "train": "DSF1-20/DS1-30, MSGA1-18/DS1-64, MSGA1-18/MSGB1-40 x2 (297.5 g, 12.85 N m)",
+     "alpha_eff_amp_deg_0.44/0.56/0.69": "5.74/6.39/6.15"
+    },
+    "24": {
+     "mass_g": 1513.7,
+     "G": 22.22,
+     "M1_worst_lost_m": 2.35,
+     "M1_failing_of_27": 27,
+     "M2_min": 11.4,
+     "M3_max_dev_m": 1.38,
+     "M5_max_touchdown_m_s": 9.1,
+     "M4_pass_nominal_aero0.9m1.05cg5_aero1.1m1.05cg5": [
+      76,
+      73,
+      64
+     ],
+     "crank_max_M4_pass_Nm": 11.23,
+     "split_at_peak_nominal_median": {
+      "aero": 1.245,
+      "inertia": -0.199,
+      "gravity": -0.047
+     },
+     "motor_peak_A": 72.5,
+     "motor_rms2s_max_A": 22.7,
+     "k": 0.309,
+     "climb_m_s": 0.372,
+     "train": "DSF1-20/DS1-30, MSGA1-20/DS1-60, MSGA1-18/MSGB1-40 x2 (302.7 g, 11.00 N m)",
+     "alpha_eff_amp_deg_0.44/0.56/0.69": "5.65/6.60/6.89"
+    },
+    "20": {
+     "mass_g": 1534.2,
+     "G": 17.64,
+     "M1_worst_lost_m": 3.98,
+     "M1_failing_of_27": 27,
+     "M2_min": 7.1,
+     "M3_max_dev_m": 5.94,
+     "M5_max_touchdown_m_s": 9.19,
+     "M4_pass_nominal_aero0.9m1.05cg5_aero1.1m1.05cg5": [
+      37,
+      38,
+      27
+     ],
+     "crank_max_M4_pass_Nm": 9.72,
+     "split_at_peak_nominal_median": {
+      "aero": 1.192,
+      "inertia": -0.145,
+      "gravity": -0.045
+     },
+     "motor_peak_A": 76.1,
+     "motor_rms2s_max_A": 25.8,
+     "k": 0.39,
+     "climb_m_s": -0.062,
+     "train": "DS1-28/DS1-50, DS1-36/DS1-64, MSGA1-18/MSGB1-45, MSGA1-18/MSGB1-40 (313.4 g, 9.30 N m)",
+     "alpha_eff_amp_deg_0.44/0.56/0.69": "5.53/6.42/6.65"
+    }
+   },
+   "verdict": "The torque falls with the stroke (M4 crank peak 15.9 -> 9.7 N m, gear mass 356 -> 298-327 g), but at the same electrical power (2S, 34 A clamp, about 180 W at the shaft) the faster stroke needs more power for the same thrust: sustained climb 0.75 -> 0.33-0.44 m/s at 28-32 deg and below zero at 20 deg; M4 falls to 79/66/76/37 nominal, M1 to 1.98-3.98 m lost. Wing inertia relieves the peak at every point (-27% at 38 deg to -15% at 20 deg): no spring case. The lever does not break the mass spiral; it loses more in power than it saves in gears."
+  },
+  {
+   "tag": "1b the same lever with more power (3S Li-ion, screen only)",
+   "method": "Nexus 3S1P P30B (156 g, +52 g), reduction x1.4 so the extra power is usable, servos on a 6 V rail (screen only: the FC Vx BEC, 4.5 A cont., was not modelled as a separate rail, so M8 is not valid here); S/r10/screen2.sh",
+   "28 deg (G 35.56, 1579.6 g)": {
+    "mass_g": 1579.6,
+    "G": 35.56,
+    "M1_worst_lost_m": 4.09,
+    "M1_failing_of_27": 27,
+    "M2_min": 18.9,
+    "M3_max_dev_m": 6.65,
+    "M5_max_touchdown_m_s": 9.53,
+    "M4_pass_nominal_aero0.9m1.05cg5_aero1.1m1.05cg5": [
+     89,
+     85,
+     88
+    ],
+    "crank_max_M4_pass_Nm": 16.22,
+    "split_at_peak_nominal_median": {
+     "aero": 1.076,
+     "inertia": -0.039,
+     "gravity": -0.038
+    },
+    "motor_peak_A": 76.5,
+    "motor_rms2s_max_A": 20.1,
+    "climb_m_s": 0.556
+   },
+   "32 deg (G 44.44, 1608.8 g)": {
+    "mass_g": 1608.8,
+    "G": 44.44,
+    "M1_worst_lost_m": 2.81,
+    "M1_failing_of_27": 10,
+    "M2_min": 20.8,
+    "M3_max_dev_m": 1.11,
+    "M5_max_touchdown_m_s": 9.69,
+    "M4_pass_nominal_aero0.9m1.05cg5_aero1.1m1.05cg5": [
+     96,
+     90,
+     92
+    ],
+    "crank_max_M4_pass_Nm": 17.18,
+    "split_at_peak_nominal_median": {
+     "aero": 1.185,
+     "inertia": -0.147,
+     "gravity": -0.043
+    },
+    "motor_peak_A": 75.8,
+    "motor_rms2s_max_A": 16.4,
+    "climb_m_s": 0.653
+   },
+   "verdict": "more power lifts M4 (89-96/100) but M1 gets worse (2.8-4.1 m lost) and the 32 deg crank peak rises to 17.2 N m: not a passing direction either; not adopted"
+  },
+  {
+   "tag": "2 judgment calls rechecked (round 8 ruling)",
+   "KH-beta": "KHK's Japanese Table 10.11 labels the columns \"一方の軸受に近い、軸のこわさ大/小\" (shaft stiffness large/small) and gives no stiffness, deflection or span criterion (research/round10-parts.json Q3); JGMA 402-01 itself was not readable. The weak-shaft column stays.",
+   "speed band": "JGMA KV now applied at the actual speed on each gear's Table 10.3 row (gears.js kvFactor/kvRow, gearing.js kvRowOf). N5 = old JIS grade 1 (KHK khk416_1 Table 8.4 \"N5,N6 (old JIS 1,2)\"; khk472 \"new = old + 4\" rule), N7 = 3, N8 = 4; no tooth modification stated (catalogue: \"Standard full depth\"): unmodified rows. Exact row exists, so no conservative-side step was needed. Half only where the row prints nothing at the actual speed (none in v20). The KV ratio is capped at 1 (no credit for running slower than KHK's 600 rpm). Effect: MSGA1-18 at stage 3 of v19 3.25 (half) -> 5.9 N m; at stage 2 3.97 -> 6.3-7.6 N m.",
+   "ZV": "held at the first curve value below 1 m/s, as accepted",
+   "7075": "EN 1999-1-1 does not list EN AW-7075: its bolt-bearing result now counts at half (members.js bearingAllowable, catalogue bearing_standard_lists_alloy false). v20: horn bosses FoS 2.33/2.45, rocker hubs 7.47/7.70 (were about twice that); all >= 1.5, so no swap was needed (a 6061 or steel boss would be heavier or larger).",
+   "titanium": "no titanium seat in v20 (titanium parts are the crank shaft, web and pin in one piece and the keys; keys are judged by crushing, not pin bearing)"
+  },
+  {
+   "tag": "3 lug and seat mass",
+   "finding": "no saving found within the rules with catalogue parts. Every ring is set by e >= 1.2 d0 around its bushing or pin (rocker hub 14.5/6, horn boss 19.5/8, coupler eyes 24.5/10, shoulder housings 19.5/8, plate bosses 29/12), not by load (FoS 2.3-50). A pressed steel bushing raises d0 to its own outside diameter, so the aluminium ring grows; a steel ring of the same size is 2.9x heavier. Thinner rings need shorter bushings: igus GFM-0608-04, GFM-0810-05 and GFM-1012-05 appear only in distributor search results (no igus page read: no mass or pressure figure), so they cannot enter the BOM. The smaller pins that a smaller stroke allows (lower coupler force) do not apply at 38 deg.",
+   "gap found": "bearings.js judges a bushing on its full length (Fr / (d1 b1)) even where it sits in a 1.2-1.6 mm plate with no boss (gear shafts 1 forward, 2, and the 5-6 mm ball bearings); igus and ISO 76 ratings assume a housing over the part's width. Making every seat as long as its part would add about 30-35 g with margin (estimate, not built). Reported, not changed this round."
+  },
+  {
+   "tag": "4 motor-shaft fixing",
+   "status": "superseded by the SPEC ruling \"RC practice for joints no one can rate\" (c5d53f8). v20 keeps a KHK F-Loc pinion (DSF1-24, 5 mm) on the motor shaft within KHK's published reference slipping torque at full value: peak 0.526 N m (M7 population, 31 runs) against 0.62 N m. Couplings found for the record (research Q1): Misumi CPSCN20-5-8 1 N m 13 g, CPLCN20-5-8 1 N m 16 g, CPSSC20-5-8 slip 0.9 N m 38 g; Ruland pages blocked.",
+   "other fixings in v20": "DS1-36 on shaft 3 and DS1-64 on shaft 2, plain bores bonded with LOCTITE 406 on SF 770 primer: peaks 0.79 and 2.52 N m against 4.75 and 8.44 N m from Henkel's published acetal block shear (14 MPa, ISO 13445) over bore x face; all three reported as unrated, RC practice (missions.mjs M7 rc_practice list)"
+  },
+  {
+   "tag": "bugs fixed this round",
+   "items": [
+    "linkage.js: /keyway/ matched \"plain bore, no keyway ...\" (any SSG/SSY/SSAY gear would have passed as keyed); now /^keyway\\s/",
+    "linkage.js gearFixing: /set screw/ matched \"plain bore, no keyway or set screw\"; now /^tapped ... set screw/",
+    "gearing.js: KHK DSF gears (\"Polyacetal\") were rated by the metal JGMA path; now by KHK's plastic method like DS (catalogue rating_conditions corrected)",
+    "v19 shaft 1 carried MSGB1-45 (bore 15, 5 mm keyway) on v18's 10 mm seat with a 4 mm key; round10.mjs trainShafts derives seats and keys from the train",
+    "a 6 mm gear shaft on an iglidur G bushing exceeds its surface speed near the motor (3000 rpm): 6 mm shafts run in SKF 628/6-2Z"
+   ]
+  },
+  {
+   "tag": "5 half step on airframe channel w2",
+   "v19_at_1/1920": "w2 26.47 -> 23.60 (-10.8%), seed 72; perturb 1e-9 m moves the same seed 6.6% (out/sweep/round9/v19-*-channels.json; S/r10/w2trace72.log)",
+   "diagnosis": [
+    "the peak is a 4.3 rad/s roll rate at t = 54 s, no stall, mid-stroke (S/r10/w2trace72.json)",
+    "with the governor encoder (14 bit), FC voltage and current-sense quantisation removed (diagnosis copy S/r10/v19-noquant.json) the 1e-9 m offset changes nothing (no 1% difference in w2 over 60 s) but the half step still moves the peak (19.1 -> 25.0): the quantised readings make the closed loop discontinuous, and the step error is separate (S/r10/w2trace72nq.log)",
+    "calm air, no noise, no quantisation: the dt vs dt/2 state differences in the first 0.1 s (roll rate 5.8e-3 rad/s, crank rate 7.1e-3 rad/s) halve at dt/2 vs dt/4 (2.8e-3, 3.8e-3): FIRST-order convergence, not the integrator's second order (S/r10/w2diff*.log)",
+    "source: flight.js integrates with RK2 midpoint but strip.js advances its internal states once per step in the second stage: one frozen-Jacobian Newton step of the lifting line per flight step (the circulation lags its target by about a step), the Wagner lag states with alpha_E held, and the wind held at the step start. No stiff spring or contact was found."
+   ],
+   "fix": "the whole gate set moves to 1/3840 s (ROUND10_OPT.dt). Half-step check of that step: v19 1/3840 vs 1/7680 w2 +2.9% (S/r10/hs-v19h.json); v20 sf_origin -0.7%, wdot +0.2%, w2 +1.1%, tail_F +0.2% (out/sweep/round10/v20-halfstep-channels.json). Iterating the lifting line to convergence would make the scheme second order but changes the V5-calibrated model: not attempted."
+  },
+  {
+   "tag": "6 M5 touchdown speed",
+   "v20": "sink at most 0.49 m/s; speed 9.76 m/s at the worst aero 0.9 corner (v19 9.76): the four aero 0.9 corners fail 9 m/s. It follows the wing loading (23.5 N/m2), as the brief expects."
+  },
+  {
+   "tag": "7 eta_s",
+   "cfd": "stations 0.4 / 0.6 / 0.75 unsettled (negative stall near alpha_E -6 deg in cycles 3-4): no gate table; final set not flown",
+   "v20_alpha_eff_amplitude_deg": "1.67-6.31; 0.44 / 0.56 / 0.69 semispan 5.60 / 6.13 / 5.89; upstroke minima -4.4 / -5.0 / -4.7 (out/sweep/round10/v20-alpha-eff.json); k 0.198: v17's stroke family, no new points needed",
+   "M4_vs_eta_s (nominal / aero0.9 m1.05 cg+5 / aero1.1 m1.05 cg+5)": {
+    "0.42": "88/82/86",
+    "0.50": "92/88/90",
+    "0.55": "94/90/92",
+    "0.60": "96/94/94",
+    "0.67": "97/96/96"
+   },
+   "lowest_passing_eta_s_M4": "none up to 0.67",
+   "negative_stall_in_the_strip_model": "not reproduced: polar-fit.js E387 aStallNeg -4.42 / -1.27 / -0.93 rad at Re 60k / 100k / 200k (outside the data); at -6 deg, Re 1e5 the section is attached (Cl -0.30). A model that stalls at -6 deg would change the upstroke loads; not changed this round (V5-calibrated)."
+  },
+  {
+   "tag": "v20 as flown (probes, eta_s 0.6, flight step 1/3840 s; not gate files)",
+   "mass_g": 1598.3,
+   "train": "DSF1-24/DS1-36, MSGA1-20/DS1-64, MSGA1-18/MSGB1-45 x2, ratio 30.0, 367.3 g, 16.24 N m at crank_Hz 3.0",
+   "M1": "worst 2.31 m (aero 0.9 / mass 1.05 / cg +5, 10 deg); 7 of 27 cases fail",
+   "M2": "worst 12.3 min",
+   "M3": "<= 0.85 m",
+   "M4": "93-97/100 at the 9 corners (nominal 96)",
+   "M5": "touchdown up to 9.76 m/s: 4 corners fail",
+   "M7": "members FoS >= 1.79, joints >= 2.18, coupler buckling 2.07; three fixings unrated, RC practice within published figures; population crank peak 15.77 vs 16.24 rated, M4 corner runs up to 16.44 (over)",
+   "M8": "motor 2 s RMS <= 23.6 A",
+   "diagnosis": "v20 is 22.4 g heavier than v19 (shaft 1 now sized for the 15 mm bore, the stronger train). It flies M4 2-4 seeds better than v19 at 0.6 but still short of 98 everywhere, and M1 and M5 fail at the heavy, low-lift corners. The gap is mass: v18 at 1364.5 g passed M1 and M4 under the old rules; the ruling costs since (edge distances, rated gears) are about 200 g and no lever this round won them back."
+  }
+ ]
+}

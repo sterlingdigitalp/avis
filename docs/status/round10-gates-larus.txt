@@ -1,0 +1,62 @@
+design: larus-gl-2 v20 (data/designs/larus-gl-2.json), 1598.3 g, built by src/design/round10.mjs --no-suction (eta_s 0.6 default)
+NOT THE FINAL GATE SET. The cfd workstream's eta_s points at 0.4 / 0.6 / 0.75 semispan did not settle (stall in the
+negative half near alpha_E -6 deg in cycles 3-4; unsettled means 0.42 / 0.55 / 0.67) and are being rerun, so the gate
+table has no settled point and the final set was not flown, as the brief requires. These are round 10's probe numbers at
+eta_s 0.6 (nominal and the 8 robustness corners; out/sweep/round10/v20-*.json, S/r10/eval10.mjs), not gate files;
+out/verification/ still holds round 7's gate files except V5 (round 8).
+
+What changed from v19 (1575.9 g), docs/status/round10-levers.json:
+  - item 1 (smaller, faster stroke) measured at 20-38 deg and NOT adopted: at the pack's power it loses climb, M1 and M4
+    faster than it saves gear mass (also screened with a 3S pack: no better). v20 keeps the 38 deg stroke.
+  - gear ratings: JGMA KV on each gear's accuracy row at the actual speed (N5 = old JIS 1, unmodified), not half; KH-beta
+    stays "weak shaft" (no published criterion); 7075 seats at half the EN 1999-1-1 result.
+  - SPEC ruling "RC practice for joints no one can rate": the Duracon stages are back; train DSF1-24/DS1-36,
+    MSGA1-20/DS1-64, MSGA1-18/MSGB1-45 x2, ratio 30.0, 367.3 g of gears (v19 355.7), rated 16.24 N m at the crank
+    (crank_Hz 3.0); shafts, seats and keys now follow the train (v19's shaft 1 was a 10 mm seat under a 15 mm bore).
+  - flight step 1/3840 s (item 5).
+
+V1  pass      unchanged from round 7 (method gate; wing-independent)
+V2  FAIL      unchanged (ruling after round 4)
+V3  pass      unchanged
+V4  pass      unchanged (SmartBird geometry, not this wing)
+V5  pass      unchanged from round 8 (v18's AR 6 wing and 38 deg stroke, as v20's; not rerun at the new flight step)
+V6  pass      unchanged
+V7  FAIL      unchanged (ruling)
+M1  FAIL      8 m/s release (named speed): worst corner aero 0.9 / mass 1.05 / CG +5 mm loses 2.31 m at 10 deg (limit 1.5);
+              7 of 27 corner/pitch cases fail (v20-eval-corners.json). Lowest passing speed at the worst corner: none at
+              or below 8 m/s (8 m/s fails; lower speeds lost more on v18 and v19).
+M2  pass      worst corner 12.3 min (v20-eval-corners.json)
+M3  pass      altitude deviation at most 0.85 m
+M4  FAIL      at eta_s 0.6: nominal 96/100, corners 93-97/100 (limit 98) (v20-eval-corners.json). Against eta_s (nominal /
+              aero 0.9 mass 1.05 cg +5 / aero 1.1 mass 1.05 cg +5, 100 seeds, v20-m4-eta*.json): 0.42 88/82/86, 0.50
+              92/88/90, 0.55 94/90/92, 0.60 96/94/94, 0.67 97/96/96. Lowest passing eta_s: none up to 0.67 (the highest
+              unsettled cfd mean); failures are altitude (10.6-24.5 m), no stall departures.
+M5  FAIL      touchdown sink at most 0.49 m/s, but touchdown speed up to 9.76 m/s: the four aero 0.9 corners exceed 9 m/s
+              (item 6: it follows the mass; v20 is 22 g heavier than v19, 9.76 m/s on both)
+M6  1598.3 g
+M7  open      not flown as a gate (missions.mjs not run: eta_s table pending). Probes (30-seed population + M1-M5,
+              out/sweep/round10/v20-members-probe.txt): every member, seat, lug, key and bearing rated, FoS >= 1.79 (the
+              shoulder-rail torsion-lock screw seats), joints >= 2.18, coupler buckling 2.07; the three shaft-to-hub fixings
+              are "unrated, RC practice" within their published figures: DSF1-24 on the motor shaft 0.526 N m (KHK
+              reference slip 0.62), DS1-36 bonded 0.79 N m (LOCTITE 406/SF 770 acetal 14 MPa: 4.75 N m), DS1-64 bonded
+              2.52 N m (8.44 N m). Gear torque: population peak 15.77 N m against 16.24 rated; the M4 corner runs reach
+              16.44 N m (aero 1.1 / mass 0.95 corners), above the rating, so a corner population would fail the gear check.
+              Half-step on the four airframe channels at 1/3840 s (v20-halfstep-channels.json): sf_origin -0.7%, wdot +0.2%,
+              w2 +1.1%, tail_F +0.2% (all < 10%). The other M7 channels passed at 1/1920 s in round 9 and converge at first
+              order in the step; not re-run at 1/3840 s through missions.mjs.
+M8  pass (probe) motor 2 s RMS max 23.6 A in M4 (36 A continuous); peak 59 A is a drive transient
+Item 5 (w2): at 1/1920 s, w2 moved -10.8% at half step (v19, seed 72). Diagnosis (S/r10/w2trace*.log, w2diff*.log): the
+  peak is a 4.3 rad/s roll at t = 54 s; it moves 6.6% under a 1e-9 m start offset because the governor's quantised
+  encoder, voltage and current readings make the closed loop discontinuous; with quantisation removed the offset changes
+  nothing but the half step still moves it, and state differences halve with each halving of the step (calm air, no
+  noise): the flight model converges at FIRST order. Source: aerodynamic internal states advanced once per step (the
+  strip lifting line takes one frozen-Jacobian Newton step per flight step; the Wagner lag states; the wind held over the
+  step). No stiff spring or contact was found. At 1/3840 s the population max moves 2.9% (v19) and 1.1% (v20) at half
+  step, so the whole gate set moves to 1/3840 s (about twice the run time). Fixing the scheme (iterating the lifting
+  line to convergence each step) would change the V5-calibrated model and was not attempted this round.
+eta_s (item 7): v20's strip effective-angle amplitudes 1.67-6.31 deg; at 0.44 / 0.56 / 0.69 semispan 5.60 / 6.13 / 5.89 deg
+  (out/sweep/round10/v20-alpha-eff.json), k 0.198 at cruise: the same stroke family as v17, inside or just below the
+  cfd stations' 5.9-6.9 deg, so v20 needs no new kinematics points. Upstroke minima -4.4 / -5.0 / -4.7 deg.
+  Negative stall: the strip model's E387 fit does NOT reproduce it near -6 deg. src/physics/polar-fit.js puts aStallNeg
+  at -4.42 / -1.27 / -0.93 rad (Re 60k / 100k / 200k), far outside any data, so the section stays attached (Cl -0.30,
+  attached fraction 1.00 at -6 deg, Re 1e5; S/r10/negstall.mjs). v20's own upstroke minima stop near -5 deg.

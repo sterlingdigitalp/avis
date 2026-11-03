@@ -59,6 +59,42 @@ export function kvBand(v) {
 }
 
 /**
+ * Round 10: JGMA's dynamic load factor KV (KHK Table 10.3), every row and band as printed (null where the table has
+ * a dash). Rows are by the old JIS B 1702 accuracy grade: row g for an unmodified grade-g gear, row g - 1 for a
+ * tooth-modified one ('modified 1' is row 0, 'unmodified 1 / modified 2' row 1, ... 'unmodified 6' row 6).
+ */
+export const KV_TABLE = [
+  [null, null, 1.0, 1.0, 1.1, 1.2, 1.3],
+  [null, 1.0, 1.05, 1.1, 1.2, 1.3, 1.5],
+  [1.0, 1.1, 1.15, 1.2, 1.3, 1.5, null],
+  [1.0, 1.2, 1.3, 1.4, 1.5, null, null],
+  [1.0, 1.3, 1.4, 1.5, null, null, null],
+  [1.1, 1.4, 1.5, null, null, null, null],
+  [1.2, 1.5, null, null, null, null, null],
+];
+
+/** KHK Table 10.3 row for an old JIS grade g (unmodified: row g; modified: g - 1); finer than the table: its first row; coarser: none. */
+export function kvRow(oldGrade, modified = false) {
+  if (!Number.isFinite(oldGrade)) return null;
+  const r = modified ? oldGrade - 1 : oldGrade;
+  return r > KV_TABLE.length - 1 ? null : Math.max(0, r);
+}
+
+/**
+ * KV at pitch-line speed v on row r. A dash below a row's first printed value (fine grades at low speed) reads as
+ * that row's floor 1.0: KV never falls below 1 and does not fall with speed. A dash above a row's last value (the
+ * grade is not tabulated for that speed) gives null: no factor.
+ */
+export function kvFactor(v, row) {
+  const r = KV_TABLE[row];
+  if (!r) return null;
+  const b = kvBand(v);
+  if (b >= r.length) return null;
+  if (r[b] !== null) return r[b];
+  return b < r.findIndex((x) => x !== null) ? 1.0 : null;
+}
+
+/**
  * JGMA 402-01 lubrication speed factor ZV (KHK Fig. 10.5, read from the printed curves: approximate), surface
  * hardened or thermal refined. The curves start at 1 m/s and the standard gives no rule below; KHK's own catalogue
  * ratings (600 rpm: 0.57 m/s on an 18-tooth pinion) sit there too, so below 1 m/s the curve's first value is read.
@@ -80,6 +116,26 @@ export function duraconKv(v) {
 
 /** Pitch-line speed (m/s) of a gear of z teeth, module m (mm), at n rpm. */
 export const pitchLineSpeed = (m, z, rpm) => (Math.PI * (m / 1000) * z * rpm) / 60;
+
+/**
+ * The speed condition of a metal gear's KHK rating: KV (KHK Table 10.3) and ZV (Fig. 10.5) at the rated pitch-line
+ * speed vR and the actual one. With an accuracy row (mesh.kv_row, round 10): KV on that row at both speeds, the ratio
+ * capped at 1 (no credit for running slower), half only where the row prints nothing at the actual speed. Without one:
+ * bands compared, a higher actual band has no correction (half). Returns { condition, bending, surface, half }.
+ */
+export function speedCorrection(mesh, vR, rpm = 600) {
+  const bA = kvBand(mesh.v_m_s), bR = kvBand(vR);
+  const zvS = (zvFactor(mesh.v_m_s, mesh.hardened !== false) / zvFactor(vR, mesh.hardened !== false)) ** 2;
+  const speed = { condition: 'speed', rated: `${rpm} rpm (${vR.toFixed(3)} m/s on this gear)`, actual: `${mesh.v_m_s.toFixed(3)} m/s`, holds: Math.abs(mesh.v_m_s - vR) < 1e-9 };
+  if (Number.isInteger(mesh.kv_row)) {
+    const kvA = kvFactor(mesh.v_m_s, mesh.kv_row), kvR = kvFactor(vR, mesh.kv_row);
+    const fk = kvA !== null && kvR !== null ? Math.min(1, kvR / kvA) : null;
+    if (fk === null) return { condition: { ...speed, kv_row: mesh.kv_row, kv: { rated: kvR, actual: kvA }, correction: `KV: row ${mesh.kv_row} prints no value at ${mesh.v_m_s.toFixed(2)} m/s: no correction, half`, bending_factor: null, surface_factor: null }, half: true };
+    return { condition: { ...speed, kv_row: mesh.kv_row, kv: { rated: kvR, actual: kvA }, zv_surface_factor: zvS, correction: `JGMA KV (KHK Table 10.3, row ${mesh.kv_row}) ${kvR} rated / ${kvA} actual on both strengths; ZV (Fig. 10.5) squared on surface`, bending_factor: fk, surface_factor: fk * zvS }, bending: fk, surface: fk * zvS, half: false };
+  }
+  if (bA > bR) return { condition: { ...speed, correction: 'KV: a higher speed band than rated and no accuracy-grade row stated: no correction, half', bending_factor: null, surface_factor: null }, half: true };
+  return { condition: { ...speed, correction: `KV: the actual speed band (${bA}) is not above the rated one (${bR}), so KV is not larger: no credit taken; ZV (Fig. 10.5) squared`, bending_factor: 1, surface_factor: zvS }, bending: 1, surface: zvS, half: false };
+}
 
 /**
  * One metal gear's KHK ratings (bending, surface; N m on that gear) corrected from KHK's stated conditions to the
@@ -105,13 +161,10 @@ export function jgmaGearRating(cat, mesh, rated = {}) {
   fB *= epsA / epsR;
   conds.push({ condition: 'gear support', rated: `${r.support}, b/d01 ${(mesh.b_mm / dR).toFixed(3)}, KH-beta ${khR?.toFixed(3)}`, actual: `${mesh.support}, b/d01 ${(mesh.b_mm / dA).toFixed(3)}, KH-beta ${khA === null ? 'none' : khA.toFixed(3)}`, holds: mesh.support === r.support && khA === khR, correction: 'JGMA 402-01 KH-beta (KHK Table 10.11, contact not predictable)', surface_factor: supS });
   if (supS === null) half = true; else fS *= supS;
-  // Speed: KV by band (grade-independent comparison: KV does not fall with speed), ZV by the printed curve.
-  const vR = pitchLineSpeed(mesh.m, mesh.z, r.rpm);
-  const bA = kvBand(mesh.v_m_s), bR = kvBand(vR);
-  const kvOk = bA <= bR;
-  const zvS = (zvFactor(mesh.v_m_s, mesh.hardened !== false) / zvFactor(vR, mesh.hardened !== false)) ** 2;
-  conds.push({ condition: 'speed', rated: `${r.rpm} rpm (${vR.toFixed(3)} m/s on this gear)`, actual: `${mesh.v_m_s.toFixed(3)} m/s`, holds: Math.abs(mesh.v_m_s - vR) < 1e-9, correction: kvOk ? `KV: the actual speed band (${bA}) is not above the rated one (${bR}), so KV is not larger: no credit taken; ZV (Fig. 10.5) squared` : 'KV: a higher speed band than rated and the KHK grade-to-JGMA row is not resolved: no correction, half', bending_factor: kvOk ? 1 : null, surface_factor: kvOk ? zvS : null });
-  if (!kvOk) half = true; else fS *= zvS;
+  // Speed: KV and ZV, JGMA's own factors, at the rated and the actual pitch-line speed.
+  const sp = speedCorrection(mesh, pitchLineSpeed(mesh.m, mesh.z, r.rpm), r.rpm);
+  conds.push(sp.condition);
+  if (sp.half) half = true; else { fB *= sp.bending; fS *= sp.surface; }
   // Lubricant: ZL rises with viscosity; at or above the rated 100 cSt (50 C) no credit is taken.
   const lubOk = Number.isFinite(mesh.lubricant_cSt_50C) && mesh.lubricant_cSt_50C >= r.lubricant_cSt_50C;
   conds.push({ condition: 'lubricant', rated: `${r.lubricant_cSt_50C} cSt at 50 C`, actual: Number.isFinite(mesh.lubricant_cSt_50C) ? `${mesh.lubricant_cSt_50C} cSt at 50 C` : 'not stated', holds: lubOk, correction: lubOk ? 'ZL at or above the rated value: no credit' : 'ZL for a lower or unstated viscosity: no correction applied, half', surface_factor: lubOk ? 1 : null });
