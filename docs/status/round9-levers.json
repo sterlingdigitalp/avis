@@ -1,0 +1,102 @@
+{
+ "note": "Round 9 (Larus GL-2) exploration and diagnosis under the SPEC rulings after physics round 8. Not gate files. Every number was measured by the file or log named with it (out/sweep/round9 unless a scratch path is given; S = the physics agent's scratchpad /private/tmp/claude-501/-Users-sterlingdigital-avis/73ca93d6-9b09-4365-aabc-7e9ea7dc5b7b/scratchpad).",
+ "rows": [
+  {
+   "tag": "1(a) KHK gear ratings under their stated conditions",
+   "stated_conditions": "KHK 2025 spur gear catalogue (JGMA 401-01 / 402-01 metal gears): mating gear of the same number of teeth, 600 rpm, over 1e7 cycles, uniform load, bidirectional load (2/3 of sigma_Flim already taken), 100 cSt (50 C) oil, symmetric support. DS (Lewis): sigma_b 3.5 kgf/mm2 at m 1 (40 C, grease), 100 rpm; mate and direction not stated. Recorded per gear in the catalogue (specs.rating_conditions).",
+   "checks": {
+    "load direction": "the train reverses: back-driven crank torque 8.7 N m on v18 (S/r9/split-v18.json crankBack_max). Metal: KHK's 2/3 already in its bending figure, no further factor (JGMA 402 has no reversing reduction for surface). DS: the plastic method has no reversing rule, so JGMA 401's 2/3 is applied.",
+    "mating gear": "corrected by JGMA 402-01 eq. 10.17 (d01 i/(i+1), d01 the pinion) and JGMA 401-01 Y-epsilon = 1/eps_alpha (contact ratio by formula, pinned to KHK Table 10.1). A pinion gains (x1.38 for 18:40); a wheel loses (x0.62 for a 40-tooth wheel on an 18-tooth pinion).",
+    "support": "KH-beta (KHK Table 10.11): every stage plane sits 11-82% along the 65 mm plate span (sims/avis-shared/model.js gearPlanes, not this workstream's), none at mid-span; KHK states no criterion for its 'rugged shaft' column, so the 'weak shaft' column is used (1.46 at b/d01 0.56 against 1.04 rated).",
+    "speed": "KV by its band (no credit for a lower band; a higher band than rated has no resolved KHK-grade row: half); ZV by Fig. 10.5, read at its first value below 1 m/s (KHK's own 600 rpm ratings need the same reading). DS: KHK's plastic speed factor KV.",
+    "lubricant": "Shell Omala S2 GX 220 on the steel stages, about 127 cSt at 50 C by ASTM D341 from the published 220 / 19.4 cSt (no ZL credit); Molykote EM-30L (PAO grease) on the Duracon meshes, as KHK advises for plastic gears. Their grams sit in the 15% margin.",
+    "cycles and impact": "no life credit (KL = KHL = 1); the rating is applied to the simulated instantaneous peak torque, gusts included (KO = 1).",
+    "material": "DS on DS: KM 0.75 (KHK plastic method; the catalogue states no mate, taken as metal).",
+    "scope": "KHK states the JGMA method for module 1.5-25 and pitch diameter 25 mm and up; these gears are module 1 (as are KHK's own catalogue ratings)."
+   },
+   "v18_train_corrected_Nm": {
+    "DS1-18 / DS1-32": "0.83 -> 0.39 / 1.75 -> 0.83",
+    "DS1-20 / DS1-64": "0.96 -> 0.46 / 4.07 -> 1.97",
+    "MSGA1-18 / SSAG1-40J10": "6.37 -> 6.27 / 8.42 -> 3.58",
+    "MSGA1-18 / MSGB1-40": "6.37 -> 6.27 / 34.6 -> 14.7",
+    "train at the crank": "14.16 -> 7.34"
+   },
+   "effect": "no stroke trims within 7.34 N m: the v18 train cannot be built under the ruling (S/r9/b19a.log, 'no stroke within ratings in flight')",
+   "research": "S/research/round9-gears.json"
+  },
+  {
+   "tag": "train for v19",
+   "search": "S/r9/trainsearch.mjs: every module-1 KHK gear in the catalogue, 4 stages, ratio 24-32, each stage rated by gearing.js at 3 Hz crank, 15 N m at the crank",
+   "lightest": "DSF1-20/DS1-30, MSGA1-18/DS1-60, MSGA1-18/MSGB1-45, MSGA1-18/MSGB1-45: ratio 31.25, 356 g of gears (v18 262 g), train 15.17 N m corrected",
+   "v19_corrected_Nm": {
+    "DSF1-20 / DS1-30": "0.96 -> 0.49 / 1.61 -> 0.99",
+    "MSGA1-18 / DS1-60": "6.37 -> 3.97 (half: KV band) / 3.78 -> 2.43",
+    "MSGA1-18 / MSGB1-45 (stage 3)": "6.37 -> 3.25 (half: KV band) / 42.3 -> 17.33",
+    "MSGA1-18 / MSGB1-45 (stage 4)": "6.37 -> 6.50 / 42.3 -> 17.32"
+   }
+  },
+  {
+   "tag": "1(b) bearing below the source edge distance",
+   "rule": "members.js bearingAllowable / enBoltBearing: at e >= the source's e/D the published value; below it the lesser of that source at half and EN 1999-1-1 / EN 1993-1-8 k1 alpha_b fu d t / 1.25 (fu specified minimum: 6061-T6 260, 7075-T6 540 MPa); e1 or e2 < 1.2 d0, or no EN standard (titanium), unrated. Pinned by hand in test/physics/round9.test.js.",
+   "v18_effect": "every ring lug and pin seat sat at e/D 0.65-1.04: all unrated (coupler eyes, shoulder housings, rocker hubs, horn bosses, plate seats, rail seats)",
+   "resize": "rings to e >= 1.2 d0: rocker hub 11 -> 14.5, horn boss 13 -> 19.5, coupler eye 13 -> 24.5, shoulder housing 11 -> 19.5, plate seat ring edge 5 -> 9.2 mm, bosses 2 -> 8.5 mm wall, rail seats 25 -> 29 mm; about +87 g before margin, +100 g with it (S/r9/v19a-graft.json)",
+   "note_7075": "EN 1999-1-1 Table 3.2 does not list EN AW-7075; its Table 8.5 expression is applied with 7075-T6's specified minimum fu (disclosed in the catalogue)"
+  },
+  {
+   "tag": "1(c) launch speed",
+   "design": "design.launch.release_speed_m_s 8 (scenarios.js releaseSpeedOf; M1 passes only at a named speed <= 8 m/s)"
+  },
+  {
+   "tag": "2 what sets the peak crank torque (v18, M4 nominal and aero0.9 mass1.05 cg5mm, 200 seeds)",
+   "file": "S/r9/split-v18.json (flight.js telemetry crankTorqueAero / Gravity / Spring / Inertia at the peak instant)",
+   "at_peak_crank_torque": "aero 136% (p10-p90 130-143%), wing inertia -31% (-37 to -24%: it relieves the peak), gravity -6%",
+   "peak_motor_current": "53.0 A, a start transient at t = 0.06 s (rotor and gear acceleration 6.3 N m crank-equivalent); 26 of 200 runs peak in the first second; the in-flight peak is 47.4 A; 2 s RMS max 23.4 A against 36 A continuous",
+   "verdict": "inertia is not a large share at the peak: the brief's condition for item 3 does not hold"
+  },
+  {
+   "tag": "3 elastic storage (screen only, idealised linear rocker springs, not adopted)",
+   "file": "S/r9/springsweep1.log (v18, 200 seeds each)",
+   "rows": {
+    "none": "crank max 14.06, p50 12.83, back 8.66, motor 2 s RMS 23.4 A",
+    "k 3, T_mid 0 (stiffness only)": "max 14.99 (higher: it removes the inertial relief)",
+    "k 3, T_mid 1.5 (down-bias)": "max 14.53, p50 12.37",
+    "k 3, T_mid 3": "max 13.80, p50 11.12, back 5.65, RMS 21.5 A",
+    "k 6, T_mid 3": "max 14.24",
+    "k 1, T_mid 2": "max 13.97, p50 11.78",
+    "k 3, T_mid -1.5 (up-bias)": "max 15.45"
+   },
+   "parts": "Lee Spring stock torsion springs top out at 43.29 in-lb (4.9 N m, LTL135H 30); maximum = torque to the maximum suggested deflection, no cycle life stated; a +/-19 deg rocker needs a preloaded or opposed pair (S/research/round9-drive.json Q4)",
+   "verdict": "not adopted: inertia is not the peak's driver, and a down-biased spring trims the maximum by 2% (the median by 13%), which does not close the gear-rating gap"
+  },
+  {
+   "tag": "4 DS gear fixings",
+   "a_motor_flat": "no maker-cut flat stated for the Cobra C-2820 shaft (Innov8tive pages; a replacement-shaft photo shows a flat at the rotor end only) or any substitute read (Scorpion SII-3020, T-Motor AT2820, AXI 2820 V3, Dualsky ECO 2820C, Leopard LC3542, Hacker A30): route (a) fails",
+   "set_screw_strength": "ISO 898-5 specifies hardness only and states it does not specify tensile or shear strength; no maker publishes a metric set-screw shear or holding rating (Holo-Krome / Unbrako give inch axial holding power, friction, +/-30%): a set-screw form fit has no published screw strength, so routes (a) and (b) cannot be rated",
+   "c_keyed": "keyed module-1 KHK bores start at 8 mm (MSGA/SSA J8) and S1K keyed + set-screw bores at 24 teeth (10 mm); the motor shaft (5 mm, round) cannot take one. The rated train above already keys every steel gear; its three Duracon gears (DSF1-20 on the motor, DS1-30, DS1-60) stay unrated fixings",
+   "d_maxon_faulhaber": "maxon GP 52 C 2-stage 15 / 22.5 N m 620 g, 3-stage 30 / 45 N m 770 g; GP 42 C 3-stage 15 / 22.5 N m 460 g; EC 60 flat 200 W 360 g; lightest qualifying pair EC 60 flat + GP 52 C 43:1, about 1130 g against the 578.5 g drive group: the reviewer's estimate is confirmed (several hundred grams heavier)",
+   "research": "S/research/round9-drive.json"
+  },
+  {
+   "tag": "5 shoulder rail",
+   "design": "7075-T6 12/9.6 mm tube (airframe rail id_mm 9.6)"
+  },
+  {
+   "tag": "7 eta_s and the v19 strips",
+   "v19_alpha_eff_amplitudes_deg": "1.65-6.19 over the 16 strips; at 0.44 / 0.56 / 0.69 semispan 5.5-5.6 / 6.0-6.2 / 5.8-6.0 (out/sweep/round9/v19-alpha-eff.json)",
+   "against_cfd": "the cfd points (matched on v17: 5.9 / 6.9 / 6.2 deg) bracket v19's mid-span strips from below only: no strip exceeds 6.9 (no upward extrapolation); most strips sit below 5.9 deg and would hold the smallest point's value",
+   "status": "the cfd settled points had not landed when round 9 stopped: the final gate set was not flown"
+  },
+  {
+   "tag": "v19 as flown (probes, eta_s 0.6; not gate files)",
+   "mass_g": 1575.9,
+   "M1": "8 m/s: nominal 0.78 m lost; worst corner aero0.9 mass1.05 cg+5 2.18 m (10 deg), 2.02 m (5 deg): FAIL (v19-m1-corners.json, v19-corners-m1235.json)",
+   "M2": "12.9-15.5 min, power ratio 3.13-3.75",
+   "M3": "0.46-0.87 m",
+   "M5": "touchdown speed 9.02-9.76 m/s at the four aero 0.9 corners: FAIL",
+   "M4": "93/100 nominal, 90-96 at the corners: FAIL (v19-m4-corners.json)",
+   "M7": "three Duracon fixings unrated; M7-population crank peak 14.81 N m against 15.17 rated (30 seeds); M4 runs reach 16.06-16.77 N m; w2 half-step -10.8% (no chaos route: perturb median 0.24% vs half-step 0.90%)",
+   "M8": "motor 2 s RMS max 19.2 A (M1-M5), 22.0 A (M4) against 36 A",
+   "diagnosis": "the two ruling costs (edge distances about +100 g, rated gears +94 g of gears) put 211 g on v18, whose M1 margin was 0.37 m and M4 98/100: both fail now. A passing design needs lighter rated gears (none found in the catalogue) or a lighter airframe."
+  }
+ ]
+}

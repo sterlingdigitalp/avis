@@ -228,21 +228,26 @@ test('members: round shaft von Mises, pin shear, seat bearing, bond and key work
   const p = pinShearCheck({ d_mm: 6 }, { yield_MPa: 866 }, 1000, 2);
   near(p.tau_MPa, 1000 / (2 * 28.274), 1e-3);
   near(p.shear_allowable_MPa, 866 / Math.sqrt(3), 1e-9);
-  // Seat: 1000 N on a 10 mm bushing in 2 mm of plate: 50 MPa; the published bearing yield only at its e/D, else the
-  // tensile yield; nothing published, no rating.
+  // Seat: 1000 N on a 10 mm bushing in 2 mm of plate: 50 MPa; the published bearing yield only at its e/D. Round 9
+  // (ruling after round 8): below it, unrated here (no EN standard named on this material; the EN case is in
+  // round9.test.js);
+  // no stated edge distance, or nothing published, no rating; a crushed round part takes the yield.
   const al = { yield_MPa: 138, bearing_yield_MPa: 386, bearing_e_over_d_min: 2 };
   near(seatCheck({ d_mm: 10, t_mm: 2, e_over_d: 2 }, al, 1000).fos, 386 / 50, 1e-9);
-  near(seatCheck({ d_mm: 10, t_mm: 2, e_over_d: 1.9 }, al, 1000).fos, 138 / 50, 1e-9);
-  near(seatCheck({ d_mm: 10, t_mm: 2 }, al, 1000).fos, 138 / 50, 1e-9);
-  assert.equal(seatCheck({ d_mm: 10, t_mm: 2 }, {}, 1000).ok, false);
+  assert.equal(seatCheck({ d_mm: 10, t_mm: 2, e_over_d: 1.9 }, al, 1000).fos, null);
+  assert.equal(seatCheck({ d_mm: 10, t_mm: 2 }, al, 1000).fos, null);
+  near(seatCheck({ d_mm: 10, t_mm: 2, crush: true }, al, 1000).fos, 138 / 50, 1e-9);
+  assert.equal(seatCheck({ d_mm: 10, t_mm: 2, e_over_d: 2 }, {}, 1000).ok, false);
   // A pin cantilevered from its seat adds the edge pressure 6 M / (d t^2): 1 N m on 8 mm in 8 mm is 11.72 MPa.
   near(seatCheck({ d_mm: 8, t_mm: 8 }, al, 0, 1).p_MPa, 6 / (0.008 * 0.008 ** 2) / 1e6, 1e-9);
   // Ring lug 10 mm hole, 16 mm outside, 6 mm thick, 1000 N: bearing 16.7 MPa, net tension 27.8 MPa, shear-out 27.8 MPa.
   const lug = lugCheck({ d_mm: 10, D_mm: 16, t_mm: 6 }, { yield_MPa: 138, shear_yield_MPa: 103.5, bearing_yield_MPa: 386, bearing_e_over_d_min: 2 }, 1000);
   near(lug.bearing_MPa, 1000 / 60, 1e-9);
-  near(lug.bearing_allowable_MPa, 138, 1e-12); // e/D = 0.8: the published bearing yield does not apply
+  assert.equal(lug.bearing_allowable_MPa, null); // round 9: e/D = 0.8 is below 1.2 d0, so the lug is unrated
+  assert.equal(lug.fos, null);
+  assert.equal(lug.ok, false);
   near(lug.net_tension_MPa, 1000 / 36, 1e-9);
-  near(lug.fos, 103.5 / (1000 / 36), 1e-9);
+  near(lug.fos_shear_out, 103.5 / (1000 / 36), 1e-9);
   // Web 14 x 5 mm: 10 N m out of plane (6M / (b h^2) = 171.4 MPa) plus 1000 N at 12 mm in plane (73.5 MPa).
   near(webCheck({ b_mm: 14, h_mm: 5, lever_mm: 12 }, { yield_MPa: 827 }, { M: 10, F: 1000 }).sigma_MPa, 6 * 10 / (0.014 * 0.005 ** 2) / 1e6 + 6 * 12 / (0.005 * 0.014 ** 2) / 1e6, 1e-9);
   // Bond: 1 N m on 8 mm x 10 mm: F = 250 N over 251.3 mm2.
@@ -295,8 +300,11 @@ test('members: sections, checks and dispatch by hand, every branch', async () =>
   const lg = M.lugCheck({ d_mm: 10, D_mm: 16, t_mm: 6 }, al, 1000);
   near(lg.fos_tension, 138 / (1000 / 36), 1e-9);
   near(lg.fos_shear_out, (138 / Math.sqrt(3)) / (1000 / 36), 1e-9);
-  near(lg.fos_bearing, 138 / (1000 / 60), 1e-9);
-  assert.equal(M.lugCheck({ d_mm: 10, D_mm: 16, t_mm: 6 }, al, 0).fos, Infinity);
+  assert.equal(lg.fos_bearing, null); // round 9: e/D 0.8 < 1.2, unrated
+  assert.equal(lg.fos, null);
+  // e/D 1.5 (a 30 mm ring) with no EN standard on this material: unrated below the source's e/D 2.
+  assert.equal(M.lugCheck({ d_mm: 10, D_mm: 30, t_mm: 6 }, al, 1000).fos, null);
+  assert.equal(M.lugCheck({ d_mm: 10, D_mm: 40, t_mm: 6 }, al, 0).fos, Infinity);
   // A big ring reaches e/D 2: the published bearing yield applies.
   near(M.lugCheck({ d_mm: 10, D_mm: 40, t_mm: 6 }, al, 1000).fos_bearing, 386 / (1000 / 60), 1e-9);
   // Web: only M given; only F given; factor by hand.
@@ -326,8 +334,8 @@ test('members: sections, checks and dispatch by hand, every branch', async () =>
     { name: 'r', check: 'round', material: ti, dims: { d_mm: 8 }, uses: { M: ['m1', 'm2'], T: 't' } },
     { name: 'p', check: 'pin-shear', material: ti, dims: { d_mm: 6, planes: 2 }, uses: { F: 'f' } },
     { name: 'p1', check: 'pin-shear', material: ti, dims: { d_mm: 6 }, uses: { F: 'f' } },
-    { name: 's', check: 'seat', material: al, dims: { d_mm: 8, t_mm: 8 }, uses: { F: 'f', M: 'm' } },
-    { name: 'l', check: 'lug', material: al, dims: { d_mm: 10, D_mm: 16, t_mm: 6 }, uses: { F: 'f' } },
+    { name: 's', check: 'seat', material: al, dims: { d_mm: 8, t_mm: 8, e_over_d: 2 }, uses: { F: 'f', M: 'm' } },
+    { name: 'l', check: 'lug', material: al, dims: { d_mm: 10, D_mm: 40, t_mm: 6 }, uses: { F: 'f' } },
     { name: 'w', check: 'web', material: ti, dims: { b_mm: 14, h_mm: 5, lever_mm: 12 }, uses: { M: 'm', F: 'f' } },
     { name: 'b', check: 'bond', material: { shear_MPa: 10 }, dims: { d_mm: 8, L_mm: 10 }, uses: { T: 't', F: 'f' } },
     { name: 'k', check: 'key', material: ti, side_material: al, dims: { d_mm: 8, b_mm: 3, h_mm: 1.8, L_mm: 10 }, uses: { T: 't' }, note: 'n' },
@@ -337,8 +345,8 @@ test('members: sections, checks and dispatch by hand, every branch', async () =>
   near(by.r.fos, M.roundMemberCheck({ d_mm: 8 }, ti, { M: 5, T: 2 }).fos, 1e-12);
   near(by.p.fos, M.pinShearCheck({ d_mm: 6 }, ti, 1000, 2).fos, 1e-12);
   near(by.p1.fos, M.pinShearCheck({ d_mm: 6 }, ti, 1000, 1).fos, 1e-12);
-  near(by.s.fos, M.seatCheck({ d_mm: 8, t_mm: 8 }, al, 1000, 1).fos, 1e-12);
-  near(by.l.fos, M.lugCheck({ d_mm: 10, D_mm: 16, t_mm: 6 }, al, 1000).fos, 1e-12);
+  near(by.s.fos, M.seatCheck({ d_mm: 8, t_mm: 8, e_over_d: 2 }, al, 1000, 1).fos, 1e-12);
+  near(by.l.fos, M.lugCheck({ d_mm: 10, D_mm: 40, t_mm: 6 }, al, 1000).fos, 1e-12);
   near(by.w.fos, M.webCheck({ b_mm: 14, h_mm: 5, lever_mm: 12 }, ti, { M: 10, F: 1000 }).fos, 1e-12);
   near(by.b.fos, M.bondCheck({ d_mm: 8, L_mm: 10 }, { shear_MPa: 10 }, { T: 2, F: 100 }).fos, 1e-12);
   near(by.k.fos, M.keyCheck({ d_mm: 8, b_mm: 3, h_mm: 1.8, L_mm: 10 }, ti, al, 5).fos, 1e-12);

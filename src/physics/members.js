@@ -71,26 +71,75 @@ export function pinShearCheck({ d_mm }, material, F, planes = 1) {
   return { tau_MPa: tau, shear_allowable_MPa: allow, fos, ok: fos >= FOS };
 }
 
+/** Partial factor on bolt bearing resistance, EN 1993-1-8 Table 2.1 and EN 1999-1-1 Table 8.1. */
+export const GAMMA_M2 = 1.25;
+/** Smallest end or edge distance a fastener hole may have, EN 1993-1-8 Table 3.3 and EN 1999-1-1 Table 8.2: 1.2 d0. */
+export const EDGE_MIN_OVER_D0 = 1.2;
+
 /**
- * Bearing allowable of a seat: the published bearing yield where the seat's edge distance / hole diameter reaches the
- * value it is quoted at; otherwise the material's tensile yield, a lower bound (bearing yield exceeds tensile yield in
- * every published metal table), and null where neither is published.
+ * Round 9 (SPEC ruling after physics round 8): bolt-bearing resistance of a single end-and-edge fastener, EN 1993-1-8
+ * Table 3.4 (steel) and EN 1999-1-1 Table 8.5 (aluminium), the same expressions: F_b,Rd = k1 alpha_b fu d t / gamma_M2
+ * with alpha_b = min(alpha_d, fub / fu, 1), alpha_d = e1 / (3 d0) and k1 = min(2.8 e2 / d0 - 1.7, 2.5). Returned as the
+ * pressure on the projected area d t, so it compares with seatCheck's p. e1 (along the load) or e2 (across it) below
+ * 1.2 d0 leaves the hole unrated. fu: the plate's specified minimum tensile strength; fub: the pin's, if published.
  */
-export function bearingAllowable(material, eOverD = null) {
-  if (Number.isFinite(material.bearing_yield_MPa) && Number.isFinite(eOverD) && eOverD >= (material.bearing_e_over_d_min ?? Infinity)) return { MPa: material.bearing_yield_MPa, basis: `published bearing yield at e/D >= ${material.bearing_e_over_d_min}` };
-  if (Number.isFinite(material.yield_MPa)) return { MPa: material.yield_MPa, basis: 'tensile yield as a lower bound on bearing yield' };
-  return { MPa: null, basis: 'no published strength' };
+export function enBoltBearing({ e1_over_d0, e2_over_d0 }, fu_MPa, fub_MPa = Infinity) {
+  if (!(e1_over_d0 >= EDGE_MIN_OVER_D0) || !(e2_over_d0 >= EDGE_MIN_OVER_D0)) return { MPa: null, basis: `unrated: edge distance ${Math.min(e1_over_d0, e2_over_d0).toFixed(3)} d0 below ${EDGE_MIN_OVER_D0} d0 (EN 1993-1-8 Table 3.3 / EN 1999-1-1 Table 8.2)` };
+  const alphaD = e1_over_d0 / 3;
+  const alphaB = Math.min(alphaD, fub_MPa / fu_MPa, 1);
+  const k1 = Math.min(2.8 * e2_over_d0 - 1.7, 2.5);
+  return { MPa: (k1 * alphaB * fu_MPa) / GAMMA_M2, k1, alpha_b: alphaB, basis: `EN bolt bearing k1 ${k1.toFixed(3)} x alpha_b ${alphaB.toFixed(3)} x fu ${fu_MPa} / ${GAMMA_M2}` };
+}
+
+/** A seat's end and edge distances over the hole diameter: e_over_d (a ring or a hole loaded in any direction: both), or e1/e2 apart. */
+export function edgeDistances(dims = {}) {
+  const e1 = dims.e1_over_d0 ?? dims.e_over_d ?? null;
+  const e2 = dims.e2_over_d0 ?? dims.e_over_d ?? null;
+  return { e1_over_d0: e1, e2_over_d0: e2 };
+}
+
+/**
+ * Bearing allowable of a pin-in-hole seat (SPEC rulings after physics rounds 6 and 8). Where both edge distances reach
+ * the e/D the published bearing value is quoted at, that value (its design value already carries the full-or-half
+ * rule). Below it, the lesser of that source's value under the half rule and the EN bolt-bearing resistance at the
+ * seat's own distances (EN 1999-1-1 for aluminium, EN 1993-1-8 for steel, with the specified-minimum fu); a material
+ * outside both standards (titanium) is unrated there. Either distance below 1.2 d0, or no stated distance, leaves it
+ * unrated.
+ * The old fallback to the tensile yield is gone: it could rate a smaller edge distance higher (round 8 ruling).
+ * material: { bearing_yield_MPa, bearing_e_over_d_min, bearing_counted_at_half, ultimate_MPa, bearing_standard }.
+ */
+export function bearingAllowable(material, geom = {}) {
+  const g = typeof geom === 'number' ? { e1_over_d0: geom, e2_over_d0: geom } : edgeDistances(geom);
+  const e = Math.min(g.e1_over_d0 ?? NaN, g.e2_over_d0 ?? NaN);
+  if (!Number.isFinite(e)) return { MPa: null, basis: 'unrated: no edge distance stated for the seat' };
+  if (e < EDGE_MIN_OVER_D0) return { MPa: null, basis: `unrated: edge distance ${e.toFixed(3)} d0 below ${EDGE_MIN_OVER_D0} d0 (EN 1993-1-8 Table 3.3 / EN 1999-1-1 Table 8.2)` };
+  const pub = material.bearing_yield_MPa;
+  if (Number.isFinite(pub) && e >= (material.bearing_e_over_d_min ?? Infinity)) return { MPa: pub, basis: `published bearing at e/D >= ${material.bearing_e_over_d_min}` };
+  // Below the source's e/D the EN resistance is required: without it nothing bounds the value at small distances.
+  if (!(Number.isFinite(material.ultimate_MPa) && /^EN 199[39]/.test(material.bearing_standard ?? ''))) return { MPa: null, basis: 'unrated: below the bearing source\'s e/D (or no source), and no EN bolt-bearing standard for this material' };
+  const en = enBoltBearing(g, material.ultimate_MPa, material.pin_ultimate_MPa ?? Infinity);
+  const c = [{ MPa: en.MPa, basis: `${material.bearing_standard}: ${en.basis}` }];
+  if (Number.isFinite(pub)) c.push({ MPa: material.bearing_counted_at_half ? pub : pub / 2, basis: `published bearing below its e/D ${material.bearing_e_over_d_min}, at half` });
+  return c.reduce((a, b) => (b.MPa < a.MPa ? b : a));
+}
+
+/** Crushing allowable (keyways, a round part bearing on its seat): the yield its material's standard specifies (SPEC ruling after round 7). */
+export function crushingAllowable(material) {
+  return Number.isFinite(material.yield_MPa) ? { MPa: material.yield_MPa, basis: 'yield (crushing ruling after round 7)' } : { MPa: null, basis: 'no published strength' };
 }
 
 /**
  * A round part of diameter d held in a seat of length t (a pin pressed in a boss, a shaft in a hub): projected
  * pressure F / (d t) plus, when the part is cantilevered from the seat with moment M, the linear edge pressure
- * 6 M / (d t^2) of a rigid pin in an elastic seat. Against bearingAllowable(material, e/D).
+ * 6 M / (d t^2) of a rigid pin in an elastic seat. Against bearingAllowable(material, the seat's e1, e2), or with
+ * dims.crush (the round part's own material is checked) against crushingAllowable.
  */
-export function seatCheck({ d_mm, t_mm, e_over_d = null }, material, F, M = 0) {
+export function seatCheck(dims, material, F, M = 0) {
+  const { d_mm, t_mm } = dims;
   const d = d_mm / 1000, t = t_mm / 1000;
   const p = (F / (d * t) + (6 * M) / (d * t * t)) / 1e6;
-  const a = bearingAllowable(material, e_over_d);
+  // dims.crush: the material checked is the round part itself (a tube bearing in its socket or clamp), no hole edge.
+  const a = dims.crush ? crushingAllowable(material) : bearingAllowable(material, edgeDistances(dims));
   if (!Number.isFinite(a.MPa)) return { p_MPa: p, bearing_allowable_MPa: null, fos: null, ok: false, why: a.basis };
   const fos = p > 0 ? a.MPa / p : Infinity;
   return { p_MPa: p, bearing_allowable_MPa: a.MPa, allowable_basis: a.basis, fos, ok: fos >= FOS };
@@ -99,7 +148,8 @@ export function seatCheck({ d_mm, t_mm, e_over_d = null }, material, F, M = 0) {
 /**
  * A ring lug (an eye or a housing of outside diameter D round a hole d, thickness t) carrying F in any direction:
  * bearing at the hole (seatCheck), net-section tension F / ((D - d) t) and shear-out F / (2 t (D - d) / 2) against
- * the material's tensile and shear yield. The smallest factor governs.
+ * the material's tensile and shear yield. The smallest factor governs; an unrated hole (bearingAllowable) leaves the
+ * lug unrated.
  */
 export function lugCheck({ d_mm, D_mm, t_mm }, material, F) {
   const t = t_mm / 1000, w = (D_mm - d_mm) / 1000;
@@ -109,8 +159,9 @@ export function lugCheck({ d_mm, D_mm, t_mm }, material, F) {
   const tauY = material.shear_yield_MPa ?? material.yield_MPa / Math.sqrt(3);
   const fosT = sTen > 0 ? material.yield_MPa / sTen : Infinity;
   const fosS = sShear > 0 ? tauY / sShear : Infinity;
-  const fos = Math.min(brg.fos ?? 0, fosT, fosS);
-  return { bearing_MPa: brg.p_MPa, bearing_allowable_MPa: brg.bearing_allowable_MPa, net_tension_MPa: sTen, shear_out_MPa: sShear, fos_bearing: brg.fos, fos_tension: fosT, fos_shear_out: fosS, fos, ok: fos >= FOS };
+  // Round 9: a hole whose bearing is unrated (edge distance below 1.2 d0) leaves the lug unrated, whatever its sections.
+  const fos = Number.isFinite(brg.bearing_allowable_MPa) ? Math.min(brg.fos, fosT, fosS) : null;
+  return { bearing_MPa: brg.p_MPa, bearing_allowable_MPa: brg.bearing_allowable_MPa, net_tension_MPa: sTen, shear_out_MPa: sShear, fos_bearing: brg.fos, fos_tension: fosT, fos_shear_out: fosS, fos, ok: fos !== null && fos >= FOS, ...(fos === null ? { why: brg.why } : {}) };
 }
 
 /**
@@ -135,15 +186,15 @@ export function bondCheck({ d_mm, L_mm }, adhesive, { T = 0, F = 0 }) {
 
 /**
  * Parallel key transmitting torque T on a shaft of diameter d: shear over its width b and length L, and bearing on the
- * engaged depth h of the side checked (the shaft's keyseat), against the key's and that side's yield (seat material
- * without a published bearing yield: its tensile yield). The other side (the gear's own keyway) is the gear maker's.
+ * engaged depth h of the side checked (the shaft's keyseat), against the key's and that side's yield (the crushing
+ * ruling after round 7). The other side (the gear's own keyway) is the gear maker's.
  */
 export function keyCheck({ d_mm, b_mm, h_mm, L_mm }, keyMat, sideMat, T) {
   const F = T / (d_mm / 2000);
   const tau = F / ((b_mm / 1000) * (L_mm / 1000)) / 1e6;
   const p = F / ((h_mm / 1000) * (L_mm / 1000)) / 1e6;
   const fosShear = (keyMat.shear_yield_MPa ?? keyMat.yield_MPa / Math.sqrt(3)) / tau;
-  const brg = Math.min(keyMat.yield_MPa, bearingAllowable(sideMat).MPa ?? 0);
+  const brg = Math.min(keyMat.yield_MPa, crushingAllowable(sideMat).MPa ?? 0);
   const fosBearing = brg / p;
   const fos = Math.min(fosShear, fosBearing);
   return { force_N: F, tau_MPa: tau, bearing_MPa: p, fos_shear: fosShear, fos_bearing: fosBearing, fos, ok: fos >= FOS };

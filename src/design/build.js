@@ -1,4 +1,5 @@
 // From parameters and a catalogue to a complete design: geometry, BOM, sized structure, CG, margin (M6).
+import { rateStages } from './gearing.js';
 import { byId, ofCategory, servoAt, motorModel, batteryModel, tubeAllowable, tubeSection, becOf, escCellsCover, servoVoltageRange, servoStallCurrentConservative } from './catalog.js';
 import { batteryOcv } from '../physics/flight.js';
 import { makeFlapDrive, makeWing, wingArea, mac, wingSpan, linkageCycleStats } from '../physics/kinematics.js';
@@ -444,6 +445,12 @@ export function buildDesign(params, catalog) {
     d.structure.joints = jp.joints;
     d.structure.joints_unchecked = jp.unchecked;
     d.structure.joints_layout = jp.layout;
+    // Round 9: the gear ratings under KHK's stated conditions (SPEC ruling after physics round 8), at the design's
+    // stated running conditions (p.gearRating) and the stage planes of the layout.
+    if (p.gearRating) {
+      d.structure.gear_stages = rateStages(d.structure.gear_stages, catalog, jp.layout, p.gearRating);
+      d.drive.gear_rating_conditions = p.gearRating;
+    }
     if (p.linkage) {
       // Round 6: every loaded part of the drive (src/design/linkage.js), checked in M7 (src/physics/members.js).
       const lm = driveMembers(d, catalog, p.linkage, driveLayout(d, catalog), jp.joints);

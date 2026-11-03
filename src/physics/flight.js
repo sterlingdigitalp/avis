@@ -320,6 +320,9 @@ export function createFlight(design, opts = {}) {
   const tailTorque = [0, 0];
   const pol = new Float64Array(4);
   const wingQ = [{}, {}];
+  const springPhi = new Float64Array(2);
+  const springQ = new Float64Array(2); // round 9: each rocker spring's generalised force on its wing's stroke angle
+  const rs = Number.isFinite(design.drive?.rockerSpring?.k_Nm_rad) && design.drive.rockerSpring.k_Nm_rad > 0 ? { k_Nm_rad: design.drive.rockerSpring.k_Nm_rad, phi0_rad: design.drive.rockerSpring.phi0_rad ?? 0 } : null;
   // Telemetry of the most recent step
   const tel = {
     power_w: 0, batt_V: 0, batt_I: 0, motor_I: 0, motor_V: 0, servo_I: 0, duty: 0, airspeed: 0, alpha: 0, beta: 0, sf: 0,
@@ -335,7 +338,7 @@ export function createFlight(design, opts = {}) {
   const sup = compileSupports([...(design.structure?.joints ?? []), ...(design.structure?.members ?? []).map((m) => ({ name: m.name, supports: m.sections }))]);
   const supLoad = new Float64Array(3 * sup.length);
   // Worst-case tracking for M7, M8
-  const peaks = { servoEach: 0, becI: 0, crankDrive: 0, crankBack: 0, rootBend: 0, elbowBend: 0, crankTorque: 0, motorI: 0, battI: 0, servoI: 0, twistTorque: 0, tailTorque: 0, couplerForce: 0, loadFactor: 0, shoulderTorque: 0, crankRate: 0, motorIDrive: 0, motorIBrake: 0, channels: Object.fromEntries(LOAD_CHANNELS.map((c) => [c, 0])), slotPair: 0, supports: sup.map((s) => ({ key: s.key, Fr: 0, Fa: 0, P0: 0 })) };
+  const peaks = { servoEach: 0, becI: 0, crankDrive: 0, crankBack: 0, rootBend: 0, elbowBend: 0, crankTorque: 0, motorI: 0, battI: 0, servoI: 0, twistTorque: 0, tailTorque: 0, couplerForce: 0, loadFactor: 0, shoulderTorque: 0, crankRate: 0, motorIDrive: 0, crankAtAero: 0, crankAtGravity: 0, crankAtInertia: 0, crankAtSpring: 0, crankAtRate: 0, crankAtT: 0, motorIAtCrank: 0, motorIAtAero: 0, motorIAtGravity: 0, motorIAtInertia: 0, motorIAtSpring: 0, motorIAtRotor: 0, motorIAtT: 0, motorIBrake: 0, channels: Object.fromEntries(LOAD_CHANNELS.map((c) => [c, 0])), slotPair: 0, supports: sup.map((s) => ({ key: s.key, Fr: 0, Fa: 0, P0: 0 })) };
   const rmsAcc = { motorI2: 0, battI2: 0, servoI2: 0, servoItwist2: 0, n: 0, motorI2Win: 0, nWin: 0, motorRmsMax: 0, battRmsMax: 0, battI2Win: 0 };
   const servoSpec = (s) => s;
 
@@ -484,6 +487,7 @@ export function createFlight(design, opts = {}) {
     let mT = mb;
     let iPhi = 0; // sum m |dr/dphi|^2, the wing inertia seen by the shoulder, both wings
     let Qrest = 0; // generalised gravity and inertial force on phi, without a, wdot and the crank's own acceleration
+    let Qgrav = 0; // round 9: the gravity part of Qrest alone, for the crank torque's split (telemetry only)
     let sumfx = 0, sumfy = 0, sumfz = 0;
     let sumtx = 0, sumty = 0, sumtz = 0;
     let cFx = 0, cFy = 0, cFz = 0, cMx = 0, cMy = 0, cMz = 0; // coupling of crank acceleration into the body rows
@@ -492,7 +496,7 @@ export function createFlight(design, opts = {}) {
     for (let w = 0; w < 2; w++) {
       const W = w === 0 ? R : L;
       // Per-wing shares of the same sums, for each shoulder's own load (couplers are separate per wing).
-      const qr0 = Qrest, i0 = iPhi, f0y0 = cFy, f0z0 = cFz, m0x = cMx, m0y = cMy, m0z = cMz;
+      const qr0 = Qrest, qg0 = Qgrav, i0 = iPhi, f0y0 = cFy, f0z0 = cFz, m0x = cMx, m0y = cMy, m0z = cMz;
       for (let i = 0; i < n; i++) {
         const j = 3 * i;
         const q = 3 * (i + w * n);
@@ -522,6 +526,7 @@ export function createFlight(design, opts = {}) {
         const wrx = wy * rz - wz * ry, wry = wz * rx - wx * rz, wrz = wx * ry - wy * rx;
         const wwx = wy * wrz - wz * wry, wwy = wz * wrx - wx * wrz, wwz = wx * wry - wy * wrx;
         Qrest += m * ((gyb - wwy - f0y) * py + (gzb - wwz - f0z) * pz);
+        Qgrav += m * (gyb * py + gzb * pz);
         sumfx += m * f0x; sumfy += m * f0y; sumfz += m * f0z;
         sumtx += m * (ry * f0z - rz * f0y);
         sumty += m * (rz * f0x - rx * f0z);
@@ -532,7 +537,7 @@ export function createFlight(design, opts = {}) {
         cMz += m * (rx * py);
       }
       const wq = wingQ[w];
-      wq.Qrest = Qrest - qr0; wq.iPhi = iPhi - i0; wq.cFy = cFy - f0y0; wq.cFz = cFz - f0z0;
+      wq.Qrest = Qrest - qr0; wq.Qgrav = Qgrav - qg0; wq.iPhi = iPhi - i0; wq.cFy = cFy - f0y0; wq.cFz = cFz - f0z0;
       wq.cMx = cMx - m0x; wq.cMy = cMy - m0y; wq.cMz = cMz - m0z;
     }
     // Crank: rotor, gear and reflected wing inertia, solved together with the body below.
@@ -570,6 +575,12 @@ export function createFlight(design, opts = {}) {
     const tauC = (tauM * crank >= 0 ? tauM * etaG : tauM / etaG) * G;
     // Each wing's inertia and generalised forces reach the crank through its own velocity ratio.
     const wR = wingQ[0], wL = wingQ[1];
+    // Round 9: elastic energy storage at the rockers (design.drive.rockerSpring: k_Nm_rad per wing about phi0_rad, a
+    // linear torque between the airframe and each wing's stroke). Internal to the system, so it acts only through the
+    // stroke angle's generalised force, and through the velocity ratio on the crank like the air and inertia do.
+    springQ[0] = rs ? -rs.k_Nm_rad * (sa.phi - rs.phi0_rad) : 0;
+    springQ[1] = rs ? -rs.k_Nm_rad * (saL.phi - rs.phi0_rad) : 0;
+    springPhi[0] = sa.phi; springPhi[1] = saL.phi;
     let Jeff = Jcrank + wR.iPhi * dph * dph + wL.iPhi * dphL * dphL + 1e-6;
     // The motor's speed feedback (back-EMF plus governor) is a fast pole next to the time step: implicit.
     if (Iraw > Ilimit) {
@@ -578,7 +589,7 @@ export function createFlight(design, opts = {}) {
       const B = fcGov ? (motorKt * etaG * G * (G / motor.kv_rad_per_v_s)) / motor.R : clamped ? 0 : (motorKt * etaG * G * (G / motor.kv_rad_per_v_s + (dutyNow > 0 && dutyNow < 1 ? KpV : 0))) / motor.R;
       Jeff += 0.5 * dt * B;
     }
-    const crankRhs = tauC + dph * (aero.Qphi[0] + wR.Qrest) + dphL * (aero.Qphi[1] + wL.Qrest) - (design.drive.crankFriction_Nm ?? 0) * Math.tanh(crank / 0.5);
+    const crankRhs = tauC + dph * (aero.Qphi[0] + wR.Qrest + springQ[0]) + dphL * (aero.Qphi[1] + wL.Qrest + springQ[1]) - (design.drive.crankFriction_Nm ?? 0) * Math.tanh(crank / 0.5);
     const parked = cmd.parkPhase !== null && Math.abs(wantCrank) < 1e-6 && Math.abs(crank) < 0.3 && motor.holdable !== false;
     // Gravity
     Fx += mT * gxb;
@@ -638,7 +649,7 @@ export function createFlight(design, opts = {}) {
     // Each shoulder's generalised force (aero plus inertial reaction), what that wing's coupler must carry.
     const qWing = (w) => {
       const s = wingQ[w];
-      return aero.Qphi[w] + s.Qrest - (s.cFy * sol[1] + s.cFz * sol[2] + s.cMx * sol[3] + s.cMy * sol[4] + s.cMz * sol[5]) - s.iPhi * dphOf(w) * thDD;
+      return aero.Qphi[w] + s.Qrest + springQ[w] - (s.cFy * sol[1] + s.cFz * sol[2] + s.cMx * sol[3] + s.cMy * sol[4] + s.cMz * sol[5]) - s.iPhi * dphOf(w) * thDD;
     };
     const abx = sol[0], aby = sol[1], abz = sol[2];
     // Kinematics
@@ -800,6 +811,14 @@ export function createFlight(design, opts = {}) {
       tel.shoulderTorque = Math.max(Math.abs(qR), Math.abs(qL));
       // Equal to -dph Qtotal when both wings share one stroke law.
       tel.crankTorque = -(dph * qR + dphL * qL);
+      // Round 9: the crank torque split by origin (telemetry only): the air, gravity on the wing lumps, the rocker
+      // springs (if any), and the rest, which is the wing lumps' inertial reaction (their own stroke acceleration, the
+      // crank's acceleration and the body's motion). rotorTorque is what the crank spends accelerating rotor and gears.
+      tel.crankTorqueAero = -(dph * aero.Qphi[0] + dphL * aero.Qphi[1]);
+      tel.crankTorqueGravity = -(dph * wR.Qgrav + dphL * wL.Qgrav);
+      tel.crankTorqueSpring = -(dph * springQ[0] + dphL * springQ[1]);
+      tel.crankTorqueInertia = tel.crankTorque - tel.crankTorqueAero - tel.crankTorqueGravity - tel.crankTorqueSpring;
+      tel.rotorTorque = Jcrank * thDD;
       tel.motorTorque = tauM;
       tel.twistTorque[0] = lastTwistTorque[0];
       tel.twistTorque[1] = lastTwistTorque[1];
@@ -928,12 +947,25 @@ export function createFlight(design, opts = {}) {
     // Peaks
     if (tel.rootBend > peaks.rootBend) peaks.rootBend = tel.rootBend;
     if (tel.elbowBend > peaks.elbowBend) peaks.elbowBend = tel.elbowBend;
-    if (Math.abs(tel.crankTorque) > peaks.crankTorque) peaks.crankTorque = Math.abs(tel.crankTorque);
+    if (Math.abs(tel.crankTorque) > peaks.crankTorque) {
+      peaks.crankTorque = Math.abs(tel.crankTorque);
+      // Round 9: the split at the instant of the peak, signed along the peak's own sign.
+      const sg = Math.sign(tel.crankTorque);
+      peaks.crankAtAero = sg * tel.crankTorqueAero; peaks.crankAtGravity = sg * tel.crankTorqueGravity;
+      peaks.crankAtInertia = sg * tel.crankTorqueInertia; peaks.crankAtSpring = sg * tel.crankTorqueSpring;
+      peaks.crankAtRate = x[14]; peaks.crankAtT = t;
+    }
     // Split by who does the work: the drive pushing the wing (load torque along the crank's rotation) or the wing's air
     // and inertia back-driving the crank and motor (against it).
     if (tel.crankTorque * x[14] >= 0) { if (Math.abs(tel.crankTorque) > peaks.crankDrive) peaks.crankDrive = Math.abs(tel.crankTorque); }
     else if (Math.abs(tel.crankTorque) > peaks.crankBack) peaks.crankBack = Math.abs(tel.crankTorque);
-    if (Math.abs(tel.motor_I) > peaks.motorI) peaks.motorI = Math.abs(tel.motor_I);
+    if (Math.abs(tel.motor_I) > peaks.motorI) {
+      peaks.motorI = Math.abs(tel.motor_I);
+      const sg = Math.sign(tel.motor_I);
+      peaks.motorIAtCrank = sg * tel.crankTorque; peaks.motorIAtAero = sg * tel.crankTorqueAero;
+      peaks.motorIAtGravity = sg * tel.crankTorqueGravity; peaks.motorIAtInertia = sg * tel.crankTorqueInertia;
+      peaks.motorIAtSpring = sg * tel.crankTorqueSpring; peaks.motorIAtRotor = sg * tel.rotorTorque; peaks.motorIAtT = t;
+    }
     if (Math.abs(tel.batt_I) > peaks.battI) peaks.battI = Math.abs(tel.batt_I);
     if (tel.servo_I > peaks.servoI) peaks.servoI = tel.servo_I;
     if ((tel.bec_I ?? 0) > peaks.becI) peaks.becI = tel.bec_I;
@@ -1070,6 +1102,13 @@ export function createFlight(design, opts = {}) {
     return KE + 0.5 * Jcrank * x[14] * x[14];
   }
 
+  /** Round 9: elastic energy in the rocker springs at the current state (zero without springs). */
+  function springEnergy() {
+    if (!rs) return 0;
+    deriv(x, k1, 0, false);
+    return 0.5 * rs.k_Nm_rad * (springPhi[0] - rs.phi0_rad) ** 2 + 0.5 * rs.k_Nm_rad * (springPhi[1] - rs.phi0_rad) ** 2;
+  }
+
   /** Zero every peak (scalars, the load channels and the supports) in place. */
   function resetPeaks() {
     for (const k of Object.keys(peaks)) {
@@ -1078,7 +1117,7 @@ export function createFlight(design, opts = {}) {
       else peaks[k] = 0;
     }
   }
-  return { dt, bird, cmd, x, step, setState, snapshot, momentum, energy, tel, peaks, resetPeaks, rms: rmsAcc, get t() { return t; }, get wind() { return wind; }, ix: IX, get aBody() { return aBody; }, get wDot() { return wDot; }, get thetaDD() { return thetaDD; } };
+  return { dt, bird, cmd, x, step, setState, snapshot, momentum, energy, springEnergy, tel, peaks, resetPeaks, rms: rmsAcc, get t() { return t; }, get wind() { return wind; }, ix: IX, get aBody() { return aBody; }, get wDot() { return wDot; }, get thetaDD() { return thetaDD; } };
 }
 
 /** Total momentum of the rigid body plus wing lumps in world axes, for conservation tests. */

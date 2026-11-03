@@ -133,7 +133,13 @@ const fosOut = sOut.allowable_MPa / sigOut;
 const gears = st.gear_stages;
 const crankT = worst('crankTorque');
 const G2 = gears[gears.length - 1];
-const gearOk = gears.every((g, i) => {
+// Round 9 (SPEC ruling after physics round 8): the ratings are KHK's under the design's stated conditions
+// (structure.gear_stages[].rating_check, src/design/gearing.js). Those conditions must hold in flight: the flown peak
+// crank rate within the rating crank frequency, and a reversing load declared if the wing back-drives the train.
+const grc = design.drive?.gear_rating_conditions ?? null;
+const ratingConditions = grc ? { crank_Hz: grc.crank_Hz, peak_crank_rate_rad_s: worst('crankRate'), speed_within: worst('crankRate') <= 2 * Math.PI * grc.crank_Hz, reversing_declared: grc.reversing === true, back_driven_Nm: worst('crankBack'), direction_consistent: grc.reversing === true || worst('crankBack') === 0 } : null;
+const ratingConditionsOk = !ratingConditions || (ratingConditions.speed_within && ratingConditions.direction_consistent);
+const gearOk = ratingConditionsOk && gears.every((g, i) => {
   const below = gears.slice(i + 1).reduce((r, q) => r * q.ratio, 1);
   const tGear = crankT / below;
   return tGear <= g.gear_allowable_Nm && tGear / g.ratio <= g.pinion_allowable_Nm;
@@ -174,7 +180,7 @@ writeGate({
     spar_inner: { id: sIn.id, moment_Nm: worst('rootBend'), stress_MPa: sigIn, allowable_MPa: sIn.allowable_MPa, fos: fosIn },
     spar_outer: { id: sOut.id, moment_Nm: worst('elbowBend'), stress_MPa: sigOut, allowable_MPa: sOut.allowable_MPa, fos: fosOut },
     coupler: { id: cp.id, kind: cp.kind ?? null, force_N: Fc, buckling_N: Pcr, fos_buckling: fosRodBuckle, stress_MPa: sigRod, fos_stress: fosRodStress, allowable_MPa: cpc.allowable_MPa, allowable_basis: cp.allowable_basis ?? null, E_GPa: cp.E_GPa, section: cpc.section },
-    crank_torque_Nm: crankT, crank_torque_split: { drive_pushing_Nm: worst('crankDrive'), back_driven_Nm: worst('crankBack'), note: 'drive pushing: load torque along the crank rotation; back-driven: air and wing inertia driving the crank and motor' }, gears: gearUse, gears_within_rating: gearOk, mixed_material_meshes_ok: meshesOk,
+    crank_torque_Nm: crankT, crank_torque_split: { drive_pushing_Nm: worst('crankDrive'), back_driven_Nm: worst('crankBack'), note: 'drive pushing: load torque along the crank rotation; back-driven: air and wing inertia driving the crank and motor' }, gears: gearUse, gears_within_rating: gearOk, gear_rating_conditions: ratingConditions, gear_rating_checks: gears.map((g) => g.rating_check ?? null), mixed_material_meshes_ok: meshesOk,
     twist_torque_rod: tr,
     twist_servo: { torque_Nm: twistT, rated_stall_Nm: design.servos.twist.stall_Nm }, tail_servo: { torque_Nm: tailT, rated_stall_Nm: design.servos.tail.stall_Nm },
     stroke_servo_hold: hold,

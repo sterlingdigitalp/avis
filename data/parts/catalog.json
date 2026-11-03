@@ -1909,7 +1909,15 @@
    "outside_dia_mm": 7,
    "face_width_mm": 3,
    "allowable_torque_bending_nm": 0.063,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -1932,7 +1940,15 @@
    "outside_dia_mm": 11,
    "face_width_mm": 3,
    "allowable_torque_bending_nm": 0.14,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -1955,7 +1971,15 @@
    "outside_dia_mm": 16,
    "face_width_mm": 3,
    "allowable_torque_bending_nm": 0.23,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -1978,7 +2002,15 @@
    "outside_dia_mm": 21,
    "face_width_mm": 3,
    "allowable_torque_bending_nm": 0.33,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -2001,7 +2033,15 @@
    "outside_dia_mm": 26,
    "face_width_mm": 3,
    "allowable_torque_bending_nm": 0.44,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -2024,7 +2064,15 @@
    "outside_dia_mm": 31,
    "face_width_mm": 3,
    "allowable_torque_bending_nm": 0.54,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -2047,7 +2095,15 @@
    "outside_dia_mm": 41,
    "face_width_mm": 3,
    "allowable_torque_bending_nm": 0.75,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -2070,7 +2126,15 @@
    "outside_dia_mm": 11.2,
    "face_width_mm": 4,
    "allowable_torque_bending_nm": 0.22,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -2093,7 +2157,15 @@
    "outside_dia_mm": 17.6,
    "face_width_mm": 4,
    "allowable_torque_bending_nm": 0.47,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -2116,7 +2188,15 @@
    "outside_dia_mm": 25.6,
    "face_width_mm": 4,
    "allowable_torque_bending_nm": 0.79,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -2139,7 +2219,15 @@
    "outside_dia_mm": 33.6,
    "face_width_mm": 4,
    "allowable_torque_bending_nm": 1.13,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -2162,7 +2250,15 @@
    "outside_dia_mm": 49.6,
    "face_width_mm": 4,
    "allowable_torque_bending_nm": 1.85,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -2185,7 +2281,15 @@
    "outside_dia_mm": 65.6,
    "face_width_mm": 4,
    "allowable_torque_bending_nm": 2.55,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0155.pdf",
@@ -2208,7 +2312,21 @@
    "outside_dia_mm": 17,
    "face_width_mm": 10,
    "allowable_torque_bending_nm": 0.41,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0142.pdf",
@@ -2231,7 +2349,21 @@
    "outside_dia_mm": 22,
    "face_width_mm": 10,
    "allowable_torque_bending_nm": 0.61,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0142.pdf",
@@ -2254,7 +2386,21 @@
    "outside_dia_mm": 32,
    "face_width_mm": 10,
    "allowable_torque_bending_nm": 1.03,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0142.pdf",
@@ -2277,7 +2423,21 @@
    "outside_dia_mm": 42,
    "face_width_mm": 10,
    "allowable_torque_bending_nm": 1.48,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0142.pdf",
@@ -2300,7 +2460,21 @@
    "outside_dia_mm": 62,
    "face_width_mm": 10,
    "allowable_torque_bending_nm": 2.41,
-   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears."
+   "note": "Allowable torque is KHK's bending strength figure, calculated for its assumed usage conditions (catalogue p. 31). Surface durability not listed for plastic gears.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0142.pdf",
@@ -2324,7 +2498,21 @@
    "allowable_torque_bending_nm": 2.04,
    "allowable_torque_surface_durability_nm": 0.12,
    "design_note": "Surface durability is the limiting figure. Check both.",
-   "note": "KHK catalogue values."
+   "note": "KHK catalogue values.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0116.pdf",
@@ -2348,7 +2536,21 @@
    "allowable_torque_bending_nm": 3.18,
    "allowable_torque_surface_durability_nm": 0.23,
    "design_note": "Surface durability is the limiting figure. Check both.",
-   "note": "KHK catalogue values."
+   "note": "KHK catalogue values.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0116.pdf",
@@ -2372,7 +2574,21 @@
    "allowable_torque_bending_nm": 5.6,
    "allowable_torque_surface_durability_nm": 0.56,
    "design_note": "Surface durability is the limiting figure. Check both.",
-   "note": "KHK catalogue values."
+   "note": "KHK catalogue values.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0116.pdf",
@@ -2396,7 +2612,21 @@
    "allowable_torque_bending_nm": 8.15,
    "allowable_torque_surface_durability_nm": 1.03,
    "design_note": "Surface durability is the limiting figure. Check both.",
-   "note": "KHK catalogue values."
+   "note": "KHK catalogue values.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://mx.c.misumi-ec.com/es/book/KHK1_USA_M01/pdf/0116.pdf",
@@ -3398,7 +3628,21 @@
    "note": "Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 8.5,
    "hub_width_mm": 11.0,
-   "total_length_mm": 16.0
+   "total_length_mm": 16.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 14.49,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss0-5-15a",
@@ -3448,7 +3692,21 @@
    "note": "Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 28.0,
    "hub_width_mm": 7.0,
-   "total_length_mm": 12.0
+   "total_length_mm": 12.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 20.59,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss0-5-60a",
@@ -3498,7 +3756,21 @@
    "note": "Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 28.0,
    "hub_width_mm": 7.0,
-   "total_length_mm": 12.0
+   "total_length_mm": 12.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 24.8,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss0-5-80a",
@@ -3548,7 +3820,21 @@
    "note": "Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 13.0,
    "hub_width_mm": 8.0,
-   "total_length_mm": 16.0
+   "total_length_mm": 16.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 19.39,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss0-8-20a",
@@ -3598,7 +3884,21 @@
    "note": "Not in the printed 2025 catalogue (which lists SS0.8 only up to 45 teeth); all values from the live KHK USA item page. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair.",
    "hub_dia_mm": 28.0,
    "hub_width_mm": 8.0,
-   "total_length_mm": 16.0
+   "total_length_mm": 16.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 37.13,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss0-8-80a",
@@ -3647,7 +3947,21 @@
    "note": "Hardened Plus variant (catalogue no. + H) of the SSY thin-face gear, listed as its own item on the KHK USA site. KHK intro catalogue p.22: induction hardening service, tooth surface HRC 50-60, \"The gear precision decreases after hardening. The original bore dimension tolerance H7 will also be degraded.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 13.5,
    "hub_width_mm": 8.0,
-   "total_length_mm": 12.0
+   "total_length_mm": 12.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 35.0,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/thin-face-spur-gears-ssy/ssy0-8-20h",
@@ -3696,7 +4010,21 @@
    "note": "Hardened Plus variant (catalogue no. + H) of the SSY thin-face gear, listed as its own item on the KHK USA site. KHK intro catalogue p.22: induction hardening service, tooth surface HRC 50-60, \"The gear precision decreases after hardening. The original bore dimension tolerance H7 will also be degraded.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 25.0,
    "hub_width_mm": 8.0,
-   "total_length_mm": 12.0
+   "total_length_mm": 12.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 40.3,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/thin-face-spur-gears-ssy/ssy0-8-50h",
@@ -3744,7 +4072,21 @@
    "note": "KHK: \"No secondary operations can be performed on these finished gears due to the applied carburizing process.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 15.0,
    "hub_width_mm": 5.0,
-   "total_length_mm": 15.0
+   "total_length_mm": 15.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 71.93,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-18",
@@ -3792,7 +4134,21 @@
    "note": "KHK: \"No secondary operations can be performed on these finished gears due to the applied carburizing process.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 30.0,
    "hub_width_mm": 5.0,
-   "total_length_mm": 15.0
+   "total_length_mm": 15.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 113.0,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msgb1-40",
@@ -3840,7 +4196,21 @@
    "note": "KHK: \"No secondary operations can be performed on these finished gears due to the applied carburizing process.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 45.0,
    "hub_width_mm": 10.0,
-   "total_length_mm": 20.0
+   "total_length_mm": 20.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 165.09,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-70",
@@ -3888,7 +4258,21 @@
    "note": "KHK: \"No secondary operations can be performed on these finished gears due to the applied carburizing process.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 45.0,
    "hub_width_mm": 10.0,
-   "total_length_mm": 20.0
+   "total_length_mm": 20.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 184.95,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-80",
@@ -3937,7 +4321,21 @@
    "note": "KHK: no secondary operations on tooth areas including the bottom land (approx. 2 to 3 mm) because the teeth are induction hardened. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 12.0,
    "hub_width_mm": 10.0,
-   "total_length_mm": 18.0
+   "total_length_mm": 18.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 40.73,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-ssg/ssg1-15",
@@ -3986,7 +4384,21 @@
    "note": "KHK: no secondary operations on tooth areas including the bottom land (approx. 2 to 3 mm) because the teeth are induction hardened. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 40.0,
    "hub_width_mm": 10.0,
-   "total_length_mm": 18.0
+   "total_length_mm": 18.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 89.24,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-ssg/ssg1-60",
@@ -4035,7 +4447,21 @@
    "note": "Hardened Plus variant (catalogue no. + H) of the SSY thin-face gear, listed as its own item on the KHK USA site. KHK intro catalogue p.22: induction hardening service, tooth surface HRC 50-60, \"The gear precision decreases after hardening. The original bore dimension tolerance H7 will also be degraded.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 12.0,
    "hub_width_mm": 8.0,
-   "total_length_mm": 14.0
+   "total_length_mm": 14.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 35.3,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/thin-face-spur-gears-ssy/ssy1-15h",
@@ -4084,7 +4510,21 @@
    "note": "Hardened Plus variant (catalogue no. + H) of the SSY thin-face gear, listed as its own item on the KHK USA site. KHK intro catalogue p.22: induction hardening service, tooth surface HRC 50-60, \"The gear precision decreases after hardening. The original bore dimension tolerance H7 will also be degraded.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 35.0,
    "hub_width_mm": 8.0,
-   "total_length_mm": 14.0
+   "total_length_mm": 14.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 45.2,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/thin-face-spur-gears-ssy/ssy1-60h",
@@ -4133,7 +4573,21 @@
    "note": "Hardened Plus variant (catalogue no. + H) of the SSY thin-face gear, listed as its own item on the KHK USA site. KHK intro catalogue p.22: induction hardening service, tooth surface HRC 50-60, \"The gear precision decreases after hardening. The original bore dimension tolerance H7 will also be degraded.\" Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 40.0,
    "hub_width_mm": 8.0,
-   "total_length_mm": 14.0
+   "total_length_mm": 14.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 53.8,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/thin-face-spur-gears-ssy/ssy1-80h",
@@ -4180,7 +4634,21 @@
     ],
     "note": "allowable_bending_stress_mpa is KHK sigma_Flim 19 kgf/mm2 (column SSS,SS / SSA,SSY / SSAY,SSR) x 9.80665, computed; KHK uses 2/3 of it for bidirectional load. Tensile 570 N/mm2 is the JIS G4051 normalizing figure as stated by Misumi. KHK Table 9.1 gives S45C tensile more than 690 N/mm2 at HB 201-269 (thermal refined / induction hardened), which is not this condition. No published yield strength for this condition could be read; AZoM cold-rolled AISI 1045 (yield 450 MPa, UTS 585 MPa, HB 163) is a different condition and is not used here (listed separately in gear_materials.json). Rating uses KHK published torques, not Lewis."
    },
-   "note": "Hubless thin-face disc (shape S5), no hub: must be clamped or bonded. KHK catalogue also lists a Hardened Plus surface-durability figure for SSAY, but no SSAY ...H item is listed on the KHK USA site, so the plain gear is recorded. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree."
+   "note": "Hubless thin-face disc (shape S5), no hub: must be clamped or bonded. KHK catalogue also lists a Hardened Plus surface-durability figure for SSAY, but no SSAY ...H item is listed on the KHK USA site, so the plain gear is recorded. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 12.66,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/hubless-thin-face-spur-gears-ssay/ssay1-20",
@@ -4227,7 +4695,21 @@
     ],
     "note": "allowable_bending_stress_mpa is KHK sigma_Flim 19 kgf/mm2 (column SSS,SS / SSA,SSY / SSAY,SSR) x 9.80665, computed; KHK uses 2/3 of it for bidirectional load. Tensile 570 N/mm2 is the JIS G4051 normalizing figure as stated by Misumi. KHK Table 9.1 gives S45C tensile more than 690 N/mm2 at HB 201-269 (thermal refined / induction hardened), which is not this condition. No published yield strength for this condition could be read; AZoM cold-rolled AISI 1045 (yield 450 MPa, UTS 585 MPa, HB 163) is a different condition and is not used here (listed separately in gear_materials.json). Rating uses KHK published torques, not Lewis."
    },
-   "note": "Hubless thin-face disc (shape S5), no hub: must be clamped or bonded. KHK catalogue also lists a Hardened Plus surface-durability figure for SSAY, but no SSAY ...H item is listed on the KHK USA site, so the plain gear is recorded. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree."
+   "note": "Hubless thin-face disc (shape S5), no hub: must be clamped or bonded. KHK catalogue also lists a Hardened Plus surface-durability figure for SSAY, but no SSAY ...H item is listed on the KHK USA site, so the plain gear is recorded. Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 28.5,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/hubless-thin-face-spur-gears-ssay/ssay1-80",
@@ -4276,7 +4758,21 @@
    "note": "KHK publishes no surface-durability torque for this brass gear (allowable_torque_surface_durability_nm null). Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 12.0,
    "hub_width_mm": 8.0,
-   "total_length_mm": 14.0
+   "total_length_mm": 14.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 22.43,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/brass-spur-gears-bss/bss1-16b",
@@ -4325,7 +4821,21 @@
    "note": "KHK publishes no surface-durability torque for this brass gear (allowable_torque_surface_durability_nm null). Mass is KHK published weight in kg x 1000. KHK torque figures assume same-tooth-count mating; check the actual pair. Cross-checked against the KHK 2025 spur gear catalogue: values agree.",
    "hub_dia_mm": 28.0,
    "hub_width_mm": 8.0,
-   "total_length_mm": 14.0
+   "total_length_mm": 14.0,
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": 43.46,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/brass-spur-gears-bss/bss1-40a",
@@ -5822,7 +6332,15 @@
    "allowable_torque_surface_nm": null,
    "rating_basis": "Lewis formula, sigma_b 3.5 kgf/mm2 for m1.0 (40\u00b0C with grease lubrication), 100 rpm",
    "mass_basis": "per part",
-   "note": "The product page and the 2025 catalogue (printed pp.186-187) agree. Web thickness and web OD come from the catalogue table; KHK prints them in parentheses. Price not shown (template placeholder)."
+   "note": "The product page and the 2025 catalogue (printed pp.186-187) agree. Web thickness and web OD come from the catalogue table; KHK prints them in parentheses. Price not shown (template placeholder).",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-18",
@@ -5859,7 +6377,15 @@
    "allowable_torque_surface_nm": null,
    "rating_basis": "Lewis formula, sigma_b 3.5 kgf/mm2 for m1.0 (40\u00b0C with grease lubrication), 100 rpm",
    "mass_basis": "per part",
-   "note": "The product page and the 2025 catalogue agree. It is the direct 60T replacement for PS1-60, with face 6 mm instead of 10 and bore 8 mm instead of 10. Price not shown."
+   "note": "The product page and the 2025 catalogue agree. It is the direct 60T replacement for PS1-60, with face 6 mm instead of 10 and bore 8 mm instead of 10. Price not shown.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-60",
@@ -6133,7 +6659,15 @@
    "allowable_torque_surface_nm": null,
    "rating_basis": "Lewis formula, sigma_b 3.5 kgf/mm2 for m1.0 (40\u00b0C with grease lubrication), 100 rpm",
    "mass_basis": "per part",
-   "note": "The product page and the 2025 catalogue agree. Web thickness and web OD come from the catalogue table. Price not shown."
+   "note": "The product page and the 2025 catalogue agree. Web thickness and web OD come from the catalogue table. Price not shown.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-20",
@@ -6170,7 +6704,15 @@
    "allowable_torque_surface_nm": null,
    "rating_basis": "Lewis formula, sigma_b 3.5 kgf/mm2 for m1.0 (40\u00b0C with grease lubrication), 100 rpm",
    "mass_basis": "per part",
-   "note": "The page and the 2025 catalogue agree. It pairs 1.5:1 with DS1-20. Price not shown."
+   "note": "The page and the 2025 catalogue agree. It pairs 1.5:1 with DS1-20. Price not shown.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-30",
@@ -6207,7 +6749,15 @@
    "allowable_torque_surface_nm": null,
    "rating_basis": "Lewis formula, sigma_b 3.5 kgf/mm2 for m1.0 (40\u00b0C with grease lubrication), 100 rpm",
    "mass_basis": "per part",
-   "note": "The page and the 2025 catalogue agree (bore 5). Price not shown."
+   "note": "The page and the 2025 catalogue agree (bore 5). Price not shown.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-28",
@@ -6244,7 +6794,15 @@
    "allowable_torque_surface_nm": null,
    "rating_basis": "Lewis formula, sigma_b 3.5 kgf/mm2 for m1.0 (40\u00b0C with grease lubrication), 100 rpm",
    "mass_basis": "per part",
-   "note": "The product page and the 2025 catalogue agree. Price not shown."
+   "note": "The product page and the 2025 catalogue agree. Price not shown.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-50",
@@ -6281,7 +6839,15 @@
    "allowable_torque_surface_nm": null,
    "rating_basis": "Lewis formula, sigma_b 3.5 kgf/mm2 for m1.0 (40\u00b0C with grease lubrication), 100 rpm",
    "mass_basis": "per part",
-   "note": "The page and the 2025 catalogue agree. It pairs 1.5:1 with DS1-48 (see research-gears2.json). Price not shown."
+   "note": "The page and the 2025 catalogue agree. It pairs 1.5:1 with DS1-48 (see research-gears2.json). Price not shown.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-32",
@@ -6318,7 +6884,15 @@
    "allowable_torque_surface_nm": null,
    "rating_basis": "Lewis formula, sigma_b 3.5 kgf/mm2 for m1.0 (40\u00b0C with grease lubrication), 100 rpm",
    "mass_basis": "per part",
-   "note": "The page and the 2025 catalogue agree. It pairs 1.5:1 with DS1-24. Price not shown."
+   "note": "The page and the 2025 catalogue agree. It pairs 1.5:1 with DS1-24. Price not shown.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-36",
@@ -6355,7 +6929,15 @@
    "allowable_torque_surface_nm": null,
    "rating_basis": "Lewis formula, sigma_b 3.5 kgf/mm2 for m1.0 (40\u00b0C with grease lubrication), 100 rpm",
    "mass_basis": "per part",
-   "note": "The product page and the 2025 catalogue agree. Price not shown."
+   "note": "The product page and the 2025 catalogue agree. Price not shown.",
+   "rating_conditions": {
+    "method": "Lewis formula (KHK plastic gear method, after Polyplastics \"Duracon Gear\")",
+    "allowable_bending_stress": "3.5 kgf/mm2 for m 1.0 (40 C with grease lubrication)",
+    "rotational_speed_rpm": 100,
+    "mating_gear": "not stated",
+    "load_direction": "not stated",
+    "source": "KHK 2025 spur gear catalogue (as above); factors KV, KM: KHK Gear Technical Reference, plastic gears (research/round9-gears.json Q3)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/injection-molded-spur-gears-ds/ds1-64",
@@ -6465,7 +7047,21 @@
    "total_length_mm": 14.5,
    "allowable_torque_bending_nm": 0.96,
    "reference_slipping_torque_nm_text": "0.62/0.36 (page does not define the two values)",
-   "note": "Keyless alternative to DS1-20 on a 5 mm shaft. Same bending rating as DS1-20 (0.96 N m), but 12.6 g vs 2.85 g. The hub slip torque, not the teeth, may govern."
+   "note": "Keyless alternative to DS1-20 on a 5 mm shaft. Same bending rating as DS1-20 (0.96 N m), but 12.6 g vs 2.85 g. The hub slip torque, not the teeth, may govern.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/acetal-f-loc-hub-spur-gears-dsf/dsf1-20",
@@ -6490,7 +7086,21 @@
    "total_length_mm": 16,
    "allowable_torque_bending_nm": 1.75,
    "reference_slipping_torque_nm_text": "2.22/0.63 (page does not define the two values)",
-   "note": "8 mm bore, not 6 mm like DS1-32. 27 g vs 5.86 g for DS1-32."
+   "note": "8 mm bore, not 6 mm like DS1-32. 27 g vs 5.86 g for DS1-32.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/acetal-f-loc-hub-spur-gears-dsf/dsf1-32",
@@ -6519,7 +7129,21 @@
    "allowable_torque_bending_nm": 36.5,
    "allowable_torque_surface_durability_nm": 34.6,
    "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
-   "note": "No secondary machining permitted; no J-series. Heavier than MSGB1-40 (100 g)."
+   "note": "No secondary machining permitted; no J-series. Heavier than MSGB1-40 (100 g).",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-40",
@@ -6555,7 +7179,21 @@
     17
    ],
    "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
-   "note": "Meets 13 N m but 160 g; no bore below 10 mm."
+   "note": "Meets 13 N m but 160 g; no bore below 10 mm.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-ksg/ksg1-40",
@@ -6590,7 +7228,21 @@
    ],
    "j_series_keyway": "4 x 1.8 mm (J10)",
    "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
-   "note": "Lightest hardened KHK m1 z40 found, but below the 12.9 N m stage 4 torque on both ratings."
+   "note": "Lightest hardened KHK m1 z40 found, but below the 12.9 N m stage 4 torque on both ratings.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-hubless-spur-gears-ssag/ssag1-40",
@@ -6617,7 +7269,21 @@
    "allowable_torque_bending_nm": 14.7,
    "allowable_torque_surface_durability_nm": 1.45,
    "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
-   "note": "Only m1 z40 steel gear found with an 8 mm bore. Surface durability (1.45 N m) is far below 12.9 N m."
+   "note": "Only m1 z40 steel gear found with an 8 mm bore. Surface durability (1.45 N m) is far below 12.9 N m.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/hubless-spur-gears-ssa/ssa1-40",
@@ -6645,7 +7311,21 @@
    "shape": "S1",
    "allowable_torque_bending_nm": 14.7,
    "allowable_torque_surface_durability_nm": 1.45,
-   "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower."
+   "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/spur-gears-ss/ss1-40",
@@ -6674,7 +7354,21 @@
    "shape": "S1",
    "allowable_torque_bending_nm": 9.83,
    "allowable_torque_surface_durability_nm": 6.79,
-   "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower."
+   "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-ssg/ssg1-40",
@@ -6748,7 +7442,11 @@
     "shear_yield_MPa": 138.6,
     "bearing_yield_MPa": 193,
     "bearing_e_over_d_min": 2.0,
-    "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed."
+    "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+    "ultimate_MPa": 260,
+    "ultimate_basis": "specified minimum Rm 260 MPa, EN 755-2 extruded and EN 754-2 drawn 6061-T6 bar (Bikar 6061 sheet, https://www.bikar.com/fileadmin/Unterlagen_BIKAR/Unterlagen_BIKAR_eng/6061-complete-en.pdf; Aalco 6061-T6 extrusions, BS EN 755-2:2008); EN 485-2 sheet is 290 MPa. The lowest, 260, is used for every form (round 9, EN bolt bearing).",
+    "bearing_standard": "EN 1999-1-1",
+    "bearing_counted_at_half": true
    },
    "standard_minimums": {
     "EN 754-2 drawn bar T6 (D <= 80 mm)": {
@@ -6800,7 +7498,12 @@
     "yield_MPa": 485,
     "shear_yield_MPa": 280.0,
     "bearing_yield_MPa": null,
-    "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)"
+    "basis": "specified minimum Rp0.2 485 MPa, EN 754-2 drawn bar T6 up to 80 mm (the rockers and gear shafts are machined from such bar) in full; shear by von Mises; no bearing strength published (seats judged at the tensile yield, a lower bound)",
+    "ultimate_MPa": 540,
+    "ultimate_basis": "specified minimum Rm 540 MPa, EN 754-2:2016 drawn 7075-T6 bar up to 80 mm (color-metal.ro table, https://color-metal.ro/en/mechanical-properties-drawn-round-square-hexagonal-and-flat-bars); EN 485-2 sheet 0.8-3 mm also 540 (Bikar). Round 9, EN bolt bearing.",
+    "bearing_standard": "EN 1999-1-1",
+    "bearing_standard_note": "EN 1999-1-1 Table 3.2 does not list EN AW-7075; its bolt-bearing expression (Table 8.5) is applied with 7075-T6's specified minimum fu, as the round 8 ruling names EN 1999-1-1 for aluminium. Disclosed.",
+    "bearing_counted_at_half": false
    },
    "standard_minimums": {
     "EN 754-2:2016 drawn bar T6 (<= 80 mm)": {
@@ -6845,7 +7548,10 @@
     "shear_yield_MPa": 477.5,
     "bearing_yield_MPa": 740,
     "basis": "ASTM B348 Grade 5 minimum yield 120 ksi (performancetitanium.com, minimums, no disclaimer): full value; shear yield by von Mises; no bearing strength published (a seat in this material is judged against its yield, a lower bound); bearing yield 1480 MPa at e/D = 2 from the ASM Ti-6Al-4V sheet (no source or basis cited): counted at half, 740 MPa where e/D >= 2",
-    "bearing_e_over_d_min": 2.0
+    "bearing_e_over_d_min": 2.0,
+    "bearing_counted_at_half": true,
+    "bearing_standard": null,
+    "bearing_standard_note": "Neither EN 1993-1-8 nor EN 1999-1-1 covers titanium: below the ASM sheet's e/D 2 a Ti seat is unrated (round 9)."
    }
   },
   "price_usd": null,
@@ -6976,7 +7682,21 @@
    "j_series_keyway": "4 x 1.8 mm (J10)",
    "rating_basis": "KHK catalogue allowable torque (JGMA401-01 bending / JGMA402-01 surface durability, KHK standard conditions). Design takes the lower.",
    "note": "KHK J-series bore modification of SSAG1-40 as published on the SSAG1-40 page (bores 10-17 mm, J10 keyway 4 x 1.8 mm). Rated above the stage 3 wheel torque (about 6.2 N m) on both ratings; not for stage 4.",
-   "fastening": "keyway 4 x 1.8 mm (KHK J-series J10, bore 10 mm)"
+   "fastening": "keyway 4 x 1.8 mm (KHK J-series J10, bore 10 mm)",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-hubless-spur-gears-ssag/ssag1-40",
@@ -7128,7 +7848,21 @@
    "hub_dia_mm": 17,
    "hub_width_mm": 5,
    "total_length_mm": 15,
-   "page_quote": "Bore 8 mm; Keyway 3 x 1.4 mm; Hub diameter 17 mm; Face width 10 mm; Total length 15 mm; Weight 0.027 kg; Bending strength 14.2 N\u00b7m; Surface durability 8.04 N\u00b7m; SCM415 (AISI 4115) Alloy Steel; Carburized; JIS grade N5; Backlash 0.08-0.16 mm; Shape S1"
+   "page_quote": "Bore 8 mm; Keyway 3 x 1.4 mm; Hub diameter 17 mm; Face width 10 mm; Total length 15 mm; Weight 0.027 kg; Bending strength 14.2 N\u00b7m; Surface durability 8.04 N\u00b7m; SCM415 (AISI 4115) Alloy Steel; Carburized; JIS grade N5; Backlash 0.08-0.16 mm; Shape S1",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msga1-20",
@@ -7349,10 +8083,67 @@
    "hub_dia_mm": 30,
    "hub_width_mm": 5,
    "total_length_mm": 15,
-   "page_quote": "No. of Teeth 45; Bore 15 mm (Ground); Keyway 5 x 2.3 mm; Hub Diameter 30 mm; Face Width 10 mm; Total Length 15 mm; Weight 0.13 kg; Bending Strength 42.3 N\u00b7m; Surface Durability 44.3 N\u00b7m; SCM415 (AISI 4115) Alloy Steel; Carburized; JIS grade N5; Shape S1"
+   "page_quote": "No. of Teeth 45; Bore 15 mm (Ground); Keyway 5 x 2.3 mm; Hub Diameter 30 mm; Face Width 10 mm; Total Length 15 mm; Weight 0.13 kg; Bending Strength 42.3 N\u00b7m; Surface Durability 44.3 N\u00b7m; SCM415 (AISI 4115) Alloy Steel; Carburized; JIS grade N5; Shape S1",
+   "rating_conditions": {
+    "method": "JGMA 401-01 (bending) / JGMA 402-01 (surface durability)",
+    "mating_gear": "same number of teeth",
+    "rotational_speed_rpm": 600,
+    "design_life": "over 1e7 cycles",
+    "impact": "uniform load from motor and load",
+    "load_direction": "bidirectional (calculated with allowable bending stress of 2/3)",
+    "lubricant": "100 cSt (50 C)",
+    "support": "symmetric support by bearings",
+    "SF": 1.2,
+    "SH": 1.15,
+    "scope_note": "KHK states the JGMA method for module 1.5-25, pitch diameter 25-3200 mm, up to 3600 rpm; KHK applies it to its own module-1 catalogue ratings",
+    "source": "KHK 2025 spur gear catalogue, Calculation of Bending Strength of Gears / Surface Durability (https://khkgears.us/media/gqxbee2t/catalog-2025-spur-gears.pdf); factors: KHK Gear Technical Reference (scratchpad research/round9-gears.json)"
+   }
   },
   "price_usd": null,
   "source_url": "https://catalog.khkgears.us/item/spur-gears/ground-spur-gears-msga-msgb/msgb1-45",
+  "retrieved": "2026-11-02",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "lubricant-shell-omala-s2-gx-220",
+  "category": "lubricant",
+  "manufacturer": "Shell",
+  "name": "Shell Omala S2 GX 220 industrial gear oil (ISO VG 220)",
+  "mass_g": 899,
+  "specs": {
+   "mass_basis": "per litre (density 899 kg/m3 at 15 C, ISO 12185, from the TDS)",
+   "kinematic_viscosity_40C_cSt": 220,
+   "kinematic_viscosity_100C_cSt": 19.4,
+   "viscosity_index": 98,
+   "kinematic_viscosity_50C_cSt_derived": 128,
+   "kv50_basis": "computed by the physics agent from the published 40 and 100 C values with the ASTM D341 (Walther) equation; not a published figure. The design takes 127 cSt (the lower of the two ISO VG 220 oils read) only to show the KHK condition (100 cSt at 50 C) is met; no ZL credit is taken.",
+   "quote": "Kinematische Viskositaet @ 40 C mm2/s ISO 3104 220 / @ 100 C 19,4 / Viskositaetsindex 98 / Dichte @ 15 C kg/m3 899",
+   "use": "the steel stages (JGMA-rated gears); not for plastic gears (KHK)"
+  },
+  "price_usd": null,
+  "source_url": "https://shop.knauber.de/media/11/03/bb/1774858136/50066374%20Shell%20Omala%20S2%20GX%20220.pdf",
+  "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "grease-molykote-em-30l",
+  "category": "lubricant",
+  "manufacturer": "DuPont (Molykote)",
+  "name": "Molykote EM-30L grease for plastic components (PAO base, NLGI 1)",
+  "mass_g": 1000,
+  "specs": {
+   "mass_basis": "per kg can (the smallest pack listed)",
+   "base_oil": "PAO",
+   "base_oil_kv40_cSt": 90,
+   "nlgi": 1,
+   "thickener": "lithium",
+   "temperature_range_C": "-45 to 150",
+   "quote": "PAO based grease with a base oil viscosity of 90 cSt at 40 C ... NLGI Grade 1 ... Compatible with most plastics.",
+   "note": "KHK recommends a synthetic-hydrocarbon (PAO) grease for plastic gears (https://khkgears.net/new/plastic_gears.html); the page does not name POM.",
+   "use": "the Duracon stages (KHK Lewis rating: grease lubrication)"
+  },
+  "price_usd": null,
+  "source_url": "https://www.dupont.com/products/molykote-em-30l-grease.html",
   "retrieved": "2026-11-02",
   "verified": "manufacturer-page"
  }

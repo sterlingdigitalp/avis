@@ -1,0 +1,62 @@
+design: larus-gl-2 v19 (data/designs/larus-gl-2.json), 1575.9 g, built by src/design/round9.mjs --no-suction (eta_s 0.6 default)
+NOT THE FINAL GATE SET. The cfd workstream's settled eta_s points had not landed when round 9 stopped, so the final set
+(with the eta_s table, without --no-suction) was not flown, as the brief requires. These are round 9's probe
+measurements at eta_s 0.6 (nominal and the 8 robustness corners, scratch probes under the physics agent's scratchpad),
+not gate files; out/verification/ still holds round 7's gate files except V5 (round 8).
+
+What changed from v18 (1364.5 g), all under the SPEC rulings after physics round 8 (docs/status/round9-levers.json):
+  - pin-in-hole bearing: EN 1999-1-1 bolt bearing below the source's e/D, every seat at e >= 1.2 d0. v18's lugs and seats sat
+    at e/D 0.65-1.04 and were all unrated; the rings were resized (about +100 g with margin).
+  - KHK gear ratings checked against their stated conditions (mate, support, speed, lubricant, direction, cycles). v18's
+    train rates 7.34 N m at the crank under them (14.16 from the catalogue figures), and no stroke trims within it. v19
+    carries the lightest catalogue train found that rates 15 N m: DSF1-20/DS1-30, MSGA1-18/DS1-60, MSGA1-18/MSGB1-45 x2,
+    ratio 31.25, 356 g of gears (v18 262 g); train 15.17 N m corrected.
+  - shoulder rails 12/9.6 mm; hand release named at 8 m/s; Shell Omala S2 GX 220 on the steel stages, Molykote EM-30L on
+    the Duracon stages.
+
+V1  pass      unchanged from round 7 (method gate; wing-independent)
+V2  FAIL      unchanged (ruling after round 4)
+V3  pass      unchanged
+V4  pass      unchanged (SmartBird geometry, not this wing)
+V5  pass      unchanged from round 8 (the wing is v18's AR 6 wing; calibration data/calibration/larus-gl-2.json)
+V6  pass      unchanged
+V7  FAIL      unchanged (ruling)
+M1  FAIL      8 m/s release (the design's named speed): nominal loses 0.78 m; worst corner (aero 0.9, mass 1.05, CG +5 mm)
+              loses 2.18 m at 10 deg and 2.02 m at 5 deg (limit 1.5 m); both aero 0.9 / mass 1.05 corners fail
+              (out/sweep/round9/v19-m1-corners.json, v19-corners-m1235.json). Lowest passing speed: none at or below 8 m/s at
+              the worst corner (8 m/s already fails; lower speeds were not flown on v19; v18's 7 m/s lost more than its 8 m/s).
+M2  pass      nominal 14.3 min, power ratio 3.46; worst corner 12.9 min, 3.13 (v19-corners-m1235.json)
+M3  pass      altitude deviation 0.46-0.87 m at every corner
+M4  FAIL      at eta_s 0.6: nominal 93/100, corners 90-96/100 (limit >= 98); failures on altitude (seeds 8, 11, 15, 16, 27 ...)
+              (out/sweep/round9/v19-m4-corners.json). eta_s bisection not run (it already fails at 0.6).
+M5  FAIL      touchdown sink 0.34-0.49 m/s at every corner, but touchdown speed 9.02-9.76 m/s at the four aero 0.9 corners
+              (limit 9 m/s); nominal and aero 1.1 corners pass (8.24-8.93 m/s)
+M6  1575.9 g  (v18 1364.5 g): the resized lugs and seats about +100 g, the rated train +94 g of gears and its shafts
+M7  FAIL      (1) the three Duracon gear fixings are unrated: DSF1-20 on the 5 mm motor shaft (KHK's slipping torque is a
+                  reference figure: 0.31 N m at half against 0.47 N m), DS1-30 and DS1-60 on plain bores. No maker-cut flat on
+                  the motor shaft, and set screws have no published strength (ISO 898-5 specifies hardness only), so no
+                  set-screw route can be rated; keyed module-1 bores start at 8 mm.
+              (2) gear torque: the corrected train rates 15.17 N m; the M7 population's peak is 14.81 N m on 30 seeds
+                  (out/sweep/round9/v19-members-probe.txt), within it, but the M4 runs reach 16.06 N m nominal and 16.77 N m
+                  at a corner (failing seeds included) - unverified on the gate's 100-seed population.
+              (3) half-step check of the four round-8 airframe channels (out/sweep/round9/v19-halfstep-channels.json,
+                  v19-perturb-channels.json): sf_origin -0.7%, wdot +0.7%, tail_F -4.0%, but w2 (body rate squared) -10.8%
+                  (26.47 -> 23.60, seed 72) - FAILS as written. The chaos route does not apply: the 1e-9 m perturbation's
+                  median per-seed change is 0.24% against a half-step median of 0.90% (needs at least half). On v18 the same
+                  check gave wdot +11.2% with the chaos route applying (mean +0.45%, p90 -1.3%: passes under the round-6 ruling).
+              Every other member, seat, lug, keyway, bearing and the coupler at FoS >= 1.93 on 30 seeds (worst: the shoulder
+              rail torsion-lock screw seats); joints 2.01; coupler buckling 2.27.
+              Gear rating conditions (recorded per stage in structure.gear_stages[].rating_check and, when missions.mjs runs,
+              in the M7 file): reversing load (the wing back-drives the crank up to 9.2 N m); support taken on KHK's "weak shaft"
+              column (no stage plane is at mid-span and KHK publishes no "rugged" criterion); MSGA1-18 at stages 2 and 3 runs
+              in a higher KV speed band than KHK rated, with no resolved grade row, so counted at half; JGMA's stated scope is
+              module 1.5 and up (these are module 1, as are KHK's own catalogue ratings).
+M8  pass (probe) motor 2 s RMS max 17.3-19.2 A in M1-M5 at every corner, 22.0 A in M4 (36 A continuous); battery 2 s RMS max
+              20.9 A in M4 (30 A). Peak motor current 59 A is a drive transient, not a continuous rating check.
+
+Item 2 (what sets the peak crank torque, out/sweep/round9/v19-torque-split.json): at the peak, air 132%, wing inertia -27%
+(it relieves the peak), gravity -5%. Inertia is not a large share, so no elastic store was added (screen in the levers file).
+
+eta_s (item 7): v19's own strip effective-angle amplitudes are 1.65-6.19 deg (out/sweep/round9/v19-alpha-eff.json). None is
+above the largest cfd point (6.9 deg at 0.6 semispan, matched on v17); the mid-span strips (5.5-6.2 deg) sit inside the
+measured 5.9-6.9 deg band or just below it, and the inboard and outboard strips would hold the 5.9 deg point's value.

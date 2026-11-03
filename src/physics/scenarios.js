@@ -120,8 +120,22 @@ export function launchClimbOf(design) {
   return design.control?.launchClimb_m_s ?? design.launch?.climb ?? 1.0;
 }
 
-// ---- M1 hand launch: released at the speed and angle limits of the gate. ---------------------------------------
-export function runM1(design, { seed = 1, perturb = {}, speed = 8, pitchDeg = 5, sensorNoise = true, delay = 0.02, log = false, servoSpeedScale, dt = null } = {}) {
+/**
+ * Round 9 (SPEC ruling after physics round 8): the design names its hand-release speed (design.launch.release_speed_m_s),
+ * which the gate caps at 8 m/s; M1 is flown at it. A design that names none is released at the cap.
+ */
+export function releaseSpeedOf(design) {
+  const v = design.launch?.release_speed_m_s;
+  return Number.isFinite(v) ? v : LIMITS.M1.release_speed_m_s;
+}
+
+/** M1's pass rule: climbing over the second before 3 s, under 1.5 m lost, released at no more than 8 m/s. */
+export function m1Passed({ climb3, lost, speed }) {
+  return climb3 > 0 && lost < LIMITS.M1.height_lost_m && speed <= LIMITS.M1.release_speed_m_s;
+}
+
+// ---- M1 hand launch: released at the design's named speed (at most the gate's 8 m/s) and the angle limits. ------
+export function runM1(design, { seed = 1, perturb = {}, speed = releaseSpeedOf(design), pitchDeg = 5, sensorNoise = true, delay = 0.02, log = false, servoSpeedScale, dt = null } = {}) {
   dt = dt ?? design.control?.dt ?? 1 / 240;
   const HZ = Math.round(1 / dt);
   // Released at the gate's speed and angle limits. "Positive climb within 3 s" is read as: the climb rate
@@ -153,7 +167,7 @@ export function runM1(design, { seed = 1, perturb = {}, speed = 8, pitchDeg = 5,
   const climb3 = ys[3 * HZ - 1] - ys[2 * HZ - 1]; // metres over the second before 3 s
   let firstPositive = null;
   for (let k = HZ; k < ys.length; k++) if (ys[k] - ys[k - HZ] > 0) { firstPositive = k / HZ; break; }
-  const passed = climb3 > 0 && -minY < 1.5;
+  const passed = m1Passed({ climb3, lost: -minY, speed });
   return { passed, measured: { release_speed_m_s: speed, release_pitch_deg: pitchDeg, climb_rate_2_to_3s_m_s: climb3, first_1s_window_climbing_s: firstPositive, height_lost_m: -minY, height_at_6s_m: ys[ys.length - 1], peak_motor_A: sim.peaks.motorI, peak_batt_A: sim.peaks.battI }, peaks: { ...sim.peaks }, rms: { ...sim.rms }, log: L?.output() };
 }
 

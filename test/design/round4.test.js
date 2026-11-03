@@ -9,7 +9,9 @@ import { buildDesign, batteryServoSupply } from '../../src/design/build.js';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const catalog = JSON.parse(readFileSync(join(ROOT, 'data/parts/catalog.json'), 'utf8'));
 // The current design's parameters (any round): the servo and pack checks below set the parts they depend on.
-const v9params = () => JSON.parse(readFileSync(join(ROOT, 'data/designs/larus-gl-2.json'), 'utf8')).params;
+// The live design's parameters as the round-4 base, without the round-9 gear rating conditions (p.gearRating), which
+// re-rate the train and belong to round 9's pipeline (test/design/round9.test.js), not to round 4's.
+const v9params = () => { const { gearRating, ...p } = JSON.parse(readFileSync(join(ROOT, 'data/designs/larus-gl-2.json'), 'utf8')).params; return p; };
 
 test('servo voltage range is read from the published text', () => {
   assert.deepEqual(servoVoltageRange({ specs: { voltage_range_text: '4.8V - 8.4V DC Volt' } }), [4.8, 8.4]);
