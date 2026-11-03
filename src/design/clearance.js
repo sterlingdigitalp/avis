@@ -16,7 +16,7 @@
 // part, the placement used is listed in the record's assumptions. Exempt from the rule: solids of one part, and two
 // parts joined directly (a journal on its shaft, a part pressed, keyed, bonded or screwed to another, two gears in
 // mesh). Two parts of one rigid assembly that are not joined to each other are checked like any other pair.
-import { drivePose, linkageAt, journalDims, journalBodyLength, partsIndex, prepare, boxProtrusion, parseDims, packRegulator } from '../../sims/avis-shared/model.js';
+import { drivePose, linkageAt, journalDims, journalBodyLength, partsIndex, prepare, boxProtrusion, parseDims, packRegulator, loftHalf } from '../../sims/avis-shared/model.js';
 import { byId } from './catalog.js';
 import { AIRFRAME_DEFAULTS, mergeDefaults, lockFlangeOD, hullOf, lockFlangeCircles } from './airframe.js';
 import { driveLayout as driveLayoutOf } from './joints.js';
@@ -217,6 +217,8 @@ export function assembly(d, catalog, L, lay, airframe) {
   ax.assumptions.push(`rocker arm centred on the horn boss (the physics states only its section); horn boss ${ax.Ly.horn_gap_mm ?? 1} mm from the coupler eye (forward of it${ax.Ly.horns ? `; ${Object.entries(ax.Ly.horns).map(([t, w]) => `${t} ${w}`).join(', ')}` : ''}), horn pin from the boss\'s far face through the eye to ${ax.Ly.horn_pin_past_mm ?? 1} mm past it (linkage.js horn pin); spar socket along the spar from the hub`);
   // Frame parts the airframe states (round 8): rails, panels, boom and clamps, trays.
   if (ax.af) frameParts(ax);
+  if (ax.af?.carriers) carrierParts(ax);
+  if (ax.af?.support?.pitot) pitotParts(ax);
   return { parts: ax.parts, joins: ax.joins, assumptions: ax.assumptions };
 }
 
@@ -235,19 +237,42 @@ function crankParts({ L, P, n, fb, lay, eye, plateT, add }) {
 }
 
 /** Round 14: the crank encoder where the planes put it (model.js clearancePlanes, encoder 'front'): readhead and actuator rings. */
-function encoderParts({ P, fb, add, join, assumptions }) {
+function encoderParts({ P, fb, af, add, join, assumptions }) {
   const e = P.encoder;
   if (!e) return;
   const rh = add('crank encoder readhead', [S('ring', e.readhead, ring(fb.O2, e.od.readhead / 2, e.id.readhead / 2))]);
   const ac = add('crank encoder actuator', [S('ring', e.actuator, ring(fb.O2, e.od.actuator / 2, e.id.actuator / 2))]);
   join(ac, 'crank/shaft', 'on the crank shaft by its three set screws (maker\'s fixing)');
   const front = e.readhead[0] > P.plateFwd;
-  join(rh, front ? 'gearbox plate forward' : 'gearbox plate aft', `on its bracket to ${front ? 'the forward plate\'s outer face' : 'the aft plate\'s crank boss'}`);
+  const fx = af?.support?.readhead;
+  if (fx) readheadFixing({ add, join, assumptions }, rh, e, fx, af.carriers.riser);
+  else join(rh, front ? 'gearbox plate forward' : 'gearbox plate aft', `on its bracket to ${front ? 'the forward plate\'s outer face' : 'the aft plate\'s crank boss'}`);
   assumptions.push('crank encoder (round 14): readhead as its ring envelope (outer diameter, through-hole, thickness with connector), the actuator at the ride height from the readhead\'s face, coaxial with the crank (model.js clearancePlanes)');
 }
 
+/**
+ * Round 15: the readhead's own fixing (BRD01: 3 x M2 DIN 912 with spacers) as one part: each screw's head on the
+ * readhead's back face, its spacer from the readhead's front face to the riser's web, its nut on the web's forward
+ * face. The shanks run inside the holes and are not drawn.
+ */
+function readheadFixing({ add, join, assumptions }, rh, e, fx, riser) {
+  const mm1 = (v) => v / 1000, hr = mm1(fx.screw_head.d_mm) / 2, k = mm1(fx.screw_head.k_mm), nr = mm1(fx.nut_s_mm) / Math.sqrt(3);
+  const sol = fx.holes_m.flatMap((c, i) => [
+    S(`head ${i + 1}`, [e.readhead[0] - k, e.readhead[0]], ring(c, hr)),
+    S(`spacer ${i + 1}`, [e.readhead[1], e.readhead[1] + mm1(fx.spacer_mm)], ring(c, mm1(fx.spacer_od_mm) / 2, mm1(fx.spacer_id_mm) / 2)),
+    S(`nut ${i + 1}`, [riser.x[1], riser.x[1] + mm1(fx.nut_m_mm)], ring(c, nr, mm1(fx.spacer_id_mm) / 2)),
+  ]);
+  const id = add('crank encoder readhead fixing', sol);
+  join(id, rh, 'its screws through the readhead\'s holes, heads on its back');
+  join(id, 'nose tray riser', 'spacers on the riser\'s web, nuts on its forward face');
+  assumptions.push('crank encoder readhead (round 15): on the nose tray riser by the maker\'s fixing, 3 x M2 DIN 912 through its mounting holes on the 34 mm circle with spacers of under 4 mm diameter to the riser\'s web (BRD01); heads, spacers and nuts drawn as rings (a nut by its corner circle), the shanks inside the holes not drawn');
+}
+
+const airframeOf = (ax) => ax.af;
+
 /** Gear shafts, the motor and every gear: link j joins shaft j (wheel of stage n-1-j) to shaft j+1 (its pinion). */
-function gearParts({ d, catalog, L, lay, P, n, sh, plateT, add, join, shaftPart, assumptions }) {
+function gearParts(ax0) {
+  const { d, catalog, L, lay, P, n, sh, plateT, add, join, shaftPart, assumptions } = ax0;
   const ms = byId(catalog, d.motor?.id ?? d.params.parts.motor).specs;
   const md = parseDims(ms.dimensions_text_mm)?.values ?? [0.035, 0.04];
   const motorShaft = mm(ms.shaft_mm ?? 5);
@@ -268,7 +293,14 @@ function gearParts({ d, catalog, L, lay, P, n, sh, plateT, add, join, shaftPart,
     // its shaft from its face to the first pinion: aft (the motor forward of the box) or, round 14, forward through the plate
     S('shaft', P.stage1 === 'overhung' ? [P.motorFace, farEnd(0, p1)] : [P.stage[0] - p1.face / 2, P.motorAft], ring(sh[n], motorShaft / 2)),
   ]);
-  join('motor', 'gearbox plate forward', 'screwed to the forward plate');
+  // round 15: the motor on its back-face bracket (structure.airframe.parts.motor_bracket), bonded on both rails
+  const mb = airframeOf(ax0)?.motor_bracket;
+  if (mb) {
+    add('motor bracket', [S('plate', mb.x, poly(mb.outline, [...mb.sleeves.map((q) => ({ c: q.c, r: q.ri })), { c: mb.stub.c, r: mb.stub.r }])), ...mb.sleeves.map((q) => S(`sleeve ${q.side}`, mb.x, ring(q.c, q.ro, q.ri)))]);
+    join('motor bracket', 'motor', 'screwed into its back-face threads');
+    for (const q of mb.sleeves) join('motor bracket', `shoulder rail ${q.side}`, 'its sleeve bonded on the rail');
+    assumptions.push('motor bracket (round 15): the motor hangs by its back face (the maker\'s 4 x M3 threads, 25 mm across) on a plate bonded on both shoulder rails; its bell clears the forward plate and the rail\'s lock flange');
+  } else join('motor', 'gearbox plate forward', 'screwed to the forward plate');
   const boreOn = (k) => (k === n ? motorShaft : mm(k === 0 ? L.crank.seat_od_mm ?? L.crank.shaft_od_mm : L.gearShafts[k - 1].d_mm));
   for (let si = 0; si < n; si++) {
     const st = lay.train.stages[si], j = n - 1 - si, x = P.stage[si];
@@ -455,7 +487,9 @@ function frameParts({ A, af, P, plateT, tA, tF, x0, span, railR, d, catalog, pla
   }
   const bo = A.boom, tube = byId(catalog, d.params.parts.keel).specs, yB = af.boom_y_m;
   const cl = mm(bo.clamp_len_mm), blk = mm(tube.od_mm + 2 * bo.clamp_wall_mm);
-  const cA = [xA - plateT / 2 - cl, xA - plateT / 2], cF = [xF + plateT / 2, xF + plateT / 2 + cl];
+  // round 15 (params.layout.plate_faces 'actual'): the clamps on the plates' own faces
+  const [hA, hF] = d.params.layout?.plate_faces === 'actual' ? [tA / 2, tF / 2] : [plateT / 2, plateT / 2];
+  const cA = [xA - hA - cl, xA - hA], cF = [xF + hF, xF + hF + cl];
   const boom = add('tail boom', [S('tube', [d.tail.x_m, cF[1]], ring([0, yB], mm(tube.od_mm) / 2, mm(tube.id_mm) / 2))]);
   for (const [nm, xs, pl] of [['aft', cA, plateIds.aft], ['forward', cF, plateIds.fwd]]) {
     const id = add(`boom clamp ${nm}`, [S('block', xs, boxYZ(-blk / 2, blk / 2, yB - blk / 2 - 0.006, yB + blk / 2).withHoles([{ c: [0, yB], r: mm(tube.od_mm) / 2 }]))]); // bored for the boom
@@ -463,7 +497,7 @@ function frameParts({ A, af, P, plateT, tA, tF, x0, span, railR, d, catalog, pla
   }
   for (const [nm, T, xs, pl] of [['forward tray', A.tray, (Lt) => [xF + plateT / 2, xF + plateT / 2 + Lt], plateIds.fwd], ['aft tray', A.aftTray, (Lt) => [xA - plateT / 2 - Lt, xA - plateT / 2], plateIds.aft]]) {
     const r = af.trays?.[nm === 'forward tray' ? 'forward' : 'aft'];
-    if (!r) continue;
+    if (!r || af.carriers) continue; // round 15: the carriers are their own parts (carrierParts)
     const y = r.y_m, w = mm(T.w_mm) / 2, t = mm(T.t_mm) / 2, h = mm(T.flange_h_mm);
     const id = add(nm, [S('base', xs(r.length_m), cap([-w, y], [w, y], t)), S('flange right', xs(r.length_m), cap([w, y], [w, y + h], t)), S('flange left', xs(r.length_m), cap([-w, y], [-w, y + h], t))]);
     join(id, pl, 'screwed to the plate');
@@ -471,8 +505,80 @@ function frameParts({ A, af, P, plateT, tA, tF, x0, span, railR, d, catalog, pla
   assumptions.push('frame (structure.airframe): rails from the aft housing\'s sleeve to the forward plate\'s outer face; panels between the plate planes; boom clamps on the plates\' outer faces with the screw flange below the boom; trays as channels, flanges up, from the plate face for their stated length');
 }
 
-/** Packed boxes (model.js layoutParts, the body fit) as parts on the trays, and their clearance to the pod shell. */
-function packedParts(add, join, d, catalog) {
+/** A channel's solids (structure.airframe carriers, airframe.js carrierGeometry): base and two flanges over x. */
+export function channelSolids(c, x) {
+  return [S('base', x, cap([-c.w / 2, c.y], [c.w / 2, c.y], c.t / 2)), S('flange right', x, cap([c.w / 2, c.y], [c.w / 2, c.y + c.h], c.t / 2)), S('flange left', x, cap([-c.w / 2, c.y], [-c.w / 2, c.y + c.h], c.t / 2))];
+}
+
+/** A channel's root tab: a sheet up the plate face from the base's top, its width the flanges' spacing. */
+const rootTab = (c, x) => S('root tab', x, boxYZ(-c.w / 2, c.w / 2, c.y + c.t / 2, c.y + c.t / 2 + c.tab));
+
+/**
+ * The riser's solids (round 15): its web across the pod, a flange forward along each vertical edge, its foot aft on
+ * the forward tray's base and its tab forward under the nose tray.
+ */
+export function riserSolids(r) {
+  const [x0, x1] = r.x, [y0, y1] = r.y, hw = r.w / 2;
+  return [
+    S('web', [x0, x1], boxYZ(-hw, hw, y0, y1)),
+    S('flange right', [x1, x1 + r.f], boxYZ(hw - r.t, hw, y0, y1 - r.t)),
+    S('flange left', [x1, x1 + r.f], boxYZ(-hw, -hw + r.t, y0, y1 - r.t)),
+    S('foot', [x0 - r.foot, x0], boxYZ(-hw, hw, y0, y0 + r.t)),
+    S('tab', [x1, x1 + r.foot], boxYZ(-hw, hw, y1 - r.t, y1)),
+  ];
+}
+
+/** Round 15 carriers (structure.airframe.parts.carriers): forward tray, riser, nose tray, aft tray, each screwed to its parent. */
+function carrierParts({ af, add, join, plateIds, assumptions }) {
+  const G = af.carriers;
+  const f = add('forward tray', [...channelSolids(G.forward, G.forward.x), rootTab(G.forward, [G.forward.x[0], G.forward.x[0] + G.forward.t])]);
+  join(f, plateIds.fwd, 'its root tab screwed to the plate');
+  const r = add('nose tray riser', riserSolids(G.riser));
+  join(r, f, 'its foot screwed to the tray\'s base');
+  const n = add('nose tray', channelSolids(G.nose, G.nose.x));
+  join(n, r, 'screwed to the riser\'s tab');
+  const a = add('aft tray', [...channelSolids(G.aft, G.aft.x), rootTab(G.aft, [G.aft.x[1] - G.aft.t, G.aft.x[1]])]);
+  join(a, plateIds.aft, 'its root tab screwed to the plate');
+  assumptions.push('carriers (round 15, structure.airframe.parts.carriers): channels with their flanges up and root tabs up the plate faces; the nose tray riser\'s web, flanges, foot and tab as sheets; screws and their heads are not drawn (no part sits on a screw: the parts start clear of the riser tab\'s screws)');
+}
+
+/**
+ * A cable tie as four slabs round a bundle box [z0, z1] x [yb, yt] at x (round 15): over the top, down each side from
+ * that side's floor (the carrier's face where the tie passes through its slot), under the bottom; band width b along x,
+ * thickness tt. The slots themselves are not drawn.
+ */
+export function bandSlabs(tag, x, b, tt, [z0, z1], [yb, yt], floors = [yb, yb]) {
+  const xs = [x - b / 2, x + b / 2];
+  return [
+    S(`${tag} top`, xs, boxYZ(z0 - tt, z1 + tt, yt, yt + tt)),
+    S(`${tag} side -z`, xs, boxYZ(z0 - tt, z0, floors[0], yt)),
+    S(`${tag} side +z`, xs, boxYZ(z1, z1 + tt, floors[1], yt)),
+    S(`${tag} bottom`, xs, boxYZ(z0 - tt, z1 + tt, yb - tt, yb)),
+  ];
+}
+
+/** The x of each of n ties spread evenly over [x0, x1] (each at the middle of its share). */
+export const tieXs = (x0, x1, n) => Array.from({ length: n }, (_, k) => x0 + ((k + 0.5) / n) * (x1 - x0));
+
+/** The carrier a mount names, as structure.airframe.parts.carriers draws it. */
+const carrierOf = (af, name) => ({ 'forward tray': af?.carriers?.forward, 'nose tray': af?.carriers?.nose, 'aft tray': af?.carriers?.aft })[name];
+
+/** A mounted part's ties (round 15): through slots in its carrier either side of it, round its box and the carrier's sheet. */
+function partTies(add, join, id, box, c, tr) {
+  const [b, tt] = tr.band_mm.map((v) => v / 1000), face = c.y + c.t / 2;
+  const sol = tieXs(box.x0, box.x1, tr.n).flatMap((x, k) => bandSlabs(`tie ${k + 1}`, x, b, tt, [box.z0, box.z1], [face - c.t, box.y1], [face, face]));
+  const tid = add(`${id} ties`, sol);
+  join(tid, id, 'round the part');
+  join(tid, tr.carrier, 'through its slots');
+  return tid;
+}
+
+/**
+ * Packed boxes (model.js layoutParts, the body fit) as parts on their carriers, and their clearance to the pod shell.
+ * Round 15: a mounted part rests on the carrier its mount names, tied through it (its ties drawn); a part without a
+ * mount keeps round 8's notional ties to a tray. -> { pod, model }.
+ */
+function packedParts(add, join, d, catalog, af) {
   const pIdx = partsIndex(d, catalog);
   const model = prepare(d, pIdx);
   packRegulator(model, d, pIdx); // round 14: the servo regulator where the film packs it (last, no other part moves)
@@ -482,13 +588,227 @@ function packedParts(add, join, d, catalog) {
     if (p.name === 'motor') { pod.push(p.shell_gap_m != null ? { part: 'motor (its can)', gap_m: p.shell_gap_m } : { part: 'motor (its box)', gap_m: -boxProtrusion(d.body.loft, p.box).out }); continue; }
     const b = p.box;
     const id = add(`packed ${p.name}`, [S('box', [b.x0, b.x1], boxYZ(b.z0, b.z1, b.y0, b.y1))]);
-    if (onFwd.test(p.name)) join(id, 'forward tray', 'tied to the tray');
-    if (onAft.test(p.name)) join(id, 'aft tray', 'tied to the tray');
+    const c = p.mount && carrierOf(af, p.mount.carrier);
+    if (c) {
+      join(id, p.mount.carrier, `resting on the ${p.mount.carrier}`);
+      const tr = af.support?.ties?.find((t) => t.part === p.name);
+      if (tr) partTies(add, join, id, b, c, tr);
+    } else {
+      if (onFwd.test(p.name)) join(id, 'forward tray', 'tied to the tray');
+      if (onAft.test(p.name)) join(id, 'aft tray', 'tied to the tray');
+    }
     pod.push({ part: id, gap_m: -boxProtrusion(d.body.loft, b).out });
   }
   // round 14: the tip circles' signed gap to the loft (model.js gearFit gap_m), checked like the packed parts
   for (const g of model.layout.gearFit) pod.push(g.gap_m != null ? { part: `${g.name} (${g.id}) tip circle`, gap_m: g.gap_m } : { part: `${g.name} (${g.id}) tip circle`, gap_m: -g.protrusion, protrusion_only: true });
-  return pod;
+  return { pod, model };
+}
+
+/**
+ * Round 15: the pitot-static probe (structure.airframe.parts.support.pitot) along the nose tray's flange, and its ties
+ * round the probe and the flange (through a slot at the flange's root).
+ */
+function pitotParts({ af, add, join, assumptions }) {
+  const pm = af.support.pitot, N = af.carriers.nose, s = Math.sign(pm.c_m[0]) || 1;
+  const id = add('pitot-static probe', [S('tube', pm.x_m, ring(pm.c_m, pm.r_m))]);
+  join(id, 'nose tray', `against the ${s > 0 ? 'right' : 'left'} flange's outer face, tied`);
+  const zin = s * (N.w / 2 - N.t / 2), zout = pm.c_m[0] + s * pm.r_m, yb = N.y - N.t / 2, yt = Math.max(N.y + N.h + N.t / 2, pm.c_m[1] + pm.r_m);
+  const [b, tt] = pm.band_mm.map((v) => v / 1000), top = N.y + N.t / 2;
+  const zs = s > 0 ? [zin, zout] : [zout, zin], floors = s > 0 ? [top, yb] : [yb, top];
+  const tid = add('pitot-static probe ties', pm.tie_x_mm.flatMap((x, k) => bandSlabs(`tie ${k + 1}`, x / 1000, b, tt, zs, [yb, yt], floors)));
+  join(tid, id, 'round the probe');
+  join(tid, 'nose tray', 'round the flange, through a slot at its root');
+  assumptions.push('pitot-static probe (round 15): the titanium tube as a solid rod along the nose tray\'s flange, its bottom flush with the tray\'s base; its ties round the probe and the flange');
+}
+
+/** Points on a cross-section's outline (every point the loft gap can be worst at: a convex section's vertices, n on each circle). */
+function outlinePoints(sh, n = 96) {
+  const circ = (c, r) => Array.from({ length: n }, (_, k) => [c[0] + r * Math.cos((k / n) * TWO_PI), c[1] + r * Math.sin((k / n) * TWO_PI)]);
+  if (sh.kind === 'ring') return circ(sh.c, sh.ro);
+  if (sh.kind === 'cap') return [...circ(sh.a, sh.r), ...circ(sh.b, sh.r)];
+  return sh.pts;
+}
+
+/** Whether point p lies in a cross-section. */
+function inShape(sh, p) {
+  if (sh.kind === 'ring') { const r = len(sub(p, sh.c)); return r <= sh.ro && r >= (sh.ri ?? 0); }
+  if (sh.kind === 'cap') return segPointDist(p, sh.a, sh.b) <= sh.r;
+  return polySd(sh.pts, p) <= 0 && !(sh.holes ?? []).some((h) => len(sub(p, h.c)) < h.r);
+}
+
+/**
+ * The loft's section at x as model.js reads it, and a point's signed gap to it (m, positive inside): model.js's own
+ * measure (1 - r) min(hh, hw), r the point's elliptic radius. It understates the true distance inside, so a gap it
+ * passes is at least that large.
+ */
+const loftAt = loftHalf;
+const gapIn = (h, p) => (h ? (1 - Math.hypot((p[1] - h.y) / h.hh, p[0] / h.hw)) * Math.min(h.hh, h.hw) : -Infinity);
+const angleIn = (h, p) => (Math.atan2((p[1] - h.y) / h.hh, p[0] / h.hw) * 180) / Math.PI;
+
+/** x samples of a prism against the loft: its ends, the loft's section planes between them, and eight between. */
+function xSamples(loft, [x0, x1]) {
+  const xs = [x0, x1, ...Array.from({ length: 7 }, (_, k) => x0 + ((k + 1) / 8) * (x1 - x0)), ...loft.sections.map((q) => q.x_m).filter((x) => x > x0 && x < x1)];
+  return [...new Set(xs)];
+}
+
+/**
+ * Round 15 (SPEC "Support and containment"): every solid against the pod loft. An enclosed solid keeps `required`
+ * inside it (model.js's measure); a solid of a declared opening may cross it, and the window of skin it crosses is
+ * recorded (x and the elliptic polar angle, 0 deg at +z, 90 at the top); an outside fitting keeps `required` clear of
+ * the skin outward. The material outside the loft (outside fittings and openings that count in drag), projected on
+ * the (z, y) plane at `cell` resolution, is the frontal area added to the pod's drag at Cd_out.
+ */
+export function containmentRecord(asm, d, lay, decl, { required = CLEARANCE_M, phases = 72, cell = 0.00025 } = {}) {
+  const loft = d.body.loft;
+  const amps = [...new Set([d.drive.ampMin, d.drive.ampNominal, d.drive.ampMax].filter(Number.isFinite))];
+  const poses = amps.flatMap((amp) => Array.from({ length: phases }, (_, i) => drivePose({ law: lay.law, fourBar: lay.fb }, (i / phases) * TWO_PI, amp)));
+  const rows = [], openings = new Map((decl.openings ?? []).map((o) => [o.name, newOpening(o)]));
+  const outside = new Map((decl.outside ?? []).map((o) => [o.part, { part: o.part, why: o.why, min_clear_m: Infinity }]));
+  const exposed = new Set();
+  for (const part of asm.parts) for (const sol of part.solids) {
+    const shapes = sol.at ? poses.map((q) => sol.at(q)) : [sol.shape];
+    const xs = xSamples(loft, sol.x);
+    const op = declaredOpening(decl.openings, part.id, sol.name), out = !op && outside.get(part.id);
+    const g = solidLoftGaps(loft, shapes, xs, required, op ? openings.get(op.name) : null);
+    const id = `${part.id}/${sol.name}`;
+    if (op) openings.get(op.name).solids.push(id);
+    else if (out) out.min_clear_m = Math.min(out.min_clear_m, g.clearOut);
+    else { rows.push({ solid: id, gap_m: g.worst }); continue; }
+    if ((out || op.drag !== false) && g.worst < 0) for (const sh of shapes) markExposed(exposed, loft, sh, xs, cell);
+  }
+  return containmentSummary(rows, openings, outside, exposed, { required, phases, amps, cell, Cd: decl.Cd_out ?? 1.2 });
+}
+
+/** The declared opening a solid belongs to (by its part, or by part/solid), if any. */
+export const declaredOpening = (list, part, sol) => (list ?? []).find((o) => (o.solids ?? [o.part]).some((k) => k === part || k === `${part}/${sol}`));
+
+/** An opening's running record: the solids in it and the window of skin they cross. */
+const newOpening = (o) => ({ name: o.name, why: o.why, drag: o.drag !== false, solids: [], x: [Infinity, -Infinity], angle: [Infinity, -Infinity], max_out_m: -Infinity, past_loft: false });
+
+/**
+ * One solid's gaps to the loft over its shapes (a moving solid's poses) and x samples: the worst (smallest) signed gap,
+ * the smallest clearance outward (for an outside fitting), and, for a solid of an opening, the window of skin where it
+ * comes within `required` of or crosses the skin (x, polar angle, the most beyond it; past the loft's ends noted).
+ */
+export function solidLoftGaps(loft, shapes, xs, required, opening = null) {
+  const hs = xs.map((x) => [x, loftAt(loft, x)]);
+  let worst = Infinity, clearOut = Infinity;
+  for (const sh of shapes) for (const p of outlinePoints(sh)) for (const [x, h] of hs) {
+    const g = gapIn(h, p);
+    worst = Math.min(worst, g);
+    clearOut = Math.min(clearOut, -g);
+    if (opening && g < required) widenWindow(opening, x, h, p, g);
+  }
+  return { worst, clearOut };
+}
+
+/** Widen an opening's window by one crossing point. */
+function widenWindow(o, x, h, p, g) {
+  o.x = [Math.min(o.x[0], x), Math.max(o.x[1], x)];
+  if (!h) { o.past_loft = true; return; }
+  const a = angleIn(h, p);
+  o.angle = [Math.min(o.angle[0], a), Math.max(o.angle[1], a)];
+  o.max_out_m = Math.max(o.max_out_m, -g);
+}
+
+/** Mark, on the (z, y) raster of `cell`, every cell of a cross-section that lies outside the loft at any of its x. */
+export function markExposed(exposed, loft, sh, xs, cell) {
+  const pts = outlinePoints(sh, 24), zs = pts.map((q) => q[0]), ys = pts.map((q) => q[1]);
+  const hs = xs.map((x) => loftAt(loft, x));
+  for (let iz = Math.floor(Math.min(...zs) / cell); iz <= Math.ceil(Math.max(...zs) / cell); iz++) for (let iy = Math.floor(Math.min(...ys) / cell); iy <= Math.ceil(Math.max(...ys) / cell); iy++) {
+    const q = [(iz + 0.5) * cell, (iy + 0.5) * cell];
+    if (inShape(sh, q) && hs.some((h) => gapIn(h, q) < 0)) exposed.add(`${iz},${iy}`);
+  }
+}
+
+/** The containment record from its accumulated rows, openings, outside fittings and exposed cells. */
+function containmentSummary(rows, openings, outside, exposed, { required, phases, amps, cell, Cd }) {
+  rows.sort((a, b) => a.gap_m - b.gap_m);
+  const enclosed = rows.filter((r) => r.gap_m < required - 1e-9);
+  const outs = [...outside.values()], outBad = outs.filter((o) => !(o.min_clear_m >= required - 1e-9));
+  const area = exposed.size * cell * cell;
+  const r3 = (v) => +(v * 1000).toFixed(3);
+  const crossing = (o) => (Number.isFinite(o.x[0]) ? { x_mm: o.x.map(r3), polar_angle_deg: o.angle.map((a) => +a.toFixed(1)), max_beyond_skin_mm: r3(o.max_out_m), ...(o.past_loft ? { reaches_past_the_loft: true } : {}) } : null);
+  return {
+    rule: 'SPEC Support and containment (2026-11-03): every part meant to be inside the pod keeps 0.5 mm inside the loft (model.js\'s elliptic measure, which understates the true distance); a part may cross the skin only at a declared opening; a fitting left outside keeps 0.5 mm clear of the skin and its frontal area counts in the pod\'s drag',
+    required_mm: required * 1000,
+    sampling: { crank_phases_per_amplitude: phases, amplitudes_rad: amps, points: 'section outlines (96 per circle), x at the ends, 7 between and every loft section plane' },
+    solids_enclosed: rows.length,
+    closest_enclosed: rows.slice(0, 12).map((r) => ({ solid: r.solid, gap_mm: r3(r.gap_m) })),
+    violations: enclosed.map((r) => ({ solid: r.solid, gap_mm: r3(r.gap_m) })),
+    openings: [...openings.values()].map((o) => ({ name: o.name, why: o.why, counts_in_drag: o.drag, solids: o.solids, crossing: crossing(o) })),
+    outside: outs.map((o) => ({ part: o.part, why: o.why, clear_of_skin_mm: r3(o.min_clear_m) })),
+    outside_violations: outBad.map((o) => o.part),
+    frontal: { area_mm2: +(area * 1e6).toFixed(1), Cd, CdA_m2: +(Cd * area).toFixed(7), cell_mm: cell * 1000, basis: `the outside fittings' and counted openings' material outside the loft, projected on the (z, y) plane (a shielded part counts once); Cd ${Cd}, a bluff body, as the pitot tip's load already takes it` },
+    passed: enclosed.length === 0 && outBad.length === 0,
+  };
+}
+
+/**
+ * Round 15 (SPEC "Support and containment"): every packed part on the structure that carries it. Each row names the
+ * carrier, the contact face and the fixing, and measures the gap from the part to that face (zero within `tol`:
+ * touching; the assembly check separately proves they never interpenetrate). A part resting on a tray must also
+ * have its centre of mass over the contact patch and every tie on the carrier.
+ */
+export function supportRecord(model, d, af, lay, { tol = 1e-6 } = {}) {
+  const P = lay.planes, tF = mm(d.params.linkage.plates.t_fwd_mm ?? d.params.linkage.plates.t_mm), ok = (g) => Math.abs(g) <= tol;
+  const rows = model.layout.parts.map((p) => (p.name === 'motor' ? motorSupport(p.box, af, P, tF, ok) : traySupport(p, af, ok)));
+  if (P.encoder) rows.push(...encoderSupport(P.encoder, d, af, ok));
+  if (af?.support?.pitot) rows.push(pitotSupport(af.support.pitot, af.carriers.nose, ok));
+  return { rule: 'SPEC Support and containment (2026-11-03): every packed part rests on the structure that carries it through a stated fixing, touching (gap zero within the tolerance) and never interpenetrating (the assembly check, joined pairs at zero gap)', tolerance_mm: tol * 1000, rows, unsupported: rows.filter((r) => !r.passed).map((r) => r.part), passed: rows.every((r) => r.passed) };
+}
+
+const r4 = (v) => +(v * 1000).toFixed(4);
+const unsupported = (part) => ({ part, carrier: null, face: null, fixing: null, gap_mm: null, passed: false, note: 'no stated mount: not supported' });
+
+/** The motor on its back-face bracket (round 15), else (v22) on the forward plate's face. */
+function motorSupport(b, af, P, tF, ok) {
+  const mb = af?.motor_bracket;
+  const gap = mb ? b.x0 - mb.x[1] : P.stage1 === 'overhung' ? P.plateFwd - tF / 2 - b.x1 : b.x0 - (P.plateFwd + tF / 2);
+  return { part: 'motor', carrier: mb ? 'motor bracket' : 'gearbox plate forward', face: mb ? 'the bracket\'s forward face, on the motor\'s back face' : 'plate face', fixing: mb ? `${mb.holes.length} M3 into the motor's back-face threads (the maker's drawing)` : 'M3 into its own threads (airframe motor mount screws)', gap_mm: r4(gap), passed: ok(gap) && !!mb };
+}
+
+/** A packed part on a tray's base: touching, its centre of mass over the contact patch, its ties on the tray. */
+function traySupport(p, af, ok) {
+  const c = p.mount && carrierOf(af, p.mount.carrier);
+  if (!c) return unsupported(p.name);
+  const b = p.box, gap = b.y0 - (c.y + c.t / 2), inner = c.w / 2 - c.t / 2;
+  const cx = [Math.max(b.x0, c.x[0]), Math.min(b.x1, c.x[1])], cz = [Math.max(b.z0, -inner), Math.min(b.z1, inner)];
+  const tr = af.support?.ties?.find((t) => t.part === p.name);
+  const tx = tr ? tieXs(b.x0, b.x1, tr.n) : [];
+  const cg = b.cx >= cx[0] && b.cx <= cx[1] && b.cz >= cz[0] && b.cz <= cz[1];
+  const tiesOn = tx.every((x) => x >= c.x[0] && x <= c.x[1]);
+  return { part: p.name, carrier: p.mount.carrier, face: 'base, top face', fixing: tr ? `${tr.n} x ${tr.tie} (${tr.loop_mm} mm loop)` : null, gap_mm: r4(gap), contact_x_mm: cx.map(r4), contact_z_mm: cz.map(r4), cg_over_contact: cg, ties_x_mm: tx.map(r4), passed: ok(gap) && cx[1] > cx[0] && cz[1] > cz[0] && cg && !!tr && tiesOn };
+}
+
+/** The crank encoder: the actuator in its bore on the crank stub, the readhead on the riser through its spacers. */
+function encoderSupport(e, d, af, ok) {
+  const ag = e.id.actuator / 2 - mm(d.params.linkage.crank.shaft_od_mm) / 2, fx = af?.support?.readhead;
+  const rows = [{ part: 'crank encoder actuator', carrier: 'crank', face: 'shaft stub (its bore)', fixing: '3 x M3 DIN 913 set screws (the maker\'s, included)', gap_mm: r4(ag), passed: ok(ag) }];
+  if (!fx) return [...rows, unsupported('crank encoder readhead')];
+  const R = af.carriers.riser, land = mm(fx.spacer_od_mm) / 2, gap = R.x[0] - (e.readhead[1] + mm(fx.spacer_mm));
+  const onWeb = fx.holes_m.every(([z, y]) => Math.abs(z) + land <= R.w / 2 && y - land >= R.y[0] && y + land <= R.y[1]);
+  return [...rows, { part: 'crank encoder readhead', carrier: 'nose tray riser', face: 'web, aft face (through its spacers)', fixing: `${fx.n} x ${fx.screw}, ${fx.spacer_mm} mm spacers, ${fx.nut}`, gap_mm: r4(gap), lands_on_web: onWeb, passed: ok(gap) && onWeb }];
+}
+
+/** The pitot against the nose tray's flange, both its ties on the tray and on the probe. */
+function pitotSupport(pm, N, ok) {
+  const gap = Math.abs(pm.c_m[0]) - pm.r_m - (N.w / 2 + N.t / 2);
+  const tiesOn = pm.tie_x_mm.every((x) => x / 1000 >= Math.max(N.x[0], pm.x_m[0]) && x / 1000 <= Math.min(N.x[1], pm.x_m[1]));
+  return { part: 'pitot-static probe', carrier: 'nose tray', face: pm.face, fixing: `${pm.n} x ${pm.tie} (${pm.loop_mm} mm loop)`, gap_mm: r4(gap), ties_x_mm: pm.tie_x_mm, ties_on_carrier: tiesOn, note: 'held by its ties along the flange (the probe overhangs forward)', passed: ok(gap) && tiesOn };
+}
+
+/**
+ * Round 15: the containment check alone (the assembly and the packed parts against the loft, no pair check), for the
+ * body fit (src/design/fit.js), which must hold every enclosed part. -> containmentRecord, or null without declarations.
+ */
+export function containmentOf(d, catalog, opts = {}) {
+  const decl = d.params.layout?.containment;
+  if (!decl || !d.params.linkage || !d.structure?.airframe) return null;
+  const lay = driveLayoutOf(d, catalog);
+  const asm = assembly(d, catalog, d.params.linkage, lay, d.structure.airframe);
+  packedParts((id, solids) => { asm.parts.push({ id, solids }); return id; }, (a, b, w) => asm.joins.push([a, b, w]), d, catalog, d.structure.airframe.parts);
+  return containmentRecord(asm, d, lay, decl, opts);
 }
 
 /** The check on a built design (its own layout, linkage and airframe), as the build records it. */
@@ -591,7 +911,8 @@ function podRecord(pod, required) {
 export function checkClearance(d, catalog, L, lay, airframe, { phases = 360, required = CLEARANCE_M, pack = true, all = false } = {}) {
   const asm = assembly(d, catalog, L, lay, airframe);
   const add = (id, solids) => { asm.parts.push({ id, solids }); return id; };
-  const pod = pack ? packedParts(add, (a, b, w) => asm.joins.push([a, b, w]), d, catalog) : [];
+  const pk = pack ? packedParts(add, (a, b, w) => asm.joins.push([a, b, w]), d, catalog, airframe?.parts) : { pod: [], model: null };
+  const pod = pk.pod;
   const { solids, pairs, nExempt } = solidPairs(asm, required);
   const amps = [...new Set([d.drive.ampMin, d.drive.ampNominal, d.drive.ampMax].filter(Number.isFinite))];
   const poseAt = (amp, ph) => drivePose({ law: lay.law, fourBar: lay.fb }, ph, amp);
@@ -600,6 +921,10 @@ export function checkClearance(d, catalog, L, lay, airframe, { phases = 360, req
   sampleMoving(pairs.filter((p) => p.a.at || p.b.at), amps, phases, poseAt, q0);
   const clashes = partPairClashes(pairs);
   const podR = podRecord(pod, required);
+  // round 15 (SPEC "Support and containment"): for a design that states its mounts and openings
+  const decl = d.params.layout?.containment;
+  const containment = decl ? containmentRecord(asm, d, lay, decl, { required }) : null;
+  const support = d.params.layout?.mounts && pk.model ? supportRecord(pk.model, d, airframe?.parts, lay) : null;
   return {
     rule: 'SPEC Design freeze, Assembly clearance (2026-11-03): at least 0.5 mm between every pair of parts that does not share a joint, through the full stroke; at least 0.5 mm running clearance between parts stacked on one pin (no catalogue thrust washer is credited); parts joined directly may touch but never interpenetrate (round 14), gears in mesh excepted',
     required_mm: required * 1000,
@@ -610,8 +935,10 @@ export function checkClearance(d, catalog, L, lay, airframe, { phases = 360, req
     min_by_class: minByClass(pairs),
     clashes, // per pair of parts, the closest solids
     pod_shell: podR,
+    ...(support ? { support } : {}),
+    ...(containment ? { containment } : {}),
     assumptions: asm.assumptions,
-    passed: clashes.length === 0 && podR.clashes.length === 0,
+    passed: clashes.length === 0 && podR.clashes.length === 0 && (support?.passed ?? true) && (containment?.passed ?? true),
     // every solid pair (for tests and probes; not written to the design file)
     ...(all ? { all_pairs: Object.fromEntries(pairs.map((p) => [`${p.a.id} | ${p.b.id}`, pairRow(p)])) } : {}),
   };

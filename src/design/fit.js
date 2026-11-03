@@ -3,6 +3,7 @@
 // design's mass lumps to where the packing put the real parts, so drag, shell mass, CG and trim all follow.
 import { prepare, partsIndex, leftRightAsymmetry } from '../../sims/avis-shared/model.js';
 import { buildDesign } from './build.js';
+import { containmentOf } from './clearance.js';
 
 /** Fit issues that are real protrusions (mm > 0.5); slides alone are not issues, they move the CG. */
 export function protrusions(fit, design = null) {
@@ -22,10 +23,20 @@ export function packingView(design, { placeholder = false } = {}) {
   return { ...design, mass: { ...design.mass, lumps: [...design.mass.lumps, { name: 'stroke servo', mass_kg: 0, pos: design.params?.lumpPos?.['stroke servo'] ?? [-0.03, 0, 0], gyration_m: 0, placeholder: 'no stroke servo (fixed stroke): kept free by the packing check' }] } };
 }
 
-/** Packing of a built design: { model, issues, cgShift_m }. */
-export function packDesign(design, catalog) {
+/**
+ * Packing of a built design: { model, issues, cgShift_m }. Round 15 (SPEC "Support and containment"): a design that
+ * declares its openings (params.layout.containment) must also hold every other part of its assembly inside the loft
+ * by the running clearance, and keep its outside fittings clear of the skin, so those shortfalls are issues too.
+ */
+export function packDesign(design, catalog, { containment = true } = {}) {
   const model = prepare(packingView(design), partsIndex(design, catalog));
-  return { model, issues: protrusions(model.fit, design), cgShift_m: model.fit.cgShift_m };
+  const issues = protrusions(model.fit, design);
+  const c = containment ? containmentOf(design, catalog, { phases: 36 }) : null;
+  if (c) {
+    for (const v of c.violations) issues.push({ part: v.solid, text: `${v.solid} ${(c.required_mm - v.gap_mm).toFixed(2)} mm short of the ${c.required_mm} mm inside the loft`, mm: c.required_mm - v.gap_mm });
+    for (const o of c.outside) if (!(o.clear_of_skin_mm >= c.required_mm)) issues.push({ part: o.part, text: `${o.part} (outside fitting) ${(c.required_mm - o.clear_of_skin_mm).toFixed(2)} mm short of clearing the skin`, mm: c.required_mm - o.clear_of_skin_mm });
+  }
+  return { model, issues, cgShift_m: model.fit.cgShift_m, containment: c };
 }
 
 /** Lump positions from a packing: each lump at the mass-weighted centre of the parts the packing placed for it. */
@@ -46,6 +57,8 @@ export function lumpPositionsFrom(model) {
     'receiver and airspeed': centre(['receiver', 'airspeed']),
     'tail servos': centre(['servo_tail_L', 'servo_tail_R']),
     'stroke servo': centre(['servo_stroke']),
+    // round 15: a mounted regulator is packed with the parts (model.js packedSpecs), so its lump follows it
+    'power module and regulator': centre(['regulator']),
   };
   // Gears and their bearings: the mass-weighted centre of the gears at their planes and shafts.
   const t = model.train;
@@ -76,7 +89,9 @@ export function lumpPositionsFrom(model) {
  * and the lumps moved to the packed positions (two passes, so the battery is re-placed for the CG target with the
  * other lumps where they really are). Returns { params, packing, tried } or { failed, best }.
  */
-export function fitBody(params, catalog, { widths = [0.06, 0.07, 0.08, 0.09, 0.1, 0.11], heights = [0.07, 0.08, 0.09, 0.1, 0.11, 0.12, 0.13, 0.14], ys = [0, -0.01, -0.02, -0.03, -0.04] } = {}) {
+export function fitBody(params, catalog, grid = {}) {
+  // round 15: params.fitGrid (the pod grid the design states) over the round-4 grid
+  const { widths = [0.06, 0.07, 0.08, 0.09, 0.1, 0.11], heights = [0.07, 0.08, 0.09, 0.1, 0.11, 0.12, 0.13, 0.14], ys = [0, -0.01, -0.02, -0.03, -0.04] } = { ...(params.fitGrid ?? {}), ...grid };
   const cands = [];
   for (const W of widths) for (const H of heights) for (const Y of ys) if (H / 2 + Y >= 0.03) cands.push({ W, H, Y, area: W * H });
   cands.sort((a, b) => a.area - b.area || b.Y - a.Y);
@@ -90,7 +105,9 @@ export function fitBody(params, catalog, { widths = [0.06, 0.07, 0.08, 0.09, 0.1
       pack = packDesign(d, catalog);
       tried++;
       p = { ...p, lumpPos: { ...(p.lumpPos ?? {}), ...lumpPositionsFrom(pack.model) } };
-      if (pack.issues.length) break;
+      // round 15: mounted parts stand where the design states, and the loft follows the lumps, so a mounted design is
+      // judged after the lumps have moved (every pass), not on its first
+      if (pack.issues.length && !(p.layout?.mounts && pass < 2)) break;
     }
     const worst = Math.max(0, ...pack.issues.map((i) => i.mm));
     if (!best || worst < best.worst) best = { c, worst, issues: pack.issues };

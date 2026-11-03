@@ -185,6 +185,8 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
   - **Final verdicts.** A gate verdict counts as final only if the same verdict holds with η_s at the 0.6 default everywhere. A strip held at the smallest point's value therefore cannot decide a gate.
   - **v21.** Its verdicts are the same under the table and at 0.6, and M4 still passes at a uniform 0.50.
   - **v22.** Its verdicts are also the same under the table and at 0.6. M4 no longer passes at a uniform 0.50 (two corners at 96/100) or 0.55 (96 and 97). This is reported, not acted on: those points are information, not gates.
+  - **v23.** On the measured table, M4 passes: 99/100 nominal, 98 at the worst corner. At uniform 0.6 it fails: 97/100 nominal, with corners down to 96. By the rule above, v23's M4 pass is not final. A pass that is not final is not a pass, so M4 is reported as NOT FINAL. The cause is the honest mass and drag of the supported, contained layout. Nothing was retuned. M1 fails both ways; M2, M3, M5, M7 and M8 pass both ways. Four strips lie more than 1° below the band.
+  - **How it is recorded.** The 0.6 run's gate files are copied unchanged to `out/verification/eta0.6/`, with their provenance. For each mission gate, `tools/verify.mjs` reports `NOT FINAL` when the two verdicts differ, and `pass?` when no 0.6 comparison is on record or the comparison is older than the official run.
 
 ### Design freeze (2026-11-03, operator decision after physics round 13)
 
@@ -218,6 +220,11 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
     - The forward tray's tip stands 32.6 mm out of the loft, and the boom clamps 22–27 mm.
     - The pitot probe is not in the check.
   - **Correction.** These are corrected as v23 = v22 plus support and containment corrections, under the same layout freedom and the same rules. The full gate set is flown again on v23, and v23 becomes the frozen design.
+  - **v23 result.**
+    - **Support.** Every packed part sits on its carrier at zero gap with a catalogue fixing; the support ledger is in the build.
+    - **Containment.** 188 enclosed solids are at least 0.5 mm clear of the skin. The openings (wing roots, horn slots, boom posts, pitot) and three outside fittings (the boom and two boom clamps) are declared. The material outside the loft adds 37% to the body's CdA.
+    - **The motor fixing did not exist.** The maker's drawing puts the motor's M3 threads on its back face, behind the rotating bell. So v23 hangs the motor by its back face on a bracket on the shoulder rails.
+    - **Totals.** 0 clashes. Mass is 1805.6 g, 43.7 g more than v22.
 
 ### Public repository
 

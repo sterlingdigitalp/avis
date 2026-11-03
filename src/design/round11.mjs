@@ -101,6 +101,19 @@ async function complete(d, opt, noSuction) {
 /** SPEC "Assembly clearance" (2026-11-03): every part pair through the stroke, recorded with the design (passed or not). */
 export function recordClearance(d, p, catalog) {
   if (p.linkage && p.joints) d.structure.clearance = clearanceRecord(d, catalog);
+  outsideDrag(d);
+  return d;
+}
+
+/**
+ * Round 15 (SPEC "Support and containment": a fitting left outside counts in the pod's drag): the frontal area the
+ * containment check finds outside the loft, at its Cd, added to the pod's frontal CdA (the pod's own kept beside it).
+ */
+export function outsideDrag(d) {
+  const f = d.structure.clearance?.containment?.frontal;
+  if (!f) return d;
+  const pod = d.body.CdA_front_pod_m2 ?? d.body.CdA_front_m2;
+  d.body = { ...d.body, CdA_front_pod_m2: pod, CdA_front_outside_m2: f.CdA_m2, CdA_front_m2: pod + f.CdA_m2, outside_frontal: { area_mm2: f.area_mm2, Cd: f.Cd, basis: f.basis } };
   return d;
 }
 

@@ -1,203 +1,251 @@
-design: larus-gl-2 v22 (data/designs/larus-gl-2.json), 1761.9 g, FROZEN (SPEC "Design freeze", "Assembly clearance":
-v22 = v21 plus clearance corrections). ROUND 14 (2026-11-03). v21's layout did not assemble: the film found four drive
-clashes, and the clearance agent's v22 candidate still had 47 clashing part pairs. v22 is laid out again under the SPEC's
-layout freedom. It keeps every v21 part except the encoder actuator, and the same wing, stroke, frequency law and
-controller laws. Every member is sized to its own loads by the existing rules.
-Built official by src/design/round14.mjs --official. The clearance check passes: zero clashes through the full stroke and
-against the pod. Then come V5 on v22 itself, the calibration's fixed point, and the full gate set, flown as freeze
-verification flew v21 (missions.mjs --seeds 100 --corners, 1/3840 s, half-step check, 12 workers, measured eta_s table).
-The gates ran in the repo. Before every official run, git diff --stat sims/avis-shared/ showed only this round's model.js.
-The uniform eta_s 0.6 comparison ran in a scratch copy of the working tree, with 6 workers
-(out/sweep/round14/v22-eta0.6/).
-The v22 flight logs are in out/sweep/round14/flight/. out/flight/ holds the v21 freeze logs again, for the film.
-The v21 freeze record is unchanged in out/sweep/freeze/. This file and docs/status/final-verify.txt supersede the v21
-versions.
+design: larus-gl-2 v23 (data/designs/larus-gl-2.json), 1805.6 g, FROZEN (SPEC "Design freeze", "Support and containment":
+v23 = v22 plus support and containment corrections). ROUND 15 (2026-11-03).
+v22 assembled without clashes, but its packed parts floated at their mass positions, up to 80 mm above their trays. Its
+forward tray stood 32.6 mm out of the nose, its boom clamps 22-27 mm out of the pod, and its pitot probe was not in the
+check. v23 puts every packed part on the structure that carries it, through a stated catalogue fixing. Every enclosed
+part stays 0.5 mm inside the loft, and the fittings left outside count in the pod's drag. v23 keeps the same parts, wing,
+stroke, frequency law and controller laws. Every member and fixing is sized to its own loads by the existing rules.
+Built official by src/design/round15.mjs --official. It refuses any clash, any unsupported part and any uncontained part
+(officialRefusal; there is no override). Then came V5 on v23 itself, the calibration's fixed point, and the full gate
+set, flown as round 14 flew v22 (missions.mjs --seeds 100 --corners, 1/3840 s, half-step check, 12 workers, measured
+eta_s table).
+The gates ran in the repo. Before every official run, git diff --stat sims/avis-shared/ showed this round's model.js and
+the film agent's uncommitted bird.js, film.js, frame.js, live.js and materials.js. No file under src/ imports any of
+those five, so the physics saw no film change.
+The uniform eta_s 0.6 comparison ran in a scratch copy of the working tree, with 6 workers (out/sweep/round15/v23-eta0.6/).
+The official run wrote out/flight/ (v23 logs, the files the gate records point to). Copies are in out/sweep/round15/flight/,
+and v22's are in out/sweep/round14/flight/. This file and docs/status/final-verify.txt supersede the v22 versions.
 
-What v22 changes (src/design/round14.mjs ROUND14.set; the model in sims/avis-shared/model.js clearancePlanes, linkage.js
-rockerHub, clearance.js):
-  - Horn stacking. The two horns pass within 11 mm of each other, so the two stacks sit at different x. The left boss is
-    aft of its eye and the right boss forward of its eye. Each boss is 0.5 mm from its eye. The horn pins end flush with
-    the eyes. The bosses are 7 mm long (v21: 8 mm, a 1 mm gap, pins 1 mm proud).
-  - Shoulder spacing 36.6 mm (v21: 24 mm), so both stacks sit between the housings. An eye or boss overlaps a housing
-    radially by up to 2.4 mm, so it cannot share the housing's x. This is v21's clash 2, and it is cleared by stacking,
-    not by resizing.
-  - The crank web is 8.7 mm forward of the hinge (v21: 1.5 mm). Both coupler eyes sit on the crank pin, 0.5 mm apart and
-    0.5 mm aft of the web. The aft plate is 0.5 mm past the crank bushing's flange. This is the same crank overhang as
-    the clearance agent's candidate, the tightest the eyes allow.
-  - The rocker hub is turned down to 13.6 mm where the coupler eyes pass. Elsewhere it keeps 14.5 mm and its 1.2 d0 edge
-    distance. It ends 0.5 mm aft of the aft plate. A 9 mm collar on the shoulder pin keeps the forward axial stop,
-    0.5 mm short of the forward bushing's flange.
-  - The rails are 20.75 mm below and 4 mm outboard of the hinges (v21: 11.5 mm above, in the spar sockets' sweep). They
-    are 13/8 mm (v21: 12/8). Their seats are 31.5 mm, which gives 1.2 d0 edge distance. The bracket arms are 11 mm wide
-    (v21: 10). The rail's torsion lock flange (1.4 mm) is at the forward plate's aft face, with 6 M3 screws on a 15 mm
-    arc from 40 to 172 degrees (v21: 3 screws, aft plate).
-  - Stage 1 overhangs forward of the forward plate, and the motor sits inside the box, screwed to the forward plate's aft
-    face. The reason: gear shaft 2 is 29 mm from gear shaft 3, inside the DS1-60's 31 mm tip circle. No shaft that spans
-    the plates can pass stage 1's plane, whatever the fold. The fold is now stated (links 157.8, 48.7, 1.3, 110.5 deg),
-    chosen with the real check against every solid.
-  - The encoder. The catalogue's 8 mm actuator cannot go on the 10 mm crank shaft. It is replaced by the maker's 10 mm
-    BA100 (RLS BRD01: ID 10 H7, OD 22, H 9.5 mm, 5.7 g, 3 x M3 DIN 913 included; read by the BR10 ordered with magnet type
-    12). It sits on a stub of the crank shaft, forward of stage 1: readhead x 86.0-92.9 mm, actuator 96.9-106.4 mm, ride
-    height 4 mm.
-    The encoder was tried inside the box first. That lengthened the box, the gears' CG moved forward, and the fit put the
-    battery 71 mm further aft. The pod's nose shortened until no pod in the fit grid held the gears.
-  - Frame routing. The side panels are at z +-45 mm, y -20 to 9 mm, 0.9 mm thick (v21: z +-31 at hinge height). The
-    horizontal panel (still named "top panel", the film reads that name) is a floor at y -81 mm, 24 mm wide (v21: y 56.5,
-    touching the boom). Both trays are at y -84 mm, under the crank eyes' sweep and the encoder (v21: -30 and -76). The
-    plate posts are 16 mm wide (v21: 12), because the posts to the boom are longer now.
-  - The pod follows from the fit rule, which now keeps every packed part, gear tip circle and the motor can 0.5 mm inside
-    the loft. Under the clearance rule there is no 0.5 mm protrusion tolerance (model.js layoutParts, fit.js protrusions).
-    The pod is 0.11 x 0.14 m, centre -0.03 m (v21: 0.09 x 0.13, -0.02). The battery's lump is 207.7 mm (v21: 256.5).
-  Catalogue: sensor-rls-orbis-actuator-10mm added; the BR10 readhead entry gains its drawn dimensions. The covering entry
-  film-oracover-air-light now holds the one real product: ORACOVER Air Light light scale white 331-099 (-002, -010),
-  colour "light scale white". Lanitz's technical data sheet gives ca. 17 g/m2 and 12 um for Air Indoor and Air Light
-  together, and the TDS figure is used, so the film mass is unchanged at 0 g. The 2010 maker catalogue's "approx. 18" is
-  recorded in the entry. At 18 g/m2 the film would weigh +1.9 g.
+What v23 changes (src/design/round15.mjs CARRIERS, mountsFor, CONTAINMENT, FIT_GRID; the packing in
+sims/avis-shared/model.js packedSpecs, placeMounted, mountOrder; the carriers and fixings in src/design/airframe.js
+carrierGeometry, af_carriers, motorBracketGeometry, af_motor, pitotTies; the checks in src/design/clearance.js
+supportRecord, containmentRecord; the pod fit in src/design/fit.js):
+  - Every packed part is mounted (params.layout.mounts): it rests flat on its carrier's top face at a stated x and z,
+    never slid off it. Only the battery keeps its CG-trim x, sliding along x alone to the nearest place the loft holds
+    it (12 mm aft of its lump, v22 20 mm).
+  - Nose tray: a 6061-T6 channel (37.6 x 5 x 0.6 mm) at y -43.1 mm, from x 108.9 to 228 mm, with the battery centred on
+    the pod's axis so it reaches furthest into the nose. It carries the ESC (across the tray), the airspeed board beside
+    the receiver, and the battery. It stands on a riser: a 0.8 mm sheet web across the pod just forward of the crank
+    stub, with two 7 mm flanges, an 8 mm foot screwed to the forward tray and an 8 mm tab under the nose tray.
+  - Forward tray: now 38.4 x 7 x 0.8 mm at y -80 mm. It runs from the forward plate under the crank encoder to the
+    riser, so its tip no longer reaches the nose (v22: 32.6 mm out of the loft).
+  - Aft tray: 53.2 x 6 x 0.6 mm at y -81.2 mm, 123 mm long. It sits lower, to clear the coupler eyes at the bottom of the
+    stroke. Fore to aft it carries the tail servos side by side, the flight controller beside the regulator, then the
+    GPS. The regulator is now packed with the parts (its lump follows it), not after them.
+  - Both trays sit inside their plates' outlines, so no plate post runs below them.
+  - Ties: through slots in the carrier either side of each part. Each tie model is the smallest catalogue tie whose
+    published bundle range takes the loop 2 (w + h + sheet): HellermannTyton T18R (to 69.1 mm) or T40R (to 125.7 mm).
+    Counts: the battery and each servo 2, every other part 1, the pitot 2.
+  - Crank encoder: the readhead hangs on the riser's web by the maker's own fixing (BRD01: 3 x M2 DIN 912 through its
+    holes on the 34 mm circle, with spacers under 4 mm across and over 6 mm long). The holes are at 30, 150 and 270 deg,
+    so every land lies on the web. The spacers are 3.8 / 2.2 mm 6061-T6 tube, 14 mm long, with M2 nuts on the web's front.
+    The readhead stands 2.5 mm, not 0.5 mm, forward of stage 1's teeth (params.layout.encoder_gap_mm), because the
+    screw heads on its back must clear the DS1-60. The crank stub is 2 mm longer. New catalogue entries:
+    screw-iso4762-m2x25-8.8 (0.795 g; Sp 580 MPa x As 2.07 mm2 = 1200.6 N) and nut-iso4032-m2-8 (0.149 g).
+  - Motor: the maker's drawing (Scorpion SII-3008 full dimension, read 2026-11-03, out/downloads/scorpion-sii-3008/)
+    puts its 4 x M3 threads on the back (stator) face, 25 mm across, and the page lists a cross-style back-plate mount.
+    Its front is the rotating bell. v22's fixing, M3 into the front face on the forward plate, does not exist.
+    In v23 the motor hangs by its back face on a 2 mm 6061-T6 bracket: the hull of the four screw lands, with a sleeve
+    bonded on each shoulder rail. The rails now carry that force: the larger lever-rule share of the motor's inertia and
+    first mesh force, plus its torque and prying as couples over the rails. The bell stays 1.9 mm from the forward
+    plate, so it clears the rail's 1.4 mm lock flange by 0.5 mm, as in v22. The forward-plate motor doubler is gone.
+  - Plate faces: the boom clamps, trays and motor gap are measured from the plates' own faces (1.2 / 1.6 mm), not the
+    nominal 2 mm plate (params.layout.plate_faces 'actual'). v22's clamps stood 0.4 / 0.2 mm off their plates.
+  - Pitot: the probe lies along the nose tray's right flange, outside it, its bottom flush with the base, from x 196 mm
+    for its 100 mm, on 2 T18R ties at x 200 and 207.5 mm. It leaves the nose through its own hole. In v22 it floated
+    30 mm above the nose tip, outside the loft.
+  - Pod: the fit rule now holds every enclosed part, and the drag counts the fittings left outside. The fit's grid
+    starts at v22's 0.11 x 0.14 m and steps the centre line by 1 mm (FIT_GRID). It picks 0.12 x 0.14 m at y -0.027 m.
+    At 0.11 m wide, the stage 3 wheel (0.478 mm by the 96-point outline) and the shoulder housings (under 0.1 mm) are
+    too close to the skin at every centre line. At 0.11 x 0.15, the wheel is.
 
-The check, checked (src/design/clearance.js; every fix pinned in test/design/clearance.test.js):
-  - Joined parts were exempt. They are now checked at zero gap: they may touch but never interpenetrate. Gears in mesh are
-    still exempt. This exposed modelling errors, now fixed: housings had no counterbore for the bushing flange; bracket
-    arms (capsules) reached into the rail and the bushing bore; panels ran to the plates' mid-planes; the boom clamp
-    blocks were not bored.
-  - The forward bracket's sleeve was assumed centred on its housing, which put it through the plate where the rail is
-    seated. It now starts 0.5 mm clear of the plate.
-  - The plates had no hole for the boom, which passes both by design. They now have a 0.5 mm clearance hole.
-  - Pieces that were not checked and now are: plate posts and pads, the rail lock flange, the encoder, and the servo
-    regulator, packed as the film packs it.
-  - Gear tip circles were reported against the pod but never counted, and the motor was not reported at all. Both now
-    count.
-  - Packed parts now keep the running clearance to each other and to the drive box (it had been 0.1 mm).
-  - Information only, outside every rule: some frame and drive parts stand outside the pod loft. The worst are the boom
-    (it leaves the tail), the forward tray (32.6 mm, its tip below the nose taper), the boom clamps and pads (22-27 mm,
-    the boom runs at y 62 mm over a 40 mm pod top), the spar sockets (20.9 mm, the wing roots), and the horn eyes (7.5 mm
-    at the top of the stroke). v21 had the same kind: boom 62, sockets 22.1, clamps 16.7, aft tray 10.4, lock flange
-    9.3 mm. Script: out/sweep/round14/scripts/podframe.mjs.
+The checks (src/design/clearance.js; pinned in test/design/clearance-builders.test.js, test/design/round15.test.js and
+test/design/clearance.test.js):
+  - Support (structure.clearance.support). For each packed part, the check names the carrier, the contact face and the
+    fixing, and measures the gap from the part to that face. The gap must be zero within 0.001 mm: touching. The pair
+    check proves separately that the part and carrier never interpenetrate, because joined pairs are checked at zero
+    gap. A part resting on a tray must also have its centre of mass over the contact patch and every tie on the carrier.
+    The motor is checked on its bracket, the encoder actuator in its bore, the readhead on the riser through its
+    spacers, and the pitot against its flange.
+  - Containment (structure.clearance.containment). Every solid of the assembly is checked against the loft: the frame,
+    the drive, the packed boxes, their ties and the fixings, the moving ones at 72 crank angles at each of three
+    amplitudes. It uses model.js's elliptic measure, which understates the true distance. A solid of a declared opening
+    may cross the skin, and the window it crosses is recorded. An outside fitting must stay 0.5 mm clear of the skin.
+    The material outside the loft is projected on the (z, y) plane, so a shielded part counts once. That frontal area,
+    at Cd 1.2, is added to the pod's frontal drag (body.CdA_front_outside_m2, round11.mjs outsideDrag), before the trim.
+  - The body fit (fit.js) now holds every enclosed solid and clears every outside fitting, so the pod is sized to them.
+  - Ties: each one is drawn as four slabs round the part and its carrier's sheet. The slots they pass through are not
+    drawn.
 
-Clash ledger. Before: the clearance agent's candidate, 47 part pairs, and the battery 0.43 mm proud of the pod. Under the
-fixed check the same candidate has 55 pairs and 2 tip circles against the pod. After: v22 has 0 and 0 (structure.clearance:
-61 parts, 133 solids, 8592 pairs, 412 joined pairs checked at zero, 186 exempt).
-Smallest gaps in v22, all 0.500 mm: web to crank flange, web to right eye, eye to eye, and the boom to its post hole.
-  REAL, fixed by layout:
-    motor | forward tray -10.25; aft plate | shoulder pins -9.0 (2); spar sockets | rails -6.82 (2);
-    gear shaft 2 | DS1-60 -6.0; DS1-60 | side panel -5.84; right horn eye | left boss -5.5 (2);
-    crank eyes | aft tray -5.44 (2); forward housings | side panels -4.85, -4.35; right horn pin | left boss -4.52;
-    left aft sleeve | left horn eye -3.43; hubs | sleeves -3.0 (4) (the rail itself was 1.07 mm into the hub; the
-    centred-sleeve assumption made it 3 mm); right aft sleeve | right horn eye -2.5; hubs | side panels -1.7 (2);
-    horn eyes | rails -1.43 (2); bushing flange | side panel -1.1, -0.6; shaft 2 | forward tray -1.0;
-    shaft 3 journal | right boss -1.0; shaft 2 | stage 4 wheel -0.94; shaft 3 | right boss -0.8;
-    shaft 2 journal | forward tray -0.6; shaft 2 | DS1-20 -0.54; right horn pin | left horn eye -0.5;
-    web | aft tray -0.19; top panel | boom +0.01; hubs | horn eyes +0.08 (2); bushing flanges | rails +0.18 (4);
-    left rail | left side panel +0.18; shaft 2 journal | motor bearing +0.46; battery | pod -0.43;
-    the encoder actuator not placed (bore 8 mm on a 10 mm shaft).
-  ARTIFACT, fixed in the check: aft plate | forward sleeves -2.0 (2), the sleeve placement; plates | boom -1.49 (2), no
-    boom hole.
-  JOINED: none of the 47. Under the zero-gap rule, the joined pairs exposed the modelling errors listed above.
+Support ledger (structure.clearance.support, tolerance 0.001 mm): PASSED, every part. Gap = part to its carrier face.
+  part                     carrier              face                               gap mm  fixing
+  motor                    motor bracket        the bracket's forward face, on the      0  4 M3 into the motor's back-face threads (the maker's drawing)
+  esc                      nose tray            base, top face                          0  1 x t40r (78.8 mm loop)
+  airspeed                 nose tray            base, top face                          0  1 x t18r (51.96 mm loop)
+  battery                  nose tray            base, top face                          0  2 x t40r (119 mm loop)
+  fc                       aft tray             base, top face                          0  1 x t40r (70.6 mm loop)
+  gps                      aft tray             base, top face                          0  1 x t18r (65.72 mm loop)
+  receiver                 nose tray            base, top face                          0  1 x t18r (25.93 mm loop)
+  servo_tail_L             aft tray             base, top face                          0  2 x t40r (87.2 mm loop)
+  servo_tail_R             aft tray             base, top face                          0  2 x t40r (87.2 mm loop)
+  regulator                aft tray             base, top face                          0  1 x t40r (71.05 mm loop)
+  crank encoder actuator   crank                shaft stub (its bore)                   0  3 x M3 DIN 913 set screws (the maker's, included)
+  crank encoder readhead   nose tray riser      web, aft face (through its spacers      0  3 x M2 x 25 DIN 912, 14 mm spacers, M2 nuts
+  pitot-static probe       nose tray            right flange, outer face                0  2 x t18r (25.1 mm loop)
+  Parts on trays have their centre of mass over the contact patch and every tie on the tray. The battery rests on
+  the nose tray from x 156.7 to 228 mm and overhangs its tip by 3.4 mm.
 
-v21 -> v22 (data/designs; out/sweep/round14/clearance/diff-v21-v22.txt):
-  mass 1708.27 -> 1761.92 g (+53.6 g; structure +46.4, parts +0.2, margin +7.0). Biggest items: rails +8.0 each (13/8
-    and longer), screws and nuts +8.4 (lock screws 6 per rail), crank +6.6 (the encoder stub), brackets +5.2 each,
-    rockers +1.9 each, formers +2.8 and film +0.4 (the larger pod), shoulder pins +1.2 each, gear shaft 3 +1.3;
-    bosses -4.3, forward tray -2.6. Actuator 5.5 -> 5.7 g. Wing loading 25.13 -> 25.92 N/m2.
-  pod 0.09 x 0.13 / -0.02 -> 0.11 x 0.14 / -0.03 m; CdA_front 0.002297 -> 0.003024 m2; wetted 0.175 -> 0.194 m2.
-  envelope 3.3179 -> 3.2471 Hz at 38 deg (members); cruise trim 1.9151 -> 1.9755 Hz; Vapp 9.033 -> 9.187 m/s;
-    best climb 1.449 -> 1.325 m/s.
-  planes (mm, hinge x 0): crank web 1.5 -> 8.7; couplers -4.5 / -9.5 -> 2.2 / -4.3; aft plate 5.5 -> 14.0; forward
-    plate 73.5 -> 75.6; stages 60.0, 45.5, 29.0, 12.5 -> 82.5 (forward of the plate), 60.7, 44.2, 27.7; motor can
-    86.4-120.2 -> 39.35-73.1 (inside).
-  pins: diameters unchanged (crank 8, horn 8, shoulder 6 mm).
-  lever arms (m per N): crank pin 3.0 / 8.0 -> 3.5 / 10.0 mm (R / L); horn pins 4.0 -> 3.5 mm; shoulder pin 1.5 (aft)
-    -> 2.8 (forward), and the root couple per support 41.7 -> 27.3 /m (wider span); crank shaft at the crank wheel:
-    coupler 0.0090 / 0.0135 -> 0.0092 / 0.0142, mesh 0.297 -> 0.504; crank shaft aft support 1.147 / 1.221 ->
-    1.192 / 1.297; motor outboard bearing (a + s) / s 3.70 -> 2.38 (pinion 6.9 mm from it, v21 13.5); bracket arm
-    lever 12.2 -> 21.1 mm; gear shaft 1 0.508 -> 0.636.
-  FoS (M7): min 1.701 (rail lock screws, right) -> 1.600 (crank shaft); bearings 1.955 -> 1.864 (crank shaft aft);
-    spars 1.99 / 2.70 -> 2.13 / 2.86; coupler 1.93 / 2.79 -> 2.08 / 3.01.
+Containment ledger (structure.clearance.containment, 0.5 mm inside the loft): PASSED. 188 enclosed solids, none short.
+  Closest: packed battery/box 0.528; nose tray/base 1.322; nose tray/flange right 1.322; nose tray/flange left 1.322; gearbox plate forward/plate 1.967 mm.
+  Openings, each decided from the geometry (x of the crossing; polar angle in the section, 0 deg at +z, 90 at the top):
+    wing root, right: 1 solid, x -6.5 to 6.5 mm, 25.2 to 56.6 deg, up to 17.919 mm out; drag not counted (the wing).
+      Why: the rocker's spar socket carries the wing spar out through the pod's side at the wing root and sweeps the full stroke; the wing's own drag model starts there.
+    wing root, left: 1 solid, x -6.5 to 6.5 mm, 123.4 to 154.8 deg, up to 17.918 mm out; drag not counted (the wing).
+      Why: the left rocker's spar socket, as the right: out through the pod's side at the wing root, through the full stroke.
+    horn slots: 10 solids, x -14.8 to 12.7 mm, 65.7 to 114.3 deg, up to 5.332 mm out; drag counted.
+      Why: each rocker's horn (its arm, boss and pin) and the coupler eye on it ride inside the shoulder span, beside the wing root, and rise above the loft at the top of the stroke: a slot in the pod's top over the shoulders; their exposed sweep counts in the drag.
+    boom posts: 4 solids, x 13.2 to 76.2 mm, 81.6 to 98.4 deg, up to 27.001 mm out; drag counted.
+      Why: the tail boom runs above the pod (over the shoulders it must clear the horn eyes' sweep), so each gearbox plate's post rises through a slot in the pod's top to its boom clamp; the exposed post and pad count in the drag.
+    pitot: 1 solid, x 233.5 to 296 mm, -33.6 to -20.6 deg, up to 18.205 mm out, and on past the nose; drag counted.
+      Why: the probe reads the free stream ahead of the nose, so it leaves the nose through a hole of its own diameter; its exposed tip counts in the drag.
+  Fittings left outside (each 0.5 mm or more clear of the skin; their frontal area counts in the drag):
+    tail boom: 12.008 mm clear. it runs above the pod from the forward clamp to the tail (it never enters the loft).
+    boom clamp aft: 5.9 mm clear. on the exposed boom, screwed to the aft plate's post.
+    boom clamp forward: 7.457 mm clear. on the exposed boom, screwed to the forward plate's post.
+  Outside the loft in all: 705.6 mm2 frontal, at Cd 1.2: 0.0008468 m2. It is the exposed posts, pads, clamps and boom, the horn sweep and the probe.
+
+Clash ledger: 0 clashing part pairs through the stroke and 0 against the pod (76 parts, 208 solids, 21156 pairs, 699 joined pairs
+  checked at zero, 372 exempt). v22: 0 and 0 (61 parts, 133 solids). The smallest gaps are all 0.500 mm: the web to the crank flange,
+  the web to the right eye, eye to eye, and the crank stub to the riser web. While the layout was built, the check found these, each fixed:
+    the motor can 1.0 mm into the right rail's lock flange, when the motor was first set on the plate;
+    the coupler crank eyes 0.54 mm into the aft tray at y -80 (the tray went to -81.2 mm);
+    a motor spacer ring and then screw sleeves on the plate, into the lock flange (-0.37 mm) and onto the outboard bearing (0.00 mm),
+      before the motor went onto its back-face bracket.
+
+v21 -> v22 -> v23 (data/designs; out/sweep/round15/diff-v21-v22-v23.txt):
+                                     v21                        v22                        v23
+  mass (g)                           1708.3                     1761.9                     1805.6
+  structure / parts / margin (g)     649.4 / 836.0 / 222.8      695.9 / 836.2 / 229.8      733.9 / 836.2 / 235.5
+  wing loading (N/m2)                25.13                      25.92                      26.56
+  CG of the lumps x, y, z (mm)       18.71, -31.54, 0.25        18.61, -31.75, -3.06       18.54, -35.71, -2.92
+  battery x (trim, mm)               256.5                      207.7                      206.1
+  residual CG shift (packing, mm)    -2.18                      -1.62                      -0.95
+  body lumps Ixx, Iyy, Izz (g m2)    6.308, 42.506, 43.059      6.708, 39.055, 39.945      6.799, 38.807, 39.735
+  pod W x H @ y (m)                  0.09 x 0.13 @ -0.02        0.11 x 0.14 @ -0.03        0.12 x 0.14 @ -0.027
+  pod frontal CdA (m2)               0.002297                   0.003024                   0.003299
+  outside fittings CdA (m2)          0.000000                   0.000000                   0.000847
+  body CdA_front total (m2)          0.002297                   0.003024                   0.004145
+  ties                               t18r, 19 off               t18r, 19 off               t18r, 12 off + t40r, 9 off
+  envelope (amp:freqMax lim)         38:3.318 members           38:3.247 members           38:3.270 members
+  cruise V / freq / power            10 / 1.915 / 64.46 W       10 / 1.975 / 69.70 W       10 / 2.046 / 72.40 W
+  Vapp (m/s)                         9.033                      9.187                      9.302
+  best sustained climb (m/s)         1.449                      1.325                      1.248
+  Mass v22 -> v23 +43.7 g: structure +38.0 g, margin +5.7 g, parts unchanged.
+    Up: motor bracket +9.7, nose tray +9.2, T40R ties +8.1 (9 off), M3 screws +6.0 and nuts +1.6 (the riser, nose tray
+    and motor), aft tray +5.6 (wider), riser +5.3, M2 screws +2.4 and nuts +0.4, forward tray doubler +2.1 (wider tray),
+    formers +1.0 and film +0.1 (wider pod), encoder spacers +0.9, crank +0.5 (the longer stub).
+    Down: forward tray -6.8 (to the riser only), plates -3.8 (no tray posts), motor doubler -2.4, T18R ties -2.0.
+  CG: x -0.07 mm, y -3.96 mm (the packed parts are now on their trays), z +0.14 mm. The residual CG shift from the
+    battery's slide is -0.95 mm (v22 -1.62).
+  Body-lump inertias about their CG: Ixx +1.4%, Iyy -0.6%, Izz -0.5%.
+  The trim rule is unchanged: the battery is placed for the CG target and slides only where the loft cannot hold it,
+    and the slide is reported.
+  Pod: 0.11 x 0.14 / -0.03 -> 0.12 x 0.14 / -0.027 m. Frontal CdA: pod 0.003024 -> 0.003299 m2, plus 0.000847 m2 outside
+    (705.6 mm2 at Cd 1.2), total 0.004145 m2 (+37%).
+  Envelope 3.247 -> 3.268 Hz at 38 deg (members). Cruise trim 1.976 -> 2.046 Hz, 69.7 -> 72.4 W.
+    Vapp 9.187 -> 9.302 m/s. Best climb 1.325 -> 1.248 m/s.
+  FoS under M7 loads: min 1.600 -> 1.610 (crank shaft); bearings 1.864 -> 1.878 (crank shaft aft); spars 2.13 / 2.86 ->
+    2.10 / 2.91; coupler 2.08 / 3.01 -> 2.11 / 3.04 (1548 N); shoulder rails 1.93 / 1.92 -> 1.93 / 2.06 (they now
+    carry the motor bracket). New: nose tray at the root 2.38, riser 4.92, forward tray 3.97, motor bracket arm 8.26,
+    its sleeve bond 16.3. Every tie is above 20.
 
 V5 and the calibration (data/calibration/larus-gl-2.json; out/verification/V5-larus-gl-2.json):
-  V5 on the first official v22, which was built on v21's own multipliers: PASS. It moved the multipliers from v21's by
-    up to -0.25% (suction) and +0.08% (induced), more than 0.02%, so v22 was rebuilt on its own multipliers twice:
-      multiplier     v21's own   v22 (built on)   V5 on that build   change
-      lift            0.99197     0.99159          0.99155            -0.004%
-      suction         0.93835     0.93602          0.93592            -0.012%
-      induced         1.02099     1.02186          1.02187            +0.001%
-      lag             0.99106     0.99084          0.99083            -0.001%
-      apparentMass    0.99382     0.99369          0.99369            -0.001%
-  That is the fixed point (all moves within 0.012%).
-  V5 on the final v22: PASS, worst held-out lift 1.3%, thrust 2.7% (limit 10%). UVLM grid nc 16 -> 24 at cruise: lift
-    +0.6%, thrust -4.4%. data/calibration holds the multipliers the design embeds (the "built on" column).
-  To keep the version at 22, v21 was restored before each official write.
+  The first official v23 was built on v22's own multipliers. V5 on it: PASS. It moved suction by -0.31%, induced by
+    +0.11% and lift by -0.07%, so v23 was rebuilt. The second build moved suction by a further -0.022%, so it was
+    rebuilt once more:
+      multiplier     v22's own   v23 (built on)   V5 on that build   change
+      lift            0.99159     0.99083          0.99085            +0.002%
+      suction         0.93602     0.93294          0.93300            +0.007%
+      induced         1.02186     1.02300          1.02299            -0.001%
+      lag             0.99084     0.99051          0.99052            +0.001%
+      apparentMass    0.99369     0.99353          0.99354            +0.002%
+  That is the fixed point: all moves are within 0.007%.
+  V5 on the final v23: PASS, worst held-out lift 1.3%, thrust 2.6% (limit 10%). UVLM grid nc 16 -> 24 at cruise: lift
+    +0.6%, thrust -4.3%. data/calibration holds the multipliers the design embeds (the "built on" column).
+  To keep the version at 23, v22 was restored before the final official write.
 
-eta_s strips (out/sweep/round14/strips/alpha-v22.json): cruise 10 m/s at 1.925 Hz, k 0.202.
+eta_s strips (out/sweep/round15/strips/alpha-v23.json): cruise 10 m/s at 1.972 Hz, k 0.207.
   semispan  0.06  0.19  0.31  0.44  0.56  0.69  0.81  0.94
-  v22 deg   1.77  3.00  4.36  5.55  6.05  5.79  5.06  3.75   (right wing; left max 6.27)
-  As in v21, none is above the 5.91-6.88 deg band. 0.56 is inside it. 0.06, 0.19, 0.31 and 0.94 are more than 1 deg below
-  and are held, so every verdict was also checked at uniform eta_s 0.6.
+  v23 deg   1.78  3.03  4.42  5.63  6.16  5.93  5.18  3.83   (right wing; left max 6.39)
+  As in v22, none is above the 5.91-6.88 deg band. 0.56 and 0.69 are inside it. 0.06, 0.19, 0.31 and 0.94 are more than
+  1 deg below and are held, so every verdict was also checked at uniform eta_s 0.6.
 
 V1  pass      unchanged                       V2  FAIL  unchanged (ruling)      V3  pass  unchanged
-V4  pass      unchanged                       V5  pass  on v22 itself: lift 1.3%, thrust 2.7%
+V4  pass      unchanged                       V5  pass  on v23 itself: lift 1.3%, thrust 2.6%
 V6  pass      unchanged                       V7  FAIL  unchanged (ruling)
-M1  FAIL      8 m/s release at 5 deg: nominal loses 1.129 m (v21 0.972) and climbs 0.554 m/s (pass). All four aero 0.9 corners
-              fail (v21: the two mass 1.05 ones); the aero 1.1 corners pass. Half-step: height lost +1.59%.
-              At eta_s 0.6: FAIL, the same verdict. Nominal loses 1.396 m; the same four corners fail.
-M2  pass      19.77 -> 18.67 min, power ratio 4.13, cruise 69.4 W (v21 65.6); every corner passes; half-step +0.02%.
-              At 0.6: 16.84 min, ratio 3.73, every corner passes.
-M3  pass      altitude deviation 0.476 m; every corner passes; half-step -1.19%. At 0.6: 0.610 m, every corner passes.
-M4  pass      nominal 100/100; corners 100, 100, 99, 98, 100, 100, 100, 99 (98 at aero 0.9 / mass 1.05 / CG +5 mm); worst H
-              5 m. Half-step on the 100 passing seeds: 100/100, worst roll +0.97%, pitch +0.03%, altitude +0.13%.
-              At 0.6: nominal 99/100; corners 99, 99, 98, 98, 100, 100, 99, 99: PASS.
-              Uniform eta_s bisection points (9 corners x 100 seeds, the round-12 probe, out/sweep/round14/scripts/eval12.mjs --eta;
-              out/sweep/round14/m4-eta/). At 0.50, M4 FAILS: 98, 98, 98, 96, 96, 99, 99, 98, 97 (nominal first; 96 at
-              both aero 0.9 / mass 1.05 corners). At 0.55 it also fails: 99, 99, 99, 97, 96, 100, 99, 98, 98.
-              v21 passed at 0.50 (minimum 98) and failed at 0.46, so v22's eta_s margin in rough air is smaller: it
-              passes at the table and at 0.6, and fails at 0.55. The gate's verdict is final under SPEC "Final
-              verdicts" (the table and 0.6 agree). But the SPEC's v21 line "M4 still passes at a uniform 0.50" does not
-              hold for v22.
-M5  pass      nominal touchdown 8.391 m/s, sink 0.651 m/s, slowest airspeed 8.34 m/s, max stalled fraction 0.9%, no
-              departure; approach 9.187 m/s; every corner passes; half-step +0.01%. At 0.6: 8.300 m/s, sink 0.693, every
-              corner passes.
-M6  1761.9 g  every part cited, 15% margin 229.8 g.
-M7  pass      population: M1-M3, M5 and the 100 passing M4 seeds (nominal). FoS min 1.600 (crank shaft).
-              Spars 2.13 / 2.86. Coupler buckling 2.08, stress 3.01 (1566 N). Bearings min 1.864 (crank shaft aft).
-              Gear torque at the crank 15.03 N m against 16.24 rated. The last stage MSGA1-18 / MSGB1-45: pinion 6.01 of
-              6.50 N m. Every stage is within its rating.
-              Rating conditions hold: peak crank rate 23.70 rad/s = 3.77 Hz, within 4.0 Hz; reversing declared. No
-              mixed-material mesh. Servos: twist 0.559 / 1.020 N m, tail 0.162 / 0.804.
-              Half-step: every M7 channel within 4.72% (tail torque), every support within 8.35% (pitot ties), so within
+M1  FAIL      8 m/s release at 5 deg: nominal loses 1.270 m (v22 1.129) and climbs 0.450 m/s (pass). The same four aero 0.9
+              corners fail; the aero 1.1 corners pass. Half-step: height lost +1.97%.
+              At eta_s 0.6: FAIL, the same verdict. Nominal loses 1.647 m (v22 1.396); the same four corners fail.
+M2  pass      18.67 -> 17.63 min, power ratio 3.90 (v22 4.13), cruise 73.4 W (v22 69.4); every corner passes; half-step
+              -0.03%. At 0.6: 15.60 min, ratio 3.46, every corner passes.
+M3  pass      altitude deviation 0.469 m (v22 0.476); every corner passes; half-step -0.71%. At 0.6: 0.821 m (v22 0.610),
+              every corner passes.
+M4  NOT FINAL passes on the measured table but fails at uniform eta_s 0.6, so it is not counted as a pass.
+              Measured table: nominal 99/100 (v22 100); corners 100, 99, 99, 98, 100, 100, 99, 99 (98 at aero 0.9 / mass 1.05 / CG +5 mm,
+              as v22); worst H 10 m. Half-step on the passing seeds: 99 -> 99, worst roll +1.38%, pitch +0.82%, altitude
+              -0.02%.
+              At uniform eta_s 0.6, M4 FAILS: nominal 97/100; corners 98, 98, 96, 96, 99, 99, 96, 96 (out/sweep/round15/
+              v23-eta0.6/). v22 passed at 0.6 (nominal 99, minimum 98).
+              Under SPEC "Final verdicts", a verdict is final only if it holds at uniform 0.6. So v23's M4 pass under
+              the measured table is NOT final. This is the one change of standing from v22. It comes from the honest
+              mass (+43.7 g) and drag (body CdA +37%, mostly the fittings left outside) of the supported, contained
+              layout. Nothing was retuned for it.
+              Uniform eta_s 0.50, information (9 corners x 100 seeds, out/sweep/round15/m4-eta/): FAIL, 97, 98, 97, 96, 96, 99, 99,
+              96, 96 (nominal first). v22 was 98, 98, 98, 96, 96, 99, 99, 98, 97, also a fail.
+M5  pass      nominal touchdown 8.462 m/s (v22 8.391), sink 0.669 m/s, slowest airspeed 8.41 m/s, max stalled fraction
+              1.0%, no departure; approach 9.302 m/s; every corner passes; half-step +0.02%. At 0.6: 8.380 m/s, sink
+              0.695, every corner passes.
+M6  1805.6 g  every part cited, the new fixings included (M2 screws and nuts, catalogued with their sources); 15% margin
+              235.5 g.
+M7  pass      population: M1-M3, M5 and the 99 passing M4 seeds (nominal). FoS min 1.610 (crank shaft; v22 1.600).
+              Spars 2.10 / 2.91. Coupler buckling 2.11, stress 3.04 (1548 N). Bearings min 1.878 (crank shaft aft).
+              Gear torque at the crank 15.61 N m (back-driven 9.79) against 16.24 rated; the last stage MSGA1-18 /
+              MSGB1-45: pinion 6.24 of 6.50 N m (v22 6.01). Every stage is within its rating.
+              Rating conditions hold: peak crank rate 23.52 rad/s = 3.74 Hz, within 4.0 Hz; reversing declared. No
+              mixed-material mesh. Servos: twist 0.589 / 1.020 N m, tail 0.157 / 0.804.
+              New members: shoulder rails 1.93 / 2.06 (now with the motor bracket), nose tray 2.38, riser 4.92, forward
+              tray 3.97, motor bracket arm 8.26, readhead screws and every tie far above.
+              Half-step: every M7 channel within 5.44% (tail torque), every support within 5.49% (crank pin), so within
               10%.
-              At 0.6: FoS min 1.619 (crank shaft), crank 15.11 of 16.24 N m, 3.77 Hz, half-step within 1.19% (supports
-              8.99%): PASS.
+              At 0.6: FoS min 1.804 (crank shaft), crank 15.74 of 16.24 N m, 3.60 Hz, half-step within 1.88% (supports
+              2.91%): PASS.
               Unrated, RC practice (SPEC "RC practice for joints no one can rate"; M7 reports exactly these two):
-                gear-khk-ds1-60 on gear shaft 3, fixing: peak 1.082 N m (published bond figure 8.44 N m, within)
-                gear-khk-ds1-20 on the motor shaft, fixing: peak 0.361 N m (published bond figure 3.30 N m, within)
+                gear-khk-ds1-60 on gear shaft 3, fixing: peak 1.124 N m (published bond figure 8.44 N m, within)
+                gear-khk-ds1-20 on the motor shaft, fixing: peak 0.375 N m (published bond figure 3.30 N m, within)
                 Both are bonded with LOCTITE 406 cyanoacrylate and LOCTITE SF 770 polyolefin primer on acetal (plain bore).
-M8  pass      motor 2 s RMS max 22.93 of 26 A continuous (published); ESC 45 A; battery RMS 15.36 of 77 A; FC BEC 0.415 of
-              2 A; servo regulator peak 2.55 of 5 A. At 0.6: motor 23.12 of 26 A: PASS.
+M8  pass      motor 2 s RMS max 23.21 of 26 A continuous (published); ESC 45 A; battery RMS 15.60 of 77 A; FC BEC 0.415 of
+              2 A; servo regulator peak 2.52 of 5 A. At 0.6: motor 23.15 of 26 A: PASS.
 
 M1's lowest passing release speed (information only; SPEC "Launch speed"). Every case at 0, 5 and 10 deg at all 9
 corners, judged on M1's two flight criteria: climb rate over 2-3 s above zero, and less than 1.5 m lost. Above 8 m/s the
-gate itself fails every case on the release-speed cap. Results are in out/sweep/round14/m1/.
+gate itself fails every case on the release-speed cap. Results are in out/sweep/round15/m1/.
   speed m/s           8      8.5    9      9.5    10     10.5   11     11.5   12
-  table: fail of 27   12     6      0      0      0      1      0      0      0     worst lost 8.5: 1.762 m
-  eta_s 0.6: fail     12     6      1      3      3      3      1      0      0
-  v21 (table)         9      0      0      0      0      0      0      0      0     (8.25: 6)
-  With the table and v22's own calibration, every case passes from 9 m/s (worst at 9: 0.951 m lost, min climb 0.067
-  m/s). Then one case fails at 10.5 m/s: aero 0.9 / mass 1.05 / CG +5 mm at 0 deg climbs -0.029 m/s over 2-3 s. So the
-  lowest speed with no failure at it or any faster speed is 11 m/s. v21's figure was 8.5 m/s, a marginal pass. At
-  uniform 0.6 the lowest is 11.5 m/s (v21: 11.5): from 9 to 11 m/s some aero-0.9 corners still sink over 2-3 s (min
-  climb -0.17 to -0.08 m/s). By the SPEC's final-verdict rule, the speed that holds under both is 11.5 m/s, as for v21.
-  At 8 m/s the 27 cases lose up to 2.794 m (v21 2.542); nominal worst 1.209 m (v21 1.032).
+  table: fail of 27   12     6      1      1      2      2      1      0      0     worst lost 8: 3.115 m
+  eta_s 0.6: fail     15     8      3      3      3      3      1      0      0
+  v22 (table)         12     6      0      0      0      1      0      0      0
+  With the table, one aero 0.9 / mass 1.05 / CG +5 mm case still fails at every speed from 9 to 11 m/s. At 9 m/s it
+  loses 1.107 m; above that it sinks over 2-3 s (min climb -0.234 to -0.061 m/s). So the lowest speed with no failure at
+  it or any faster speed is 11.5 m/s (v22: 11). At uniform 0.6 it is also 11.5 m/s (v22 11.5), so the speed that holds
+  under both is 11.5 m/s, as for v22. At 8 m/s the 27 cases lose up to 3.115 m (v22 2.794); the nominal worst is 1.364 m
+  (v22 1.209).
 
-LBM cross-check (informational): not repeated on v22. It ran on v21 (design sha256 b34427b1, cruise 1.891 Hz). That was a
-wing-only half model at dx 12.5, 10 and 7.5 mm, with true viscosity, which does not resolve Re_mac 2.0e5.
-  Lift phase: LBM 88.3 / 89.6 / 92.1 deg against the strip model's 92.3 (UVLM 102.7).
-  Lift magnitude: 12.8 / 13.9 / 15.4 N, rising 9-10% per refinement, not converged (strip 16.1).
-  Thrust: not resolved.
-  Files: out/sweep/freeze/lbm/. v22's wing and kinematics are v21's, at 1.925 Hz instead of 1.891.
+LBM cross-check (informational): not repeated on v23 (v23's wing and kinematics are v21's; out/sweep/freeze/lbm/).
 
-Verdict: no verdict moved from v21. v22 assembles, with zero clashes through the stroke and against the pod, and every
-physically located BOM part placed. It passes M2-M8 and fails only M1, at the four aero 0.9 corners. It is 53.6 g
-heavier than v21, which fails M1 by a little more: nominal 1.13 m at 5 deg against v21's 0.97. M7's margin went from
-1.70 to 1.60, set by the crank shaft. M4 holds at 98 seeds at its worst corner, but it now fails at uniform eta_s
-0.55 and 0.50 (v21 passed at 0.50). At uniform eta_s 0.6 (out/sweep/round14/v22-eta0.6/) every verdict is the same:
-M1 FAIL, M2-M8 PASS. Under SPEC "Final verdicts" they are final.
-V1, V3-V6 pass; V2 and V7 fail as ruled.
+Verdict, by the gates as declared and the measured eta_s table: no verdict moved from v22. M1 FAIL (the same four aero
+0.9 corners; nominal loses 1.27 m), M2-M8 PASS. V1, V3-V6 pass; V2 and V7 fail as ruled.
+Standing under SPEC "Final verdicts": M1 FAIL and M2, M3, M5-M8 PASS are final (they hold at uniform 0.6). M4 is NOT
+final. It passes at the table (minimum 98 seeds) and fails at uniform 0.6 (nominal 97, four corners at 96). v22's M4 was
+final.
+v23 is 43.7 g heavier than v22 and has 37% more frontal drag. Every packed part rests on its carrier through a
+catalogued fixing, every enclosed part is inside the pod, the fittings outside are counted, and the assembly still has
+zero clashes.

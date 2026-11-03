@@ -380,12 +380,16 @@ function clearancePlanes(design, train, parts) {
   const kw = train.n - 1 - last; // the last inside stage's wheel shaft (its pinion shaft is kw + 1)
   const plateFwd = x + Math.max(beyond(kw, tF), beyond(kw + 1, tF)) + run + tF / 2;
   const md = motorOf(design, parts ?? {}).md;
-  const m = over ? overhungStage1(train.stages[0], plateFwd, plateT, tF, run, k.outboardB, md) : { motorFace: plateFwd + plateT / 2 + 0.0015, motorX: null };
+  // round 15 (support): params.layout.motor_gap_mm between the motor's mounting face and the plate's own face
+  const motorGap = Ly.motor_gap_mm != null ? Ly.motor_gap_mm / 1000 : null;
+  const m = over ? overhungStage1(train.stages[0], plateFwd, plateT, tF, run, k.outboardB, md, motorGap) : { motorFace: plateFwd + plateT / 2 + 0.0015, motorX: null };
   if (over) stage[0] = m.stage0;
   const motorX = m.motorX ?? [m.motorFace, m.motorFace + md[1]];
   // encoder 'front': on a stub of the crank shaft forward of stage 1's teeth (its wheel's hub clears the crank in the
-  // plane), so the box stays as long as its three stages
-  const encoder = over && Ly.encoder === 'front' ? encoderPlanes(encoderDims(design, parts), m.stage0 + m.w0 / 2 + run) : null;
+  // plane), so the box stays as long as its three stages; round 15: params.layout.encoder_gap_mm from stage 1's teeth
+  // (the readhead's mounting screw heads on its back face, the maker's 3 x M2, clear of the wheel by the running gap)
+  const encGap = Ly.encoder_gap_mm != null ? Ly.encoder_gap_mm / 1000 : run;
+  const encoder = over && Ly.encoder === 'front' ? encoderPlanes(encoderDims(design, parts), m.stage0 + m.w0 / 2 + encGap) : null;
   const couplerR = crankArm - tw / 2 - run - eye / 2;
   return { crankArm, plateAft, stage, plateFwd, plateT, motorAft: motorX[0], motorX, motorFace: m.motorFace, stage1: over ? 'overhung' : 'inside', ...(encoder ? { encoder } : {}), shoulderAft: k.shoulderAft, crankEnd: Math.max(plateFwd + plateT / 2 + 0.001, encoder ? encoder.actuator[1] : -Infinity), couplerR, couplerL: couplerR - eye - k.eyeGap, rule: 'clearance' };
 }
@@ -426,10 +430,11 @@ function boxStages(train, last, x) {
  * shaft ends (1 mm proud of the plate, as every shaft is drawn and checked) and the motor's outboard bearing (seated
  * from the plate's inner face outward) by the running gap. -> { stage0, w0, motorFace, motorX }
  */
-function overhungStage1(st, plateFwd, plateT, tF, run, outboardB, md) {
+function overhungStage1(st, plateFwd, plateT, tF, run, outboardB, md, motorGap = null) {
   const ob = outboardB != null ? plateFwd - tF / 2 + outboardB : -Infinity;
   const w0 = Math.max(st.wheel.face, st.pinion.face);
-  const motorFace = plateFwd - plateT / 2 - 0.0015;
+  // 1.5 mm from the nominal 2 mm plate's face (v22); round 15: motorGap from the plate's own aft face (its mount spacer)
+  const motorFace = motorGap != null ? plateFwd - tF / 2 - motorGap : plateFwd - plateT / 2 - 0.0015;
   return { stage0: Math.max(plateFwd + plateT / 2 + 0.001, ob) + run + w0 / 2, w0, motorFace, motorX: [motorFace - md[1], motorFace] };
 }
 
@@ -505,8 +510,8 @@ function motorShellGap(loft, box, md, c) {
   return -worst;
 }
 
-/** Half extents of the loft at x, or null outside it. */
-function loftHalf(loft, x) {
+/** Half extents of the loft at x, or null outside it (src/design/clearance.js reads the loft through it too). */
+export function loftHalf(loft, x) {
   const s = bodySectionAt(loft, x);
   return s ? { y: s.y_m, hw: s.width_m / 2, hh: s.height_m / 2 } : null;
 }
@@ -579,16 +584,104 @@ function placeBox(loft, name, at, size, others, { rotate = true, gap = -1e-4, sh
  */
 export const SERVO_DEFAULT_DIMS = [0.033, 0.01, 0.035];
 
-function placeServos(design, put, spec) {
+function servoSpecs(design, add, spec) {
   const dims = (role) => parseDims(spec(role)?.dimensions_text_mm)?.values;
   const sv = dims('stroke amplitude servo') ?? SERVO_DEFAULT_DIMS;
   const st = lump(design, 'stroke servo');
-  if (st) put('servo_stroke', 'stroke amplitude servo', [sv[0], sv[2], sv[1]], st.pos, 'drive');
+  if (st) add('servo_stroke', 'stroke amplitude servo', [sv[0], sv[2], sv[1]], st.pos, 'drive');
   // Tail servos are sized from their own catalogue entry; the stroke servo's is only a fallback.
   const tv = dims('tail servo') ?? sv;
   const ts = lump(design, 'tail servos');
-  put('servo_tail_L', 'tail servo', [tv[0], tv[2], tv[1]], [ts.pos[0], ts.pos[1], ts.pos[2] - tv[1] * 0.55], 'avionics');
-  put('servo_tail_R', 'tail servo', [tv[0], tv[2], tv[1]], [ts.pos[0], ts.pos[1], ts.pos[2] + tv[1] * 0.55], 'avionics');
+  add('servo_tail_L', 'tail servo', [tv[0], tv[2], tv[1]], [ts.pos[0], ts.pos[1], ts.pos[2] - tv[1] * 0.55], 'avionics');
+  add('servo_tail_R', 'tail servo', [tv[0], tv[2], tv[1]], [ts.pos[0], ts.pos[1], ts.pos[2] + tv[1] * 0.55], 'avionics');
+}
+
+/**
+ * The packed parts as the design names them, before placement, in packing order: { list: [{ name, role, size [x, y,
+ * z] (m, the base orientation), at (where its lump puts it), subsystem }], assumptions }. The servo regulator is listed
+ * only when the design mounts it (round 15, params.layout.mounts.regulator); otherwise the film packs it last
+ * (packRegulator), as before.
+ */
+export function packedSpecs(design, parts) {
+  const P = (role) => design.bom.parts.find((p) => p.role === role);
+  const spec = (role) => parts[P(role)?.id]?.specs;
+  const assumptions = [];
+  const list = [];
+  const add = (name, role, size, at, subsystem) => list.push({ name, role, size, at, subsystem });
+  const FR4 = 1850; // kg/m3, glass-epoxy board, for boards whose catalogue entry lists fewer than three sizes
+  const flat = (v) => [v[0], v[2], v[1]];
+  // Battery: long axis along x, at the design's battery station.
+  add('battery', 'battery', sizeOf(spec('battery'), P('battery').unit_mass_g, flat, 2000, assumptions, 'battery'), lump(design, 'battery').pos, 'power');
+  // ESC, long axis along x.
+  const escRole = design.bom.parts.find((p) => /ESC/.test(p.role)).role;
+  add('esc', escRole, sizeOf(spec(escRole), P(escRole).unit_mass_g, flat, FR4, assumptions, 'ESC'), lump(design, 'ESC').pos, 'power');
+  // Flight controller flat.
+  const fcRole = flightControllerRole(design.bom);
+  add('fc', fcRole, sizeOf(spec(fcRole), P(fcRole).unit_mass_g, flat, FR4, assumptions, 'flight controller'), lump(design, 'flight controller').pos, 'avionics');
+  add('gps', 'GPS', sizeOf(spec('GPS'), P('GPS').unit_mass_g, flat, FR4, assumptions, 'GPS'), lump(design, 'GPS').pos, 'avionics');
+  // Receiver and airspeed board share a lump.
+  const rx = lump(design, 'receiver and airspeed');
+  add('receiver', 'receiver', sizeOf(spec('receiver'), P('receiver').unit_mass_g, flat, FR4, assumptions, 'receiver'), [rx.pos[0], rx.pos[1] + 0.008, rx.pos[2]], 'avionics');
+  add('airspeed', 'airspeed sensor', sizeOf(spec('airspeed sensor'), P('airspeed sensor').unit_mass_g, flat, FR4, assumptions, 'airspeed sensor'), [rx.pos[0], rx.pos[1] - 0.008, rx.pos[2]], 'avionics');
+  servoSpecs(design, add, spec);
+  const reg = P('servo regulator'), at = lump(design, 'power module and regulator');
+  if (design.params?.layout?.mounts?.regulator && reg && at) add('regulator', reg.role, regulatorSize(spec('servo regulator'), reg, assumptions), at.pos, 'power');
+  return { list, assumptions };
+}
+
+/** The servo regulator's box: its catalogue size (printed in inches), flat, else from its mass as a board. */
+function regulatorSize(specs, reg, assumptions) {
+  const d = catalogueDims(specs);
+  return d?.values.length >= 3 ? [d.values[0], d.values[2], d.values[1]] : sizeOf(specs, reg.unit_mass_g, (v) => [v[0], v[2], v[1]], 1850, assumptions, 'servo regulator');
+}
+
+/** The packing order with every mounted part after the part its mount follows (`after`), otherwise unchanged. */
+export function mountOrder(list, mounts) {
+  const out = [], done = new Set(), byName = new Map(list.map((s) => [s.name, s]));
+  const visit = (s, seen = new Set()) => {
+    if (done.has(s.name)) return;
+    if (seen.has(s.name)) throw new Error(`mounts: a cycle through ${s.name}`);
+    seen.add(s.name);
+    const a = mounts[s.name]?.after;
+    if (a && byName.has(a)) visit(byName.get(a), seen);
+    done.add(s.name);
+    out.push(s);
+  };
+  for (const s of list) visit(s);
+  return out;
+}
+
+/** Two boxes closer than g on every axis (the packing's clash test). */
+const boxesClash = (b, o, g) => b.x0 < o.x1 + g && b.x1 > o.x0 - g && b.y0 < o.y1 + g && b.y1 > o.y0 - g && b.z0 < o.z1 + g && b.z1 > o.z0 - g;
+
+/**
+ * Round 15 (SPEC "Support and containment"): a part with a stated mount (params.layout.mounts[name]) rests on its
+ * carrier. Its box keeps the base orientation, its bottom on the carrier's face (face_y_m), at the stated z (z_m, its
+ * centre, or z0_m, its -z side) and x (x0_m, its aft end, or gap_m after the part named `after`). A part at x 'lump'
+ * (the battery: the CG trim) starts at its lump's x and slides along x only, never aft of `after`, to the nearest
+ * place where the loft holds it with the shell clearance and it clears every part placed. Nothing else moves a mounted
+ * part: one that does not fit is reported (protrusion, clash), never moved off its carrier.
+ */
+function placeMounted(loft, name, mt, size, at, others, byName, shell) {
+  const [sx, sy, sz] = size;
+  const y = mt.face_y_m + sy / 2, z = mt.z_m ?? mt.z0_m + sz / 2;
+  const after = mt.after ? byName.get(mt.after)?.box : null;
+  if (mt.after && !after) throw new Error(`mount ${name}: ${mt.after} is not placed before it`);
+  const xMin = after ? after.x1 + (mt.gap_m ?? 0) + sx / 2 : -Infinity;
+  const boxX = (x) => boxAt(x, y, z, sx, sy, sz);
+  const out = (b) => boxProtrusion(loft, b).out + shell;
+  const clash = (b) => others.some((o) => boxesClash(b, o, shell));
+  let x = mt.x0_m != null ? mt.x0_m + sx / 2 : mt.x === 'lump' ? Math.max(at[0], xMin) : xMin;
+  if (!Number.isFinite(x)) throw new Error(`mount ${name}: no x (x0_m, after or 'lump')`);
+  if (mt.x === 'lump') {
+    const x0 = x;
+    for (let k = 0; k <= 80; k++) {
+      const hit = [x0 - k * 0.001, x0 + k * 0.001].find((xx) => xx >= xMin - 1e-12 && out(boxX(xx)) <= 0 && !clash(boxX(xx)));
+      if (hit != null) { x = hit; break; }
+    }
+  }
+  const b = boxX(x);
+  return { name, box: b, orient: size, shift: [x - at[0], y - at[1], z - at[2]], protrusion: Math.max(0, out(b)), clash: clash(b), mount: { ...mt } };
 }
 
 /** The BOM role of the flight controller. An ESC role may mention the flight controller, so ESC roles never match. */
@@ -664,16 +757,18 @@ export function layoutParts(design, parts, train, fourBar) {
   const loft = design.body.loft;
   const P = (role) => design.bom.parts.find((p) => p.role === role);
   const spec = (role) => parts[P(role)?.id]?.specs;
-  const assumptions = [];
   const out = [];
-  const FR4 = 1850; // kg/m3, glass-epoxy board, for boards whose catalogue entry lists fewer than three sizes
   const placed = [];
+  const byName = new Map();
   // Round 14 (params.layout.rule 'clearance'): packed parts keep the running clearance to each other and the drive box.
   const packGap = design.params?.layout?.rule === 'clearance' ? (design.params.layout.running_mm ?? 0.5) / 1000 : undefined;
-  const put = (name, role, size, at, subsystem, extra = {}) => {
-    const p = placeBox(loft, name, at, size, placed, { gap: packGap, shell: packGap ?? null });
+  const mounts = design.params?.layout?.mounts ?? {};
+  const put = (name, role, size, at, subsystem) => {
+    const p = mounts[name] ? placeMounted(loft, name, mounts[name], size, at, placed, byName, packGap ?? 0) : placeBox(loft, name, at, size, placed, { gap: packGap, shell: packGap ?? null });
     placed.push(p.box);
-    out.push({ ...p, role, id: P(role)?.id, subsystem, ...extra });
+    const row = { ...p, role, id: P(role)?.id, subsystem };
+    out.push(row);
+    byName.set(name, row);
     return p;
   };
   const planes = gearPlanes(design, train);
@@ -682,33 +777,25 @@ export function layoutParts(design, parts, train, fourBar) {
   placed.push(motor.box);
   // The drive's swept volume is kept clear: crank, couplers and both gear stages, plate to plate.
   if (train.links?.length) placed.push(driveReserve(train, fourBar, planes));
-  // Battery: long axis along x, at the design's battery station.
-  const bat = lump(design, 'battery');
-  put('battery', 'battery', sizeOf(spec('battery'), P('battery').unit_mass_g, (v) => [v[0], v[2], v[1]], 2000, assumptions, 'battery'), bat.pos, 'power');
-  // ESC under the drive, long axis along x.
-  const esc = lump(design, 'ESC');
-  const escRole = design.bom.parts.find((p) => /ESC/.test(p.role)).role;
-  put('esc', escRole, sizeOf(spec(escRole), P(escRole).unit_mass_g, (v) => [v[0], v[2], v[1]], FR4, assumptions, 'ESC'), esc.pos, 'power');
-  // Flight controller flat.
-  const fc = lump(design, 'flight controller');
-  const fcRole = flightControllerRole(design.bom);
-  put('fc', fcRole, sizeOf(spec(fcRole), P(fcRole).unit_mass_g, (v) => [v[0], v[2], v[1]], FR4, assumptions, 'flight controller'), fc.pos, 'avionics');
-  // GPS on top.
-  const gps = lump(design, 'GPS');
-  put('gps', 'GPS', sizeOf(spec('GPS'), P('GPS').unit_mass_g, (v) => [v[0], v[2], v[1]], FR4, assumptions, 'GPS'), gps.pos, 'avionics');
-  // Receiver and airspeed board share a lump.
-  const rx = lump(design, 'receiver and airspeed');
-  put('receiver', 'receiver', sizeOf(spec('receiver'), P('receiver').unit_mass_g, (v) => [v[0], v[2], v[1]], FR4, assumptions, 'receiver'), [rx.pos[0], rx.pos[1] + 0.008, rx.pos[2]], 'avionics');
-  put('airspeed', 'airspeed sensor', sizeOf(spec('airspeed sensor'), P('airspeed sensor').unit_mass_g, (v) => [v[0], v[2], v[1]], FR4, assumptions, 'airspeed sensor'), [rx.pos[0], rx.pos[1] - 0.008, rx.pos[2]], 'avionics');
-  placeServos(design, put, spec);
+  const { list, assumptions } = packedSpecs(design, parts);
+  for (const s of mountOrder(list, mounts)) put(s.name, s.role, s.size, s.at, s.subsystem);
   // Gears: report how far each tip circle leaves the loft at its plane.
-  const gearFit = [];
+  const gearFit = gearTipFit(loft, train, planes, packGap);
+  // Crank axis against the loft bottom.
+  const hC = loftHalf(loft, fourBar.x);
+  const crankBelow = hC ? (hC.y - hC.hh) - fourBar.O2[1] : null;
+  return { parts: out, gearFit, crankBelowLoft_m: crankBelow, assumptions };
+}
+
+/**
+ * How far each gear's tip circle leaves the loft at its plane (72 points round it): protrusion beyond the loft less
+ * packGap (the running clearance a tip circle keeps inside it under the clearance rule), and its signed gap.
+ */
+function gearTipFit(loft, train, planes, packGap) {
+  const out = [];
   for (let j = 0; j < (train.links?.length ?? 0); j++) {
-    const si = train.n - 1 - j;
-    const st = train.stages[si];
-    const x = planes.stage[si];
+    const si = train.n - 1 - j, st = train.stages[si], x = planes.stage[si], h = loftHalf(loft, x);
     for (const [name, gear, c] of [[`stage ${si + 1} wheel ${st.wheel.z}T`, st.wheel, train.shafts[j]], [`stage ${si + 1} pinion ${st.pinion.z}T`, st.pinion, train.shafts[j + 1]]]) {
-      const h = loftHalf(loft, x);
       let worst = -Infinity;
       for (let k = 0; k < 72; k++) {
         const a = (k / 72) * TWO_PI;
@@ -716,14 +803,10 @@ export function layoutParts(design, parts, train, fourBar) {
         const r = h ? Math.hypot((y - h.y) / h.hh, z / h.hw) : Infinity;
         worst = Math.max(worst, (r - 1) * (h ? Math.min(h.hh, h.hw) : 1));
       }
-      // under the clearance rule a tip circle must keep the running clearance inside the loft; gap_m is its signed gap
-      gearFit.push({ name, id: gear.id, x, protrusion: Math.max(0, worst + (packGap ?? 0)), gap_m: -worst });
+      out.push({ name, id: gear.id, x, protrusion: Math.max(0, worst + (packGap ?? 0)), gap_m: -worst });
     }
   }
-  // Crank axis against the loft bottom.
-  const hC = loftHalf(loft, fourBar.x);
-  const crankBelow = hC ? (hC.y - hC.hh) - fourBar.O2[1] : null;
-  return { parts: out, gearFit, crankBelowLoft_m: crankBelow, assumptions };
+  return out;
 }
 
 /** Body-x planes of the drive parts (see stagePlanes). */
@@ -825,9 +908,9 @@ export function prepareFilm(design, parts) {
 export function packRegulator(model, design, parts) {
   const reg = design.bom.parts.find((p) => p.role === 'servo regulator');
   const at = lump(design, 'power module and regulator');
-  if (!reg || !at) return;
-  const d = catalogueDims(parts[reg.id]?.specs);
-  const size = d?.values.length >= 3 ? [d.values[0], d.values[2], d.values[1]] : sizeOf(parts[reg.id]?.specs, reg.unit_mass_g, (v) => [v[0], v[2], v[1]], 1850, model.layout.assumptions, 'servo regulator');
+  // round 15: a design that mounts the regulator packs it in layoutParts, on its carrier
+  if (!reg || !at || model.layout.parts.some((p) => p.name === 'regulator')) return;
+  const size = regulatorSize(parts[reg.id]?.specs, reg, model.layout.assumptions);
   const boxes = model.layout.parts.map((p) => p.box);
   if (model.train.links?.length) boxes.push(driveReserve(model.train, model.fourBar, model.planes));
   const gap = design.params?.layout?.rule === 'clearance' ? (design.params.layout.running_mm ?? 0.5) / 1000 : undefined;

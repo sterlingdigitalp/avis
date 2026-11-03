@@ -22,6 +22,7 @@
 // in the design file and their clearances to the gear tip circles and rocker hubs are computed and reported here.
 import { byId } from './catalog.js';
 import { shaftMomentSections, channelSection } from '../physics/members.js';
+import { packedSpecs, partsIndex } from '../../sims/avis-shared/model.js';
 
 const PI4 = Math.PI / 4;
 const AL7 = 'metal-al-7075-t6', AL6 = 'metal-al-6061-t6';
@@ -162,10 +163,12 @@ function af_shoulders(ax) {
     const jt = jointByName(`shoulder pivot ${side}`);
     const [sAft, sFwd] = ['aft', 'forward'].map((nm) => jt.supports.find((s) => s.name === nm));
     const Faft = sAft.radial.map((t) => ({ ch: t.ch, k: t.k })), Ffwd = sFwd.radial.map((t) => ({ ch: t.ch, k: t.k }));
-    const loads = [...Faft.map((t) => ({ ch: t.ch, perUnit: t.k, x: xa })), ...Ffwd.map((t) => ({ ch: t.ch, perUnit: t.k, x: xf }))];
+    // round 15: the motor's bracket on the rails (af_motor), its whole force on each rail (conservative)
+    const mb = motorBracketLoad(ax);
+    const loads = [...Faft.map((t) => ({ ch: t.ch, perUnit: t.k, x: xa })), ...Ffwd.map((t) => ({ ch: t.ch, perUnit: t.k, x: xf })), ...(mb ? mb.F.map((t) => ({ ch: t.ch, perUnit: t.k, x: mb.x })) : [])];
     const ms = shaftMomentSections(xA, xF, loads, 'M');
-    const RA = addTerms(scaleTerms(Faft, Math.abs(xF - xa) / gap), scaleTerms(Ffwd, Math.abs(xF - xf) / gap));
-    const RB = addTerms(scaleTerms(Faft, Math.abs(xa - xA) / gap), scaleTerms(Ffwd, Math.abs(xf - xA) / gap));
+    const RA = addTerms(scaleTerms(Faft, Math.abs(xF - xa) / gap), scaleTerms(Ffwd, Math.abs(xF - xf) / gap), ...(mb ? [scaleTerms(mb.F, Math.abs(xF - mb.x) / gap)] : []));
+    const RB = addTerms(scaleTerms(Faft, Math.abs(xa - xA) / gap), scaleTerms(Ffwd, Math.abs(xf - xA) / gap), ...(mb ? [scaleTerms(mb.F, Math.abs(mb.x - xA) / gap)] : []));
     const Ftot = addTerms(Faft, Ffwd);
     const dy = Math.hypot(ra.dz_mm, ra.dy_mm) / 1000; // the bracket arm: the rail's offset from the hinge axis
     const Trail = scaleTerms(Ftot, dy);
@@ -206,7 +209,9 @@ function af_boom(ax) {
   const bo = A.boom;
   const tube = byId(catalog, d.params.parts.keel);
   const tube_od = tube.specs.od_mm, tube_id = tube.specs.id_mm;
-  const xcA = xA - plateT / 2 - bo.clamp_len_mm / 2000, xcF = xF + plateT / 2 + bo.clamp_len_mm / 2000, sCl = xcF - xcA;
+  // round 15 (params.layout.plate_faces 'actual'): the clamps on the plates' own faces, not the nominal 2 mm plate's
+  const [hA, hF] = ax.d.params.layout?.plate_faces === 'actual' ? [tAft / 2000, tFwd / 2000] : [plateT / 2, plateT / 2];
+  const xcA = xA - hA - bo.clamp_len_mm / 2000, xcF = xF + hF + bo.clamp_len_mm / 2000, sCl = xcF - xcA;
   const yB = bo.y_mm / 1000;
   const tail = d.tail;
   const Lt = xcA - tail.x_m;
@@ -238,6 +243,7 @@ function af_boom(ax) {
 }
 
 function af_trays(ax) {
+  if (ax.A.noseTray) return af_carriers(ax);
   const { plateT, members, mat, item, A, tieS, lump, counts, xA, xF, tFwd, tAft, screwSeat, bolts, flangePlate, perScrewShear, tail } = ax;
   // ---- Forward tray: battery, ESC, receiver and pitot ---------------------------------------------------------------
   const trayChecks = (tag, T, plateX, itemsOn, tiesFor) => {
@@ -273,22 +279,259 @@ function af_trays(ax) {
   Object.assign(ax, { fwdTray, aftTray });
 }
 
+/**
+ * Round 15 (SPEC "Support and containment"): the carriers' geometry (m) from the airframe's parameters and the plate
+ * faces, shared by the load checks here, the packing mounts (src/design/round15.mjs) and the assembly check
+ * (src/design/clearance.js). A channel's base is centred on y (thickness t), its flanges' mid-planes at z +-w/2 rising
+ * h from the base's centre line (as clearance.js has drawn trays since round 14).
+ *  - forward tray: from the forward plate's outer face to the riser's forward face, at tray.y_mm, with its root tab
+ *    (flange_mm) up the plate face;
+ *  - nose tray riser: a bent sheet standing on the forward tray: its web across the pod at noseTray.riser_x_mm (the aft
+ *    face), a flange forward along each vertical edge, a foot aft along the forward tray's base and a tab forward
+ *    under the nose tray;
+ *  - nose tray: from the riser's aft face forward to noseTray.tip_x_mm, at noseTray.y_mm, on the riser's tab;
+ *  - aft tray: from the aft plate's outer face aft for aftTray.length_mm, at aftTray.y_mm, its root tab up the plate.
+ */
+export function carrierGeometry(A, planes, tF, tA) {
+  const m = (v) => v / 1000, xPf = planes.plateFwd + tF / 2, xPa = planes.plateAft - tA / 2; // the plates' own faces
+  const ch = (T) => ({ y: m(T.y_mm), w: m(T.w_mm), h: m(T.flange_h_mm), t: m(T.t_mm), tab: m(T.flange_mm), material: T.material });
+  const N = A.noseTray, R = N.riser, xr = m(N.riser_x_mm), tr = m(R.t_mm);
+  const forward = { ...ch(A.tray), x: [xPf, xr + tr], root: 'fwd' };
+  const nose = { ...ch(N), x: [xr, m(N.tip_x_mm)] };
+  const riser = { x: [xr, xr + tr], y: [forward.y + forward.t / 2, nose.y - nose.t / 2], w: m(R.w_mm), t: tr, f: m(R.flange_mm), foot: m(R.foot_mm), material: R.material ?? A.tray.material };
+  const aft = { ...ch(A.aftTray), x: [xPa - m(A.aftTray.length_mm), xPa], root: 'aft' };
+  return { forward, riser, nose, aft };
+}
+
+/** Volume (m3) of a channel of the carrier geometry over length L, with its root tab when it has one. */
+const channelVolume = (c, L, tab = 0) => (c.w + 2 * c.h) * c.t * (L + tab);
+/** Volume (m3) of the riser: web, two flanges, foot and tab. */
+const riserVolume = (r) => { const h = r.y[1] - r.y[0]; return r.t * (r.w * h + 2 * r.f * (h - 2 * r.t) + 2 * r.w * r.foot); };
+
+/** A cable tie's catalogue geometry: bundle diameters and band width x thickness (m), from its dimensions text. */
+export function tieGeometry(specs) {
+  const t = String(specs?.dimensions ?? '');
+  const band = t.match(/x\s*([\d.]+)\s*x\s*([\d.]+)\s*mm/), bundle = t.match(/bundle\s*([\d.]+)\s*-\s*([\d.]+)\s*mm/);
+  return band && bundle ? { b_m: +band[1] / 1000, t_m: +band[2] / 1000, bundle_m: [+bundle[1] / 1000, +bundle[2] / 1000] } : null;
+}
+
+/**
+ * The tie that holds a part on its carrier (round 15): through two slots in the carrier either side of the part, the
+ * loop round the part's cross-section (w x h) and the carrier sheet (tb), 2 (w + h + tb); the smallest catalogue tie
+ * whose published bundle range takes that loop (pi x bundle diameter). -> the tie with loop_m, or null.
+ */
+export function tieFor(ties, w, h, tb) {
+  const loop = 2 * (w + h + tb);
+  const ok = ties.filter((q) => q.geo && loop <= Math.PI * q.geo.bundle_m[1] + 1e-12 && loop >= Math.PI * q.geo.bundle_m[0]);
+  ok.sort((a, b) => a.geo.bundle_m[1] - b.geo.bundle_m[1]);
+  return ok.length ? { ...ok[0], loop_m: loop } : null;
+}
+
+// The mass lump each packed part belongs to (src/design/fit.js lumpPositionsFrom).
+const LUMP_OF = { battery: 'battery', esc: 'ESC', fc: 'flight controller', gps: 'GPS', receiver: 'receiver and airspeed', airspeed: 'receiver and airspeed', servo_tail_L: 'tail servos', servo_tail_R: 'tail servos', regulator: 'power module and regulator', servo_stroke: 'stroke servo' };
+
+/**
+ * Round 15 carriers (SPEC "Support and containment"): the forward tray, the nose tray on its riser, the aft tray, the
+ * crank encoder readhead on the riser, every mounted part's ties and the pitot's. Each carrier is checked at its root
+ * like round 8's trays (a channel beam carrying the inertia moment of everything beyond it, both ways at full value;
+ * its screws, their seats), now with the carriers' own masses among the loads.
+ */
+function af_carriers(ax) {
+  const { d, catalog, planes, plateT, members, mat, item, A, tieS, tieL, lump, counts, tFwd, tAft, screwSeat, bolts, flangePlate, perScrewShear } = ax;
+  const G = carrierGeometry(A, planes, tFwd / 1000, tAft / 1000), mf = 1 + (d.mass.margin_frac ?? 0.15);
+  const at = (nm) => lump(nm);
+  const pt = (m, r) => ({ m, r });
+  // the carriers' own masses (kg, with the margin) at their centroids
+  const own = (c, v, x, y) => { const kg = v * mat(c.material).density_g_cm3 * 1000; return { kg, load: pt(kg * mf, [x, y, 0]) }; };
+  const F = G.forward, R = G.riser, N = G.nose, AT = G.aft;
+  const mid = (x) => (x[0] + x[1]) / 2;
+  const oF = own(F, channelVolume(F, F.x[1] - F.x[0], F.tab), mid(F.x), F.y), oR = own(R, riserVolume(R), mid(R.x), mid(R.y));
+  const oN = own(N, channelVolume(N, N.x[1] - N.x[0]), mid(N.x), N.y), oA = own(AT, channelVolume(AT, AT.x[1] - AT.x[0], AT.tab), mid(AT.x), AT.y);
+  const enc = at('crank encoder');
+  const noseItems = [...['battery', 'ESC', 'receiver and airspeed', 'pitot-static probe'].map(at).filter(Boolean), oN.load];
+  const riserItems = [...noseItems, oR.load, ...(enc ? [enc] : [])];
+  const fwdItems = [...riserItems, oF.load];
+  const aftItems = [...['tail servos', 'flight controller', 'GPS', 'power module and regulator', 'stroke servo'].map(at).filter((q) => q && q.m > 0), oA.load];
+  const V = (items) => addTerms(...items.map((q) => inertialTerms(q.m, q.r)));
+  const Mabout = (items, P) => addTerms(...items.map((q) => scaleTerms(inertialTerms(q.m, q.r), hyp(q.r[0] - P[0], q.r[1] - P[1], q.r[2]))));
+  const rootChecks = (tag, T, c, P, items, seatT, plateName) => {
+    const cs = channelSection(T.w_mm, T.flange_h_mm, T.t_mm), Vt = V(items), M = Mabout(items, P);
+    members.push({ name: `${tag} at the root`, kind: 'beam', check: 'beam', material: mat(T.material), dims: { A_mm2: +cs.A_mm2.toFixed(3), Zi_mm3: +cs.Zi_mm3.toFixed(3), Zo_mm3: +cs.Zo_mm3.toFixed(3), section: `channel ${T.w_mm} x ${T.flange_h_mm} x ${T.t_mm} mm` }, sections: [sect('M', M), sect('Mo', M)], uses: { M: 'M', Mo: 'Mo' }, note: `a bent-sheet channel: the inertia moment of everything it carries (its own mass included) about its root (${(P[0] * 1000).toFixed(1)}, ${(P[1] * 1000).toFixed(1)}) mm, taken both vertically and laterally at full value` });
+    const g = { ...rowGroup(T.screws, T.screw_pitch_mm), lever_mm: T.screw_lever_mm, n_far: 1 };
+    const Ttor = scaleTerms(Vt, T.item_height_mm / 1000);
+    bolts(`${tag} screws`, g, Vt, Ttor, M, Vt, `${T.screws} M3 with nuts through the ${tag}'s root and ${plateName}: the root moment as prying about the edge (${T.screw_lever_mm} mm, one screw), the carried force in shear and as tension, its offset of ${T.item_height_mm} mm as in-plane torsion`);
+    screwSeat(`${tag} screws in ${plateName}`, perScrewShear(g, Vt, Ttor), seatT);
+    counts.screws += T.screws; counts.nuts += T.screws;
+    return { V: Vt, M, g };
+  };
+  const fr = rootChecks('forward tray', A.tray, F, [F.x[0], F.y, 0], fwdItems, tFwd, 'the forward plate');
+  flangePlate('forward plate under the forward tray flange', A.tray.w_mm, fr.M, A.tray.doubler_mm);
+  rootChecks('nose tray riser', { ...A.noseTray.riser, w_mm: A.noseTray.riser.w_mm, flange_h_mm: A.noseTray.riser.flange_mm, material: R.material }, R, [R.x[0], R.y[0], 0], riserItems, A.tray.t_mm, 'the forward tray\'s base');
+  rootChecks('nose tray', A.noseTray, N, [R.x[1], N.y, 0], noseItems, A.noseTray.riser.t_mm, 'the riser\'s tab');
+  const ar = rootChecks('aft tray', A.aftTray, AT, [AT.x[1], AT.y, 0], aftItems, tAft, 'the aft plate');
+  flangePlate('aft plate under the aft tray flange', A.aftTray.w_mm, ar.M, A.aftTray.doubler_mm);
+  item('forward tray', mat(F.material), channelVolume(F, F.x[1] - F.x[0], F.tab), `channel ${A.tray.w_mm} x ${A.tray.flange_h_mm} x ${A.tray.t_mm} mm x ${((F.x[1] - F.x[0]) * 1000).toFixed(1)} mm (plate face to the riser) with a ${A.tray.flange_mm} mm root tab; ${mat(F.material).density_g_cm3} g/cm3`);
+  item('nose tray riser', mat(R.material), riserVolume(R), `${A.noseTray.riser.t_mm} mm sheet: web ${A.noseTray.riser.w_mm} x ${((R.y[1] - R.y[0]) * 1000).toFixed(1)} mm, two ${A.noseTray.riser.flange_mm} mm flanges, a ${A.noseTray.riser.foot_mm} mm foot and tab; ${mat(R.material).density_g_cm3} g/cm3`);
+  item('nose tray', mat(N.material), channelVolume(N, N.x[1] - N.x[0]), `channel ${A.noseTray.w_mm} x ${A.noseTray.flange_h_mm} x ${A.noseTray.t_mm} mm x ${((N.x[1] - N.x[0]) * 1000).toFixed(1)} mm (riser to tip); ${mat(N.material).density_g_cm3} g/cm3`);
+  item('aft tray', mat(AT.material), channelVolume(AT, AT.x[1] - AT.x[0], AT.tab), `channel ${A.aftTray.w_mm} x ${A.aftTray.flange_h_mm} x ${A.aftTray.t_mm} mm x ${((AT.x[1] - AT.x[0]) * 1000).toFixed(1)} mm with a ${A.aftTray.flange_mm} mm root tab; ${mat(AT.material).density_g_cm3} g/cm3`);
+  // every mounted part's ties: the tie model from the loop round the part and its carrier's sheet
+  const pIdx = partsIndex(d, catalog), specs = packedSpecs(d, pIdx).list;
+  const ties = [tieS, tieL].map((q) => ({ ...q, geo: tieGeometry(byId(catalog, q.id).specs) }));
+  const sheet = { 'forward tray': F.t, 'nose tray': N.t, 'aft tray': AT.t };
+  const tieRows = [];
+  for (const s of specs) {
+    const mt = d.params.layout?.mounts?.[s.name];
+    if (!mt) continue;
+    const tb = sheet[mt.carrier];
+    if (tb == null) throw new Error(`mount ${s.name}: unknown carrier ${mt.carrier}`);
+    const tie = tieFor(ties, s.size[2], s.size[1], tb);
+    if (!tie) throw new Error(`mount ${s.name}: no catalogue tie takes a ${(2 * (s.size[2] + s.size[1] + tb) * 1000).toFixed(1)} mm loop`);
+    const n = mt.ties ?? 1, bomPart = d.bom.parts.find((p) => p.role === s.role), lp = at(LUMP_OF[s.name]);
+    const q = pt((bomPart?.unit_mass_g ?? 0) / 1000 * mf, lp?.r ?? s.at);
+    members.push({ name: `${mt.carrier}: ${s.name} ties`, kind: 'tie', check: 'tie', tie: { id: tie.id, loop_N: tie.loop_N }, dims: { n }, sections: [sect('F', inertialTerms(q.m, q.r))], uses: { F: 'F' }, note: `${n} x ${tie.id} through slots in the ${mt.carrier} either side of the part: a ${(tie.loop_m * 1000).toFixed(1)} mm loop (its bundle range takes ${(Math.PI * tie.geo.bundle_m[1] * 1000).toFixed(1)} mm)` });
+    if (tie.id === tieS.id) counts.tieS += n; else counts.tieL += n;
+    tieRows.push({ part: s.name, carrier: mt.carrier, n, tie: tie.id, loop_mm: +(tie.loop_m * 1000).toFixed(2), bundle_max_mm: +(Math.PI * tie.geo.bundle_m[1] * 1000).toFixed(2), band_mm: [tie.geo.b_m * 1000, tie.geo.t_m * 1000] });
+  }
+  const support = { ties: tieRows, readhead: readheadMount(ax, G, enc), pitot: null };
+  ax.fwdTray = { V: fr.V, length_m: F.x[1] - F.x[0], plateX: F.x[0], y: F.y };
+  ax.aftTray = { V: ar.V, length_m: AT.x[1] - AT.x[0], plateX: AT.x[1], y: AT.y };
+  ax.carriers = { geometry: G, support, masses_g: { forward: oF.kg * 1000, riser: oR.kg * 1000, nose: oN.kg * 1000, aft: oA.kg * 1000 } };
+}
+
+/**
+ * The pitot-static probe's mount (round 15): the probe along the nose tray's right flange, outside it, its bottom flush
+ * with the tray's base, from pitot.x_aft_mm forward for its length; tied to the flange through a slot at the flange's
+ * root. -> { c: [z, y], x: [x0, x1], r } (m), the probe's axis and outer radius.
+ */
+export function pitotMount(A, params, catalog) {
+  const N = A.noseTray, P = A.pitot ?? {};
+  const r = byId(catalog, 'mtube-tigertitanium-ti3al2.5v-6.35x5.54').specs.od_mm / 2000;
+  const s = P.side === 'left' ? -1 : 1;
+  const z = s * (N.w_mm / 2 + N.t_mm / 2) / 1000 + s * r, y = (N.y_mm - N.t_mm / 2) / 1000 + r;
+  const x0 = P.x_aft_mm / 1000, L = (params.pitotLength_mm ?? 100) / 1000;
+  return { c: [z, y], x: [x0, x0 + L], r };
+}
+
+/**
+ * The probe's ties (round 15): round the probe and the flange, through a slot at the flange's root; the loop is the
+ * flange's sheet and the probe's diameter across, the flange's height and the base's sheet up and down.
+ */
+function pitotTies(ax, pit, rho) {
+  const { d, catalog, A, members, counts, tieS, tieL } = ax;
+  const N = carrierGeometry(A, ax.planes, ax.tFwd / 1000, ax.tAft / 1000).nose, pm = pitotMount(A, d.params, catalog);
+  const ties = [tieS, tieL].map((q) => ({ ...q, geo: tieGeometry(byId(catalog, q.id).specs) }));
+  const tie = tieFor(ties, N.t + 2 * pm.r, N.h + N.t, 0);
+  if (!tie) throw new Error('pitot: no catalogue tie takes its loop');
+  const n = A.pitot.ties ?? 2, side = A.pitot.side ?? 'right';
+  members.push({ name: 'pitot-static probe ties', kind: 'tie', check: 'tie', tie: { id: tie.id, loop_N: tie.loop_N }, dims: { n, extra_N: +(0.5 * rho * A.pod.V_drag_m_s ** 2 * Math.PI * (2 * pm.r) ** 2 / 4 * 1.2).toFixed(4) }, sections: [sect('F', inertialTerms(pit.m, pit.r))], uses: { F: 'F' }, note: `${n} x ${tie.id} round the probe and the nose tray's ${side} flange, through a slot at the flange's root (a ${(tie.loop_m * 1000).toFixed(1)} mm loop): its inertia and the drag of its ${(2 * pm.r * 1000).toFixed(2)} mm tip at ${A.pod.V_drag_m_s} m/s (Cd 1.2)` });
+  if (tie.id === tieS.id) counts.tieS += n; else counts.tieL += n;
+  ax.carriers.support.pitot = { part: 'pitot-static probe', carrier: 'nose tray', face: `${side} flange, outer face`, c_m: pm.c.map((v) => +v.toFixed(6)), x_m: pm.x.map((v) => +v.toFixed(6)), r_m: pm.r, n, tie: tie.id, loop_mm: +(tie.loop_m * 1000).toFixed(2), bundle_max_mm: +(Math.PI * tie.geo.bundle_m[1] * 1000).toFixed(2), band_mm: [tie.geo.b_m * 1000, tie.geo.t_m * 1000], tie_x_mm: A.pitot.tie_x_mm };
+}
+
+/**
+ * The crank encoder readhead on the riser (round 15): the maker's fixing, 3 x M2 DIN 912 through its mounting holes on
+ * the 34 mm circle (BRD01; sensor-rls-orbis-br10 specs.mounting) with spacers of under 4 mm diameter from its front
+ * face to the riser's aft face and nuts on the riser's forward face; holes at encoder.holes_deg (from +z, about the
+ * crank axis) so every hole's land lies on the web below the nose tray. The readhead's inertia (the whole encoder lump,
+ * conservatively) in shear, prying at the spacers' length.
+ */
+/** The readhead's holes on its mounting circle about the crank axis, and its spacers' length to the riser's web (m). */
+export function readheadGeometry(E, mounting, crank, readheadX, riserX0) {
+  const pcd = (parseFloat(String(mounting).match(/on a ([\d.]+) mm circle/)?.[1]) || 34) / 1000;
+  const holes = (E.holes_deg ?? [30, 150, 270]).map((a) => [crank[0] + (pcd / 2) * Math.cos((a * Math.PI) / 180), crank[1] + (pcd / 2) * Math.sin((a * Math.PI) / 180)]);
+  return { pcd, holes, spacer: riserX0 - readheadX[1] };
+}
+
+function readheadMount(ax, G, enc) {
+  const { catalog, A, members, mat, item, counts, planes, crank } = ax;
+  const E = A.encoder ?? {};
+  if (!enc || !planes.encoder || !E.screw) return null;
+  const scr = fastenerOf(catalog, E.screw), nut = byId(catalog, E.nut), sp = byId(catalog, E.screw).specs;
+  const rh = byId(catalog, ax.d.params.parts?.crankEncoder ?? 'sensor-rls-orbis-br10').specs;
+  const { pcd, holes, spacer } = readheadGeometry(E, rh.mounting, crank, planes.encoder.readhead, G.riser.x[0]);
+  const g = { ...circleGroup(holes.length, (pcd / 2) * 1000), lever_mm: spacer * 1000 + (planes.encoder.readhead[1] - planes.encoder.readhead[0]) * 500, n_far: 1 };
+  const Vr = inertialTerms(enc.m, enc.r);
+  members.push({ name: 'crank encoder readhead screws', kind: 'fasteners', check: 'bolts', fastener: { id: scr.id, tension_N: scr.tension_N, shear_N: scr.shear_N }, dims: g, sections: [sect('V', Vr), sect('T', []), sect('M', scaleTerms(Vr, g.lever_mm / 1000)), sect('F', Vr)], uses: { V: 'V', T: 'T', M: 'M', F: 'F' }, note: `${holes.length} x ${scr.id} through the readhead's mounting holes (${(pcd * 1000).toFixed(0)} mm circle), ${(spacer * 1000).toFixed(1)} mm spacers and the riser, nuts forward: the encoder's inertia in shear and as tension, prying at the spacers' length plus half the readhead` });
+  members.push({ name: 'crank encoder readhead screws in the riser', kind: 'seat', check: 'seat', material: mat(G.riser.material), dims: { d_mm: 2, t_mm: A.noseTray.riser.t_mm, e_over_d: 2 }, sections: [sect('F', scaleTerms(Vr, 1 / holes.length))], uses: { F: 'F' }, note: 'an M2 screw bearing in the riser\'s sheet, edge distance at least 2 d' });
+  const so = E.spacer_od_mm / 1000, si = E.spacer_id_mm / 1000;
+  item(`crank encoder spacers, ${holes.length} off`, mat(G.riser.material), holes.length * Math.PI / 4 * (so * so - si * si) * spacer, `${E.spacer_od_mm} / ${E.spacer_id_mm} mm 6061-T6 tube x ${(spacer * 1000).toFixed(1)} mm (the maker's spacer: under 4 mm diameter, over 6 mm long)`);
+  counts.m2 = (counts.m2 ?? 0) + holes.length;
+  return { carrier: 'nose tray riser', face: 'web, aft face', screw: scr.id, nut: nut.id, n: holes.length, pcd_mm: pcd * 1000, holes_m: holes.map((h) => h.map((v) => +v.toFixed(5))), spacer_mm: +(spacer * 1000).toFixed(3), spacer_od_mm: E.spacer_od_mm, spacer_id_mm: E.spacer_id_mm, screw_head: { d_mm: sp.head_d_mm, k_mm: sp.head_k_mm }, nut_s_mm: nut.specs.s_mm, nut_m_mm: nut.specs.m_mm };
+}
+
+/**
+ * Round 15 (support): the motor's own fixing. Its maker's drawing (Scorpion SII-3008 full dimension, read 2026-11-03;
+ * out/downloads/scorpion-sii-3008) puts the 4 x M3 threads on the motor's back face (the stator side, 25 mm across), with
+ * the cross mount; its front is the rotating bell. With the bell toward the forward plate and the shaft forward through
+ * it, the motor hangs on a bracket at its back: a 6061-T6 plate the hull of the four screw lands and two sleeves bonded
+ * on the shoulder rails, bored for the shaft's back stub. -> geometry (m): { x, holes, land_r, outline, sleeves, stub }.
+ */
+export function motorBracketGeometry(B, planes, c, railPos, railR) {
+  const m = (v) => v / 1000, r = m(B.circle_d_mm) / 2, land = m(B.land_r_mm), so = railR + m(B.sleeve_wall_mm);
+  const holes = B.angles_deg.map((a) => [c[0] + r * Math.cos((a * Math.PI) / 180), c[1] + r * Math.sin((a * Math.PI) / 180)]);
+  const sleeves = ['right', 'left'].map((side) => ({ side, c: railPos[side], ro: so, ri: railR }));
+  const h = hullOf([...holes.map((q) => ({ c: q, r: land })), ...sleeves.map((q) => ({ c: q.c, r: q.ro }))]);
+  return { x: [planes.motorX[0] - m(B.t_mm), planes.motorX[0]], holes, land_r: land, outline: h.poly, area_m2: h.area_m2, sleeves, stub: { c, r: m(B.stub_hole_d_mm) / 2 } };
+}
+
+/** The motor's loads (round 8's terms): its inertia, the first mesh force and the motor torque (crank torque / G / eta). */
+function motorLoads(ax) {
+  const { d, lay, lump } = ax;
+  const mot = lump('flap motor');
+  return { mot, F0: [{ ch: 'crank_torque', k: lay.meshPerNm(0) }], Tm: [{ ch: 'crank_torque', k: 1 / (d.drive.gearRatio * (d.drive.gearEfficiency ?? 0.85)) }], motorIn: inertialTerms(mot.m, mot.r) };
+}
+
+/**
+ * Round 15: the force the motor's bracket puts on a rail: the motor's inertia and the first mesh force shared by the
+ * lever rule along the line between the rails (the larger share, on both), plus its torque and its prying moment each
+ * in full as a couple over the rails' spacing; at the bracket's mid-plane. -> { F, x, Vm, Mm, pinOff, L, share } or
+ * null without a bracket.
+ */
+function motorBracketLoad(ax) {
+  const { A, planes, lay } = ax;
+  const B = A.motor?.bracket;
+  if (!B || planes.stage1 !== 'overhung') return null;
+  const { F0, Tm, motorIn } = motorLoads(ax);
+  const ra = A.rail, sg = [1, -1].map((k) => [(lay.fb.O4[0] + ra.dz_mm / 1000) * k, lay.fb.O4[1] + ra.dy_mm / 1000]);
+  const L = Math.hypot(sg[0][0] - sg[1][0], sg[0][1] - sg[1][1]);
+  const c = lay.train.shafts[lay.train.shafts.length - 1], u = [(sg[1][0] - sg[0][0]) / L, (sg[1][1] - sg[0][1]) / L];
+  const t = ((c[0] - sg[0][0]) * u[0] + (c[1] - sg[0][1]) * u[1]) / L; // the motor's place along the line, 0 at the right rail
+  const share = Math.max(Math.min(1, Math.max(0, 1 - t)), Math.min(1, Math.max(0, t)));
+  const x1 = planes.motorX[0], pinOff = planes.stage[0] - x1;
+  const Vm = addTerms(motorIn, F0), Mm = addTerms(scaleTerms(motorIn, (planes.motorX[1] - planes.motorX[0]) / 2), scaleTerms(F0, pinOff));
+  return { F: addTerms(scaleTerms(Vm, share), scaleTerms(Tm, 1 / L), scaleTerms(Mm, 1 / L)), x: x1 - B.t_mm / 2000, Vm, Mm, pinOff, L, share };
+}
+
 function af_motor(ax) {
-  const { d, lay, planes, plateT, A, lump, counts, xF, crank, tFwd, screwSeat, bolts, flangePlate, perScrewShear } = ax;
+  const { lay, planes, plateT, A, lump, counts, xF, tFwd, screwSeat, bolts, flangePlate, perScrewShear, mat, item, members, glueAl, railPos } = ax;
   // ---- Motor on the forward plate ------------------------------------------------------------------------------------
   const mo = A.motor, mot = lump('flap motor');
   const s0 = lay.train.stages[0];
-  const F0 = [{ ch: 'crank_torque', k: lay.meshPerNm(0) }];
-  const G = d.drive.gearRatio;
-  const Tm = [{ ch: 'crank_torque', k: 1 / (G * (d.drive.gearEfficiency ?? 0.85)) }];
-  const motorIn = inertialTerms(mot.m, mot.r);
-  const mg = { ...circleGroup(mo.screws, mo.circle_r_mm), lever_mm: mo.circle_r_mm * Math.SQRT2, n_far: 2 };
-  // the pinion's offset from the plate face the motor is screwed to (round 14: the aft face, the pinion overhung forward)
-  const pinOff = Math.abs((planes.stage1 === 'overhung' ? xF - plateT / 2 : xF + plateT / 2) - planes.stage[0]);
-  bolts('motor mount screws', mg, addTerms(motorIn, F0), Tm, addTerms(scaleTerms(motorIn, mo.overhang_mm / 1000), scaleTerms(F0, pinOff)), motorIn, `${mo.screws} M3 in the motor's own threads on a ${2 * mo.circle_r_mm} mm circle: the motor's inertia and the first mesh force (${s0.pinion.id}) in shear, the motor torque (crank torque / G / efficiency) as torsion, both forces at their offsets as prying`);
-  screwSeat('motor mount screws in the plate', perScrewShear(mg, addTerms(motorIn, F0), Tm), tFwd);
-  flangePlate('forward plate under the motor', 2 * mo.circle_r_mm + 12, addTerms(scaleTerms(motorIn, mo.overhang_mm / 1000), scaleTerms(F0, pinOff)), mo.doubler_mm);
-  counts.screws += mo.screws;
+  const { F0, Tm, motorIn } = motorLoads(ax);
+  if (mo.bracket && planes.stage1 === 'overhung') {
+    // round 15: the motor on its back-face bracket, the bracket bonded on both rails
+    const B = mo.bracket, c = lay.train.shafts[lay.train.shafts.length - 1], railR = A.rail.od_mm / 2000;
+    const g = motorBracketGeometry(B, planes, c, railPos, railR);
+    const bm = mat(B.material), t = B.t_mm;
+    const mg = { ...circleGroup(B.angles_deg.length, B.circle_d_mm / 2), lever_mm: B.circle_d_mm / 2 * Math.SQRT2, n_far: 2 };
+    const { Vm, Mm, pinOff, L, F: Frail } = motorBracketLoad(ax); // the first mesh force's offset is from the bracket face
+    bolts('motor mount screws', mg, Vm, Tm, Mm, motorIn, `${B.angles_deg.length} M3 through the bracket into the motor's back-face threads (${B.circle_d_mm} mm across, the maker's drawing): the motor's inertia and the first mesh force (${s0.pinion.id}) in shear, the motor torque as torsion, the inertia at half the motor's length and the mesh force at its ${(pinOff * 1000).toFixed(1)} mm offset as prying`);
+    screwSeat('motor mount screws in the bracket', perScrewShear(mg, Vm, Tm), t);
+    const arm = Math.max(...g.sleeves.map((q) => Math.hypot(q.c[0] - c[0], q.c[1] - c[1])));
+    members.push({ name: 'motor bracket arm', kind: 'plate', check: 'plate', material: bm, dims: { b_mm: 2 * B.sleeve_wall_mm + A.rail.od_mm, t_mm: t }, sections: [sect('F', Frail), sect('M', scaleTerms(Frail, arm))], uses: { F: 'F', M: 'M' }, note: `the bracket from the motor to its farther rail (${(arm * 1000).toFixed(1)} mm), the sleeve's width: the larger lever-rule share of the motor's force, its torque and prying moment as a couple over the rails' ${(L * 1000).toFixed(0)} mm spacing, bent out of the plane` });
+    members.push({ name: 'motor bracket sleeve bond', kind: 'bond', check: 'lap', material: glueAl, dims: { w_mm: +(Math.PI * A.rail.od_mm).toFixed(3), L_mm: t }, sections: [sect('F', Frail)], uses: { F: 'F' }, note: `Araldite 2011 aluminium to aluminium, a sleeve round the ${A.rail.od_mm} mm rail over the bracket's ${t} mm, carrying a rail's share` });
+    item('motor bracket', bm, (g.area_m2 - g.sleeves.reduce((a, q) => a + Math.PI * q.ri * q.ri, 0) - Math.PI * g.stub.r ** 2) * t / 1000, `${t} mm 6061-T6 plate, the hull of the motor's four screw lands and the two rail sleeves (${(g.area_m2 * 1e6).toFixed(0)} mm2 less the rails and the shaft stub), bonded on the rails`);
+    counts.screws += B.angles_deg.length;
+    ax.motorBracket = { ...g, t_m: t / 1000, joints: 'screwed to the motor\'s back, bonded on both rails' };
+  } else {
+    const mg = { ...circleGroup(mo.screws, mo.circle_r_mm), lever_mm: mo.circle_r_mm * Math.SQRT2, n_far: 2 };
+    // the pinion's offset from the plate face the motor is screwed to (round 14: the aft face, the pinion overhung forward)
+    const pinOff = Math.abs((planes.stage1 === 'overhung' ? xF - plateT / 2 : xF + plateT / 2) - planes.stage[0]);
+    bolts('motor mount screws', mg, addTerms(motorIn, F0), Tm, addTerms(scaleTerms(motorIn, mo.overhang_mm / 1000), scaleTerms(F0, pinOff)), motorIn, `${mo.screws} M3 in the motor's own threads on a ${2 * mo.circle_r_mm} mm circle: the motor's inertia and the first mesh force (${s0.pinion.id}) in shear, the motor torque (crank torque / G / efficiency) as torsion, both forces at their offsets as prying`);
+    screwSeat('motor mount screws in the plate', perScrewShear(mg, addTerms(motorIn, F0), Tm), tFwd);
+    flangePlate('forward plate under the motor', 2 * mo.circle_r_mm + 12, addTerms(scaleTerms(motorIn, mo.overhang_mm / 1000), scaleTerms(F0, pinOff)), mo.doubler_mm);
+    counts.screws += mo.screws;
+  }
 
   Object.assign(ax, { mo, mot, F0, Tm, motorIn });
 }
@@ -297,7 +540,7 @@ function af_encoder(ax) {
   const { members, A, tieS, lump, counts, crank } = ax;
   // ---- Crank encoder on the aft plate --------------------------------------------------------------------------------
   const enc = lump('crank encoder');
-  if (enc) {
+  if (enc && !ax.carriers?.support.readhead) {
     const front = ax.planes.encoder && ax.planes.encoder.readhead[0] > ax.planes.plateFwd; // round 14: on the crank's forward stub
     members.push({ name: 'crank encoder ties', kind: 'tie', check: 'tie', tie: { id: tieS.id, loop_N: tieS.loop_N }, dims: { n: A.encoder.ties }, sections: [sect('F', inertialTerms(enc.m, enc.r))], uses: { F: 'F' }, note: `${A.encoder.ties} x ${tieS.id}: the readhead on its bracket to ${front ? 'the forward plate\'s outer face, round the crank stub' : 'the aft plate\'s crank boss'}` });
     counts.tieS += A.encoder.ties;
@@ -306,19 +549,42 @@ function af_encoder(ax) {
 }
 
 function af_ties(ax) {
-  const { d, members, A, tieS, lump, counts, tail, tailIn } = ax;
-  // ---- Pod formers and tail surfaces on ties ---------------------------------------------------------------------
+  const rho = airDensity(ax.d);
+  // ---- Pod formers, the pitot and the tail surfaces on ties ------------------------------------------------------
+  podTies(ax, rho);
+  probeTies(ax, rho);
+  tailTies(ax);
+}
+
+const airDensity = (d) => d.atmosphere?.rho_kg_m3 ?? d.atmosphere?.rho ?? 1.0;
+
+/** The pitot's ties: round 15's along the nose tray's flange when the design mounts it, else round 8's. */
+function probeTies(ax, rho) {
+  const pit = ax.lump('pitot-static probe');
+  if (!pit) return;
+  if (ax.carriers && ax.A.pitot?.x_aft_mm != null) pitotTies(ax, pit, rho);
+  else legacyPitotTies(ax, pit, rho);
+}
+
+function podTies(ax, rho) {
+  const { d, members, A, tieS, lump, counts } = ax;
   const pod = lump('fuselage shell and formers');
-  const rho = d.atmosphere?.rho_kg_m3 ?? d.atmosphere?.rho ?? 1.0;
   const drag = 0.5 * rho * A.pod.V_drag_m_s ** 2 * (d.body?.CdA_front_m2 ?? 0.003);
   const nPod = A.pod.formers * A.pod.ties_each;
   members.push({ name: 'pod formers ties', kind: 'tie', check: 'tie', tie: { id: tieS.id, loop_N: tieS.loop_N }, dims: { n: nPod, extra_N: +drag.toFixed(4) }, sections: [sect('F', inertialTerms(pod.m, pod.r))], uses: { F: 'F' }, note: `${nPod} x ${tieS.id} (balsa formers to the boom and trays: no published bond strength on balsa); the pod's inertia plus its drag at ${A.pod.V_drag_m_s} m/s (${drag.toFixed(2)} N)` });
   counts.tieS += nPod;
-  const pit = lump('pitot-static probe');
-  if (pit) { members.push({ name: 'pitot-static probe ties', kind: 'tie', check: 'tie', tie: { id: tieS.id, loop_N: tieS.loop_N }, dims: { n: A.pitot.ties, extra_N: +(0.5 * rho * A.pod.V_drag_m_s ** 2 * Math.PI * 0.00635 ** 2 / 4 * 1.2).toFixed(4) }, sections: [sect('F', inertialTerms(pit.m, pit.r))], uses: { F: 'F' } , note: `${A.pitot.ties} x ${tieS.id} to the battery and the forward tray's nose: its inertia and the drag of its 6.35 mm tip at ${A.pod.V_drag_m_s} m/s (Cd 1.2)` }); counts.tieS += A.pitot.ties; }
+}
+
+/** Round 8 to 14: the probe tied to the battery and the forward tray's nose, 2 T18R. */
+function legacyPitotTies(ax, pit, rho) {
+  const { members, A, tieS, counts } = ax;
+  members.push({ name: 'pitot-static probe ties', kind: 'tie', check: 'tie', tie: { id: tieS.id, loop_N: tieS.loop_N }, dims: { n: A.pitot.ties, extra_N: +(0.5 * rho * A.pod.V_drag_m_s ** 2 * Math.PI * 0.00635 ** 2 / 4 * 1.2).toFixed(4) }, sections: [sect('F', inertialTerms(pit.m, pit.r))], uses: { F: 'F' } , note: `${A.pitot.ties} x ${tieS.id} to the battery and the forward tray's nose: its inertia and the drag of its 6.35 mm tip at ${A.pod.V_drag_m_s} m/s (Cd 1.2)` }); counts.tieS += A.pitot.ties;
+}
+
+function tailTies(ax) {
+  const { members, A, tieS, counts, tailIn } = ax;
   members.push({ name: 'tail surfaces ties', kind: 'tie', check: 'tie', tie: { id: tieS.id, loop_N: tieS.loop_N }, dims: { n: A.tail.ties }, sections: [sect('F', addTerms([{ ch: 'tail_F', k: 1 }], tailIn))], uses: { F: 'F' }, note: `${A.tail.ties} x ${tieS.id}: the tail's aerodynamic force and inertia` });
   counts.tieS += A.tail.ties;
-
 }
 
 /** The circles a plate's outline is the hull of: every shaft seat, the motor's (forward), both rail seats, the panel lands. */
@@ -428,9 +694,16 @@ function af_bomItems(ax) {
   const sp = byId(catalog, A.fastener);
   ax.cx.items.push({ name: `M3 screws, ${counts.screws} off`, material_id: sp.id, material: sp.name, mass_g: counts.screws * sp.mass_g, basis: `${counts.screws} x ${sp.mass_g} g (${sp.specs.mass_basis})`, source_url: sp.source_url });
   if (counts.nuts) ax.cx.items.push({ name: `M3 nuts, ${counts.nuts} off`, material_id: nut.id, material: nut.name, mass_g: counts.nuts * nut.mass_g, basis: `${counts.nuts} x ${nut.mass_g} g (${nut.specs.mass_basis})`, source_url: nut.source_url });
+  if (counts.m2) {
+    // round 15: the crank encoder readhead's own fixing (3 x M2 DIN 912 with nuts)
+    for (const id of [A.encoder.screw, A.encoder.nut]) { const f = byId(catalog, id); ax.cx.items.push({ name: `${f.name}, ${counts.m2} off`, material_id: f.id, material: f.name, mass_g: counts.m2 * f.mass_g, basis: `${counts.m2} x ${f.mass_g} g (${f.specs.mass_basis})`, source_url: f.source_url }); }
+  }
   for (const [t, n] of [[tieS, counts.tieS], [tieL, counts.tieL]]) if (n) ax.cx.items.push({ name: `cable ties ${t.id}, ${n} off`, material_id: t.id, material: t.name, mass_g: n * t.mass_g, basis: `${n} x ${t.mass_g} g (maker's weight per unit)`, source_url: t.source_url });
 
   report.parts = { rails: railPos, boom_y_m: yB, clamp_spacing_m: sCl, tail_lever_m: Lt, trays: { forward: { y_m: fwdTray.y, length_m: fwdTray.length_m }, aft: { y_m: aftTray.y, length_m: aftTray.length_m } }, plates, counts };
+  // round 15: every carrier's geometry (m) and every part's fixing, for the assembly check and the film
+  if (ax.carriers) Object.assign(report.parts, { carriers: roundDeep(ax.carriers.geometry), support: ax.carriers.support, carrier_masses_g: roundDeep(ax.carriers.masses_g, 3) });
+  if (ax.motorBracket) report.parts.motor_bracket = roundDeep(ax.motorBracket);
   report.clearances_mm = clearances(ax.cx, railPos, A);
 }
 
@@ -509,6 +782,14 @@ export function lockFlangeCircles(ra, c, sg) {
   const out = [{ c, r: ra.od_mm / 2000 + 0.002 }];
   for (let i = 0; i < n; i++) { const a = n > 1 ? a0 + ((a1 - a0) * i) / (n - 1) : a0; out.push({ c: [c[0] + sg * r * Math.cos(a), c[1] + r * Math.sin(a)], r: 0.0035 }); }
   return out;
+}
+
+/** A copy with every number rounded to `k` decimals (default 6: micrometres in metres). */
+function roundDeep(o, k = 6) {
+  if (typeof o === 'number') return +o.toFixed(k);
+  if (Array.isArray(o)) return o.map((v) => roundDeep(v, k));
+  if (o && typeof o === 'object') return Object.fromEntries(Object.entries(o).map(([a, v]) => [a, roundDeep(v, k)]));
+  return o;
 }
 
 export function mergeDefaults(def, over) {

@@ -7961,6 +7961,64 @@
   "verified": "retailer-page"
  },
  {
+  "id": "screw-iso4762-m2x25-8.8",
+  "category": "fastener",
+  "manufacturer": "any ISO 4762 (DIN 912) maker (property class 8.8, ISO 898-1)",
+  "name": "ISO 4762 (DIN 912) M2 x 25 socket head cap screw, class 8.8",
+  "mass_g": 0.795,
+  "specs": {
+   "mass_basis": "per part, computed: ISO 4762 M2 maximum head 3.80 mm x 2.00 mm (fasteners.eu ISO 4762 table) plus a 2 mm x 25 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c): 0.795 g",
+   "thread": "M2 coarse (pitch 0.4)",
+   "length_mm": 25,
+   "head_d_mm": 3.8,
+   "head_k_mm": 2,
+   "thread_length_b_mm": 16,
+   "stress_area_mm2": 2.07,
+   "property_class": "8.8",
+   "use": "the RLS Orbis BR10 readhead's own fixing: BRD01 \"Fastener 3x M2, DIN 912 (not provided)\", \"Spacer OD < 4 mm, L > 6 mm (not provided)\", 3 x 2.1 mm holes; class 8.8 steel chosen here (the maker lists A2 or A4 stainless as options)",
+   "design_values": {
+    "tension_N": 1200.6,
+    "shear_N": 693.2,
+    "basis": "ISO 898-1 minimum stress under proof load Sp 580 MPa for class 8.8 at d <= 16 mm (TR Fastenings ISO 898-1 table) x the M2 tensile stress area 2.07 mm2 (TorqBolt BS 3692 table) = 1200.6 N, in full (a specified minimum); shear against the proof load / sqrt 3, the rule of the M3 entries"
+   },
+   "quotes": {
+    "proof_stress": "Class 8.8: Test stress Sp 580 MPa for \"<= 16mm\" (TR Fastenings, mechanical properties ISO 898-1 EN 20898-1)",
+    "stress_area": "M2 2.07 (Tensile stress area of bolt mm2; TorqBolt, BS 3692 proof loads for steel nuts)",
+    "head": "M2 (ISO 4762): dk max 3,80; k max 2,00; P 0,4; b 16 (fasteners.eu ISO 4762)"
+   },
+   "extra_source_urls": [
+    "https://www.trfastenings.com/knowledge-base/metric-screws/screws-and-bolts-mechanical-properties",
+    "https://TorqBolt.com/bs-3692-bolting-assemblies-fasteners-bolting-stud-bolts-screws-nuts-suppliers-manufacturers"
+   ]
+  },
+  "price_usd": null,
+  "source_url": "https://www.fasteners.eu/standards/ISO/4762/",
+  "retrieved": "2026-11-03",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "nut-iso4032-m2-8",
+  "category": "fastener",
+  "manufacturer": "any ISO 4032 maker (property class 8, ISO 898-2)",
+  "name": "ISO 4032 M2 hexagon nut, class 8",
+  "mass_g": 0.149,
+  "specs": {
+   "mass_basis": "per part, computed: ISO 4032 M2 maximum 4.00 mm across flats x 1.60 mm high (fasteners.eu ISO 4032 table) less a 1.6 mm minor-diameter bore, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c): 0.149 g",
+   "property_class": "8",
+   "s_mm": 4,
+   "m_mm": 1.6,
+   "note": "A class 8 nut matches a class 8.8 screw (ISO 898-2), so the screw governs; no separate nut rating is credited.",
+   "quotes": {
+    "nut": "M2: s (nominal = max.) 4,00; m (max.) 1,60 (fasteners.eu ISO 4032)",
+    "proof_load": "M2 2.07 830 1030 1240 1650 2070 2480 (TorqBolt: proof loads for steel nuts, grades 4 to 12; grade 8 1650 N)"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://www.fasteners.eu/standards/ISO/4032/",
+  "retrieved": "2026-11-03",
+  "verified": "retailer-page"
+ },
+ {
   "id": "tie-hellermanntyton-t18r",
   "category": "fastener",
   "manufacturer": "HellermannTyton",
