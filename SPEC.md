@@ -246,6 +246,29 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
     - **Mass.** Every structure line now follows its drawn solids, so the mass is 1749.6 g, 56.0 g less than v23. Most of that is BOM estimates that never matched a drawn part: shoulder-bracket arms, the stale aft-seat bosses, nominal formers, and screws counted by length.
     - **Verdicts.** M4 now passes both ways (at 0.6: 99/100, corners 98 or better), so it is final. No gate moved: the verdict changed because the BOM was corrected to the drawn parts. M1 still fails both ways. Every other verdict is unchanged.
     - **The crank web's axial bond.** It is LOCTITE 638 on titanium, which has no published rating. The RC-practice ruling covers only a gear, pulley or coupling held to its shaft, so it does not cover a crank web. M7's pass on v24 rests on that bond, and so it is not counted until a rated fixing replaces it.
+- **Function completeness** (2026-11-03, found by the independent audit of v24, `docs/status/audit-v24.md`). Every BOM line having a solid is not enough. The bird must be able to do everything the flight model has it do, using only the parts in the BOM.
+  - **Every actuated motion has hardware.** The flight model flies wing twist, each tail surface and the flapping drive. Each has a drawn chain from its actuator's output to the surface it moves, and every link, joint and fixing in the chain is a BOM line.
+    - The flight model's own figures for each chain (pivot, axis, horn ratio, travel, the actuator's speed and torque) are read from the drawn chain, or checked against it by the build.
+    - If the chain cannot deliver what the controller commands, that is a finding to report. It is never hidden by changing the command.
+  - **Every interface has a load path, axial retention and a rule.** This covers every pivot, pin, shaft, bearing, sliding fit and bonded or tied joint. The build records:
+    - what carries the load, and its rating;
+    - what holds it axially (a clip, shoulder, collar, nut, screw or bond);
+    - the rule that rates each of them.
+
+    A joint with no rule fails, unless the RC-practice ruling covers it. Seats are as wide as the part they seat.
+  - **Mass properties come from the drawn solids.** Each lump's CG lies within 1 mm of the centroid of its drawn parts, and its inertia follows them. A hard-coded position is a failure.
+  - **The real section.** The clearance and containment checks use the Eppler 387's published coordinates, from a source the repository can cite and publish. Nothing may stand out of the wing's surface unless it is declared and its drag counted.
+  - **The covering spans only what is supported.** Every surface the loft draws has structure under it. Film spans stay within a stated rule with its source.
+  - **What a real build needs.**
+    - **Connectors** for every electrical joint the assembly order makes.
+    - **Access.** A hatch with a stated fixing, through which the pack can be taken out to charge, and the bird armed, bound and set up, without cutting the covering.
+    - **Air path.** A declared air path for the parts that make heat, with its drag counted. Where no maker publishes a figure, the cooling assumption is stated.
+  - **Ratings within their published range.** No part runs outside its maker's published range, and nothing is extrapolated beyond a published row.
+  - **The build refuses** (`--official`) if any of these is missing, and tests pin each refusal.
+  - **Correction.** These are corrected as v25 = v24 plus function completeness, under the same layout freedom, the same rules and the same must-not-change list.
+    - The regulator may change if a servo needs it.
+    - The full gate set is flown again on v25, including the uniform-0.6 comparison.
+    - A second independent audit then reads v25 before it is frozen.
 
 ### Public repository
 
