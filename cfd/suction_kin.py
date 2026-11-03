@@ -130,6 +130,71 @@ def section_forces(raw, spec, m, span):
     return out
 
 
+def evaluate_last(d, spec, m, cd_f, last=3, band=0.05):
+    """eta_s over the last `last` whole cycles, aligned to the motion, with each cycle's value. Settled when every
+    cycle's eta_s lies within +/- band of their mean (the coordinator's criterion, read as half-width band)."""
+    rows = section_forces(bird3d.read_forces(d), spec, m, 0.1)
+    period = spec["period"]
+    if not rows:
+        return dict(complete=False, cycles_simulated=0)
+    n_whole = int(rows[-1][0] / period + 1e-3)
+    integ = lambda xs: sum(0.5 * (p[1] + q[1]) * (q[0] - p[0]) for p, q in zip(xs, xs[1:]))
+    per = []
+    for c in range(max(1, n_whole - last), n_whole):  # never the first (start-up) cycle
+        cyc = [r for r in rows if c * period - 1e-9 <= r[0] <= (c + 1) * period + 1e-9]
+        num = integ([(r[0], r[1] + cd_f * math.cos(r[3])) for r in cyc])
+        den = integ([(r[0], r[2] * math.sin(r[3])) for r in cyc])
+        per.append(dict(cycle=c + 1, eta_s=num / den if den else None, cc=integ([(r[0], r[1]) for r in cyc]) / period,
+                        cl=integ([(r[0], r[2]) for r in cyc]) / period, mean_cl_sin_a=den / period))
+    etas = [p["eta_s"] for p in per if p["eta_s"] is not None]
+    mean = sum(etas) / len(etas) if etas else None
+    settled = bool(len(etas) == last and max(abs(e - mean) for e in etas) <= band)
+    sel = [r for r in rows if per and per[0]["cycle"] - 1 <= r[0] / period <= per[-1]["cycle"] + 1e-9]
+    num = integ([(r[0], r[1] + cd_f * math.cos(r[3])) for r in sel]) if sel else 0
+    den = integ([(r[0], r[2] * math.sin(r[3])) for r in sel]) if sel else 0
+    return dict(cycles_simulated=round(rows[-1][0] / period, 3), cycles_whole=n_whole, cycles_averaged=len(per),
+                averaged_cycles=[p["cycle"] for p in per], per_cycle=per, eta_s_strip=num / den if den else None,
+                eta_s_mean_of_cycles=mean, settled=settled, settle_band=band, cd_f=cd_f,
+                complete=bool(n_whole >= 6 and len(per) == last))
+
+
+def motion_check(d, m, tables, mesh):
+    """Where the leading-edge point is at the last written time, against where the tables put it."""
+    import bisect
+    import re as _re
+    meta = json.load(open(os.path.join(mesh, "mesh.json")))
+    gid = 2 * (meta["n_wake"] + meta["n_surface"])
+    le0 = meta["wall"][meta["n_surface"]]
+    procs = [p for p in os.listdir(d) if p.startswith("processor")]
+    if not procs:
+        return None
+    times = [t for t in os.listdir(os.path.join(d, procs[0])) if t.replace(".", "").replace("e-", "").isdigit()]
+    times = [t for t in times if float(t) > 0]
+    if not times:
+        return None
+    tt = max(times, key=float)
+    T = tables["t"][-1]
+    tau = float(tt) % T
+    k = max(0, min(len(tables["t"]) - 2, bisect.bisect_right(tables["t"], tau) - 1))
+    f = (tau - tables["t"][k]) / (tables["t"][k + 1] - tables["t"][k])
+    psi = tables["psi"][k] + f * (tables["psi"][k + 1] - tables["psi"][k])
+    dx = tables["disp"][k][0] + f * (tables["disp"][k + 1][0] - tables["disp"][k][0])
+    dy = tables["disp"][k][1] + f * (tables["disp"][k + 1][1] - tables["disp"][k][1])
+    xp = m["pitch_axis_x_over_c"]
+    ex = xp + math.cos(psi) * (le0[0] - xp) - math.sin(psi) * le0[1] + dx
+    ey = math.sin(psi) * (le0[0] - xp) + math.cos(psi) * le0[1] + dy
+    for p in procs:
+        addr = open(os.path.join(d, p, "constant/polyMesh/pointProcAddressing")).read()
+        nums = [int(v) for v in addr[addr.index("(") + 1:addr.rindex(")")].split()]
+        if gid in nums:
+            txt = open(os.path.join(d, p, tt, "polyMesh/points")).read()
+            pts = _re.findall(r"\(([^()]+)\)", txt[txt.index("(\n") + 2:])
+            ax, ay = (float(v) for v in pts[nums.index(gid)].split()[:2])
+            return dict(time=float(tt), cycles=float(tt) / T, expected=[ex, ey], actual=[ax, ay],
+                        error_chords=math.hypot(ax - ex, ay - ey))
+    return None
+
+
 def evaluate(d, spec, m, cd_f):
     """eta_s (strip.js form) over the whole cycles after the first: mean(Cc + Cd_f cos a) / mean(CL sin a)."""
     raw = bird3d.read_forces(d)
@@ -173,13 +238,15 @@ def main():
     ap.add_argument("tag")
     ap.add_argument("--level", type=float, default=0.667)
     ap.add_argument("--cycles", type=float, default=3)
+    ap.add_argument("--cpus", type=int, default=pipeline.CPUS)
+    ap.add_argument("--ranks", type=int, default=pipeline.RANKS)
     a = ap.parse_args()
     m = json.load(open(a.motion))
     d = os.path.join(ROOT, "out/cfd/runs", GROUP, a.tag)
     if a.what == "run":
         mesh = pipeline.build_mesh(os.path.join(ROOT, "data/references/airfoils/e387.dat"), f"e387-L{a.level:g}", a.level)
         tables = motion_tables(m)
-        spec = make(d, mesh, m, tables, level=a.level, ranks=pipeline.RANKS, cycles=a.cycles)
+        spec = make(d, mesh, m, tables, level=a.level, ranks=a.ranks, cycles=a.cycles)
         state = dict(diverged=False)
 
         def poll():
@@ -188,13 +255,17 @@ def main():
                 state["diverged"] = True
                 return "kill"
             return None
-        rc, _ = pipeline.container(f"kin-{a.tag}"[:50], d, "run.sh", 8 * 3600, pipeline.CPUS, pipeline.MEMORY, poll)
+        rc, _ = pipeline.container(f"kin-{a.tag}"[:50], d, "run.sh", 8 * 3600, a.cpus, pipeline.MEMORY, poll)
+        try:
+            check = motion_check(d, m, tables, mesh)
+        except Exception as e:  # recorded, never fatal
+            check = dict(error=repr(e))
         with open(os.path.join(d, "result.json"), "w") as f:
-            json.dump(dict(spec, rc=rc, diverged=state["diverged"]), f, indent=1)
+            json.dump(dict(spec, rc=rc, diverged=state["diverged"], motion_check=check), f, indent=1)
         pipeline.clean(d)
     spec = json.load(open(os.path.join(d, "spec.json")))
     cd_f, cd_from = suction.friction_drag_at(m["re_chord"])
-    print(json.dumps(dict(evaluate(d, spec, m, cd_f), cd_f_from=cd_from)))
+    print(json.dumps(dict(evaluate_last(d, spec, m, cd_f), cd_f_from=cd_from)))
 
 
 if __name__ == "__main__":

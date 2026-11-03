@@ -218,11 +218,46 @@ def decimated_history(rows, period, per_cycle=60):
     return dict(t_over_period=[round(q[0] / period, 4) for q in rows[::step]], cc=[round(q[1], 5) for q in rows[::step]])
 
 
+def strip_matched_point(base, name, r, m):
+    """Round-2 design point: section motion from the strip model's own cruise, pitch offset so the 2D quasi-steady
+    3/4-chord angle equals the strip's alphaE. eta_s over the last three whole cycles, each cycle reported."""
+    import suction_kin
+    d = os.path.join(base, name)
+    cd_f, cd_from = friction_drag_at(m["re_chord"])
+    ev = suction_kin.evaluate_last(d, r, m, cd_f)
+    rows = suction_kin.section_forces(bird3d.read_forces(d), r, m, 0.1)
+    hist = decimated_history([(q[0], q[1]) for q in rows], r["period"]) if rows else None
+    if hist:
+        sel = rows[::max(1, int(len(rows) / len(hist["cc"])))][:len(hist["cc"])]
+        hist["cl"] = [round(q[2], 4) for q in sel]
+    deg = lambda key: [round(math.degrees(p[key]), 3) for p in m["samples"][::4]]
+    return dict(
+        name=name, kind="design kinematics, strip-matched effective angle (round 2)", level=r["level"],
+        design=m["design"], design_version=m["version"], motion_source="cfd/strip_motion.mjs on the setupFlight cruise",
+        frac_semispan_L=m["frac_semispan_L"], z_over_semispan=m["z_over_semispan"], chord_m=m["chord_m"],
+        twist_weight=m["twist_weight"], frequency_hz=m["frequency_hz"], k=m["k"], re=round(m["re_chord"]),
+        alpha_eff_amplitude_deg=m["strip_alpha_lag_amplitude_deg"],
+        alpha_eff_amplitude_definition="strip.js alphaEff (Wagner-lagged) half range at this station, as "
+                                       "cruiseEffectiveAngles computes it",
+        alpha_e_amplitude_deg=m["alpha_e_amplitude_deg"], alpha_2d_quasi_steady_amplitude_deg=m["alpha34_2d_amplitude_deg"],
+        alpha_match_rms_deg=m["rms_mismatch_deg"], kinematics_2d_vs_strip_alpha_geo_rms_deg=m["rms_kinematics_2d_vs_strip_geo_deg"],
+        pitch_offset_range_deg=m["pitch_offset_range_deg"],
+        alpha_e_cycle_deg=deg("alpha_e_strip"), alpha_2d_cycle_deg=deg("alpha34_2d"), alpha_lag_strip_cycle_deg=deg("alpha_lag_strip"),
+        complete=ev.get("complete", False), settled=ev.get("settled", False), settle_band=ev.get("settle_band"),
+        cycles_simulated=ev.get("cycles_simulated"), averaged_cycles=ev.get("averaged_cycles"),
+        per_cycle=ev.get("per_cycle"), eta_s_strip=ev.get("eta_s_strip"), eta_s_mean_of_cycles=ev.get("eta_s_mean_of_cycles"),
+        eta_s=None, eta_s_literal=None, strip_detail=dict(cd_f=cd_f, cd_f_from=cd_from),
+        motion_check=r.get("motion_check"), chordwise_history=hist, evidence=os.path.relpath(d, ROOT),
+        note="Settled only if every averaged cycle's eta_s is within +/- settle_band of their mean.")
+
+
 def kinematics_point(base, name, r):
     """A design-kinematics run (suction_kin.py): eta_s in the strip.js form, with the effective-angle history."""
     import suction_kin
     d = os.path.join(base, name)
     m = json.load(open(os.path.join(d, "motion.json")))
+    if m.get("source") == "strip_motion.mjs":
+        return strip_matched_point(base, name, r, m)
     cd_f, cd_from = friction_drag_at(m["re_chord"])
     ev = suction_kin.evaluate(d, r, m, cd_f)
     a = [p["alpha_eff"] for p in m["samples"]]

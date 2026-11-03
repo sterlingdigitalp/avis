@@ -156,6 +156,31 @@ fine-grid check was stopped on request inside its start-up cycle; over that comm
 body (`sixDoFMotion`, angles in degrees, sense checked on a short run) so that its relative wind and pitch rate equal
 the kinematics at every instant (`cfd/suction_kin.py`, tests in `cfd/test/test_late.py`).
 
+### eta_s round 2: strip-matched effective angle (design v17)
+
+Snapshot of the inputs: `out/cfd/snapshot-r7/` (design v17 sha256 dffada17...afdb1aa, M2 log sha256 a600ce11...b6d552e6,
+`snapshot.json`). Section motion from the strip model's own cruise (`cfd/strip_motion.mjs`: setupFlight as
+`gates/suction-sensitivity.mjs` does, strip.evaluate observed read-only). The strip's alphaE (alphaGeo minus its
+induced angle, before the Wagner lag) is reconstructed exactly by running strip.js's Jones lag recursion backwards; the
+2D section gets the pitch offset that makes its quasi-steady 3/4-chord angle equal alphaE (solved per Fourier harmonic,
+RMS mismatch 0.0005-0.0011 deg). The CFD adds its own lag, so matching the lagged angle would count it twice.
+`alpha_eff_amplitude_deg` is the strip's lagged half range, as cruiseEffectiveAngles computes it. L0.667 grid, E387,
+6 cycles, eta_s (strip form) per cycle over cycles 4-6; settled = every cycle within +/-0.05 of their mean.
+
+| s/L | Re | k | alpha_eff amplitude (strip, deg) | eta_s cycles 4 / 5 / 6 | 3-cycle eta_s | settled |
+|---|---|---|---|---|---|---|
+| 0.4 | 175,755 | 0.192 | 5.91 | -0.19 / 0.59 / 0.72 | 0.42 | no |
+| 0.6 | 163,948 | 0.171 | 6.88 | 0.26 / 0.65 / 0.66 | 0.55 | no |
+| 0.75 | 146,029 | 0.145 | 6.24 | 0.61 / 0.68 / 0.71 | 0.67 | no (0.054 from the mean; band 0.05) |
+
+Mean lift per cycle shows why: every station passes through one or two cycles with a separated state (cycle 3 or 4:
+lift drops in the negative-angle half, alphaE near -6 deg, where E387 has its negative stall in the UIUC data, and stays
+low into the next half), then recovers to attached cycles with eta_s 0.59-0.72 and rising slowly. The motion is not the
+cause: after 6 cycles the leading-edge point sits within 1.1e-7 chords of where the motion tables put it, at all three
+stations. The round-1 hand-wing collapse (lift 0.47 to 0.03 in cycle 3) has the same signature and was this start-up
+flow-state transient; three cycles were too few to see the recovery. No point settled, so the optional L1 check was
+not run.
+
 ### 3D finalist check
 
 Not done for the current design. The pipeline is built and tested end to end (`pose.mjs` from

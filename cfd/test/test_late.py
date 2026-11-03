@@ -379,3 +379,50 @@ class GateMain(unittest.TestCase):
         self.assertEqual(gate["measured"]["points"], 26)
         self.assertNotIn("cl_ref", json.dumps(gate))  # reference values stay in the local report only
         self.assertIn("cl_ref", json.dumps(report))
+
+
+class LastCycles(unittest.TestCase):
+    def history(self, etas):
+        k = KinematicsEta()
+        m = k.motion()
+        spec = dict(period=suction_kin.motion_tables(m)["period"])
+        th_mean = sum(p["theta"] for p in m["samples"]) / len(m["samples"])
+        n = len(m["samples"])
+        rows = []
+        for i in range(1, len(etas) * 300 + 1):
+            t = spec["period"] * i / 300
+            cyc = min(len(etas) - 1, int(t / spec["period"] - 1e-9))
+            ph = (t / spec["period"]) % 1.0 * n
+            j = int(ph) % n
+            f = ph - int(ph)
+            nx = m["samples"][(j + 1) % n]
+            lerp = lambda key: m["samples"][j][key] + f * (nx[key] - m["samples"][j][key])
+            a = math.atan2(lerp("w"), lerp("u"))
+            psi = -(lerp("theta") - th_mean)
+            cl = 2 * math.pi * math.sin(a) + 0.4
+            ax = -(etas[cyc] * cl * math.sin(a) - 0.012 * math.cos(a))
+            ay = (cl + ax * math.sin(a)) / math.cos(a)
+            rows.append((t, (ax * math.cos(psi) - ay * math.sin(psi)) * 0.05, (ax * math.sin(psi) + ay * math.cos(psi)) * 0.05))
+        return m, spec, rows
+
+    def run_eval(self, etas):
+        m, spec, rows = self.history(etas)
+        with tempfile.TemporaryDirectory() as d:
+            forces_file(os.path.join(d, "postProcessing/forces1/0/forces.dat"), rows)
+            return suction_kin.evaluate_last(d, spec, m, 0.012)
+
+    def test_settled_when_last_three_agree(self):
+        r = self.run_eval([0.9, 0.1, 0.8, 0.50, 0.53, 0.47])
+        self.assertEqual(r["averaged_cycles"], [4, 5, 6])
+        self.assertEqual([round(p["eta_s"], 3) for p in r["per_cycle"]], [0.5, 0.53, 0.47])
+        self.assertTrue(r["settled"])
+        self.assertTrue(r["complete"])
+
+    def test_unsettled_when_spread(self):
+        r = self.run_eval([0.5, 0.5, 0.5, 0.40, 0.60, 0.50])
+        self.assertFalse(r["settled"])
+
+    def test_too_few_cycles_not_complete(self):
+        r = self.run_eval([0.5, 0.5, 0.5, 0.5])
+        self.assertFalse(r["complete"])
+        self.assertEqual(r["averaged_cycles"], [2, 3, 4])
