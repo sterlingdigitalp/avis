@@ -191,6 +191,14 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
 - **M1 stands as a fail.** M1 fails at its worst corners, and it is reported that way in the film's gates card, the README and `tools/verify.mjs`, with its own numbers.
 - **Why no closure.** Round 13 showed the conflict. Closing M1 at an 8 m/s release needs wing loading ≤ about 20.4 N/m², and that breaks M4 and M7 at the gear train. A train strong enough for that adds mass that breaks M1 again.
 - **What may still change.** Only freeze verification: V5 and its calibration on v21 itself, and the gate set re-flown if that calibration changes. Everything else stays as built.
+- **Assembly clearance** (2026-11-03, found by the film's drive check). A design whose parts occupy the same space is not built from real parts. So every pair of parts that does not share a joint keeps at least 0.5 mm clearance through the full stroke. Parts stacked on one pin get at least 0.5 mm running clearance between them, or a catalogue thrust washer.
+  - **The physics build checks this.** It is not left to the film, and it is pinned by tests.
+  - **Clashes in v21.** Four clashes are found in v21:
+    1. The two coupler eyes on the crank pin overlap by 1 mm.
+    2. The left coupler's rocker-end eye cuts 2.4 mm radially into the left aft shoulder housing.
+    3. The 6 mm crank web leaves no room for the crank bushing's 1 mm flange.
+    4. The aft-plate bosses reach into the last gear stage.
+  - **Correction.** These are corrected as v22 = v21 plus clearance corrections. Nothing changes for any gate's sake: same parts wherever they fit, same planform, kinematics and controller. The full gate set is flown again on v22, and v22 becomes the frozen design.
 
 ### Public repository
 
