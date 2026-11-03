@@ -86,8 +86,8 @@ export function buildDesign(params, catalog) {
     return part.mass_g * count;
   };
   const structure = [];
-  const addStruct = (name, material, mass_g, basis) => {
-    structure.push({ name, material_id: material?.id ?? null, material: material?.name ?? null, mass_g, basis, source_url: material?.source_url ?? null });
+  const addStruct = (name, material, mass_g, basis, extra = {}) => {
+    structure.push({ name, material_id: material?.id ?? null, material: material?.name ?? null, mass_g, basis, source_url: material?.source_url ?? null, ...extra });
     return mass_g;
   };
   // ---- Wing structure
@@ -97,15 +97,21 @@ export function buildDesign(params, catalog) {
   const teRod = byId(catalog, parts.teRod);
   const rib = byId(catalog, parts.ribMaterial);
   const film = byId(catalog, parts.film);
-  const innerMass = (inner.mass_g * elbow);
-  const outerMass = (outerSpar.mass_g * outer);
-  addStruct('inner spar, 2 off', inner, 2 * innerMass, `${inner.mass_g} g/m x ${elbow.toFixed(3)} m x 2`);
-  addStruct('outer spar, 2 off', outerSpar, 2 * outerMass, `${outerSpar.mass_g} g/m x ${outer.toFixed(3)} m x 2`);
+  // round 16 (p.wingStructure, SPEC completeness): the inner spar from its socket's base, the edge rods from the root rib,
+  // as the assembly check draws them (src/design/wing-solids.js)
+  const WS = p.wingStructure;
+  const innerLen = WS ? elbow - (WS.spar_from_m ?? p.linkage.rocker.hub_od_mm / 2000) : elbow, rodLen = WS ? semi - WS.rib_root_m : semi;
+  const innerMass = (inner.mass_g * innerLen);
+  // round 16: the outer spar to where the swept leading edge still clears it (WS.spar_to_m)
+  const outerLen = WS?.spar_to_m ? WS.spar_to_m - elbow : outer;
+  const outerMass = (outerSpar.mass_g * outerLen);
+  addStruct('inner spar, 2 off', inner, 2 * innerMass, `${inner.mass_g} g/m x ${innerLen.toFixed(WS ? 4 : 3)} m x 2`);
+  addStruct('outer spar, 2 off', outerSpar, 2 * outerMass, `${outerSpar.mass_g} g/m x ${outerLen.toFixed(WS ? 4 : 3)} m x 2`);
   // LE and TE members run the whole span of each wing.
-  const leMass = leRod.mass_g * semi;
-  const teMass = teRod.mass_g * semi;
-  addStruct('leading edge rod, 2 off', leRod, 2 * leMass, `${leRod.mass_g} g/m x ${semi.toFixed(3)} m x 2`);
-  addStruct('trailing edge rod, 2 off', teRod, 2 * teMass, `${teRod.mass_g} g/m x ${semi.toFixed(3)} m x 2`);
+  const leMass = leRod.mass_g * rodLen;
+  const teMass = teRod.mass_g * rodLen;
+  addStruct('leading edge rod, 2 off', leRod, 2 * leMass, `${leRod.mass_g} g/m x ${rodLen.toFixed(WS ? 4 : 3)} m x 2`);
+  addStruct('trailing edge rod, 2 off', teRod, 2 * teMass, `${teRod.mass_g} g/m x ${rodLen.toFixed(WS ? 4 : 3)} m x 2`);
   // Film both faces plus a 5% allowance on curvature over the camber
   const filmArea = 2 * Sact * 1.03;
   const filmG = (film.specs.areal_density_g_m2 ?? film.mass_g) * filmArea;
@@ -134,20 +140,30 @@ export function buildDesign(params, catalog) {
   const tailFilm = filmG / filmArea * 2 * Stail * 1.03;
   const tailSparG = tailRod.mass_g * spanEach * 2 * 2; // spar + edge per surface
   const tailRibG = 8 * ribMassEach * (chordT / meanc) ** 2;
-  addStruct('tail surfaces, film, spar and ribs', film, tailFilm + tailSparG + tailRibG, `film ${(tailFilm).toFixed(1)} g + rods ${(tailSparG).toFixed(1)} g + ribs ${(tailRibG).toFixed(1)} g`);
+  if (p.tailLines === 'split') {
+    // round 16 (SPEC completeness): the tail's covering, rods and ribs as their own lines (the rods and ribs have solids)
+    addStruct('tail film, both faces', film, tailFilm, `${(film.specs.areal_density_g_m2 ?? film.mass_g)} g/m2 over both faces of both surfaces, with the wing's curvature allowance`);
+    addStruct('tail rods, 4 off', tailRod, tailSparG, `${tailRod.mass_g} g/m x ${spanEach.toFixed(4)} m x 4 (a spar and a trailing edge per surface)`, { count: 4 });
+    addStruct('tail ribs, 8 off', rib, tailRibG, `8 x the wing rib (area ${(ribArea).toExponential(2)} m2 at the mean chord) scaled to the tail's root chord squared, x ${tRib} m x ${ribDensity} kg/m3`, { count: 8 });
+  } else addStruct('tail surfaces, film, spar and ribs', film, tailFilm + tailSparG + tailRibG, `film ${(tailFilm).toFixed(1)} g + rods ${(tailSparG).toFixed(1)} g + ribs ${(tailRibG).toFixed(1)} g`);
   // ---- Fuselage: keel tube plus tail boom plus formers and film
   const keel = byId(catalog, parts.keel);
   const bodyLen = Math.max(0.28, 0.5 * lt + 0.1) + (p.bodyExtra_m ?? 0);
   const noseLen = 0.45 * bodyLen;
   const keelLen = lt + noseLen * 0.5;
-  addStruct('keel and tail boom', keel, keel.mass_g * keelLen, `${keel.mass_g} g/m x ${keelLen.toFixed(3)} m`);
+  // round 16: the airframe states the boom's length from its solid (airframe.js af_boom), so its line comes with the linkage items
+  const keelItem = (p._linkageItems ?? []).find((q) => q.name === 'keel and tail boom');
+  if (!keelItem) addStruct('keel and tail boom', keel, keel.mass_g * keelLen, `${keel.mass_g} g/m x ${keelLen.toFixed(3)} m`);
   const bodyW = p.bodyWidth_m ?? 0.06;
   const bodyH = p.bodyHeight_m ?? 0.07;
   // Round 4: the pod's centre line may sit below the wing hinge so the crank and gear train fit inside it.
   const bodyY = p.bodyY_m ?? 0;
   const shell = (Math.PI * 0.5 * (bodyW + bodyH) * bodyLen * 0.8);
   addStruct('fuselage film shell', film, (film.specs.areal_density_g_m2 ?? film.mass_g) * shell, `${shell.toFixed(3)} m2`);
-  addStruct('fuselage formers', rib, 5 * bodyW * bodyH * 0.5 * 0.002 * ribDensity * 1000, '5 off, 50% lightened, 2 mm');
+  // round 16: the airframe states the formers (airframe.js formerGeometry), so their line comes with the linkage items
+  const formerItem = (p._linkageItems ?? []).find((q) => q.name === 'fuselage formers');
+  const formersG = formerItem ? formerItem.mass_g : 5 * bodyW * bodyH * 0.5 * 0.002 * ribDensity * 1000;
+  if (!formerItem) addStruct('fuselage formers', rib, formersG, '5 off, 50% lightened, 2 mm');
   // ---- Drive
   const plate = byId(catalog, parts.drivePlate ?? 'plate-ec-2mm');
   const bellArea = 4 * (p.crank_mm ?? 12) * 25e-6 + 2 * 0.03 * 0.03;
@@ -162,7 +178,9 @@ export function buildDesign(params, catalog) {
   for (const it of linkItems ?? []) structure.push({ ...it });
   const linkG = (re) => (linkItems ?? []).filter((it) => re.test(it.name)).reduce((a, it) => a + it.mass_g, 0);
   const couplerG = linkItems ? linkG(/^coupler links/) : (2 * couplerRod.mass_g * bMm) / 1000;
-  const drivePlatesG = linkItems ? linkG(/^(?!coupler links)/) : crankPlateG + (p.gearboxPlate_g ?? 8);
+  // round 16: the keel and the formers come with the linkage items but have lumps of their own (keel and boom; fuselage
+  // shell and formers), so they are not also counted in the gearbox's lump
+  const drivePlatesG = linkItems ? linkG(/^(?!coupler links|keel and tail boom$|fuselage formers$)/) : crankPlateG + (p.gearboxPlate_g ?? 8);
   // Round 4 derived parts (p.derivedParts), each from catalogue materials with its basis stated:
   //  - the stroke servo's linkage to the two slotted rockers: two 2 mm carbon pushrods and a 2 mm carbon-plate yoke;
   //  - a pitot-static probe for the airspeed board, whose catalogue mass excludes the probe: a titanium outer tube with
@@ -187,7 +205,8 @@ export function buildDesign(params, catalog) {
   // published torque for speed: stall torque / k and no-load speed x k at the wing.
   const twistAtElbow = p.twistServoAt === 'elbow';
   const twistRod = twistAtElbow && parts.twistRod ? byId(catalog, parts.twistRod) : null;
-  const twistRodLen = twistRod ? semi - elbow : 0;
+  // round 16: in the outer spar's bore, from the running clearance past the inner spar's end to the spar's end
+  const twistRodLen = twistRod ? (WS?.spar_to_m ? WS.spar_to_m - elbow - (p.layout?.running_mm ?? 0.5) / 1000 : semi - elbow) : 0;
   if (twistRod) addStruct('twist torque rods, 2 off', twistRod, 2 * twistRod.mass_g * twistRodLen, `${twistRod.mass_g} g/m x ${twistRodLen.toFixed(3)} m x 2`);
   // ---- Parts
   const motorP = byId(catalog, parts.motor);
@@ -302,9 +321,10 @@ export function buildDesign(params, catalog) {
   const supplyG = ['powerModule', 'servoRegulator'].reduce((a, k) => a + (parts[k] ? byId(catalog, parts[k]).mass_g : 0), 0);
   if (supplyG > 0) lump('power module and regulator', supplyG, -0.01, -0.03);
   if (pitotG) lump('pitot-static probe', pitotG, Math.max(0.45 * bodyLen, 0.14) + 0.04, 0.0);
-  lump('keel and boom', keel.mass_g * keelLen, -lt / 2 + noseLen * 0.25, 0.0, 0, 0.29 * keelLen);
-  lump('fuselage shell and formers', (film.specs.areal_density_g_m2 ?? film.mass_g) * shell + 5 * bodyW * bodyH * 0.5 * 0.002 * ribDensity * 1000, -0.05, 0.0, 0, 0.3 * bodyLen);
-  lump('tail surfaces', tailFilm + tailSparG + tailRibG, -lt, 0.02);
+  if (keelItem) lump('keel and boom', keelItem.mass_g, keelItem.lump.pos[0], keelItem.lump.pos[1], keelItem.lump.pos[2], keelItem.lump.gyration_m);
+  else lump('keel and boom', keel.mass_g * keelLen, -lt / 2 + noseLen * 0.25, 0.0, 0, 0.29 * keelLen);
+  lump('fuselage shell and formers', (film.specs.areal_density_g_m2 ?? film.mass_g) * shell + formersG, -0.05, 0.0, 0, 0.3 * bodyLen);
+  lump('tail surfaces', tailFilm + tailSparG + tailRibG, -lt, p.tailY_m ?? 0.02);
   // Mean position of the wing mass, for the CG budget
   const wingOneKg = wingMass.one_wing_kg;
   const xWing = xleRoot - 0.42 * meanc; // skin centroid, spar at 0: weighted below
@@ -416,7 +436,8 @@ export function buildDesign(params, catalog) {
     wing,
     geometry: { span_m: wingSpan(w), area_m2: Sact, AR: wingSpan(w) ** 2 / Sact, mac_m: macv, chord_root_m: cr, chord_elbow_m: ce, chord_tip_m: ct, tail_arm_m: lt, wing_loading_N_m2: (total * 9.80665) / Sact, x_np_m: xNP, x_cg_m: xCGtarget, static_margin: p.staticMargin ?? 0.1 },
     drive,
-    tail: { x_m: -lt, y_m: 0.02, z_m: 0.005, span_each_m: spanEach, chord_root_m: chordT, taper: p.tailTaper ?? 0.7, dihedral_rad: dih, incidence_rad: (p.tailIncidence_deg ?? 0) * DEG, polar: 'thin-plate', AR_each: ARtail, lift_factor: ARtail / (ARtail + 2) * 1.05, kEps: 1.0, area_total_m2: Stail, deflection_max_rad: 30 * DEG },
+    // round 16 (p.tailY_m): the V-tail's roots on the boom's sides, at its height
+    tail: { x_m: -lt, y_m: p.tailY_m ?? 0.02, z_m: 0.005, span_each_m: spanEach, chord_root_m: chordT, taper: p.tailTaper ?? 0.7, dihedral_rad: dih, incidence_rad: (p.tailIncidence_deg ?? 0) * DEG, polar: 'thin-plate', AR_each: ARtail, lift_factor: ARtail / (ARtail + 2) * 1.05, kEps: 1.0, area_total_m2: Stail, deflection_max_rad: 30 * DEG },
     body,
     mass: {
       total_kg: total,

@@ -51,7 +51,7 @@ function linkageContext(d, catalog, L, lay, joints) {
   return {
     d, catalog, L, lay, joints, items, members: [], unchecked: [], planes, plateT,
     mat: (id) => materialOf(catalog, id),
-    item: (name, m, v, basis) => items.push({ name, material_id: m.id, material: m.name, mass_g: gOf(m, v), basis, source_url: m.source_url }),
+    item: (name, m, v, basis, extra = {}) => items.push({ name, material_id: m.id, material: m.name, mass_g: gOf(m, v), basis, source_url: m.source_url, ...extra }),
     jointByName: (nm) => joints.find((j) => j.name === nm),
     shaftLen: planes.plateFwd - planes.plateAft + plateT + 0.002, // plate to plate, through both, 1 mm proud each side
     eye, eyeD: partDims(eye), shoulder, shD: partDims(shoulder),
@@ -83,7 +83,7 @@ export function driveMembers(d, catalog, L, lay, joints) {
     const it = cx.items.find((q) => q.name === 'gearbox plates, 2 off');
     const { aft, fwd } = airframe.parts.plates;
     const tF = L.plates.t_fwd_mm ?? L.plates.t_mm;
-    Object.assign(it, { mass_g: (aft.area_m2 * L.plates.t_mm + fwd.area_m2 * tF) / 1000 * pm.density_g_cm3 * 1e6, basis: `solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft ${(aft.area_m2 * 1e4).toFixed(1)} cm2 x ${L.plates.t_mm} mm, forward ${(fwd.area_m2 * 1e4).toFixed(1)} cm2 x ${tF} mm; ${pm.density_g_cm3} g/cm3` });
+    Object.assign(it, { mass_g: (aft.area_m2 * L.plates.t_mm + fwd.area_m2 * tF) / 1000 * pm.density_g_cm3 * 1e6, basis: `solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited${aft.holes_area_m2 ? '; less the seat, rail and boom holes' : ''}): aft ${(aft.area_m2 * 1e4).toFixed(1)} cm2 x ${L.plates.t_mm} mm, forward ${(fwd.area_m2 * 1e4).toFixed(1)} cm2 x ${tF} mm; ${pm.density_g_cm3} g/cm3` });
   } else {
     // Round 7 (SPEC ruling after round 6: a load path that cannot be rated fails): the plates between their seats.
     cx.members.push(unrated('gearbox plates between seats', 'plate', 'the drive layout (model.js) gives the two plates no mounts to the airframe, so the path from the seats to the keel cannot be sized or rated', [{ ch: 'crank_torque', k: 1 }]));
@@ -105,7 +105,8 @@ function crankMembers(cx) {
     const wheel = train.stages[n - 1].wheel;
     const seatL = (wheel.face ?? 0.01);
     const v = ringV(od, id, lenS) + bw * tw * (d.drive.a + (od + dp) / 2) + rodV(dp, pinL) + (c.seat_od_mm ? ringV(c.seat_od_mm / 1000, od, seatL) : 0);
-    item('crank: shaft, web and pin in one piece', m, v, `${c.shaft_od_mm}${id ? `/${c.shaft_id_mm}` : ''} mm shaft x ${(lenS * 1000).toFixed(1)} mm, web ${c.web_b_mm} x ${c.web_t_mm} mm over the ${(d.drive.a * 1000).toFixed(0)} mm throw, ${(dp * 1000).toFixed(0)} mm pin x ${(pinL * 1000).toFixed(1)} mm${c.seat_od_mm ? `, ${c.seat_od_mm} mm wheel seat x ${(seatL * 1000).toFixed(0)} mm (the ${wheel.id}, ${boreText(catalog, wheel.id)}, keyed)` : ''}; ${m.density_g_cm3} g/cm3`);
+    if (c.web?.separate) crankSplit(cx, { c, m, od, id, tw, bw, dp, pinL, lenS, wheel, seatL });
+    else item('crank: shaft, web and pin in one piece', m, v, `${c.shaft_od_mm}${id ? `/${c.shaft_id_mm}` : ''} mm shaft x ${(lenS * 1000).toFixed(1)} mm, web ${c.web_b_mm} x ${c.web_t_mm} mm over the ${(d.drive.a * 1000).toFixed(0)} mm throw, ${(dp * 1000).toFixed(0)} mm pin x ${(pinL * 1000).toFixed(1)} mm${c.seat_od_mm ? `, ${c.seat_od_mm} mm wheel seat x ${(seatL * 1000).toFixed(0)} mm (the ${wheel.id}, ${boreText(catalog, wheel.id)}, keyed)` : ''}; ${m.density_g_cm3} g/cm3`);
     const loads = [
       { ch: 'coupler_R', perUnit: 1, x: planes.couplerR },
       { ch: 'coupler_L', perUnit: 1, x: planes.couplerL },
@@ -120,6 +121,31 @@ function crankMembers(cx) {
     if (c.key) members.push(keyMember(`key, crank wheel ${wheel.id}`, catalog, c.key, m, c.seat_od_mm, [{ ch: 'crank_torque', k: 1 }], items));
     if (c.key) members.push(keyHubSide(`key, crank wheel ${wheel.id}, gear side`, catalog, c.key, wheel.id, c.seat_od_mm, [{ ch: 'crank_torque', k: 1 }]));
   }
+}
+
+/**
+ * Round 16 (SPEC "Completeness and assembly order"; crank.web.separate): the one-piece crank could not go together (its
+ * web aft of the aft plate and its wheel seat inside the box, neither through the plate's 10 mm bushing). The web and
+ * its pin are one part, keyed on a solid stub at the shaft's aft end (a parallel key over the web's thickness, both
+ * sides rated by the key rule) and held there axially with LOCTITE 638, whose maker publishes no strength on titanium:
+ * that axial fixing is unrated, RC practice (SPEC ruling), reported with the torque its joint carries. The shaft keeps
+ * its wheel seat and goes into the aft plate's bushing from forward. The shaft is checked again at the keyseat's root.
+ */
+function crankSplit(cx, { c, m, od, id, tw, bw, dp, pinL, lenS, wheel, seatL }) {
+  const { d, catalog, planes, members, items, item } = cx;
+  const a = d.drive.a, K = c.web.key, T = [{ ch: 'crank_torque', k: 1 }];
+  const webA = Math.PI * (bw / 2) ** 2 + bw * a - Math.PI * (od / 2) ** 2; // the web's capsule round the throw, less its bore
+  item('crank shaft', m, ringV(od, id, lenS) + PI4 * od * od * tw + (c.seat_od_mm ? ringV(c.seat_od_mm / 1000, od, seatL) : 0), `${c.shaft_od_mm}${id ? `/${c.shaft_id_mm}` : ''} mm shaft x ${(lenS * 1000).toFixed(1)} mm, a solid ${c.shaft_od_mm} mm stub x ${(tw * 1000).toFixed(0)} mm under the web (keyseated)${c.seat_od_mm ? `, ${c.seat_od_mm} mm wheel seat x ${(seatL * 1000).toFixed(0)} mm (the ${wheel.id}, ${boreText(catalog, wheel.id)}, keyed)` : ''}; ${m.density_g_cm3} g/cm3`);
+  item('crank web and pin', m, webA * tw + rodV(dp, pinL), `web ${c.web_b_mm} mm wide round the ${(a * 1000).toFixed(0)} mm throw x ${c.web_t_mm} mm, bored ${c.shaft_od_mm} mm on the shaft's stub (keyed), ${(dp * 1000).toFixed(0)} mm pin x ${(pinL * 1000).toFixed(1)} mm in one piece; ${m.density_g_cm3} g/cm3`);
+  members.push(keyMember('key, crank web', catalog, K, m, c.shaft_od_mm, T, items));
+  const km = materialOf(catalog, K.material);
+  members.push({ name: 'key, crank web, web side', kind: 'key', check: 'key', material: km, side_material: m, dims: { d_mm: c.shaft_od_mm, b_mm: K.b_mm, h_mm: +(K.h_mm - K.shaft_depth_mm).toFixed(3), L_mm: K.L_mm }, sections: [sect('T', T)], uses: { T: 'T' }, note: `bearing on the web's keyway (${(K.h_mm - K.shaft_depth_mm).toFixed(1)} mm deep), the web's own ${m.id}` });
+  const Mweb = [{ ch: 'coupler_R', k: +(planes.crankArm - planes.couplerR).toFixed(6) }, { ch: 'coupler_L', k: +(planes.crankArm - planes.couplerL).toFixed(6) }];
+  // the keyseated solid stub as the round section of the same bending modulus: Z = pi d^3 / 32 - b t (d - t)^2 / (2 d)
+  // (a shaft with one keyseat of width b and depth t, the standard section property), smaller than its torsion one's
+  const D = c.shaft_od_mm, bk = K.b_mm, tk = K.shaft_depth_mm, dEq = Math.cbrt(D ** 3 - (16 * bk * tk * (D - tk) ** 2) / (Math.PI * D));
+  members.push({ name: 'crank shaft at the web\'s keyseat', kind: 'shaft', check: 'round', material: m, dims: { d_mm: +dEq.toFixed(3), di_mm: 0 }, sections: [sect('M', Mweb), sect('T', T), sect('V', [{ ch: 'coupler_R', k: 1 }, { ch: 'coupler_L', k: 1 }])], uses: { M: 'M', T: 'T', V: 'V' }, note: `the solid ${D} mm stub under the web with its ${bk} x ${tk} mm keyseat, as a ${dEq.toFixed(2)} mm round of the same bending modulus (pi d^3/32 - b t (d - t)^2 / 2 d): the coupler forces at the web's mid-plane as bending, the whole crank torque` });
+  members.push({ name: 'crank web on the crank shaft, axial fixing', kind: 'shaft fixing', check: 'rc practice', material: null, dims: { d_mm: c.shaft_od_mm, L_mm: c.web_t_mm }, sections: [sect('T', T)], uses: { T: 'T' }, rc: { method: `keyed (the key rated above) and held axially with LOCTITE 638 on the web's bore: LOCTITE publishes no strength on titanium, so the axial fixing is unrated`, published_Nm: null, published_basis: null }, note: 'SPEC ruling "RC practice for joints no one can rate": a hub (the crank web) held to its shaft by a bond no maker rates on this material; its torque is the key\'s' });
 }
 
 const plateTOf = (cx) => cx.plateT ?? 0.002;
@@ -293,7 +319,7 @@ function plateSeats(cx) {
   // length round its outside diameter.
   const pm = mat(L.plates.material);
   item('gearbox plates, 2 off', pm, L.plates.area_m2 * (L.plates.t_mm / 1000), `${L.plates.area_m2.toExponential(2)} m2 (round 5's carbon cheek allowance) x ${L.plates.t_mm} mm; ${pm.density_g_cm3} g/cm3`);
-  let bossV = 0;
+  let bossV = 0, nBoss = 0;
   // Seats named in L.plates.bossed ('joint/support') have a boss of the part's own length and boss_wall_mm wall; the
   // others sit in the plate alone, judged as a ring of edge_mm round the part.
   const bossed = new Set(L.plates.bossed ?? []);
@@ -305,11 +331,11 @@ function plateSeats(cx) {
       const boss = bossed.has(key);
       const D = pd.D * 1000 + 2 * (boss ? L.plates.boss_wall_mm : L.plates.edge_mm);
       const { plate_mm: tp, length_mm: t } = plateSeatLength(L.plates, jt.name, sp.name, pd.B * 1000, pd.flangeB * 1000);
-      if (boss) bossV += ringV(D / 1000, pd.D, Math.max(0, t / 1000 - tp / 1000));
+      if (boss && t > tp) { bossV += ringV(D / 1000, pd.D, t / 1000 - tp / 1000); nBoss++; }
       members.push({ name: `plate seat ${jt.name} ${sp.name}`, kind: 'seat', check: 'lug', material: pm, dims: { d_mm: +(pd.D * 1000).toFixed(3), D_mm: +D.toFixed(3), t_mm: +t.toFixed(3) }, sections: [sect('F', sp.radial.map((q) => ({ ch: q.ch, k: q.k })))], uses: { F: 'F' }, note: boss ? `a boss ${D.toFixed(1)} mm round the ${prt.id}, as long as the part` : `the plate alone, judged as a ${L.plates.edge_mm} mm ring round the ${prt.id}` });
     }
   }
-  if (bossV > 0) item('gearbox plate bosses', pm, bossV, `bosses ${L.plates.boss_wall_mm} mm wall round the seats ${[...bossed].join(', ')}, as long as the bushing, beyond the plate; ${pm.density_g_cm3} g/cm3`);
+  if (bossV > 0) item('gearbox plate bosses', pm, bossV, `bosses ${L.plates.boss_wall_mm} mm wall round the seats ${[...bossed].join(', ')}, as long as the bushing, beyond the plate; ${pm.density_g_cm3} g/cm3`, { count: nBoss });
 }
 
 const DS_WHY = 'Duracon gear on a plain bore: KHK advises against secondary operations on DS gears and publishes no keyway, set screw or adhesive fixing; Polyplastics M90-44 data could not be read; KHK DSF clamp hubs publish a reference slipping torque without a basis; Loctite 638 is not for plastics. No published rating for its torque to the shaft.';

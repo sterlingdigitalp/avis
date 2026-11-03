@@ -240,6 +240,12 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
     - **Lengths that disagree.** The boom is 1075 mm in the BOM but 1028 mm as a solid. The panels' BOM length is the plates' centre spacing, and their flanges have no solid.
     - **A lock-flange land.** It leaves 0.5 mm between the flange and the motor can, with no room for its M3×8.
   - **Correction.** These are corrected as v24 = v23 plus completeness and assembly corrections, under the same layout freedom and the same rules. A part is replaced or split only where it cannot fit or cannot be assembled, using catalogue fixings sized by the existing rules. The full gate set is flown again on v24, and v24 becomes the frozen design.
+  - **v24 result.**
+    - **Completeness.** All 79 BOM lines have solids whose count and size match their line. The three covering films are exempt, because the covering is the loft. No solid is untagged. All 44 screw holes lie wholly in metal.
+    - **Assembly.** The sequence has 83 steps and every one arrives clear. The crank is split: the shaft goes in from forward, and the web and pin, as one part, are keyed onto the aft stub.
+    - **Mass.** Every structure line now follows its drawn solids, so the mass is 1749.6 g, 56.0 g less than v23. Most of that is BOM estimates that never matched a drawn part: shoulder-bracket arms, the stale aft-seat bosses, nominal formers, and screws counted by length.
+    - **Verdicts.** M4 now passes both ways (at 0.6: 99/100, corners 98 or better), so it is final. No gate moved: the verdict changed because the BOM was corrected to the drawn parts. M1 still fails both ways. Every other verdict is unchanged.
+    - **The crank web's axial bond.** It is LOCTITE 638 on titanium, which has no published rating. The RC-practice ruling covers only a gear, pulley or coupling held to its shaft, so it does not cover a crank web. M7's pass on v24 rests on that bond, and so it is not counted until a rated fixing replaces it.
 
 ### Public repository
 

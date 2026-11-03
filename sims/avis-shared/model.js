@@ -675,10 +675,14 @@ function placeMounted(loft, name, mt, size, at, others, byName, shell) {
   if (!Number.isFinite(x)) throw new Error(`mount ${name}: no x (x0_m, after or 'lump')`);
   if (mt.x === 'lump') {
     const x0 = x;
+    let found = false;
     for (let k = 0; k <= 80; k++) {
       const hit = [x0 - k * 0.001, x0 + k * 0.001].find((xx) => xx >= xMin - 1e-12 && out(boxX(xx)) <= 0 && !clash(boxX(xx)));
-      if (hit != null) { x = hit; break; }
+      if (hit != null) { x = hit; found = true; break; }
     }
+    // round 16: the window between the part it follows and the loft can be narrower than the 1 mm search step; its
+    // aft end (right after that part) is then the place, if it fits
+    if (!found && Number.isFinite(xMin) && xMin >= x0 - 0.08 && out(boxX(xMin)) <= 0 && !clash(boxX(xMin))) x = xMin;
   }
   const b = boxX(x);
   return { name, box: b, orient: size, shift: [x - at[0], y - at[1], z - at[2]], protrusion: Math.max(0, out(b)), clash: clash(b), mount: { ...mt } };

@@ -28,6 +28,15 @@ const pair = (r, a, b) => {
   assert.ok(p, `no pair ${a} / ${b}`);
   return p.gap_mm; // rounded to 0.001 mm in the record
 };
+/**
+ * Round 16: a coupler eye is drawn as its body and, at its outer face, the counterbore for its bushing's 1 mm flange
+ * (the catalogue's d3 x b2): the eye's gap to a part is the smaller of the two solids'.
+ */
+const eyePair = (r, a, b) => {
+  const g = [pair(r, a, b)];
+  for (const [x, y] of [[`${a} counterbore`, b], [a, `${b} counterbore`]]) if (r.all_pairs[`${x} | ${y}`] ?? r.all_pairs[`${y} | ${x}`]) g.push(pair(r, x, y));
+  return Math.min(...g);
+};
 const R3 = 6e-4; // tolerance for a value read from the record
 const asV22 = (d) => { d.params.layout = { rule: 'clearance', running_mm: 0.5 }; d.params.linkage.plates.flange = 'face'; return d; };
 
@@ -74,7 +83,7 @@ test('v21 clash 2: the left rocker-end eye cuts 2.4 mm radially into the left af
   const hand = (c * 1000) - L.coupler.eye_od_mm / 2 - L.shoulderHousing.od_mm / 2; // the eye's centre is the rocker length from the housing's
   near(hand, -2.4164, 1e-3);
   assert.ok(hand < CLEARANCE_M * 1000);
-  near(pair(r, 'coupler L/horn eye', 'shoulder bracket L aft/housing'), hand, R3);
+  near(eyePair(r, 'coupler L/horn eye', 'shoulder bracket L aft/housing'), hand, R3);
 });
 
 test('v21 clash 3: the crank web is 0.2 mm from the aft plate, so the crank bushing\'s 1 mm flange has no room', () => {
@@ -134,15 +143,15 @@ test('v22 layout: hand-calculated planes from the catalogue and the design (0.5 
 
 test('v22 layout clears the four clashes and the hub stacks by the 0.5 mm running clearance', () => {
   const { r } = once22();
-  near(pair(r, 'coupler R/crank eye', 'coupler L/crank eye'), 0.5, R3);
-  near(pair(r, 'crank/web', 'coupler R/crank eye'), 0.5, R3);
+  near(eyePair(r, 'coupler R/crank eye', 'coupler L/crank eye'), 0.5, R3);
+  near(eyePair(r, 'crank/web', 'coupler R/crank eye'), 0.5, R3);
   near(pair(r, 'crank/web', 'crank shaft journal aft (bushing-igus-GFM-1012-10)/flange'), 0.5, R3);
   near(pair(r, 'stage 4 wheel gear-khk-msgb1-45/teeth', 'gearbox plate aft/boss crank shaft/aft'), 0.5, R3);
   near(pair(r, 'rocker R/hub', 'shoulder bushing R aft/body'), 0.5, R3);
   near(pair(r, 'rocker L/hub', 'shoulder bushing L forward/body'), 0.5, R3);
   near(pair(r, 'stage 1 wheel gear-khk-ds1-60/hub', 'gear shaft 3 journal forward (bearing-skf-628-8-2z)/body'), 0.5, R3);
   // clash 2 is not a plane question: the eye and housing radii exceed the rocker length whatever the planes
-  assert.ok(pair(r, 'coupler L/horn eye', 'shoulder bracket L aft/housing') < 0);
+  assert.ok(eyePair(r, 'coupler L/horn eye', 'shoulder bracket L aft/housing') < 0);
 });
 
 test('seat rules under the flange-on-face convention (v22) and v21 unchanged', () => {
@@ -263,14 +272,14 @@ test('round 14 horn stacking and bracket sleeves, by hand', () => {
 test('round 14: the left eye clears the left aft housing by stacking along x (clash 2), the horns clear each other', () => {
   const { r } = once14();
   // the left eye (-7.3 to -1.3 mm) 8 mm forward of the left aft housing's counterbore (-16.3 to -15.3 mm)
-  near(pair(r, 'coupler L/horn eye', 'shoulder bracket L aft/housing counterbore'), 8, R3);
-  assert.ok(pair(r, 'coupler R/horn eye', 'rocker L/horn boss') >= 0.5);
-  assert.ok(pair(r, 'rocker R/horn pin', 'coupler L/horn eye') >= 0.5);
+  near(eyePair(r, 'coupler L/horn eye', 'shoulder bracket L aft/housing counterbore'), 8, R3);
+  assert.ok(eyePair(r, 'coupler R/horn eye', 'rocker L/horn boss') >= 0.5);
+  assert.ok(eyePair(r, 'rocker R/horn pin', 'coupler L/horn eye') >= 0.5);
   near(pair(r, 'rocker L/horn boss', 'shoulder bracket L aft/housing counterbore'), 0.5, R3); // boss from -14.8 mm
   // the hub turned down to 13.6 mm where the eyes pass: the eye's inner edge is the rocker length less 12.25 mm from
   // the axis, 0.53 mm off the relief
   const c = linkageAt(driveLayout(asR14(v21()), catalog).law, v21().drive.ampNominal).c * 1000;
-  near(pair(r, 'rocker R/hub relief', 'coupler R/horn eye'), c - 24.5 / 2 - 13.6 / 2, 0.02);
+  near(eyePair(r, 'rocker R/hub relief', 'coupler R/horn eye'), c - 24.5 / 2 - 13.6 / 2, 0.02);
 });
 
 test('round 14 rocker hub by hand: relief at the eyes, forward end clear of the aft plate, the seat at full diameter', () => {

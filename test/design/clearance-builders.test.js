@@ -345,46 +345,54 @@ test('carrierParts: forward tray, nose tray riser, nose tray and aft tray are ch
   const { asm, d } = v23Like();
   const G = d.structure.airframe.parts.carriers;
   const rootTabExpected = (c, x) => S('root tab', x, box2(-c.w / 2, c.w / 2, c.y + c.t / 2, c.y + c.t / 2 + c.tab));
-  assert.deepEqual(plain(partSolids(asm.parts, 'forward tray')), plain([...channelSolids(G.forward, G.forward.x), rootTabExpected(G.forward, [G.forward.x[0], G.forward.x[0] + G.forward.t])]));
-  assert.deepEqual(plain(partSolids(asm.parts, 'nose tray riser')), plain(riserSolids(G.riser)));
-  assert.deepEqual(plain(partSolids(asm.parts, 'nose tray')), plain(channelSolids(G.nose, G.nose.x)));
-  assert.deepEqual(plain(partSolids(asm.parts, 'aft tray')), plain([...channelSolids(G.aft, G.aft.x), rootTabExpected(G.aft, [G.aft.x[1] - G.aft.t, G.aft.x[1]])]));
+  // round 16: each solid tagged with its BOM line (the carrier's own structure item)
+  const bom = (line, sols) => sols.map((q) => ({ ...q, bom: line }));
+  assert.deepEqual(plain(partSolids(asm.parts, 'forward tray')), plain(bom('forward tray', [...channelSolids(G.forward, G.forward.x), rootTabExpected(G.forward, [G.forward.x[0], G.forward.x[0] + G.forward.t])])));
+  // the riser's web has the readhead screws' 2.4 mm clearance holes (ISO 273 medium for M2)
+  const rh = d.structure.airframe.parts.support.readhead.holes_m.map((c) => ({ c, r: 0.0012 }));
+  assert.deepEqual(plain(partSolids(asm.parts, 'nose tray riser')), plain(bom('nose tray riser', riserSolids(G.riser, rh))));
+  assert.deepEqual(plain(partSolids(asm.parts, 'nose tray')), plain(bom('nose tray', channelSolids(G.nose, G.nose.x))));
+  assert.deepEqual(plain(partSolids(asm.parts, 'aft tray')), plain(bom('aft tray', [...channelSolids(G.aft, G.aft.x), rootTabExpected(G.aft, [G.aft.x[1] - G.aft.t, G.aft.x[1]])])));
 });
 
 test('pitotParts: the probe is a ring on the nose flange; its ties are bandSlabs built from the pitot and nose-tray records', () => {
   const { asm, d } = v23Like();
   const af = d.structure.airframe.parts;
   const pm = af.support.pitot, N = af.carriers.nose, s = Math.sign(pm.c_m[0]) || 1;
-  assert.deepEqual(plain(partSolids(asm.parts, 'pitot-static probe')), plain([S('tube', pm.x_m, ring(pm.c_m, pm.r_m))]));
+  assert.deepEqual(plain(partSolids(asm.parts, 'pitot-static probe')), plain([{ ...S('tube', pm.x_m, ring(pm.c_m, pm.r_m)), bom: 'pitot-static probe' }]));
   const zin = s * (N.w / 2 - N.t / 2), zout = pm.c_m[0] + s * pm.r_m, yb = N.y - N.t / 2, yt = Math.max(N.y + N.h + N.t / 2, pm.c_m[1] + pm.r_m);
   const [b, tt] = pm.band_mm.map((v) => v / 1000), top = N.y + N.t / 2;
   const zs = s > 0 ? [zin, zout] : [zout, zin], floors = s > 0 ? [top, yb] : [yb, top];
-  const expected = pm.tie_x_mm.flatMap((x, k) => bandSlabs(`tie ${k + 1}`, x / 1000, b, tt, zs, [yb, yt], floors));
+  // round 16: each tie its own item of the tie's BOM line
+  const expected = pm.tie_x_mm.flatMap((x, k) => bandSlabs(`tie ${k + 1}`, x / 1000, b, tt, zs, [yb, yt], floors).map((q) => ({ ...q, bom: pm.tie, item: `pitot tie ${k + 1}` })));
   assert.deepEqual(plain(partSolids(asm.parts, 'pitot-static probe ties')), plain(expected));
 });
 
-test('readheadFixing: heads, spacers and nuts as rings, placed from the readhead fixing and encoder-plane records', () => {
+test('readheadFixing (round 16: each screw, spacer and nut its own part): heads and shanks, spacers and nuts as rings, placed from the readhead fixing and encoder-plane records', () => {
   const { asm, d, lay } = v23Like();
   const af = d.structure.airframe.parts;
   const fx = af.support.readhead, e = lay.planes.encoder, riser = af.carriers.riser;
+  // ISO 4762 M2 x 25: head 3.80 x 2.00 mm, shank 2 mm x 25 mm; ISO 4032 M2: 4.00 mm across flats x 1.60 mm
   const mm1 = (v) => v / 1000, hr = mm1(fx.screw_head.d_mm) / 2, k = mm1(fx.screw_head.k_mm), nr = mm1(fx.nut_s_mm) / Math.sqrt(3);
-  const expected = fx.holes_m.flatMap((c, i) => [
-    S(`head ${i + 1}`, [e.readhead[0] - k, e.readhead[0]], ring(c, hr)),
-    S(`spacer ${i + 1}`, [e.readhead[1], e.readhead[1] + mm1(fx.spacer_mm)], ring(c, mm1(fx.spacer_od_mm) / 2, mm1(fx.spacer_id_mm) / 2)),
-    S(`nut ${i + 1}`, [riser.x[1], riser.x[1] + mm1(fx.nut_m_mm)], ring(c, nr, mm1(fx.spacer_id_mm) / 2)),
-  ]);
-  assert.deepEqual(plain(partSolids(asm.parts, 'crank encoder readhead fixing')), plain(expected));
-  assert.equal(fx.holes_m.length, 3); // BRD01's 3 x M2: head/spacer/nut per hole, 9 solids
-  assert.equal(partSolids(asm.parts, 'crank encoder readhead fixing').length, 9);
+  near(hr, 0.0019, 1e-12); near(k, 0.002, 1e-12); near(nr, 0.004 / Math.sqrt(3), 1e-12);
+  fx.holes_m.forEach((c, i) => {
+    assert.deepEqual(plain(partSolids(asm.parts, `readhead screw ${i + 1}`)), plain([S('head', [e.readhead[0] - k, e.readhead[0]], ring(c, hr)), S('shank', [e.readhead[0], e.readhead[0] + 0.025], ring(c, 0.001))].map((q) => ({ ...q, bom: fx.screw }))));
+    assert.deepEqual(plain(partSolids(asm.parts, `readhead spacer ${i + 1}`)), plain([{ ...S('spacer', [e.readhead[1], e.readhead[1] + mm1(fx.spacer_mm)], ring(c, mm1(fx.spacer_od_mm) / 2, mm1(fx.spacer_id_mm) / 2)), bom: 'crank encoder spacers' }]));
+    assert.deepEqual(plain(partSolids(asm.parts, `readhead nut ${i + 1}`)), plain([{ ...S('nut', [riser.x[1], riser.x[1] + mm1(fx.nut_m_mm)], ring(c, nr, 0.001)), bom: fx.nut }]));
+  });
+  assert.equal(fx.holes_m.length, 3); // BRD01's 3 x M2
+  // the shank reaches through the readhead (6.9), the spacer, the riser's 0.8 mm web and the 1.6 mm nut, and past it
+  assert.ok(e.readhead[0] + 0.025 > riser.x[1] + mm1(fx.nut_m_mm));
 });
 
 test('the motor bracket (gearParts, round 15): plate as the hull polygon with its sleeve and stub holes, plus the two sleeves as rings', () => {
   const { asm, d } = v23Like();
   const mb = d.structure.airframe.parts.motor_bracket;
   const expected = [
-    S('plate', mb.x, poly(mb.outline, [...mb.sleeves.map((q) => ({ c: q.c, r: q.ri })), { c: mb.stub.c, r: mb.stub.r }])),
+    // round 16: the plate stops at the sleeves' outside (the sleeves fill it), so the bracket's material is counted once
+    S('plate', mb.x, poly(mb.outline, [...mb.sleeves.map((q) => ({ c: q.c, r: q.ro })), { c: mb.stub.c, r: mb.stub.r }])),
     ...mb.sleeves.map((q) => S(`sleeve ${q.side}`, mb.x, ring(q.c, q.ro, q.ri))),
-  ];
+  ].map((q) => ({ ...q, bom: 'motor bracket' }));
   assert.deepEqual(plain(partSolids(asm.parts, 'motor bracket')), plain(expected));
   assert.deepEqual(mb.sleeves.map((q) => q.side).sort(), ['left', 'right']);
 });

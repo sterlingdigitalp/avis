@@ -7,12 +7,12 @@ V4  pass        {"method":"published kinematics imposed (2 Hz, 0.3 m plunge, 9 d
 V5  pass       larus-gl-2 {"protocol":"fixed-stroke drive: multipliers fitted on cruise and cruise x1.3 stroke frequency; judged on four
 V6  pass        {"gpu_vs_cpu":[{"case":"thin-bouzidi","max_population_diff":3.3527612686157227e-8,"mean_population_diff":2.868
 V7  FAIL        {"points":26,"points_passed":13,"points_unconverged":8,"cl_max_err":{"value":0.1125,"re":100000,"alpha_deg":-2
-M1  FAIL       larus-gl-2 {"release_speed_m_s":8,"release_pitch_deg":5,"climb_rate_2_to_3s_m_s":0.44961726783203493,"first_1s_window_cli
-M2  pass       larus-gl-2 {"cruise_power_w":73.37500593184733,"cruise_batt_A":5.990849095546,"endurance_min":17.626883654690978,"usable_
-M3  pass       larus-gl-2 {"heading_change_deg":360.0061257454048,"altitude_dev_m":0.4688020660797548,"mean_bank_deg":27.39770427199024,
-M4  NOT FINAL  larus-gl-2 {"seeds_passed":99,"seeds_run":100,"worst_H_m":10,"by_H":{"5":{"runs":23,"pass":23,"worstAlt":4.44559362152956
-M5  pass       larus-gl-2 {"touchdown_sink_m_s":0.6691788502711538,"touchdown_speed_m_s":8.462196179420713,"pitch_deg":1.968847961140754
-M6  pass       larus-gl-2 {"total_g":1805.620327874301,"parts_g":836.2374000000001,"structure_g":733.867232934175,"margin_g":235.5156949
-M7  pass       larus-gl-2 {"spar_inner":{"id":"tube-rockwest-pultruded-10x8","moment_Nm":23.186803794776516,"stress_MPa":400.86497925089
-M8  pass       larus-gl-2 {"motor_rms_2s_max_A":23.21072703524317,"motor_continuous_A":26,"motor_rule":"published continuous rating","mo
+M1  FAIL       larus-gl-2 {"release_speed_m_s":8,"release_pitch_deg":5,"climb_rate_2_to_3s_m_s":0.5209178458533389,"first_1s_window_clim
+M2  pass       larus-gl-2 {"cruise_power_w":70.40202341357148,"cruise_batt_A":5.743333766802358,"endurance_min":18.386533725480067,"usab
+M3  pass       larus-gl-2 {"heading_change_deg":360.00792479995135,"altitude_dev_m":0.4883494387570268,"mean_bank_deg":27.43354474566205
+M4  pass       larus-gl-2 {"seeds_passed":100,"seeds_run":100,"worst_H_m":5,"by_H":{"5":{"runs":23,"pass":23,"worstAlt":4.42234987223820
+M5  pass       larus-gl-2 {"touchdown_sink_m_s":0.6641070111268798,"touchdown_speed_m_s":8.330464823107498,"pitch_deg":1.935333671591447
+M6  pass       larus-gl-2 {"total_g":1749.6440588391333,"parts_g":836.2374000000001,"structure_g":685.192216381855,"margin_g":228.214442
+M7  pass       larus-gl-2 {"spar_inner":{"id":"tube-rockwest-pultruded-10x8","moment_Nm":23.63943816769495,"stress_MPa":408.690347081414
+M8  pass       larus-gl-2 {"motor_rms_2s_max_A":22.974106114808748,"motor_continuous_A":26,"motor_rule":"published continuous rating","m
 NOT ALL GATES PASS

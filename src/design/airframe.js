@@ -22,7 +22,8 @@
 // in the design file and their clearances to the gear tip circles and rocker hubs are computed and reported here.
 import { byId } from './catalog.js';
 import { shaftMomentSections, channelSection } from '../physics/members.js';
-import { packedSpecs, partsIndex } from '../../sims/avis-shared/model.js';
+import { packedSpecs, partsIndex, loftHalf } from '../../sims/avis-shared/model.js';
+import { fixingLayout, fixingCounts } from './fixings.js';
 
 const PI4 = Math.PI / 4;
 const AL7 = 'metal-al-7075-t6', AL6 = 'metal-al-6061-t6';
@@ -135,11 +136,13 @@ export function airframeMembers(cx) {
     // A screwed (unbonded) doubler shares the moment by stiffness: the stack's stress 6 M t_max / (b sum t^3), as a plate of t_eff.
     const tEff = doubler_mm > 0 ? Math.sqrt((tp ** 3 + doubler_mm ** 3) / Math.max(tp, doubler_mm)) : tp;
     members.push({ name, kind: 'plate', check: 'plate', material: mat(L.plates.material), dims: { b_mm: w_mm, t_mm: +tEff.toFixed(4) }, sections: [sect('Mo', Mo)], uses: { Mo: 'Mo' }, note: `the flange's prying moment as out-of-plane bending of the plate over the flange width${doubler_mm > 0 ? `, with a ${doubler_mm} mm 6061-T6 doubler under the same screws (unbonded: t_eff ${tEff.toFixed(2)} mm)` : ''}` });
-    if (doubler_mm > 0) item(`${name.replace(/^(forward|aft) plate under the /, '')} doubler`, mat(AL6), (w_mm / 1000) * (2 * (/motor/.test(name) ? A.motor.circle_r_mm : 12) / 1000) * (doubler_mm / 1000), `${w_mm} mm x ${doubler_mm} mm 6061-T6 under the flange screws`);
+    // round 16 (tray.doubler_h_mm): the doubler's height as drawn, its screws' edge distance either side
+    const dh = /tray/.test(name) && A.tray.doubler_h_mm ? A.tray.doubler_h_mm : 2 * (/motor/.test(name) ? A.motor.circle_r_mm : 12);
+    if (doubler_mm > 0) item(`${name.replace(/^(forward|aft) plate under the /, '')} doubler`, mat(AL6), (w_mm / 1000) * (dh / 1000) * (doubler_mm / 1000), `${w_mm} x ${dh} mm x ${doubler_mm} mm 6061-T6 under the flange screws`);
   };
   const perScrewShear = (group, V, T) => addTerms(scaleTerms(V, 1 / group.n), group.sum_r2_mm2 > 0 ? scaleTerms(T, (group.r_max_mm / 1000) / (group.sum_r2_mm2 * 1e-6)) : []);
 
-  const ax = { cx, d, catalog, L, lay, jointByName, planes, plateT, members, mat, item, span, A, scr, nut, tieS, tieL, glueAl, glueCf, lump, counts, xA, xF, gap, x0, shafts, crank, report, tFwd, tAft, screwSeat, bolts, flangePlate, perScrewShear };
+  const ax = { cx, d, catalog, L, lay, jointByName, planes, plateT, members, mat, item, span, A, scr, nut, tieS, tieL, glueAl, glueCf, lump, counts, xA, xF, gap, x0, shafts, crank, report, tFwd, tAft, screwSeat, bolts, flangePlate, perScrewShear, loftHalfAt: loftHalf };
   af_shoulders(ax);
   af_boom(ax);
   af_trays(ax);
@@ -185,8 +188,10 @@ function af_shoulders(ax) {
     const lockG = circleGroup(ra.lock_screws, ra.lock_r_mm);
     // round 14: rail.lock_at 'forward' puts the lock flange at the forward plate's aft face (else the aft plate's front face)
     const lockFwd = ra.lock_at === 'forward';
-    bolts(`shoulder rail ${side}, torsion lock screws`, lockG, [], Trail, [], rootX, `a flange on the rail at the ${lockFwd ? 'forward plate\'s aft' : 'aft plate\'s front'} face, screwed to it: the rail torque on ${ra.lock_screws} M3 screws at ${ra.lock_r_mm} mm, the root axial force as tension`);
-    screwSeat(`shoulder rail ${side}, torsion lock screws in the plate`, perScrewShear(lockG, [], Trail), lockFwd ? tFwd : tAft);
+    bolts(`shoulder rail ${side}, torsion lock screws`, lockG, [], Trail, [], rootX, `a flange on the rail at the ${lockFwd ? 'forward plate\'s aft' : ra.lock_at === 'aft outer' ? 'aft plate\'s aft' : 'aft plate\'s front'} face, screwed to it: the rail torque on ${ra.lock_screws} M3 screws at ${ra.lock_r_mm} mm, the root axial force as tension`);
+    // round 16 (lock_at 'aft outer' on the aft seat boss, aft_boss_at 'aft face'): the screws bear in the plate and the boss
+    const onBoss = ra.lock_at === 'aft outer' && ra.aft_boss_at === 'aft face';
+    screwSeat(`shoulder rail ${side}, torsion lock screws in the plate`, perScrewShear(lockG, [], Trail), lockFwd ? tFwd : tAft + (onBoss ? ra.aft_boss_mm ?? 0 : 0));
     counts.screws += ra.lock_screws; counts.nuts += ra.lock_screws;
     const railLen = gap + plateT + (xA - xa) + ra.sleeve_len_mm / 2000 + 0.002;
     if (ra.aft_boss_mm) item(`shoulder rail ${side} aft seat boss`, mat(L.plates.material), PI4 * ((ra.seat_D_mm / 1000) ** 2 - (ra.od_mm / 1000) ** 2) * (ra.aft_boss_mm / 1000), `ring ${ra.seat_D_mm}/${ra.od_mm} x ${ra.aft_boss_mm} mm on the aft plate`);
@@ -195,8 +200,12 @@ function af_shoulders(ax) {
     item(`shoulder rail ${side}`, rm, PI4 * ((ra.od_mm / 1000) ** 2 - (ra.id_mm / 1000) ** 2) * railLen + flangeA * (ra.lock_t_mm ?? 2) / 1000, `${ra.od_mm}/${ra.id_mm} mm tube x ${(railLen * 1000).toFixed(1)} mm plus a ${ra.lock_t_mm ?? 2} mm lock flange (${(flangeA * 1e6).toFixed(0)} mm2); ${rm.density_g_cm3} g/cm3`);
     const al6 = mat(ra.arm_material);
     const sleeveV = 2 * PI4 * ((ra.od_mm + 2 * ra.sleeve_wall_mm) ** 2 - ra.od_mm ** 2) * 1e-9 * ra.sleeve_len_mm;
-    const armV = 2 * (ra.arm_b_mm * ra.arm_t_mm * dy * 1000) * 1e-9;
-    item(`shoulder bracket ${side}`, al6, sleeveV + armV, `two sleeves ${ra.od_mm + 2 * ra.sleeve_wall_mm}/${ra.od_mm} x ${ra.sleeve_len_mm} mm and two arms ${ra.arm_b_mm} x ${ra.arm_t_mm} x ${(dy * 1000).toFixed(1)} mm to the housings (the housing rings are the shoulder housings' items); ${al6.density_g_cm3} g/cm3`);
+    // round 16 (the solids, clearance.js shoulderParts): each arm a bar from the shoulder bushing's flange (or bore) to the
+    // rail's surface, the two brackets of a side two items
+    const shB = jointByName(`shoulder pivot ${side}`), shP = shB ? ax.catalog.find((q) => q.id === shB.part_id)?.specs : null;
+    const armL = ax.d.params.layout?.rule === 'clearance' && shP ? dy * 1000 - (shP.d3_mm ?? shP.d2_mm) / 2 - ra.od_mm / 2 : dy * 1000;
+    const armV = 2 * (ra.arm_b_mm * ra.arm_t_mm * armL) * 1e-9;
+    item(`shoulder bracket ${side}`, al6, sleeveV + armV, `two sleeves ${ra.od_mm + 2 * ra.sleeve_wall_mm}/${ra.od_mm} x ${ra.sleeve_len_mm} mm and two arms ${ra.arm_b_mm} x ${ra.arm_t_mm} x ${armL.toFixed(1)} mm from the bushing to the rail (the housing rings are the shoulder housings' items); two brackets; ${al6.density_g_cm3} g/cm3`, { count: 2 });
     railPos[side] = [(lay.fb.O4[0] + ra.dz_mm / 1000) * sg, lay.fb.O4[1] + ra.dy_mm / 1000];
   }
 
@@ -234,9 +243,18 @@ function af_boom(ax) {
     counts.screws += bo.screws; counts.nuts += bo.screws;
   }
   members.push({ name: 'tail boom clamp bonds', kind: 'bond', check: 'bond', material: glueCf, dims: { d_mm: tube_od, L_mm: 2 * bo.clamp_len_mm }, sections: [sect('T', Tb), sect('F', Vb)], uses: { T: 'T', F: 'F' }, note: 'Araldite 2011 on CFRP (typical, half) in both clamp bores: the boom torque and its axial load (bounded by the whole tail force and inertia)' });
+  if (bo.to_tail_spar_mm != null) {
+    // round 16 (SPEC completeness: the BOM's boom is its solid): the boom from the forward clamp's outer face to
+    // to_tail_spar_mm aft of the tail's spar (on its root quarter chord), so the spar's root and the ties lie on it;
+    // its lump at its middle
+    const x1 = xF + hF + bo.clamp_len_mm / 1000, x0 = tail.x_m - bo.to_tail_spar_mm / 1000, Lb = x1 - x0;
+    ax.cx.items.push({ name: 'keel and tail boom', material_id: tube.id, material: tube.name, mass_g: tube.mass_g * Lb, basis: `${tube.mass_g} g/m x ${Lb.toFixed(4)} m (the forward clamp's outer face to ${bo.to_tail_spar_mm} mm aft of the tail's spar)`, source_url: tube.source_url, lump: { pos: [+((x0 + x1) / 2).toFixed(5), yB, 0], gyration_m: +(Lb / Math.sqrt(12)).toFixed(5) }, x_m: [x0, x1] });
+  }
   const al6c = mat(bo.clamp_material);
   const blk = (tube_od + 2 * bo.clamp_wall_mm) / 1000;
-  item('tail boom clamp blocks, 2 off', al6c, 2 * ((blk * (blk + 0.006)) - PI4 * (tube_od / 1000) ** 2) * (bo.clamp_len_mm / 1000), `${(blk * 1000).toFixed(0)} x ${(blk * 1000 + 6).toFixed(0)} mm blocks x ${bo.clamp_len_mm} mm, bored ${tube_od} mm (a 6 mm screw flange); ${al6c.density_g_cm3} g/cm3`);
+  const cf = clampFlange(bo, blk, yB);
+  if (cf) item('tail boom clamp blocks, 2 off', al6c, 2 * (blk * blk - PI4 * (tube_od / 1000) ** 2 + (cf.z[1] - cf.z[0]) * (cf.y[1] - cf.y[0])) * (bo.clamp_len_mm / 1000), `each a ${(blk * 1000).toFixed(1)} mm square collar bored ${tube_od} mm and a ${((cf.z[1] - cf.z[0]) * 1000).toFixed(1)} x ${((cf.y[1] - cf.y[0]) * 1000).toFixed(1)} mm screw flange below it (its screws ${bo.screw_edge_mm} mm from its edges), x ${bo.clamp_len_mm} mm; ${al6c.density_g_cm3} g/cm3`, { count: 2 });
+  else item('tail boom clamp blocks, 2 off', al6c, 2 * ((blk * (blk + 0.006)) - PI4 * (tube_od / 1000) ** 2) * (bo.clamp_len_mm / 1000), `${(blk * 1000).toFixed(0)} x ${(blk * 1000 + 6).toFixed(0)} mm blocks x ${bo.clamp_len_mm} mm, bored ${tube_od} mm (a 6 mm screw flange); ${al6c.density_g_cm3} g/cm3`);
   const boomRoot = { aft: Fa, fwd: Ff };
 
   Object.assign(ax, { sCl, yB, tail, Lt, tailIn, boomRoot });
@@ -292,21 +310,28 @@ function af_trays(ax) {
  *  - nose tray: from the riser's aft face forward to noseTray.tip_x_mm, at noseTray.y_mm, on the riser's tab;
  *  - aft tray: from the aft plate's outer face aft for aftTray.length_mm, at aftTray.y_mm, its root tab up the plate.
  */
-export function carrierGeometry(A, planes, tF, tA) {
+export function carrierGeometry(A, planes, tF, tA, crank = null) {
   const m = (v) => v / 1000, xPf = planes.plateFwd + tF / 2, xPa = planes.plateAft - tA / 2; // the plates' own faces
   const ch = (T) => ({ y: m(T.y_mm), w: m(T.w_mm), h: m(T.flange_h_mm), t: m(T.t_mm), tab: m(T.flange_mm), material: T.material });
   const N = A.noseTray, R = N.riser, xr = m(N.riser_x_mm), tr = m(R.t_mm);
-  const forward = { ...ch(A.tray), x: [xPf, xr + tr], root: 'fwd' };
+  // round 16 (tray.doubler_at 'outer'): the doubler between the tray's root tab and the forward plate's outer face
+  const dbl = A.tray.doubler_at === 'outer' ? m(A.tray.doubler_mm ?? 0) : 0;
+  const forward = { ...ch(A.tray), x: [xPf + dbl, xr + tr], root: 'fwd' };
   const nose = { ...ch(N), x: [xr, m(N.tip_x_mm)] };
-  const riser = { x: [xr, xr + tr], y: [forward.y + forward.t / 2, nose.y - nose.t / 2], w: m(R.w_mm), t: tr, f: m(R.flange_mm), foot: m(R.foot_mm), material: R.material ?? A.tray.material };
+  // round 16 (riser.actuator_hole_mm): a hole in the web round the crank axis for the encoder's actuator to pass
+  const hole = R.actuator_hole && planes.encoder && crank ? { c: crank, r: planes.encoder.od.actuator / 2 + m(R.actuator_hole_mm ?? 0.5) } : null;
+  const riser = { x: [xr, xr + tr], y: [forward.y + forward.t / 2, nose.y - nose.t / 2], w: m(R.w_mm), t: tr, f: m(R.flange_mm), foot: m(R.foot_mm), material: R.material ?? A.tray.material, ...(hole ? { hole } : {}) };
   const aft = { ...ch(A.aftTray), x: [xPa - m(A.aftTray.length_mm), xPa], root: 'aft' };
-  return { forward, riser, nose, aft };
+  // the doubler's plate: the tray's width, its height centred on the root tab's screws (tray.doubler_h_mm)
+  const ys = forward.y + forward.t / 2 + forward.tab / 2, dh = m(A.tray.doubler_h_mm ?? 24);
+  const doubler = dbl ? { x: [xPf, xPf + dbl], y: [ys - dh / 2, ys + dh / 2], w: forward.w } : null;
+  return { forward, riser, nose, aft, ...(doubler ? { doubler } : {}) };
 }
 
 /** Volume (m3) of a channel of the carrier geometry over length L, with its root tab when it has one. */
 const channelVolume = (c, L, tab = 0) => (c.w + 2 * c.h) * c.t * (L + tab);
 /** Volume (m3) of the riser: web, two flanges, foot and tab. */
-const riserVolume = (r) => { const h = r.y[1] - r.y[0]; return r.t * (r.w * h + 2 * r.f * (h - 2 * r.t) + 2 * r.w * r.foot); };
+const riserVolume = (r) => { const h = r.y[1] - r.y[0]; return r.t * (r.w * h + 2 * r.f * (h - 2 * r.t) + 2 * r.w * r.foot - (r.hole ? Math.PI * r.hole.r ** 2 : 0)); };
 
 /** A cable tie's catalogue geometry: bundle diameters and band width x thickness (m), from its dimensions text. */
 export function tieGeometry(specs) {
@@ -338,7 +363,7 @@ const LUMP_OF = { battery: 'battery', esc: 'ESC', fc: 'flight controller', gps: 
  */
 function af_carriers(ax) {
   const { d, catalog, planes, plateT, members, mat, item, A, tieS, tieL, lump, counts, tFwd, tAft, screwSeat, bolts, flangePlate, perScrewShear } = ax;
-  const G = carrierGeometry(A, planes, tFwd / 1000, tAft / 1000), mf = 1 + (d.mass.margin_frac ?? 0.15);
+  const G = carrierGeometry(A, planes, tFwd / 1000, tAft / 1000, ax.crank), mf = 1 + (d.mass.margin_frac ?? 0.15);
   const at = (nm) => lump(nm);
   const pt = (m, r) => ({ m, r });
   // the carriers' own masses (kg, with the margin) at their centroids
@@ -418,7 +443,7 @@ export function pitotMount(A, params, catalog) {
  */
 function pitotTies(ax, pit, rho) {
   const { d, catalog, A, members, counts, tieS, tieL } = ax;
-  const N = carrierGeometry(A, ax.planes, ax.tFwd / 1000, ax.tAft / 1000).nose, pm = pitotMount(A, d.params, catalog);
+  const N = carrierGeometry(A, ax.planes, ax.tFwd / 1000, ax.tAft / 1000, ax.crank).nose, pm = pitotMount(A, d.params, catalog);
   const ties = [tieS, tieL].map((q) => ({ ...q, geo: tieGeometry(byId(catalog, q.id).specs) }));
   const tie = tieFor(ties, N.t + 2 * pm.r, N.h + N.t, 0);
   if (!tie) throw new Error('pitot: no catalogue tie takes its loop');
@@ -548,6 +573,32 @@ function af_encoder(ax) {
 
 }
 
+/**
+ * Round 16 (pod.formers_at_mm): the pod's formers, each a 2 mm balsa band round the inside of the loft at its station
+ * (its outside on the covering, touching it, at the smaller of the loft's sections across its thickness; band_mm wide),
+ * with a tab rising from the band against the outer face of the left flange of the tray above it, to the flange's top:
+ * one T18R round the flange and the tab, through a slot at the flange's root (as the pitot is tied).
+ * -> [{ x_m: [x0, x1], band_m, section: { y, hw, hh }, tab: { z, y }, tray, flange: { z, y } }] (m).
+ */
+export function formerGeometry(loft, P, carriers, loftHalfAt) {
+  const t = (P.former_t_mm ?? 2) / 1000, band = (P.former_band_mm ?? 5) / 1000, tw = (P.former_tab_mm ?? 2) / 1000;
+  return P.formers_at_mm.map((xmm) => {
+    const x = xmm / 1000, a = loftHalfAt(loft, x - t / 2), b = loftHalfAt(loft, x + t / 2);
+    const h = a.hw * a.hh <= b.hw * b.hh ? a : b; // the smaller section across the former's thickness
+    const tray = [['nose tray', carriers.nose], ['aft tray', carriers.aft], ['forward tray', carriers.forward]].find(([, c]) => x >= c.x[0] && x <= c.x[1]);
+    if (!tray) throw new Error(`former at x ${xmm} mm: no tray above it to tie it to`);
+    const c = tray[1], zf = -(c.w / 2 + c.t / 2), z0 = zf - tw, ri = (z) => h.y - (h.hh - band / 2) * Math.sqrt(Math.max(0, 1 - (z / (h.hw - band / 2)) ** 2));
+    // the tab from the band's middle (at its outer edge, the lower of the two) up to the flange's top
+    return { x_m: [x - t / 2, x + t / 2], band_m: band, section: h, tab: { z: [z0, zf], y: [Math.max(ri(z0), ri(zf)), c.y + c.h + c.t / 2] }, tray: tray[0], flange: { z: [zf - c.t / 2 * 0, -(c.w / 2 - c.t / 2)], y: [c.y - c.t / 2, c.y + c.h + c.t / 2] } };
+  });
+}
+
+/** A former's band as n convex pieces between its outside (the loft's ellipse) and its inside (band in from it). */
+export function formerPieces(f, n = 48) {
+  const { y, hw, hh } = f.section, w = f.band_m, P = (a, k) => [k * hw * Math.cos(a), y + k * hh * Math.sin(a)], Q = (a) => [(hw - w) * Math.cos(a), y + (hh - w) * Math.sin(a)];
+  return Array.from({ length: n }, (_, i) => { const a0 = (i / n) * 2 * Math.PI, a1 = ((i + 1) / n) * 2 * Math.PI; return [P(a0, 1), P(a1, 1), Q(a1), Q(a0)]; });
+}
+
 function af_ties(ax) {
   const rho = airDensity(ax.d);
   // ---- Pod formers, the pitot and the tail surfaces on ties ------------------------------------------------------
@@ -568,6 +619,17 @@ function probeTies(ax, rho) {
 
 function podTies(ax, rho) {
   const { d, members, A, tieS, lump, counts } = ax;
+  if (A.pod.formers_at_mm && ax.carriers) {
+    // round 16: the formers where they stand (formerGeometry), their line from their solids' volume
+    const fs = formerGeometry(d.body.loft, A.pod, ax.carriers.geometry, ax.loftHalfAt);
+    const polyA = (p) => Math.abs(p.reduce((s, q, i) => s + q[0] * p[(i + 1) % p.length][1] - p[(i + 1) % p.length][0] * q[1], 0)) / 2;
+    const area = fs.reduce((s, f) => s + formerPieces(f).reduce((a, p) => a + polyA(p), 0) + (f.tab.z[1] - f.tab.z[0]) * (f.tab.y[1] - f.tab.y[0]), 0);
+    const bal = ax.catalog.find((q) => q.id === (d.params.parts?.ribMaterial ?? 'balsa-wood-database'));
+    const t = (A.pod.former_t_mm ?? 2) / 1000, rhoB = bal.specs.density_kg_m3;
+    ax.cx.items.push({ name: 'fuselage formers', material_id: bal.id, material: bal.name, mass_g: area * t * rhoB * 1000, basis: `${fs.length} off, ${A.pod.former_band_mm ?? 5} mm bands round the loft at x ${A.pod.formers_at_mm.join(', ')} mm with a tab to the tray above (${(area * 1e6).toFixed(0)} mm2 in all) x ${t * 1000} mm, ${rhoB} kg/m3`, source_url: bal.source_url, count: fs.length });
+    // the stations and sizes the assembly check builds them from on the design's own loft (clearance.js formerParts)
+    ax.formers = { formers_at_mm: A.pod.formers_at_mm, band_mm: A.pod.former_band_mm ?? 5, tab_mm: A.pod.former_tab_mm ?? 2, t_mm: A.pod.former_t_mm ?? 2, trays: fs.map((f) => f.tray) };
+  }
   const pod = lump('fuselage shell and formers');
   const drag = 0.5 * rho * A.pod.V_drag_m_s ** 2 * (d.body?.CdA_front_m2 ?? 0.003);
   const nPod = A.pod.formers * A.pod.ties_each;
@@ -596,12 +658,103 @@ function plateSeatCircles(ax, plateName) {
   for (const [nm, i] of Object.entries(named)) { const jt = jointByName(nm); if (jt && shafts[i]) out.push({ c: shafts[i], r: ringR(jt) }); }
   if (plateName === 'fwd') { const jt = jointByName('motor shaft outboard'); if (jt) out.push({ c: shafts[shafts.length - 1], r: Math.max(ringR(jt), (mo.circle_r_mm + 5) / 1000) }); }
   for (const side of ['right', 'left']) out.push({ c: railPos[side], r: A.rail.seat_D_mm / 2000 });
+  // round 16 (plates.screw_edge_mm): the plate reaches that far round each of the trays' root screws it carries
+  const G = ax.carriers?.geometry, e = (A.plates.screw_edge_mm ?? 0) / 1000;
+  if (G && e) {
+    const T = plateName === 'fwd' ? A.tray : A.aftTray, c = plateName === 'fwd' ? G.forward : G.aft, n = T.screws, s = T.screw_pitch_mm / 1000;
+    for (let i = 0; i < n; i++) out.push({ c: [(i - (n - 1) / 2) * s, c.y + c.t / 2 + c.tab / 2], r: e });
+  }
   // Flange lands for the panels (the flange's own width past the panel line).
   for (const q of A.panels.list) {
     const ends = q.kind === 'side' ? [[q.z_mm, q.y0_mm], [q.z_mm, q.y0_mm + q.h_mm]] : [[-q.w_mm / 2, q.y_mm], [q.w_mm / 2, q.y_mm]];
     for (const e of ends) out.push({ c: [e[0] / 1000, e[1] / 1000], r: 0.002 });
   }
   return out;
+}
+
+/**
+ * Round 16: the area (m2) of the holes a plate is cut with, as the assembly draws them (clearance.js plateParts): every
+ * shaft seat at its journal's outside diameter (the motor's outboard bearing in the forward plate), both rails, and
+ * the boom's clearance hole (the running clearance round the tube) in the plate's pad.
+ */
+function plateHoleArea(ax, pl) {
+  const { catalog, jointByName, A, d } = ax;
+  const D = (jt) => { const p = byId(catalog, jt.part_id).specs; return (Number.isFinite(p.d2_mm) ? p.d2_mm : +(p.dimensions_mm_d_D_B ?? '').split('x')[1]) / 1000; };
+  const seats = ['crank shaft', 'gear shaft 1', 'gear shaft 2', 'gear shaft 3', ...(pl === 'fwd' ? ['motor shaft outboard'] : [])].map(jointByName).filter(Boolean);
+  const disc = (dia) => (Math.PI / 4) * dia * dia;
+  const boomR = byId(catalog, d.params.parts.keel).specs.od_mm / 2000 + (d.params.layout?.running_mm ?? 0.5) / 1000;
+  return seats.reduce((a, jt) => a + disc(D(jt)), 0) + 2 * disc(A.rail.od_mm / 1000) + Math.PI * boomR * boomR;
+}
+
+/**
+ * Round 16 (rail.lock_edge_mm): the plate the rails' torsion lock screws bear in reaches lock_edge_mm round each screw.
+ * A land whose edge circle lies outside the plate's hull gets an ear: the hull of the rail's seat circle and that edge
+ * circle, as its own convex piece (the plate's outline stays the hull of its seats, which the ears would otherwise
+ * stretch over parts beside the plate). Each ear's area outside the hull is the plate's extra material.
+ * -> [{ outline_m, area_m2, rail, land }].
+ */
+function lockEars(ax, pl, hull) {
+  const { A, railPos } = ax, lockPlate = A.rail.lock_at === 'forward' ? 'fwd' : 'aft', er = (A.rail.lock_edge_mm ?? 0) / 1000;
+  if (!er || !A.rail.lock_arc_deg || pl !== lockPlate) return [];
+  const out = [];
+  // one ear per rail: the hull of its seat circle and the edge circles of its lands outside the plate's hull
+  for (const [side, sg] of [['right', 1], ['left', -1]]) {
+    const outsiders = lockFlangeCircles(A.rail, railPos[side], sg).slice(1).filter((q) => !Array.from({ length: 36 }, (_, i) => [q.c[0] + er * Math.cos((i * Math.PI) / 18), q.c[1] + er * Math.sin((i * Math.PI) / 18)]).every((p) => insideConvex(hull, p)));
+    if (!outsiders.length) continue;
+    const e = hullOf([{ c: railPos[side], r: A.rail.seat_D_mm / 2000 }, ...outsiders.map((q) => ({ c: q.c, r: er }))]);
+    out.push({ rail: side, lands: outsiders.length, outline_m: e.poly.map(([z, y]) => [+z.toFixed(5), +y.toFixed(5)]), area_m2: e.area_m2 - convexArea(clipConvex(e.poly, hull)) });
+  }
+  return out;
+}
+const cross2 = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+const signedArea = (P) => P.reduce((s, p, i) => s + p[0] * P[(i + 1) % P.length][1] - P[(i + 1) % P.length][0] * p[1], 0) / 2;
+const convexArea = (P) => (P.length < 3 ? 0 : Math.abs(signedArea(P)));
+/** Whether p lies in the convex polygon P (either winding). */
+export function insideConvex(P, p) {
+  const s = Math.sign(signedArea(P));
+  return P.every((a, i) => s * cross2(a, P[(i + 1) % P.length], p) >= -1e-12);
+}
+/** The convex polygon P clipped to the convex polygon C (Sutherland-Hodgman). */
+export function clipConvex(P, C) {
+  const s = Math.sign(signedArea(C));
+  let out = P;
+  for (let i = 0; i < C.length && out.length; i++) {
+    const a = C[i], b = C[(i + 1) % C.length], inp = out;
+    out = [];
+    const side = (p) => s * cross2(a, b, p);
+    for (let k = 0; k < inp.length; k++) {
+      const p = inp[k], q = inp[(k + 1) % inp.length], sp = side(p), sq = side(q);
+      if (sp >= 0) out.push(p);
+      if ((sp >= 0) !== (sq >= 0)) { const t = sp / (sp - sq); out.push([p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])]); }
+    }
+  }
+  return out;
+}
+
+/**
+ * Round 16: the panels' end flanges (panels.list[].flanges, rectangles [z, y] in mm) on each plate's inner face:
+ * -> [{ part, end ('aft' | 'fwd'), x: [x0, x1] (m), t (m), rects: [{ z, y }] (m) }].
+ */
+export function panelFlanges(A, planes, tA, tF) {
+  const out = [];
+  for (const q of A.panels.list) {
+    if (!q.flanges) continue;
+    const t = q.t_mm / 1000, rects = q.flanges.map((r) => ({ z: r.z.map((v) => v / 1000), y: r.y.map((v) => v / 1000) }));
+    const a = planes.plateAft + tA / 2, f = planes.plateFwd - tF / 2;
+    out.push({ part: `gearbox ${q.name}`, end: 'aft', x: [a, a + t], t, rects }, { part: `gearbox ${q.name}`, end: 'fwd', x: [f - t, f], t, rects });
+  }
+  return out;
+}
+
+/**
+ * Round 16 (boom.screw_edge_mm): a boom clamp's screw flange below its collar, wide and deep enough that each of its
+ * screws (a row at screw_pitch_mm, screw_offset_mm below the boom's axis) has screw_edge_mm of metal round it.
+ * -> { z: [z0, z1], y: [y0, y1] } (m), or null.
+ */
+export function clampFlange(bo, blk, yB) {
+  if (!bo.screw_edge_mm) return null;
+  const e = bo.screw_edge_mm / 1000, zs = bo.screw_pitch_mm / 2000 * (bo.screws - 1), ys = yB - bo.screw_offset_mm / 1000;
+  return { z: [-(zs + e), zs + e], y: [ys - e, yB - blk / 2] };
 }
 
 /** The outline's top (up) or bottom edge y at z, of a convex polygon. */
@@ -628,7 +781,14 @@ function platePosts(ax, pl, poly, pmat) {
     members.push({ name: `${pl === 'aft' ? 'aft' : 'forward'} plate post to the ${nm}`, kind: 'plate', check: 'plate', material: pmat, dims: { b_mm: pw, t_mm: pl === 'aft' ? tAft : tFwd }, sections: [sect('F', Fp), sect('M', scaleTerms(Fp, Lp))], uses: { F: 'F', M: 'M' }, note: `a ${pw} mm post ${(Lp * 1000).toFixed(1)} mm from the plate's outline to the pad: the pad force axially and at the post length` });
     // the post and its pad as [z, y] boxes (m), for the assembly clearance check (src/design/clearance.js)
     const r5 = (v) => +v.toFixed(5), hw = pw / 2000, pad = A.plates.pad_mm / 1000;
-    posts.push({ to: nm, length_m: Lp, area_m2: pw / 1000 * Lp + (padW / 1000) * (2 * pad), post_m: [r5(c[0] - hw), r5(c[0] + hw), r5(Math.min(edge, c[1])), r5(Math.max(edge, c[1]))], pad_m: [r5(c[0] - padW / 2000), r5(c[0] + padW / 2000), r5(c[1] - pad), r5(c[1] + pad)] });
+    // round 16 (clearance rule): the post runs from the outline to the pad's near edge, so post and pad do not overlap
+    // (their solids' volume is the plate's material once); the post's bending lever stays the pad's centre
+    const near = ax.d.params.layout?.rule === 'clearance' ? (up ? c[1] - pad : c[1] + pad) : c[1], Lq = Math.abs(near - edge);
+    // round 16 (boom.screw_edge_mm): the boom clamp's pad reaches round the clamp's screws as the clamp's flange does
+    const cf = nm === 'boom clamp' ? clampFlange(A.boom, (ax.catalog.find((q) => q.id === ax.d.params.parts.keel).specs.od_mm + 2 * A.boom.clamp_wall_mm) / 1000, yB) : null;
+    const padBox = cf ? [cf.z[0], cf.z[1], Math.min(cf.y[0], c[1] - pad), c[1] + pad] : [c[0] - padW / 2000, c[0] + padW / 2000, c[1] - pad, c[1] + pad];
+    const nearC = cf && ax.d.params.layout?.rule === 'clearance' ? padBox[up ? 2 : 3] : near, Lc = Math.abs(nearC - edge);
+    posts.push({ to: nm, length_m: Lp, area_m2: pw / 1000 * Lc + (padBox[1] - padBox[0]) * (padBox[3] - padBox[2]), post_m: [r5(c[0] - hw), r5(c[0] + hw), r5(Math.min(edge, nearC)), r5(Math.max(edge, nearC))], pad_m: padBox.map(r5) });
   }
   return posts;
 }
@@ -648,14 +808,18 @@ function af_plateSections(ax) {
     members.push({ name: `${pl === 'aft' ? 'aft' : 'forward'} plate below the rail seats`, kind: 'plate', check: 'plate', material: pmat, dims: { b_mm: +(b * 1000).toFixed(2), t_mm: pl === 'aft' ? tAft : tFwd }, sections: [sect('F', F), sect('M', M)], uses: { F: 'F', M: 'M' }, note: `the section ${(yCut * 1000).toFixed(1)} mm up, ${(b * 1000).toFixed(1)} mm wide: both rails' reactions and the boom clamp force, the rails' at their ${(zR * 1000).toFixed(0)} mm offset as in-plane bending` });
     const posts = platePosts(ax, pl, h.poly, pmat);
     // outline_m: the hull's corners [z, y] (m), for the assembly clearance check (src/design/clearance.js)
-    plates[pl] = { area_m2: h.area_m2 + posts.reduce((a, q) => a + q.area_m2, 0), hull_area_m2: h.area_m2, posts, cut_y_m: yCut, cut_width_m: b, outline_m: h.poly.map(([z, y]) => [+z.toFixed(5), +y.toFixed(5)]) };
+    // round 16 (completeness: the BOM weighs the plate the solids draw): the holes the plate is cut with, every seat at
+    // its journal's outside diameter, both rails, the boom's clearance hole in the pad
+    const holes = ax.d.params.layout?.rule === 'clearance' ? plateHoleArea(ax, pl) : 0;
+    const ears = lockEars(ax, pl, h.poly);
+    plates[pl] = { area_m2: h.area_m2 + posts.reduce((a, q) => a + q.area_m2, 0) + ears.reduce((a, e) => a + e.area_m2, 0) - holes, holes_area_m2: holes, hull_area_m2: h.area_m2, posts, ...(ears.length ? { ears } : {}), cut_y_m: yCut, cut_width_m: b, outline_m: h.poly.map(([z, y]) => [+z.toFixed(5), +y.toFixed(5)]) };
   }
 
   Object.assign(ax, { plates });
 }
 
 function af_panels(ax) {
-  const { lay, jointByName, planes, members, mat, item, A, glueAl, xA, gap, shafts, crank, railPlates, railPos, yB, boomRoot, fwdTray, mot, F0, Tm, motorIn } = ax;
+  const { lay, jointByName, planes, members, mat, item, A, glueAl, xA, gap, shafts, crank, railPlates, railPos, yB, boomRoot, fwdTray, mot, F0, Tm, motorIn, tFwd, tAft } = ax;
   // ---- Box: two side panels and a floor panel carry the forward plate's net force and torsion to the aft plate -------
   const pn = A.panels, pm = mat(pn.material);
   const crankFwd = jointByName('crank shaft').supports.find((s) => s.name === 'forward').radial.filter((t) => /^coupler_/.test(t.ch)).map((t) => ({ ch: t.ch, k: t.k }));
@@ -681,10 +845,15 @@ function af_panels(ax) {
     const V = q.kind === 'side' ? Vside : Vfwd;
     const h = q.kind === 'side' ? q.h_mm : q.w_mm;
     members.push({ name: `gearbox ${q.name}`, kind: 'panel', check: 'panel', material: pm, dims: { h_mm: h, b_mm: +(gap * 1000).toFixed(2), t_mm: q.t_mm }, sections: [sect('V', V)], uses: { V: 'V' }, note: q.kind === 'side' ? `x-y plane at z ${q.z_mm} mm, y ${q.y0_mm} to ${q.y0_mm + q.h_mm} mm: half the forward plate's net force (every force on it summed as a magnitude) plus its torsion about the crank axis over the sides' ${(W * 1000).toFixed(0)} mm spacing` : `x-z plane at y ${q.y_mm} mm, ${q.w_mm} mm wide: the forward plate's whole net force` });
-    members.push({ name: `gearbox ${q.name} flange bond`, kind: 'bond', check: 'lap', material: glueAl, dims: { w_mm: h, L_mm: pn.flange_mm }, sections: [sect('F', V)], uses: { F: 'F' }, note: 'Araldite 2011 aluminium to aluminium, one end flange (each end has one)' });
-    panelV += h * 1e-3 * (gap + 2 * pn.flange_mm / 1000) * (q.t_mm / 1000);
+    // round 16 (q.flanges): each end's flange the stated rectangles on the plate's inner face, the sheet between the inner
+    // faces (as the assembly check draws them); the bond over the flange's own area
+    const fa = q.flanges ? q.flanges.reduce((a, r) => a + (r.z[1] - r.z[0]) * (r.y[1] - r.y[0]), 0) : null;
+    members.push({ name: `gearbox ${q.name} flange bond`, kind: 'bond', check: 'lap', material: glueAl, dims: { w_mm: h, L_mm: fa ? +(fa / h).toFixed(3) : pn.flange_mm }, sections: [sect('F', V)], uses: { F: 'F' }, note: fa ? `Araldite 2011 aluminium to aluminium, one end flange of ${fa.toFixed(0)} mm2 on the plate's inner face (each end has one), as a ${h} mm wide lap of the same area` : 'Araldite 2011 aluminium to aluminium, one end flange (each end has one)' });
+    const inner = (planes.plateFwd - tFwd / 2000) - (planes.plateAft + tAft / 2000);
+    panelV += fa ? (h * 1e-3 * inner + 2 * fa * 1e-6) * (q.t_mm / 1000) : h * 1e-3 * (gap + 2 * pn.flange_mm / 1000) * (q.t_mm / 1000);
   }
-  item(`gearbox panels, ${pn.list.length} off`, pm, panelV, `${pn.list.map((q) => `${q.name} ${q.kind === 'side' ? q.h_mm : q.w_mm} x ${q.t_mm} mm`).join(', ')}, each ${(gap * 1000).toFixed(1)} mm plus two ${pn.flange_mm} mm flanges; ${pm.density_g_cm3} g/cm3`);
+  const anyF = pn.list.some((q) => q.flanges);
+  item(`gearbox panels, ${pn.list.length} off`, pm, panelV, anyF ? `${pn.list.map((q) => `${q.name} ${q.kind === 'side' ? q.h_mm : q.w_mm} x ${q.t_mm} mm, its flanges ${q.flanges.reduce((a, r) => a + (r.z[1] - r.z[0]) * (r.y[1] - r.y[0]), 0).toFixed(0)} mm2 each end`).join('; ')}; each between the plates' inner faces (${(((planes.plateFwd - tFwd / 2000) - (planes.plateAft + tAft / 2000)) * 1000).toFixed(1)} mm); ${pm.density_g_cm3} g/cm3` : `${pn.list.map((q) => `${q.name} ${q.kind === 'side' ? q.h_mm : q.w_mm} x ${q.t_mm} mm`).join(', ')}, each ${(gap * 1000).toFixed(1)} mm plus two ${pn.flange_mm} mm flanges; ${pm.density_g_cm3} g/cm3`, { count: pn.list.length });
 
 }
 
@@ -692,8 +861,18 @@ function af_bomItems(ax) {
   const { catalog, A, nut, tieS, tieL, counts, report, railPos, sCl, yB, Lt, fwdTray, aftTray, plates } = ax;
   // ---- Fasteners and ties in the BOM ----------------------------------------------------------------------------------
   const sp = byId(catalog, A.fastener);
-  ax.cx.items.push({ name: `M3 screws, ${counts.screws} off`, material_id: sp.id, material: sp.name, mass_g: counts.screws * sp.mass_g, basis: `${counts.screws} x ${sp.mass_g} g (${sp.specs.mass_basis})`, source_url: sp.source_url });
-  if (counts.nuts) ax.cx.items.push({ name: `M3 nuts, ${counts.nuts} off`, material_id: nut.id, material: nut.name, mass_g: counts.nuts * nut.mass_g, basis: `${counts.nuts} x ${nut.mass_g} g (${nut.specs.mass_basis})`, source_url: nut.source_url });
+  if (A.screws) {
+    // round 16: every counted screw and nut at a stated place (fixings.js), the BOM by screw length from that layout
+    const layout = fixingLayout(ax), fc = fixingCounts(layout);
+    const nS = [...fc.screws.values()].reduce((a, b) => a + b, 0), nN = [...fc.nuts.values()].reduce((a, b) => a + b, 0);
+    if (nS !== counts.screws || nN !== counts.nuts) throw new Error(`fixing layout: ${nS} screws and ${nN} nuts placed, the bolt checks count ${counts.screws} and ${counts.nuts}`);
+    for (const [id, n] of fc.screws) { const f = byId(catalog, id); ax.cx.items.push({ name: `${id === A.fastener ? 'M3 screws' : f.name.replace(/^ISO 4762 /, 'ISO 4762 ')}, ${n} off`, material_id: id, material: f.name, mass_g: n * f.mass_g, basis: `${n} x ${f.mass_g} g (${f.specs.mass_basis})`, source_url: f.source_url, count: n }); }
+    for (const [id, n] of fc.nuts) { const f = byId(catalog, id); ax.cx.items.push({ name: `M3 nuts, ${n} off`, material_id: id, material: f.name, mass_g: n * f.mass_g, basis: `${n} x ${f.mass_g} g (${f.specs.mass_basis})`, source_url: f.source_url, count: n }); }
+    ax.fixings = layout.map(({ g, ng, ...b }) => b);
+  } else {
+    ax.cx.items.push({ name: `M3 screws, ${counts.screws} off`, material_id: sp.id, material: sp.name, mass_g: counts.screws * sp.mass_g, basis: `${counts.screws} x ${sp.mass_g} g (${sp.specs.mass_basis})`, source_url: sp.source_url });
+    if (counts.nuts) ax.cx.items.push({ name: `M3 nuts, ${counts.nuts} off`, material_id: nut.id, material: nut.name, mass_g: counts.nuts * nut.mass_g, basis: `${counts.nuts} x ${nut.mass_g} g (${nut.specs.mass_basis})`, source_url: nut.source_url });
+  }
   if (counts.m2) {
     // round 15: the crank encoder readhead's own fixing (3 x M2 DIN 912 with nuts)
     for (const id of [A.encoder.screw, A.encoder.nut]) { const f = byId(catalog, id); ax.cx.items.push({ name: `${f.name}, ${counts.m2} off`, material_id: f.id, material: f.name, mass_g: counts.m2 * f.mass_g, basis: `${counts.m2} x ${f.mass_g} g (${f.specs.mass_basis})`, source_url: f.source_url }); }
@@ -704,6 +883,8 @@ function af_bomItems(ax) {
   // round 15: every carrier's geometry (m) and every part's fixing, for the assembly check and the film
   if (ax.carriers) Object.assign(report.parts, { carriers: roundDeep(ax.carriers.geometry), support: ax.carriers.support, carrier_masses_g: roundDeep(ax.carriers.masses_g, 3) });
   if (ax.motorBracket) report.parts.motor_bracket = roundDeep(ax.motorBracket);
+  if (ax.fixings) report.parts.fixings = roundDeep(ax.fixings);
+  if (ax.formers) report.parts.formers = ax.formers;
   report.clearances_mm = clearances(ax.cx, railPos, A);
 }
 
@@ -780,7 +961,9 @@ export function lockFlangeOD(ra) {
 export function lockFlangeCircles(ra, c, sg) {
   const [a0, a1] = ra.lock_arc_deg.map((a) => (a * Math.PI) / 180), n = ra.lock_screws, r = ra.lock_r_mm / 1000;
   const out = [{ c, r: ra.od_mm / 2000 + 0.002 }];
-  for (let i = 0; i < n; i++) { const a = n > 1 ? a0 + ((a1 - a0) * i) / (n - 1) : a0; out.push({ c: [c[0] + sg * r * Math.cos(a), c[1] + r * Math.sin(a)], r: 0.0035 }); }
+  // round 16: rail.lock_angles_deg states each land's angle (the lands need not be evenly spread)
+  const angles = ra.lock_angles_deg ? ra.lock_angles_deg.map((a) => (a * Math.PI) / 180) : Array.from({ length: n }, (_, i) => (n > 1 ? a0 + ((a1 - a0) * i) / (n - 1) : a0));
+  for (const a of angles) out.push({ c: [c[0] + sg * r * Math.cos(a), c[1] + r * Math.sin(a)], r: 0.0035 });
   return out;
 }
 
