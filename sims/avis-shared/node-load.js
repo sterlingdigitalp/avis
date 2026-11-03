@@ -4,7 +4,7 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fileSha256 } from '../../src/design/io.js';
-import { partsIndex, prepare } from './model.js';
+import { partsIndex, prepareFilm } from './model.js';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -22,7 +22,7 @@ export function loadParts(design) {
 export function loadModel(name = 'larus-gl-2') {
   const { design, path, sha256 } = loadDesign(name);
   const parts = loadParts(design);
-  return { model: prepare(design, parts), design, parts, path, sha256 };
+  return { model: prepareFilm(design, parts), design, parts, path, sha256 };
 }
 
 /** The gate files as they are, newest per gate, for this design and the method gates. Never edited. */

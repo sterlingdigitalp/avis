@@ -233,7 +233,9 @@ test('catalogue gears: pitch radius from module and teeth, tip radius from the l
   for (const g of model.train.gears) {
     const s = model.parts[g.id].specs;
     assert.ok(Math.abs(g.rp - (s.module_mm * s.teeth) / 2000) < 1e-12);
-    assert.ok(Math.abs(g.ro - s.outside_dia_mm / 2000) < 1e-12);
+    // the listed outside diameter, or a standard full-depth tooth's (ISO 53: addendum one module) when none is listed
+    const tip = s.outside_dia_mm ?? s.module_mm * (s.teeth + 2);
+    assert.ok(Math.abs(g.ro - tip / 2000) < 1e-12, `${g.id} tip`);
     assert.equal(g.face, s.face_width_mm / 1000);
   }
 });
@@ -331,10 +333,13 @@ test('servos: tail servos either side of their lump; a stroke servo exactly when
   const box = (m, n) => m.layout.parts.find((p) => p.name === n)?.box;
   const tl = box(model, 'servo_tail_L'), tr = box(model, 'servo_tail_R');
   const lump = design.mass.lumps.find((l) => l.name === 'tail servos').pos;
-  // sized as layoutParts always sized them (src/design/fit.js packs with it): the stroke servo's entry, or a default
+  // tail servos sized from their own catalogue entry; the stroke servo's entry, then a default, only without one
   const strokeId = design.bom.parts.find((p) => p.role === 'stroke amplitude servo')?.id;
   const sv = parseDims(model.parts[strokeId]?.specs?.dimensions_text_mm)?.values ?? [0.033, 0.01, 0.035];
-  assert.ok(Math.abs(tr.cz - tl.cz - 2 * 0.55 * sv[1]) < 1e-9 && Math.abs((tl.cz + tr.cz) / 2 - lump[2]) < 1e-9);
+  const tailId = design.bom.parts.find((p) => p.role === 'tail servo')?.id;
+  const tv = parseDims(model.parts[tailId]?.specs?.dimensions_text_mm)?.values ?? sv;
+  assert.ok(Math.abs(tr.cz - tl.cz - 2 * 0.55 * tv[1]) < 1e-9 && Math.abs((tl.cz + tr.cz) / 2 - lump[2]) < 1e-9);
+  assert.deepEqual([tl.sx, tl.sy, tl.sz].map((v) => +v.toFixed(6)), [tv[0], tv[2], tv[1]].map((v) => +v.toFixed(6)), 'tail servo at its catalogue size');
   for (const b of [tl, tr]) assert.ok(Math.abs(b.cx - lump[0]) < 0.005 && Math.abs(b.cy - lump[1]) < 0.005, 'at the tail-servo lump');
   const hasLump = design.mass.lumps.some((l) => l.name === 'stroke servo');
   assert.equal(!!box(model, 'servo_stroke'), hasLump);
@@ -362,4 +367,24 @@ test('layoutParts places the flight controller and tail servos as their own cata
     const b = tail.box, size = [b.x1 - b.x0, b.y1 - b.y0, b.z1 - b.z0].sort((a, c) => a - c);
     assert.deepEqual(size.map((v) => +v.toFixed(5)), [...dims].sort((a, c) => a - c).map((v) => +v.toFixed(5)));
   }
+});
+
+test('catalogue sizes with their units; the regulator is packed for the film only, never in the physics view', async () => {
+  const { catalogueDims, prepare, prepareFilm } = await import('../../sims/avis-shared/model.js');
+  const near = (a, b) => a.every((v, i) => Math.abs(v - b[i]) < 1e-12);
+  assert.ok(near(catalogueDims({ dimensions_text: '1 x 1 x 0.375 in' }).values, [0.0254, 0.0254, 0.009525]));
+  assert.ok(near(catalogueDims({ dimensions_text: '2 x 3 x 4 cm' }).values, [0.02, 0.03, 0.04]));
+  assert.ok(near(catalogueDims({ dimensions_text: '20 x 30 x 4 mm' }).values, [0.02, 0.03, 0.004]));
+  assert.ok(near(catalogueDims({ dimensions_text_mm: '29.0 x 13.0 x 30.0', dimensions_text: '9 x 9 x 9 in' }).values, [0.029, 0.013, 0.03]));
+  assert.equal(catalogueDims({ dimensions_text: '1 x 1 x 0.375' }), null);
+  assert.equal(catalogueDims({}), null);
+  const reg = design.bom.parts.find((p) => p.role === 'servo regulator');
+  if (!reg) return;
+  assert.ok(!prepare(design, model.parts).layout.parts.some((p) => p.name === 'regulator'), 'src/design packs without it');
+  const film = prepareFilm(design, model.parts);
+  const box = film.layout.parts.find((p) => p.name === 'regulator').box;
+  const d = catalogueDims(model.parts[reg.id].specs).values;
+  assert.deepEqual([box.sx, box.sy, box.sz].map((v) => +v.toFixed(6)).sort(), [...d].map((v) => +v.toFixed(6)).sort());
+  const clash = film.layout.parts.filter((p) => p.name !== 'regulator').some(({ box: o }) => box.x0 < o.x1 - 1e-4 && box.x1 > o.x0 + 1e-4 && box.y0 < o.y1 - 1e-4 && box.y1 > o.y0 + 1e-4 && box.z0 < o.z1 - 1e-4 && box.z1 > o.z0 + 1e-4);
+  assert.equal(clash, false, 'the regulator overlaps another part');
 });

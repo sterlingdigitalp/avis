@@ -13,9 +13,12 @@ node film/render.mjs                  # final cut: film/edit.json -> out/film/av
 node film/render.mjs --edit preview   # the short preview: film/edit.preview.json -> out/film/preview.mp4
 node film/render.mjs --dry            # plan and GPU estimate only
 node film/render.mjs --proxy          # review proxy: 640x360 plates at 8 samples, every third frame held for three
+node film/render.mjs --stills DIR     # one Blender still per flight shot at its log start and mid-shot, film settings
+                                      # (add --threads 4 to cap Blender's CPU threads while other work runs)
 ```
 
-It regenerates the bundled data from `data/designs/<design>.json` (`film/gen_data.mjs`), rebuilds the pages,
+It flies the corridor log again when the design, the flight model or the corridor changed (`film/flight_log.mjs`,
+below), regenerates the bundled data from `data/designs/<design>.json` (`film/gen_data.mjs`), rebuilds the pages,
 re-exports the GLB when the design or the bird code changed, bakes the pose of every flight shot from its log,
 renders the Blender plates in holds under 10 minutes through `tools/run-guarded.py --gpu`, captures the film page in
 20 s chunks (also guarded, also GPU), concatenates, synthesises the score on the same timeline and muxes.
@@ -46,8 +49,11 @@ workstream asked. Blender occasionally aborts while Metal loads its kernels (cra
 
 Flight shots come only from flight logs: the camera is env/shots.py's function of the log; the bird's pose is
 baked from the same log by `film/bake_pose.mjs` (phase, amplitude, twist and tail columns through
-`src/physics/kinematics.js`). Start times are seconds into the log (the v12 corridor log is 121.0 s); render.mjs refuses a window that runs past the
-end of its log. `env/test_shots.py` pins what each shot promises on today's edit and log (the bird inside the frame, its
+`src/physics/kinematics.js`). The corridor log is `src/physics/gates/corridor.mjs`'s scenario (12 m/s, mean wind
+3.2 m/s, Dryden u_rms 1 m/s, seed 7) flown by `film/flight_log.mjs` through `runCorridor`, without that script's climb
+runs or its evidence file; the log records the sha256 of the design, the flight model's sources and the corridor it was
+flown from, and render.mjs flies it again (6 s) when any of them changed. Start times are seconds into the log (v21's
+is 122.6 s); render.mjs refuses a window that runs past the end of its log. `env/test_shots.py` pins what each shot promises on today's edit and log (the bird inside the frame, its
 size in pixels, land rather than sky, forest or water behind it), so a new corridor log that breaks a shot fails a test
 named after it: move that shot's `start_s` and re-run the tests. The HUD on flight shots reads the log at the same frame.
 
@@ -57,6 +63,13 @@ named after it: move that shot's `start_s` and re-run the tests. The HUD on flig
 bird (`bird.js`), its numbers (`model.js`, pure), the stage, the film sequences and the score. The film page is a pure
 function of time (`window.FILM.frame(t)`): Blender plates are composited in the page as full-frame images behind
 the same HUD type, so studio and flight shots share one look and one capture path (`film/capture.mjs`).
+
+The drive is drawn from the design's machined linkage (`params.linkage`: aluminium rockers with hub, horn arm, horn
+boss and spar socket, one-piece coupler links, the titanium crank, keyed gear shafts, aluminium plates and bosses) and
+the airframe its load path names (`sims/avis-shared/frame.js`: rails, brackets, clamp blocks, trays, panels, screws,
+nuts, ties). The physics' coupler planes put v21's two 6 mm coupler eyes 1 mm into each other on the crank pin; the film
+draws the left eye flush behind the right one, within the design's own 12 mm pin (`model.filmCouplerPlanes`, film
+only: nothing the physics imports changes). The servo regulator is packed for the film only (`prepareFilm`).
 
 ## The bird's covering
 

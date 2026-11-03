@@ -179,7 +179,13 @@ test('journals are drawn at catalogue size on their shafts; the encoder rings we
     assert.ok(Math.abs(s.x - d.B) < 1e-6 && Math.abs(s.y - Math.max(d.D, d.flangeD)) < 2e-4, `${o.name}: ${s.x} x ${s.y}`);
     const g = o.name.match(/^gearbox_\w+_(\d+)_(aft|fwd)$/);
     if (g) {
-      assert.deepEqual([o.position.x, o.position.y, o.position.z], [g[2] === 'aft' ? P.plateAft : P.plateFwd, shafts[+g[1]][1], shafts[+g[1]][0]]);
+      // flush with the plate's outer face, reaching into the gearbox (the plate's thickness from the design when it
+      // gives one), so a journal longer than its plate never pokes out of the aft plate into the crank web
+      const PL = design.params?.linkage?.plates;
+      const t = g[2] === 'aft' ? (PL ? PL.t_mm / 1000 : P.plateT) : (PL ? (PL.t_fwd_mm ?? PL.t_mm) / 1000 : P.plateT);
+      const x = g[2] === 'aft' ? P.plateAft - t / 2 + d.B / 2 : P.plateFwd + t / 2 - d.B / 2;
+      assert.ok(Math.abs(o.position.x - x) < 1e-12, `${o.name} x`);
+      assert.deepEqual([o.position.y, o.position.z], [shafts[+g[1]][1], shafts[+g[1]][0]]);
       n++;
     }
   }

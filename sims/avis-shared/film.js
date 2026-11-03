@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { makeMaterials, ACCENT } from './materials.js';
 import { buildBird } from './bird.js';
 import { createStage } from './stage.js';
-import { numbers, gateLine } from './numbers.js';
+import { numbers, gateLine, gateFailures } from './numbers.js';
 import { drivePose } from './model.js';
 
 const DEG = 180 / Math.PI;
@@ -39,9 +39,13 @@ export function driveLabels(model) {
     crankWheel: `Crank wheel ${model.train.stages[model.train.stages.length - 1].wheel.z}T`,
     // where each label's end sits on screen (a label left of its part ends there): clear ground left of the gears (the
     // encoder, low on the crank shaft) or above them (the pin swings through the gears), off the Coupler and Motor labels
+    fixed,
     late: fixed ? { node: 'encoder_readhead', text: 'Crank angle encoder', at: [450, 640] } : { node: 'slot_pin_R', text: 'Stroke servo slides the pin', at: [700, 195] },
   };
 }
+
+/** Where the power sequence's labels sit on screen, one per powerParts row: clear ground left of the parts. */
+export const POWER_LABELS = [[330, 330], [330, 430], [330, 530], [330, 630], [330, 730]];
 
 /** The twist sequence's orbit: aim point, azimuth sweep (deg), elevation (deg), distance (m), lens fov (deg). */
 export const TWIST_CAM = { target: [-0.06, 0.06, 0], az0: 10, azSpan: 24, el: 12, dist0: 3.6, distSpan: -0.1, fov: 33, shift: 260 };
@@ -91,17 +95,114 @@ const CSS = `
 .g em{font-style:normal;font-family:'JetBrains Mono',monospace;font-weight:700;width:64px;color:#8d99a6}
 .g .ok{color:#cfe8d7}.g .no{color:#ff8a75}
 .g .v{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:600}
+.g.wide{grid-column:1/-1}
+.g .why{display:block;font-size:26px;color:#ffb3a6;margin-top:4px}
+.frow.dim{opacity:.38}
+.frow b{white-space:nowrap;margin-left:16px}
+.frow.s{padding:7px 0}.frow.s span{font-size:25px}.frow.s b{font-size:28px}
+.g{font-size:26px;padding:7px 0}
+.card.gc h2{font-size:56px}.card.gc p{font-size:28px;margin-bottom:16px}
 .credits{columns:2;column-gap:80px;font-size:30px;line-height:1.45;color:#c9d3dc}
 .credits b{color:#fff;font-weight:600}
 `;
 
+/** The subsystem a BOM role or structure item belongs to, by its words. */
+export function subsystemOf(s) {
+  if (/motor|gear|bearing|bushing|stroke|crank|coupler|rocker|horn pin|shoulder (pin|housing)|^key,|encoder/i.test(s)) return 'drive';
+  if (/battery|ESC|regulator/i.test(s)) return 'power';
+  if (/flight controller|GPS|airspeed|receiver|tail servo/i.test(s)) return 'avionics';
+  if (/twist servo|twist torque|spar|edge rod|wing film|ribs/i.test(s)) return 'wing';
+  return 'structure';
+}
+
 /** Mass per subsystem from the BOM, by the role or item name. */
 export function subsystemMass(design) {
-  const sub = (s) => (/motor|gear|bearing|stroke|crank|coupler/i.test(s) ? 'drive' : /battery|ESC/i.test(s) ? 'power' : /flight controller|GPS|airspeed|receiver|tail servo/i.test(s) ? 'avionics' : /twist servo|spar|edge rod|wing film|ribs/i.test(s) ? 'wing' : 'structure');
+  const sub = subsystemOf;
   const m = { drive: 0, power: 0, avionics: 0, wing: 0, structure: 0 };
   for (const p of design.bom.parts) m[sub(p.role)] += p.mass_g;
   for (const s of design.bom.structure) m[sub(s.name)] += s.mass_g;
   return m;
+}
+
+/** A catalogue part's short name: its maker and the first word of its name ("Pololu D36V50F7"). */
+export function shortName(part) {
+  if (!part) return '';
+  const maker = part.manufacturer ?? '';
+  const rest = (part.name ?? '').startsWith(maker) ? part.name.slice(maker.length).trim() : part.name ?? '';
+  return `${maker} ${rest.split(/[\s,(]/)[0]}`.trim();
+}
+
+/** The gear train as the BOM lists it, motor first: each stage's catalogue numbers, teeth, ratio and BOM masses. */
+export function driveStages(model) {
+  const bom = (id) => model.design.bom.parts.find((p) => p.id === id);
+  // the part number: the catalogue's, else the first word of the BOM line's name (the page's catalogue copy is terse)
+  const pn = (id) => model.parts[id]?.specs?.part_number ?? (bom(id)?.name ?? model.parts[id]?.name)?.split(' ')[0] ?? id;
+  return model.train.stages.map((st) => ({
+    pinion: pn(st.pinion.id), wheel: pn(st.wheel.id), zp: st.pinion.z, zw: st.wheel.z, ratio: st.wheel.z / st.pinion.z,
+    mass_g: (bom(st.pinion.id)?.unit_mass_g ?? 0) + (bom(st.wheel.id)?.unit_mass_g ?? 0),
+  }));
+}
+
+/** The power sequence's parts, from the BOM by role: battery, ESC, servo regulator and the servos it feeds, with masses. */
+export function powerParts(model) {
+  const D = model.design;
+  const rows = [];
+  const add = (label, re, node) => {
+    const ps = D.bom.parts.filter((p) => re.test(p.role));
+    if (!ps.length) return;
+    const n = ps.reduce((a, p) => a + p.count, 0);
+    const part = { ...model.parts[ps[0].id], name: ps[0].name ?? model.parts[ps[0].id]?.name };
+    rows.push({ label, name: `${n > 1 ? `${n} × ` : ''}${shortName(part)}`, mass_g: ps.reduce((a, p) => a + p.mass_g, 0), node });
+  };
+  add(`${D.battery.cells}S LiPo`, /^battery$/, 'part_battery');
+  add('ESC', /\bESC\b/, 'part_esc');
+  add('regulator', /regulator/, 'part_regulator');
+  add('tail servos', /^tail servo$/, 'part_servo_tail_R');
+  add('twist servos', /twist servo$/, 'twist_servo_R');
+  return rows;
+}
+
+/** The bounding sphere (centre c, radius r) of the bird's meshes that pass `pred`, posed level at amplitude amp. */
+export function sphereOf(bird, amp, pred) {
+  const b = new THREE.Box3();
+  bird.update({ phase: 0, amp });
+  bird.root.updateMatrixWorld(true);
+  bird.root.traverse((o) => o.isMesh && pred(o) && b.expandByObject(o));
+  return { c: b.getCenter(new THREE.Vector3()), r: b.getSize(new THREE.Vector3()).length() / 2 };
+}
+
+/** A projected point (pixels, NDC depth) inside the 1920 x 1080 frame and in front of the camera. */
+export const onScreen = (x, y, z) => z <= 1 && x >= 0 && x <= 1920 && y >= 0 && y <= 1080;
+
+/** Aim point and distance that hold a bounding sphere (centre c, radius r) at fraction k of the frame height. */
+export function framing(c, r, fovDeg = 30, k = 0.62) {
+  return { target: c, dist: r / (k * Math.tan((fovDeg * Math.PI) / 360)) };
+}
+
+/** One panel row: a label and its value. */
+const row = (k, v, cls = '', rowCls = '') => `<div class="frow ${rowCls}"><span>${k}</span><b class="${cls}">${v}</b></div>`;
+
+/** The gates card's rows: every gate, its own line and verdict; a failure spans the card with what failed beneath. */
+export function gatesCardItems(gates) {
+  return gateOrder(gates).map((g) => {
+    const r = gates.find((x) => x.gate === g);
+    if (!r) return `<div class="g"><em>${g}</em><span>no result yet</span><span class="v" style="color:#8d99a6">not run</span></div>`;
+    if (r.passed) return `<div class="g"><em>${g}</em><span>${gateLine(r)}</span><span class="v ok">pass</span></div>`;
+    return `<div class="g wide"><em>${g}</em><span>${gateLine(r)}<span class="why">${(r.failures ?? gateFailures(r)).join('; ')}</span></span><span class="v no">FAIL</span></div>`;
+  }).join('');
+}
+
+/** The drive panel's stage rows, motor first: catalogue numbers, teeth and ratio. */
+export const stageRows = (stages) => stages.map((x) => row(`${x.pinion} → ${x.wheel}`, `${x.zp}:${x.zw} · ${fmt(x.ratio, 2)}`, '', 's')).join('');
+
+/** The assembly panel's subsystem rows: each subsystem's BOM mass, dimmed until it is in place. */
+export const massRows = (ex, massBy) => Object.keys(ex).map((k) => `<div class="frow${ex[k] < 0.02 ? '' : ' dim'}"><span>${k}</span><b>${fmt(massBy[k], 0)} g</b></div>`).join('');
+
+/** The SPEC's gates, then any other gate file present, M before V, by number. */
+export function gateOrder(gates) {
+  const declared = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7'];
+  const key = (g) => [g[0] === 'M' ? 0 : 1, +g.slice(1) || 0];
+  return [...new Set([...declared, ...gates.map((g) => g.gate)])].sort((a, b) => key(a)[0] - key(b)[0] || key(a)[1] - key(b)[1] || a.localeCompare(b));
 }
 
 export function createFilm(host, { model, data, edit, plateBase = 'plates', segData = {} }) {
@@ -128,6 +229,11 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
   const bird = buildBird(model, mats);
   stage.scene.add(bird.root);
   const massBy = subsystemMass(model.design);
+  const stages = driveStages(model), power = powerParts(model);
+  // each studio shot is framed on the parts it shows, as built from this design, so a new design re-frames itself
+  const servoIds = new Set(model.design.bom.parts.filter((p) => /servo$/.test(p.role)).map((p) => p.id));
+  const driveSphere = sphereOf(bird, N.ampDeg / DEG, (o) => o.userData.subsystem === 'drive' && !/^(hinge|shoulder|rocker_socket)/.test(o.name));
+  const powerSphere = sphereOf(bird, N.ampDeg / DEG, (o) => o.userData.subsystem === 'power' && !/^wire/.test(o.name));
   const cam = stage.camera;
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
@@ -158,8 +264,14 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
       <div class="call" style="left:${lx + (dx < 0 ? -12 : 12)}px;top:${ly - 22}px;opacity:${alpha};${dx < 0 ? 'transform:translateX(-100%)' : ''}">${text}</div>
       <div class="call" style="left:${x - 5}px;top:${y - 5}px;opacity:${alpha}"><i style="left:0;top:0"></i></div>`;
   };
+  /** A callout whose label sits at a fixed clear place on screen [x, y], its line running to the part. */
+  const calloutAt = (text, obj, at, alpha = 1) => {
+    if (!obj || !at) return '';
+    const [x, y, z] = screenOf(obj, V(0, 0, 0));
+    if (!onScreen(x, y, z)) return ''; // the part is out of shot: no line to nowhere
+    return callout(text, obj, V(0, 0, 0), at[0] - x, at[1] - y, alpha);
+  };
   const honest = (a = 1) => `<div class="honest" style="opacity:${0.92 * a}"><b>●</b>&nbsp; simulated flight · real parts</div>`;
-  const row = (k, v, cls = '') => `<div class="frow"><span>${k}</span><b class="${cls}">${v}</b></div>`;
   const node = (n) => bird.root.getObjectByName(n);
 
   // ---- studio sequences: (u in 0..1, t seconds into the sequence, dur) -> { state, html } with the camera set ---
@@ -186,19 +298,18 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
       const st = fl > 0 ? flap(t - 0.88 * this._dur) : { phase: this._level, amp: N.ampDeg / DEG };
       let g = 0;
       for (const k of Object.keys(ex)) g += massBy[k] * (1 - ex[k]);
-      const done = Object.values(ex).filter((v) => v < 0.02).length;
       g += N.margin_g * span(u, 0.86, 0.95);
       return {
         shift: 260,
         state: { ...st, explode: ex, shell: 1 },
         html: () => `<div class="fcap">Every part from a catalogue<small>${N.bomLines} BOM lines, ${N.partCount} bought parts, each with a source</small></div>
           <div class="panel" style="top:auto;bottom:120px"><h3>${fmt(g, 0)} g</h3><div class="sub">parts ${fmt(N.parts_g, 0)} g · structure ${fmt(N.structure_g, 0)} g · 15% margin ${fmt(N.margin_g, 0)} g</div>
-          ${row('subsystems in place', `${done} / 5`)}${row('span', `${fmt(N.span_m, 2)} m`)}${row('wing area', `${fmt(N.area_m2, 3)} m²`)}</div>${honest()}`,
+          ${massRows(ex, massBy)}${row('span', `${fmt(N.span_m, 2)} m`)}</div>${honest()}`,
       };
     },
     drive(u, t) {
-      const target = V(0.004, -0.028, 0);
-      orbit(target, 205 - 30 * ease(u), -6 + 8 * u, 0.36 - 0.04 * ease(u), 30);
+      const fr = framing(driveSphere.c, driveSphere.r, 30, 0.85);
+      orbit(fr.target, 205 - 30 * ease(u), -6 + 8 * u, fr.dist * (1 - 0.1 * ease(u)), 30);
       const speed = 0.25;
       const st = flap(t, speed);
       // a stroke servo walks the amplitude through its range in the second half; a fixed-stroke drive holds it
@@ -226,8 +337,9 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
         shift: 280,
         state: { ...st, amp, focus: 'drive', accents: true },
         html: () => `<div class="fcap">The drive<small>shown at ¼ speed</small></div>
-          <div class="panel" style="opacity:${a}"><h3>${fmt(N.ratio, 2)} : 1</h3><div class="sub">${['one', 'two', 'three', 'four'][N.stages.length - 1] ?? N.stages.length} spur stages, ${N.stages.join(' × ')} teeth</div>
-          ${row('motor', `${fmt(N.motorRpm, 0)} rpm`)}${row('crank', `${fmt(N.flapHz, 2)} Hz`)}${row('stroke angle', `${fmt(dp.right.phi * DEG, 1)}°`, 'acc')}${row('amplitude', `±${fmt(amp * DEG, 1)}°`)}${row('transmission angle', `${fmt(dp.right.mu * DEG, 0)}°`)}</div>
+          <div class="panel" style="opacity:${a};width:620px"><h3>${fmt(N.ratio, 2)} : 1</h3><div class="sub">${['one', 'two', 'three', 'four', 'five'][stages.length - 1] ?? stages.length} spur stages · gears ${fmt(stages.reduce((g, x) => g + x.mass_g, 0), 0)} g${labels.fixed ? ` · fixed stroke ±${fmt(amp * DEG, 1)}°` : ''}</div>
+          ${stageRows(stages)}
+          ${row('motor', `${fmt(N.motorRpm, 0)} rpm`)}${row('crank', `${fmt(N.flapHz, 2)} Hz`)}${row('stroke angle', `${fmt(dp.right.phi * DEG, 1)}°`, 'acc')}${labels.fixed ? '' : row('amplitude', `±${fmt(amp * DEG, 1)}°`)}${row('transmission angle', `${fmt(dp.right.mu * DEG, 0)}°`)}</div>
           ${callout('Motor', node('motor'), V(0, 0.018, 0), -240, 40, a)}
           ${callout(labels.crankWheel, node('gear_crank'), V(0, -0.021, 0), -200, 80, a)}
           ${callout('Coupler', node('coupler_R'), V(0, 0.045, 0), 200, -170, a)}
@@ -254,32 +366,28 @@ export function createFilm(host, { model, data, edit, plateBase = 'plates', segD
       };
     },
     power(u, t) {
-      const target = V(0.15, -0.008, 0);
-      orbit(target, 30 + 25 * ease(u), -22 + 8 * u, 0.6 - 0.08 * ease(u), 30);
+      const fr = framing(powerSphere.c, powerSphere.r, 30, 0.72);
+      orbit(fr.target, 30 + 25 * ease(u), -22 + 8 * u, fr.dist * (1 - 0.08 * ease(u)), 30);
       const st = flap(t);
       const a = easeOut(span(u, 0.05, 0.2));
       const m2 = data.gates.find((g) => g.gate === 'M2');
       return {
         shift: 280,
-        state: { ...st, focus: 'power', accents: true },
+        state: { ...st, focus: 'power', also: servoIds, accents: true },
         html: () => `<div class="fcap">Power<small>${N.batteryCells}S ${fmt(N.batteryMah, 0)} mAh ${model.design.battery.chemistry ?? ''}, ${fmt(N.batteryWh, 1)} Wh${model.design.battery.charge_limit_V_per_cell ? ` · charged to ${fmt(model.design.battery.charge_limit_V_per_cell, 2)} V a cell` : ''}</small></div>
           <div class="panel" style="opacity:${a}"><h3>${fmt(N.cruisePowerW, 1)} W</h3><div class="sub">electrical power in cruise at ${fmt(N.cruiseV, 1)} m/s (M2)</div>
-          ${row('endurance', `${fmt(N.enduranceMin, 1)} min`)}${row('power available / required', `${fmt(N.powerRatio, 1)}`)}${row('gate M2', m2 ? (m2.passed ? 'pass' : 'FAIL') : 'not run', m2 && !m2.passed ? 'bad' : '')}</div>
-          ${callout('Battery', node('part_battery'), V(0, 0, 0), -170, 110, a)}${callout('ESC', node('part_esc'), V(0, 0, 0), -120, 170, a)}${honest()}`,
+          ${row('endurance', `${fmt(N.enduranceMin, 1)} min`)}${row('gate M2', m2 ? (m2.passed ? 'pass' : 'FAIL') : 'not run', m2 && !m2.passed ? 'bad' : '')}
+          ${power.map((p) => row(`${p.label} · ${p.name}`, `${fmt(p.mass_g, 0)} g`, '', 's')).join('')}</div>
+          ${power.map((p, k) => calloutAt(p.label === 'ESC' ? 'ESC' : p.label[0].toUpperCase() + p.label.slice(1), node(p.node), POWER_LABELS[k], a)).join('')}${honest()}`,
       };
     },
     gates(u, t) {
       orbit(V(-0.22, 0.0, 0), 210 + 20 * u, 14, 3.6, 30);
       const a = easeOut(span(u, 0.03, 0.18));
-      const order = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7'];
-      const items = order.map((g) => {
-        const r = data.gates.find((x) => x.gate === g);
-        const v = !r ? '<span class="v" style="color:#8d99a6">not run</span>' : r.passed ? '<span class="v ok">pass</span>' : '<span class="v no">FAIL</span>';
-        return `<div class="g"><em>${g}</em><span>${r ? gateLine(r) : 'no result yet'}</span>${v}</div>`;
-      }).join('');
+      const items = gatesCardItems(data.gates);
       return {
         state: { ...flap(t), shell: 1 },
-        html: () => `<div style="position:absolute;inset:0;background:rgba(9,11,15,${0.78 * a})"></div><div class="card" style="opacity:${a}"><h2>Where it stands</h2><p>${N.passCount} of ${data.gates.length} gates pass for ${N.name}, design v${data.design_version}. Failures stay on the record.</p><div class="gates">${items}</div></div>${honest(a)}`,
+        html: () => `<div style="position:absolute;inset:0;background:rgba(9,11,15,${0.78 * a})"></div><div class="card gc" style="opacity:${a}"><h2>Where it stands</h2><p>${N.passCount} of ${data.gates.length} gates pass for ${N.name}, design v${data.design_version}. Failures stay on the record.</p><div class="gates">${items}</div></div>${honest(a)}`,
       };
     },
     credits(u, t) {

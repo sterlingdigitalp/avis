@@ -7,6 +7,12 @@
 //            --keep (keep frames on disk even if a signature changed)
 //            --proxy [--stride N] (review proxy of the edit: plates at 640x360, 8 samples, every third (Nth) frame held, into
 //                     out/film/proxy.mp4 with its own site, plates, chunks and state, so the real render is untouched)
+//            --stills DIR (one Blender still per flight shot at its log start and one mid-shot, at the edit's resolution
+//                     and samples, the camera solved over the whole shot as in the film; PNGs into DIR, then stop)
+//            --threads N (Blender CPU threads; default Blender's own)
+//
+// The corridor flight logs come from the design and the flight model: film/flight_log.mjs flies one again whenever
+// the design file, the flight model's sources or the corridor changed since the log on disk was flown.
 //
 // Resumable by shot and frame: Blender frames already on disk are kept unless the design, the log or the shot's
 // settings changed (out/film/state.json); capture chunks likewise. Every GPU job runs through
@@ -21,9 +27,10 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const OUT = path.join(ROOT, 'out', 'film');
 const proxy = process.argv.includes('--proxy');
+const stillsDir = process.argv.includes('--stills') ? path.resolve(process.argv[process.argv.indexOf('--stills') + 1]) : null;
 const SITE = path.join(OUT, proxy ? 'site-proxy' : 'site');
-const SHOTS = path.join(OUT, proxy ? 'shots-proxy' : 'shots');
-const STRIDE = proxy ? +(process.argv.includes('--stride') ? process.argv[process.argv.indexOf('--stride') + 1] : 3) : 1;
+const SHOTS = path.join(OUT, proxy ? 'shots-proxy' : stillsDir ? 'shots-stills' : 'shots');
+const STRIDE = stillsDir ? Infinity : proxy ? +(process.argv.includes('--stride') ? process.argv[process.argv.indexOf('--stride') + 1] : 3) : 1;
 const BLENDER = '/Applications/Blender.app/Contents/MacOS/Blender';
 const HOLD_S = 540; // target GPU time per lock hold, under the 10 min rule
 const a = process.argv.slice(2);
@@ -35,6 +42,7 @@ const only = opt('only', null);
 const dry = a.includes('--dry');
 // --keep: keep Blender frames even if their inputs' signature changed (when the change is known not to touch them)
 const keep = a.includes('--keep');
+const threadArgs = opt('threads', null) ? ['--threads', String(+opt('threads'))] : [];
 
 const sh = (cmd, args, { env = {}, quiet = false } = {}) => {
   const r = spawnSync(cmd, args, { cwd: ROOT, stdio: quiet ? 'pipe' : 'inherit', env: { ...process.env, ...env }, encoding: 'utf8' });
@@ -53,11 +61,15 @@ const edit = readJson(editFile);
 const fps = edit.fps ?? 30;
 const design = edit.design ?? 'larus-gl-2';
 fs.mkdirSync(path.join(OUT, 'logs'), { recursive: true });
-const stateFile = path.join(OUT, proxy ? 'state-proxy.json' : 'state.json');
+const stateFile = path.join(OUT, proxy ? 'state-proxy.json' : stillsDir ? 'state-stills.json' : 'state.json');
 const state = readJson(stateFile, { plates: {}, chunks: {} });
 const saveState = () => fs.writeFileSync(stateFile, JSON.stringify(state, null, 1));
 
 node('film/gen_data.mjs', [design]);
+// flight logs first: a corridor log flown for another design or another flight model is flown again (6 s on one core)
+for (const sc of new Set(edit.segments.filter((x) => x.kind === 'bl').map((x) => x.scenario))) {
+  if (sc === `${design}-corridor`) guarded(590, path.join(OUT, 'logs', 'flight_log.log'), [process.execPath, 'film/flight_log.mjs', design], false);
+}
 const designSha = readJson(path.join(OUT, 'gen', 'model-data.json')).design_sha256;
 buildPages();
 // the bird is the design plus the code that builds it: a change to either re-exports it and re-renders its plates
@@ -101,6 +113,10 @@ const holds = segs.filter((s) => s.kind === 'bl').reduce((n, s) => n + Math.ceil
 const gpuH = ((blFrames / STRIDE) * perFrame + holds * 75) / 3600;
 log(`${outName}: ${duration.toFixed(1)} s at ${fps} fps, ${Math.ceil(blFrames / STRIDE)} Blender frames at ${res}, ${samples} samples (~${perFrame.toFixed(1)} s/frame measured, ${holds} holds with ~75 s setup each -> ~${gpuH.toFixed(2)} GPU h)`);
 if (dry) process.exit(0);
+if (stillsDir) {
+  for (const s of segs.filter((x) => x.kind === 'bl')) renderStills(s);
+  process.exit(0);
+}
 
 // ---- 3. trees: the environment's note, prebuild on the CPU if trees.py changed ---------------------------------
 const treesSig = hashOf(fs.readFileSync(path.join(ROOT, 'env', 'trees.py'), 'utf8'));
@@ -204,7 +220,24 @@ function meanOf(col, a, b) {
   return sum / (b - a + 1);
 }
 
-function renderPlates(s) {
+/**
+ * Stills: the shot's frames at its log start and its middle, rendered through renderPlates with every other frame of
+ * the shot held by a placeholder (so the rig is solved over the whole shot), copied to the stills folder by log time.
+ */
+function renderStills(s) {
+  const p = s.plate;
+  const want = [p.i0, p.i0 + Math.floor(p.n / 2)];
+  const frame = (i) => path.join(SHOTS, s.id, `f_${String(i).padStart(5, '0')}.png`);
+  renderPlates(s, { only: want });
+  fs.mkdirSync(stillsDir, { recursive: true });
+  for (const i of want) {
+    const tLog = i / (fps * p.slow);
+    fs.copyFileSync(frame(i), path.join(stillsDir, `${s.id}_${s.shot}_t${tLog.toFixed(2)}s.png`));
+  }
+  for (let i = p.i0; i < p.i0 + p.n; i++) if (!want.includes(i) && fs.existsSync(frame(i)) && fs.statSync(frame(i)).size === 0) fs.rmSync(frame(i));
+}
+
+function renderPlates(s, { only: onlyFrames = null } = {}) {
   const p = s.plate;
   const dir = path.join(SHOTS, s.id);
   const bl = { ...edit.blender, samples, ...(s.blender ?? {}), ...(proxy ? { res, samples } : {}) };
@@ -216,7 +249,9 @@ function renderPlates(s) {
   const sig = hashOf(glbSha, bakeSha, s.scenario, s.shot, p, bl, fileSig(path.join(HERE, 'blender_shot.py')), fileSig(path.join(HERE, 'blender_bird.py')), fileSig(path.join(ROOT, 'env', 'shots.py')));
   platesDir(s.id, dir, sig);
   const frame = (i) => path.join(dir, `f_${String(i).padStart(5, '0')}.png`);
-  const held = holdBetweenStrides(p, frame);
+  // stills: every frame but the wanted ones held by an empty placeholder, which Blender skips
+  if (onlyFrames) for (let i = p.i0; i < p.i0 + p.n; i++) if (!onlyFrames.includes(i) && !fs.existsSync(frame(i))) fs.writeFileSync(frame(i), '');
+  const held = onlyFrames ? [] : holdBetweenStrides(p, frame);
   const key = `${bl.res ?? res}@${bl.samples}`;
   const per = readJson(path.join(OUT, 'timing.json'), {})[key] ?? (proxy ? 3 : 30);
   const chunk = Math.max(1, Math.floor((HOLD_S - 75) / per)); // 75 s for scene setup per hold
@@ -227,7 +262,7 @@ function renderPlates(s) {
     const lo = todo[0], hi = todo[Math.min(todo.length, chunk) - 1] + 1;
     log(`${s.id}: frames ${lo}..${hi - 1} (${hi - lo}) at ${key}`);
     try {
-      guarded(595, path.join(OUT, 'logs', `blender-${s.id}.log`), [BLENDER, '--background', '--factory-startup', '--python-exit-code', '7', '--python', 'film/blender_shot.py', '--', ...blenderArgs(s, bl, bake, dir, lo, hi)]);
+      guarded(595, path.join(OUT, 'logs', `blender-${s.id}.log`), [BLENDER, '--background', '--factory-startup', ...threadArgs, '--python-exit-code', '7', '--python', 'film/blender_shot.py', '--', ...blenderArgs(s, bl, bake, dir, lo, hi)]);
     } catch (e) {
       failures++;
       log(`${s.id}: Blender failed (${failures}): ${String(e.message).split('\n')[0]}`);
@@ -252,7 +287,7 @@ function platesDir(id, dir, sig) {
   fs.mkdirSync(dir, { recursive: true });
   fs.mkdirSync(path.join(SITE, 'plates'), { recursive: true });
   const link = path.join(SITE, 'plates', id);
-  if (!fs.existsSync(link)) fs.symlinkSync(dir, link);
+  if (!stillsDir && !fs.existsSync(link)) fs.symlinkSync(dir, link);
 }
 
 /** Proxy: only every STRIDE-th frame is rendered; the others hold an empty placeholder while Blender runs (it skips

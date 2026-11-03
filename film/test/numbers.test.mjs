@@ -140,3 +140,9 @@ test('captions take their numbers from the design, not from the edit', async () 
   // no caption types a number of its own: digits in captions come from the design or name the log
   for (const s of edit.segments) for (const t of [s.caption, s.sub]) if (t) assert.ok(!/\d/.test(t.replace(/larus-gl-2-corridor|\{\w+\}/g, '')), `${s.id}: "${t}"`);
 });
+
+test('M7 leads with its lowest factor of safety when the gate file gives one', () => {
+  const l = gateLine({ gate: 'M7', measured: { fos_min: 1.234, spar_inner: { fos: 2 }, coupler: { fos_buckling: 1.9 } }, limit: { factor_of_safety: 1.5 } });
+  assert.equal(l, 'Structure: lowest FoS 1.23 (need 1.5); inner spar FoS 2.00, coupler buckling 1.90');
+  assert.equal(gateLine({ gate: 'M7', measured: { fos_min: 1.4, gears_within_rating: false }, limit: {} }), 'Structure: lowest FoS 1.40 (need 1.5), gears over rating');
+});

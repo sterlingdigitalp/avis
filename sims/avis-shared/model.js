@@ -304,6 +304,32 @@ export function gearTrain(design, parts, fourBar) {
   return train;
 }
 
+/** Thickness along x of the crank web: the design's (params.linkage.crank.web_t_mm), else the 2 mm crank disc. */
+export function crankWebThickness(design) {
+  return (design.params?.linkage?.crank?.web_t_mm ?? 2) / 1000;
+}
+
+/** Length along x of a coupler eye: its bushing's (flange included), at least 3 mm. */
+export function couplerEyeLength(design, parts) {
+  const j = journals(design).find((x) => x.place === 'coupler');
+  return Math.max(0.003, j && parts?.[j.id] ? journalDims(parts[j.id].specs).B : 0);
+}
+
+/**
+ * Film only: where the two couplers are drawn on the crank pin. The physics' planes (stagePlanes, which src/design
+ * sizes the crank pin from) are kept wherever their eyes clear each other and the web. Where they would overlap
+ * (v21: two 6 mm eyes on planes 5 mm apart, 1 mm into each other), the right eye is drawn against the web's aft face
+ * and the left eye against the right one, so both stay on the design's own crank pin. The physics never reads this.
+ */
+export function filmCouplerPlanes(design, parts, planes) {
+  const eye = couplerEyeLength(design, parts);
+  const couplerR = Math.min(planes.couplerR, planes.crankArm - crankWebThickness(design) / 2 - eye / 2);
+  const couplerL = Math.min(planes.couplerL, couplerR - eye);
+  // the crank pin as the design sizes it (src/design/linkage.js crankMembers): to 1 mm past the physics' left eye
+  const pinEnd = Math.min(planes.couplerL - eye / 2 - 0.001, couplerL - eye / 2);
+  return { couplerR, couplerL, couplerEye: eye, crankPinEnd: pinEnd };
+}
+
 /** x planes of the drive: crank disc at the hinge, aft plate, one plane per stage (crank wheel first), front plate. */
 function stagePlanes(design, train) {
   const x0 = design.wing.hinge[0];
@@ -435,6 +461,15 @@ export function flightControllerRole(bom) {
 }
 
 /** Sizes from catalogue text: a box [x, y, z]. Unknown third dimensions come from mass at a stated density. */
+/** A catalogue entry's printed size: dimensions_text_mm, or dimensions_text with its unit ("1 x 1 x 0.375 in"). */
+export function catalogueDims(spec) {
+  if (spec?.dimensions_text_mm) return parseDims(spec.dimensions_text_mm);
+  const text = String(spec?.dimensions_text ?? '');
+  const k = { in: 25.4, inch: 25.4, inches: 25.4, cm: 10, mm: 1 }[text.match(/([a-z]+)\s*$/i)?.[1].toLowerCase()];
+  const d = parseDims(text);
+  return d && k ? { ...d, values: d.values.map((v) => v * k) } : null;
+}
+
 export function sizeOf(spec, mass_g, order, assumeDensity, assumptions, label) {
   const d = parseDims(spec?.dimensions_text_mm);
   if (d && d.values.length >= 3) return order(d.values);
@@ -449,6 +484,21 @@ export function sizeOf(spec, mass_g, order, assumeDensity, assumptions, label) {
   const side = Math.cbrt(mass_g / 1000 / assumeDensity / 0.2);
   assumptions.push(`${label}: no dimensions in the catalogue; drawn as a ${(side * 1000).toFixed(0)} x ${(side * 1000).toFixed(0)} x ${(side * 200).toFixed(1)} mm board from ${mass_g} g at ${assumeDensity} kg/m3`);
   return order([side, side, side * 0.2]);
+}
+
+/** The box the drive sweeps (crank, couplers, every gear stage, plate to plate), which no packed part may enter. */
+function driveReserve(train, fourBar, planes) {
+  let y0 = Infinity, y1 = -Infinity, z0 = -(fourBar.O4[0] + 0.004), z1 = fourBar.O4[0] + 0.004;
+  train.links.forEach((_, j) => {
+    const st = train.stages[train.n - 1 - j];
+    for (const [c, r] of [[train.shafts[j], st.wheel.ro], [train.shafts[j + 1], st.pinion.ro]]) {
+      y0 = Math.min(y0, c[1] - r);
+      y1 = Math.max(y1, c[1] + r);
+      z0 = Math.min(z0, c[0] - r);
+      z1 = Math.max(z1, c[0] + r);
+    }
+  });
+  return { x0: planes.couplerL - 0.004, x1: planes.plateFwd + planes.plateT / 2, y0, y1, z0, z1 };
 }
 
 export function layoutParts(design, parts, train, fourBar) {
@@ -475,19 +525,7 @@ export function layoutParts(design, parts, train, fourBar) {
   out.push({ name: 'motor', role: 'flap motor', id: P('flap motor').id, subsystem: 'drive', box: motorBox, shift: [motorX - ml.pos[0], motorC[1] - ml.pos[1], motorC[0] - ml.pos[2]], protrusion: Math.max(0, boxProtrusion(loft, motorBox).out), cylinder: { r: md[0] / 2, len: md[1] } });
   placed.push(motorBox);
   // The drive's swept volume is kept clear: crank, couplers and both gear stages, plate to plate.
-  if (train.links?.length) {
-    let y0 = Infinity, y1 = -Infinity, z0 = -(fourBar.O4[0] + 0.004), z1 = fourBar.O4[0] + 0.004;
-    train.links.forEach((_, j) => {
-      const st = train.stages[train.n - 1 - j];
-      for (const [c, r] of [[train.shafts[j], st.wheel.ro], [train.shafts[j + 1], st.pinion.ro]]) {
-        y0 = Math.min(y0, c[1] - r);
-        y1 = Math.max(y1, c[1] + r);
-        z0 = Math.min(z0, c[0] - r);
-        z1 = Math.max(z1, c[0] + r);
-      }
-    });
-    placed.push({ x0: planes.couplerL - 0.004, x1: planes.plateFwd + planes.plateT / 2, y0, y1, z0, z1 });
-  }
+  if (train.links?.length) placed.push(driveReserve(train, fourBar, planes));
   // Battery: long axis along x, at the design's battery station.
   const bat = lump(design, 'battery');
   put('battery', 'battery', sizeOf(spec('battery'), P('battery').unit_mass_g, (v) => [v[0], v[2], v[1]], 2000, assumptions, 'battery'), bat.pos, 'power');
@@ -605,6 +643,31 @@ export function prepare(design, parts) {
   model.layout = layoutParts(design, parts, train, fourBar);
   model.fit = fitReport(model);
   return model;
+}
+
+/**
+ * The film's model: prepare() exactly as src/design uses it, plus the parts only the film packs. The servo regulator
+ * (v21 on), sized from its catalogue entry (printed in inches), is packed last at its mass lump so no other part
+ * moves. src/design packs with prepare()/layoutParts alone, so nothing here reaches a number the physics computes.
+ */
+export function prepareFilm(design, parts) {
+  const model = prepare(design, parts);
+  packRegulator(model, design, parts);
+  model.planes = { ...model.planes, ...filmCouplerPlanes(design, parts, model.planes) };
+  return model;
+}
+
+/** The servo regulator, packed last against the physics' layout so no other part moves (film only). */
+function packRegulator(model, design, parts) {
+  const reg = design.bom.parts.find((p) => p.role === 'servo regulator');
+  const at = lump(design, 'power module and regulator');
+  if (!reg || !at) return;
+  const d = catalogueDims(parts[reg.id]?.specs);
+  const size = d?.values.length >= 3 ? [d.values[0], d.values[2], d.values[1]] : sizeOf(parts[reg.id]?.specs, reg.unit_mass_g, (v) => [v[0], v[2], v[1]], 1850, model.layout.assumptions, 'servo regulator');
+  const boxes = model.layout.parts.map((p) => p.box);
+  if (model.train.links?.length) boxes.push(driveReserve(model.train, model.fourBar, model.planes));
+  model.layout.parts.push({ ...placeBox(design.body.loft, 'regulator', at.pos, size, boxes), role: reg.role, id: reg.id, subsystem: 'power' });
+  model.fit = fitReport(model);
 }
 
 /** Plain-language list of what does not fit, with numbers, for the page and the report. */

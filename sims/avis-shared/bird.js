@@ -13,9 +13,13 @@ import * as THREE from 'three';
 import { stationsAt, wingStations, sectionPoint, drivePose, gearAngles, sineSeries, membraneDip, journals, journalDims, sizeOf } from './model.js';
 import { segmentAngles } from '../../src/physics/kinematics.js';
 import { ACCENT } from './materials.js';
+import { buildFrame } from './frame.js';
 
 export const SUBSYSTEMS = ['wing', 'drive', 'twist', 'power', 'avionics', 'structure'];
 const TWO_PI = 2 * Math.PI;
+const mm = (v) => v / 1000;
+/** The design's horn pin is the boss, the eye and 2 mm (src/design/linkage.js): the eye 1 mm off the boss face. */
+const HORN_GAP = 0.001;
 const V3 = THREE.Vector3;
 
 // ---- geometry helpers ------------------------------------------------------------------------------------------
@@ -265,7 +269,9 @@ function makeCtx(model, mats, { filmRows = 4 } = {}) {
   };
   // one ring per journal, flanged when the part is, along x; bearings in steel, polymer bushings in plastic
   const journalMesh = (name, j, parent, sub) => mesh(name, journalGeometry(j.dims), j.kind === 'bushing' ? 'acetal' : 'steel_ground', parent, sub, j.id);
-  return { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows, journal, journalMesh };
+  // geometry helpers for the builders in other modules (frame.js)
+  const geo = { cylX, cylZ, tubeZ, ringX, roundedBox, mergeGeos, alongX, wire, convexHull };
+  return { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows, journal, journalMesh, geo };
 }
 
 /**
@@ -697,20 +703,81 @@ export function slotPath(slot, side, half) {
   return path;
 }
 
-/** The journals in the gearbox plates, aft then forward: the crank shaft (shaft 0) and each gear shaft, as the BOM says. */
+/** Thickness of the aft and forward gearbox plates: the design's (params.linkage.plates), else model.planes.plateT. */
+function plateThickness(ctx) {
+  const PL = ctx.D.params?.linkage?.plates;
+  return PL ? { aft: mm(PL.t_mm), fwd: mm(PL.t_fwd_mm ?? PL.t_mm) } : { aft: ctx.P.plateT, fwd: ctx.P.plateT };
+}
+
+/**
+ * The journals in the gearbox plates, aft then forward: the crank shaft (shaft 0) and each gear shaft, as the BOM says,
+ * and the motor's outboard bearing in the forward plate when the BOM has one. A journal longer than its plate sits
+ * flush with the plate's outer face and reaches into the gearbox, flange in the plate.
+ */
 function gearboxJournals(ctx, shaftsN) {
   const { P, root, register } = ctx;
+  const t = plateThickness(ctx);
   const byId = new Map();
+  const put = (jj, name, x, c, aft) => {
+    const b = ctx.journalMesh(name, jj, root, 'drive');
+    b.position.set(aft ? x - t.aft / 2 + jj.dims.B / 2 : x + t.fwd / 2 - jj.dims.B / 2, c[1], c[0]);
+    if (aft) b.rotation.y = Math.PI; // flange on the outer face
+    if (!byId.has(jj.id)) byId.set(jj.id, { kind: jj.kind, meshes: [] });
+    byId.get(jj.id).meshes.push(b);
+  };
   for (let j = 0; j < shaftsN.length - 1; j++) {
     const jj = j === 0 ? ctx.journal('crank') : ctx.journal('shaft', j);
-    for (const [name, x] of [['aft', P.plateAft], ['fwd', P.plateFwd]].slice(0, jj?.count ?? 0)) {
-      const b = ctx.journalMesh(`gearbox_${jj.kind}_${j}_${name}`, jj, root, 'drive');
-      b.position.set(x, shaftsN[j][1], shaftsN[j][0]);
-      if (!byId.has(jj.id)) byId.set(jj.id, { kind: jj.kind, meshes: [] });
-      byId.get(jj.id).meshes.push(b);
-    }
+    for (const [name, x] of [['aft', P.plateAft], ['fwd', P.plateFwd]].slice(0, jj?.count ?? 0)) put(jj, `gearbox_${jj.kind}_${j}_${name}`, x, shaftsN[j], name === 'aft');
   }
+  const mo = journals(ctx.D).find((x) => x.place === 'other' && /motor/.test(ctx.D.bom.parts.find((p) => p.id === x.id)?.role ?? ''));
+  if (mo && shaftsN.length) put({ ...mo, dims: journalDims(ctx.model.parts[mo.id]?.specs) }, `motor_outboard_${mo.kind}`, P.plateFwd, shaftsN[shaftsN.length - 1], false);
   for (const [id, { kind, meshes }] of byId) register(`gearbox ${kind}s`, id, kind, 'drive', meshes);
+}
+
+/** A metal gear shaft (params.linkage.gearShafts[j - 1]): its material, and the wheel seat where the design has one. */
+function gearShaft(ctx, o, g, j, centre) {
+  const { mats, P, train, root, mesh, register } = ctx;
+  o.material = mats.alu_machined;
+  o.userData.matName = 'alu_machined';
+  o.userData.partId = g.material;
+  const objs = [o];
+  const wheel = train.stages[train.n - 1 - j]?.wheel;
+  if (g.seat_od_mm && wheel) {
+    const seat = mesh(`shaft_${j}_wheel_seat`, ringX(mm(g.seat_od_mm) / 2, mm(g.d_mm) / 2, wheel.face, 24), 'alu_machined', root, 'drive', g.material);
+    seat.position.set(P.stage[train.n - 1 - j], centre[1], centre[0]);
+    objs.push(seat);
+  }
+  register(`gear shaft ${j}`, g.material, 'gear shaft', 'drive', objs);
+}
+
+/** The key of a gear on its shaft (params.linkage: the crank's key, each gear shaft's wheel and pinion keys). */
+function gearKey(ctx, name, node, bore, gear, shaft, isWheel) {
+  const L = ctx.D.params?.linkage;
+  const k = !L ? null : isWheel ? (shaft === 0 ? L.crank?.key : L.gearShafts?.[shaft - 1]?.wheelKey) : L.gearShafts?.[shaft - 1]?.pinionKey;
+  if (!k) return;
+  const o = ctx.mesh(`${name}_key`, new THREE.BoxGeometry(Math.min(mm(k.L_mm), gear.face), mm(k.h_mm), mm(k.b_mm)), 'titanium', node, 'drive', k.material);
+  o.position.y = bore / 2 - mm(k.shaft_depth_mm ?? k.h_mm / 2) + mm(k.h_mm) / 2;
+  ctx.register(`key ${name}`, k.material, 'key', 'drive', o);
+}
+
+/** Bosses round the seats params.linkage.plates.bossed names ('joint/support'), as long as the part, into the gearbox. */
+function plateBosses(ctx, PL, shaftsN) {
+  const { P, root, mesh, register, structItem } = ctx;
+  const t = plateThickness(ctx);
+  const objs = [];
+  for (const key of PL.bossed) {
+    const [joint, support] = key.split('/');
+    const k = joint === 'crank shaft' ? 0 : +(joint.match(/gear shaft\s*(\d+)/)?.[1] ?? -1);
+    const jj = k === 0 ? ctx.journal('crank') : ctx.journal('shaft', k);
+    if (!jj || !shaftsN[k]) continue;
+    const aft = support === 'aft';
+    const tp = aft ? t.aft : t.fwd, len = jj.dims.B - tp;
+    if (len <= 0) continue;
+    const o = mesh(`plate_boss_${k}_${support}`, ringX(jj.dims.D / 2 + mm(PL.boss_wall_mm), jj.dims.D / 2, len, 32), 'alu_machined', root, 'drive', structItem(/plate bosses/)?.material_id ?? PL.material);
+    o.position.set(aft ? P.plateAft + tp / 2 + len / 2 : P.plateFwd - tp / 2 - len / 2, shaftsN[k][1], shaftsN[k][0]);
+    objs.push(o);
+  }
+  if (objs.length) register('gearbox plate bosses', structItem(/plate bosses/)?.material_id ?? PL.material, 'gearbox plate bosses', 'drive', objs);
 }
 
 /**
@@ -739,8 +806,148 @@ function buildEncoder(ctx, c) {
   if (enc) ring(enc, 'encoder_readhead', 1850, ri, 'pcb', 'crank angle encoder');
 }
 
+/**
+ * The machined linkage a design lists in params.linkage (v21 on): per side an aluminium rocker (hub on the shoulder
+ * pin between its two bushings, horn arm of the rocker length, horn boss, spar socket), its horn pin, the shoulder
+ * pin and the two shoulder housings round the bushings; one-piece coupler links with an eye round a bushing at each
+ * end. The coupler's eye rides at its coupler plane (model.filmCouplerPlanes); the horn boss sits forward of the eye,
+ * HORN_GAP clear of it, as the design's horn pin length (boss + eye + 2 mm) has it.
+ */
+function buildMetalLinkage(ctx, L) {
+  const { model, D, P, wings, drive } = ctx;
+  const fb = model.fourBar, law = model.law;
+  const sh = ctx.journal('shoulder')?.dims ?? { d: 0.006, D: 0.008, B: 0.006 };
+  const span = (D.params?.joints?.shoulderSpan_mm ?? 24) / 1000;
+  // a fixed-stroke rocker has one horn position (the drive table's middle entry for a servo drive's slot)
+  const e = law.table[Math.floor((law.table.length - 1) / 2)];
+  const delta = fb.alpha + e.psiMid - law.phiMean;
+  const horn = [e.c * Math.cos(delta), e.c * Math.sin(delta)];
+  for (const [tag, side] of [['R', 1], ['L', -1]]) {
+    const x = side > 0 ? P.couplerR : P.couplerL;
+    const k = { tag, side, x, seg0: wings[tag].segs[0], horn, span, sh };
+    metalRocker(ctx, L, k);
+    shoulderJoint(ctx, L, k);
+    const cn = metalCoupler(ctx, L, tag);
+    drive[tag] = { rocker: ctx.root.getObjectByName(`rocker_${tag}`), coupler: cn, pin: null, x };
+  }
+}
+
+/** One rocker in its wing root's frame (local (x - hinge x, y, side z) for a point (z, y) about the hinge). */
+function metalRocker(ctx, L, { tag, side, x, seg0, horn, sh, span }) {
+  const { model, P, mesh, register, journal } = ctx;
+  const r = L.rocker, fbx = model.fourBar.x, c = Math.hypot(horn[0], horn[1]);
+  const eye = journal('coupler')?.dims ?? { d: 0.008, B: P.couplerEye };
+  const bossX = x + P.couplerEye / 2 + HORN_GAP + mm(r.boss_len_mm) / 2;
+  const at = (o, xx, [z, y]) => (o.position.set(xx - fbx, y, side * z), o);
+  const hub = at(mesh(`rocker_${tag}`, ringX(mm(r.hub_od_mm) / 2, sh.d / 2, span - sh.B), 'alu_machined', seg0, 'drive', r.material), fbx, [0, 0]);
+  const boss = at(mesh(`rocker_boss_${tag}`, ringX(mm(r.boss_od_mm) / 2, eye.d / 2, mm(r.boss_len_mm)), 'alu_machined', seg0, 'drive', r.material), bossX, horn);
+  const arm = at(mesh(`rocker_arm_${tag}`, new THREE.BoxGeometry(mm(r.arm_t_mm), c, mm(r.arm_w_mm)), 'alu_machined', seg0, 'drive', r.material), bossX, [horn[0] / 2, horn[1] / 2]);
+  arm.rotation.x = Math.atan2(side * horn[0], horn[1]); // +y onto the horn
+  const so = mm(r.spar_od_mm) / 2, sl = mm(r.socket_len_mm);
+  const sock = at(mesh(`rocker_socket_${tag}`, tubeZ(so + mm(r.socket_wall_mm), so, sl), 'alu_machined', seg0, 'drive', r.material), fbx, [0, 0]);
+  sock.position.z = side * mm(r.hub_od_mm) / 2 - (side > 0 ? 0 : sl);
+  register(`rocker ${tag}`, r.material, `rocker ${side > 0 ? 'right' : 'left'}`, 'drive', [hub, boss, arm, sock]);
+  // horn pin: pressed in the boss, the coupler eye beside it, 2 mm beyond (the design's boss + eye + 2 mm)
+  const pinL = mm(r.boss_len_mm) + eye.B + 0.002;
+  const pin = at(mesh(`horn_pin_${tag}`, cylX(eye.d / 2, pinL, 16), 'alu_machined', seg0, 'drive', L.hornPin?.material ?? r.material), bossX + mm(r.boss_len_mm) / 2 - pinL / 2, horn);
+  register(`horn pin ${tag}`, L.hornPin?.material ?? r.material, 'horn pin', 'drive', pin);
+}
+
+/** Shoulder pin and bushings at the design's span, and the housings round the bushings (fixed to the frame). */
+function shoulderJoint(ctx, L, { tag, side, seg0, sh, span }) {
+  const { model, root, mesh, register, journal, journalMesh } = ctx;
+  const fb = model.fourBar, jh = journal('shoulder');
+  const pin = mesh(`hinge_pin_${tag}`, cylX(sh.d / 2, span + sh.B, 16), 'alu_machined', seg0, 'drive', L.shoulderPin?.material);
+  register(`shoulder pin ${tag}`, L.shoulderPin?.material, 'shoulder pin', 'drive', pin);
+  const bush = [], hous = [];
+  for (const dx of [-span / 2, span / 2]) {
+    if (jh) {
+      const b = journalMesh(`hinge_${jh.kind}_${tag}_${dx > 0 ? 'f' : 'a'}`, jh, seg0, 'drive');
+      b.position.set(dx, 0, 0);
+      bush.push(b);
+    }
+    if (!L.shoulderHousing) continue;
+    const h = mesh(`shoulder_housing_${tag}_${dx > 0 ? 'f' : 'a'}`, ringX(mm(L.shoulderHousing.od_mm) / 2, sh.D / 2, sh.B), 'alu_machined', root, 'drive', L.shoulderHousing.material);
+    h.position.set(fb.x + dx, fb.O4[1], side * fb.O4[0]);
+    hous.push(h);
+  }
+  if (bush.length) register(`hinge ${jh.kind}s ${tag}`, jh.id, jh.kind, 'drive', bush);
+  if (hous.length) register(`shoulder housings ${tag}`, L.shoulderHousing.material, 'shoulder housings', 'drive', hous);
+}
+
+/** One coupler link, one piece: a round body between two eyes, each eye round a coupler-eye bushing; y along the link. */
+function metalCoupler(ctx, L, tag) {
+  const { model, root, mesh, group, register, journal, journalMesh, accentLine } = ctx;
+  const cp = L.coupler, b = model.law.b, jc = journal('coupler');
+  const eye = jc?.dims ?? { D: 0.01, B: ctx.P.couplerEye };
+  const cn = group(`coupler_${tag}`, root, 'drive');
+  const eo = mm(cp.eye_od_mm) / 2;
+  const body = mesh(`coupler_rod_${tag}`, cylZ(mm(cp.body_d_mm) / 2, b - 2 * eo + 0.002, 16), 'alu_machined', cn, 'drive', cp.material);
+  body.rotation.x = -Math.PI / 2; // +z -> +y
+  body.position.y = eo - 0.001;
+  const eyes = [], bush = [];
+  for (const y of [0, b]) {
+    const o = mesh(`coupler_eye_${tag}_${y ? 'top' : 'bot'}`, ringX(eo, eye.D / 2, eye.B), 'alu_machined', cn, 'drive', cp.material);
+    o.position.y = y;
+    eyes.push(o);
+    if (!jc) continue;
+    const j = journalMesh(`coupler_${jc.kind}_${tag}_${y ? 'top' : 'bot'}`, jc, cn, 'drive');
+    j.position.y = y;
+    bush.push(j);
+  }
+  ctx.posed.push(cn);
+  register(`coupler ${tag}`, cp.material, 'coupler links', 'drive', [body, ...eyes]);
+  if (bush.length) register(`coupler eye ${jc.kind}s ${tag}`, jc.id, jc.kind, 'drive', bush);
+  accentLine(`coupler_line_${tag}`, [[0, 0, 0], [0, b, 0]], cn, 'drive', false);
+  return cn;
+}
+
+/**
+ * The one-piece crank of params.linkage.crank: a web web_b wide and web_t thick round the shaft and the pin over the
+ * throw, the hollow shaft from the web to 1 mm past the forward plate, the seat of the crank wheel, and the pin
+ * cantilevered aft of the web to 1 mm past the left coupler's eye (src/design/linkage.js crankMembers).
+ */
+function buildMetalCrank(ctx, C) {
+  const { model, P, train, root, mesh, group, register, accentLine, drive } = ctx;
+  const a = model.law.a, tw = mm(C.web_t_mm), bw = mm(C.web_b_mm);
+  const pinD = ctx.journal('coupler')?.dims.d ?? 0.008;
+  const crank = group('crank', root, 'drive');
+  const s = new THREE.Shape();
+  s.absarc(0, a, bw / 2, 0, Math.PI, false);
+  s.absarc(0, 0, bw / 2, Math.PI, TWO_PI, false);
+  s.closePath();
+  const wg = new THREE.ExtrudeGeometry(s, { depth: tw, bevelEnabled: false, curveSegments: 24 });
+  wg.translate(0, 0, -tw / 2);
+  const web = mesh('crank_web', alongX(wg), 'titanium', crank, 'drive', C.material);
+  web.position.x = P.crankArm;
+  const x0 = P.crankArm + tw / 2, x1 = P.plateFwd + P.plateT / 2 + 0.001;
+  const shaft = mesh('crank_shaft', ringX(mm(C.shaft_od_mm) / 2, mm(C.shaft_id_mm ?? 0) / 2 + 1e-5, x1 - x0, 24), 'titanium', crank, 'drive', C.material);
+  shaft.position.x = (x0 + x1) / 2;
+  const wheel = train.stages?.[train.n - 1]?.wheel;
+  const objs = [web, shaft];
+  if (wheel && C.seat_od_mm) {
+    const seat = mesh('crank_wheel_seat', ringX(mm(C.seat_od_mm) / 2, mm(C.shaft_id_mm ?? 0) / 2 + 1e-5, wheel.face, 24), 'titanium', crank, 'drive', C.material);
+    seat.position.x = P.stage[train.n - 1];
+    objs.push(seat);
+  }
+  const xw = P.crankArm - tw / 2, pinL = xw - P.crankPinEnd;
+  const pin = mesh('crank_pin', cylX(pinD / 2, pinL, 16), 'titanium', crank, 'drive', C.material);
+  pin.position.set(xw - pinL / 2, a, 0);
+  objs.push(pin);
+  ctx.posed.push(crank);
+  register('crank', C.material, 'crank: shaft, web and pin in one piece', 'drive', objs);
+  accentLine('crank_circle', Array.from({ length: 48 }, (_, i) => [P.crankArm, a * Math.cos((i / 48) * TWO_PI), a * Math.sin((i / 48) * TWO_PI)]), crank, 'drive');
+  drive.crank = crank;
+}
+
 /** Rockers on the wing roots and the couplers. */
 function buildLinkage(ctx) {
+  const L = ctx.D.params?.linkage;
+  return L?.rocker && L?.coupler ? buildMetalLinkage(ctx, L) : buildCarbonLinkage(ctx);
+}
+
+/** Older designs: carbon-plate rockers (a slot for a stroke servo's pin, else a plain hole) and carbon-tube couplers. */
+function buildCarbonLinkage(ctx) {
   const { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows } = ctx;
   const { wings, drive } = ctx;
   const fb = model.fourBar;
@@ -821,6 +1028,8 @@ function buildLinkage(ctx) {
 
 /** Crank disc and pin. */
 function buildCrank(ctx) {
+  const C = ctx.D.params?.linkage?.crank;
+  if (C?.web_t_mm) return buildMetalCrank(ctx, C);
   const { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows } = ctx;
   const { wings, drive } = ctx;
   const fb = model.fourBar;
@@ -853,94 +1062,118 @@ function buildCrank(ctx) {
 
 /** Gears, shafts, gearbox plates, bearings and fasteners. */
 function buildGears(ctx) {
-  const { model, mats, D, W, P, train, root, parts, meshes, accents, posed, deform, mesh, group, register, accentLine, bomPart, structItem, spec, filmRows } = ctx;
-  const { wings, drive } = ctx;
-  const fb = model.fourBar;
-  const law = model.law;
-  const plateI = structItem(/crank, rockers/);
-  const coupI = structItem(/couplers/);
-  // each shaft's journal (the crank is shaft 0): bore for the shaft and gears, outside diameter for the plate hole
-  const sj = (k) => (k === 0 ? ctx.journal('crank') : ctx.journal('shaft', k))?.dims ?? { d: 0.004, D: 0.009 };
-  const plate = 0.002;
-  // gears: one node per gear, named by stage (stage 1 is the motor stage); shafts run plate to plate
-  drive.gears = [];
-  const shaftsN = train.shafts ?? [];
-  if (train.links?.length) {
-    const gearMesh = (name, gear, centre, x, shaftIndex) => {
-      const node = group(name, root, 'drive');
-      node.position.set(x, centre[1], centre[0]);
-      const isSteel = /SCM|steel/i.test(gear.material);
-      const hub = isSteel && gear.hub && gear.hubW > 0;
-      const bore = gear.bore || (shaftIndex === shaftsN.length - 1 ? (spec(model.design.motor.id).shaft_mm ?? 5) / 1000 : sj(shaftIndex).d);
-      const key = hub ? (bore >= 0.012 ? 0.005 : 0.003) : 0;
-      const g = gearGeometry(gear.z, gear.m, gear.face, bore, { hubR: hub ? gear.hub / 2 : 0, hubW: hub ? gear.hubW : 0, key });
-      const o = mesh(`${name}_teeth`, g, isSteel ? 'steel_ground' : 'acetal', node, 'drive', gear.id);
-      posed.push(node);
-      register(`gear ${gear.z}T m${+(gear.m * 1000).toFixed(2)}`, gear.id, 'gear', 'drive', o);
-      accentLine(`${name}_pitch`, Array.from({ length: 64 }, (_, i) => [gear.face / 2 + 0.0004, gear.rp * Math.cos((i / 64) * TWO_PI), gear.rp * Math.sin((i / 64) * TWO_PI)]), node, 'drive');
-      drive.gears.push({ node, shaft: shaftIndex });
-      return node;
-    };
-    train.links.forEach((_, j) => {
-      const si = train.n - 1 - j;
-      const st = train.stages[si];
-      const x = P.stage[si];
-      gearMesh(j === 0 ? 'gear_crank' : `gear_s${si + 1}_wheel`, st.wheel, shaftsN[j], x, j);
-      gearMesh(si === 0 ? 'gear_motor' : `gear_s${si + 1}_pinion`, st.pinion, shaftsN[j + 1], x, j + 1);
-    });
-    drive.gCrank = root.getObjectByName('gear_crank');
-    const shaft = (name, centre, x0, x1, r) => {
-      const o = mesh(name, cylX(r, x1 - x0, 16), 'steel_shaft', root, 'drive');
-      o.position.set((x0 + x1) / 2, centre[1], centre[0]);
-      return o;
-    };
-    shaft('shaft_crank', shaftsN[0], P.crankArm - 0.001, P.plateFwd + 0.002, sj(0).d / 2);
-    for (let j = 1; j < shaftsN.length - 1; j++) shaft(`shaft_${j}`, shaftsN[j], P.plateAft - 0.002, P.plateFwd + 0.002, sj(j).d / 2);
-    // gearbox plates: a rounded hull around every shaft, bearing seats for the crank and intermediate shafts
-    const r = 0.0085;
-    const ring = [];
-    for (const c of shaftsN) for (let k = 0; k < 24; k++) ring.push([c[0] + r * Math.cos((k / 24) * TWO_PI), c[1] + r * Math.sin((k / 24) * TWO_PI)]);
-    const hull = convexHull(ring);
-    const plateShape = () => {
-      const sh = new THREE.Shape();
-      // shape x = -(body z) so alongX() maps it back without mirroring
-      hull.forEach(([z, y], i) => (i ? sh.lineTo(-z, y) : sh.moveTo(-z, y)));
-      sh.closePath();
-      shaftsN.forEach((c, i) => {
-        const h = new THREE.Path();
-        h.absarc(-c[0], c[1], i === shaftsN.length - 1 ? 0.0035 : sj(i).D / 2, 0, TWO_PI, true);
-        sh.holes.push(h);
-      });
-      return sh;
-    };
-    const plates = [];
-    for (const [name, x] of [['plate_aft', P.plateAft], ['plate_fwd', P.plateFwd]]) {
-      const g = new THREE.ExtrudeGeometry(plateShape(), { depth: plate, bevelEnabled: false, curveSegments: 24 });
-      g.translate(0, 0, -plate / 2);
-      alongX(g);
-      const o = mesh(name, g, 'carbon_plate', root, 'drive', plateI?.material_id);
-      o.position.x = x;
-      plates.push(o);
-    }
-    register('gearbox plates', plateI?.material_id, 'crank, rockers and gearbox plates', 'drive', plates);
-    gearboxJournals(ctx, shaftsN);
-    buildEncoder(ctx, shaftsN[0]);
-    const standoffs = [];
-    const lowest = shaftsN.reduce((m, c) => (c[1] < m[1] ? c : m), shaftsN[0]);
-    const highest = shaftsN.reduce((m, c) => (c[1] > m[1] ? c : m), shaftsN[0]);
-    for (const [dz, y] of [[-0.0062, lowest[1] - 0.004], [0.0062, lowest[1] - 0.004], [-0.0062, highest[1] + 0.004], [0.0062, highest[1] + 0.004]]) {
-      const zc = (dz < 0 ? -1 : 1) * 0.0062 + (y < 0 ? lowest[0] : highest[0]);
-      const o = mesh(`standoff_${standoffs.length}`, cylX(0.001, P.plateFwd - P.plateAft + 0.004, 10), 'titanium', root, 'drive');
-      o.position.set((P.plateAft + P.plateFwd) / 2, y, zc);
-      standoffs.push(o);
-      for (const x of [P.plateAft - 0.0022, P.plateFwd + 0.0022]) {
-        const head = mesh(`screw_head_${standoffs.length}_${x > P.plateAft ? 'f' : 'a'}`, cylX(0.0018, 0.0012, 12), 'titanium', root, 'drive');
-        head.position.set(x, y, zc);
-        standoffs.push(head);
-      }
-    }
-    register('fasteners (15% margin)', null, 'fasteners', 'drive', standoffs);
+  ctx.drive.gears = [];
+  const shaftsN = ctx.train.shafts ?? [];
+  if (!ctx.train.links?.length) return;
+  gearMeshes(ctx, shaftsN);
+  driveShafts(ctx, shaftsN);
+  gearboxPlates(ctx, shaftsN);
+  const PL = ctx.D.params?.linkage?.plates;
+  if (PL?.bossed?.length) plateBosses(ctx, PL, shaftsN);
+  gearboxJournals(ctx, shaftsN);
+  buildEncoder(ctx, shaftsN[0]);
+  // a design with an airframe draws its own fasteners and panels (frame.js); older ones get the plate standoffs
+  if (!ctx.D.structure?.airframe) plateStandoffs(ctx, shaftsN);
+}
+
+/** Each shaft's journal (the crank is shaft 0): bore for the shaft and gears, outside diameter for the plate hole. */
+const shaftJournal = (ctx, k) => (k === 0 ? ctx.journal('crank') : ctx.journal('shaft', k))?.dims ?? { d: 0.004, D: 0.009 };
+
+/** Gears: one node per gear, named by stage (stage 1 is the motor stage), at its plane on its shaft. */
+function gearMeshes(ctx, shaftsN) {
+  const { model, P, train, root, posed, mesh, group, register, accentLine, spec, drive } = ctx;
+  const gearMesh = (name, gear, centre, x, shaftIndex) => {
+    const node = group(name, root, 'drive');
+    node.position.set(x, centre[1], centre[0]);
+    const isSteel = /SCM|steel/i.test(gear.material);
+    const hub = isSteel && gear.hub && gear.hubW > 0;
+    const bore = gear.bore || (shaftIndex === shaftsN.length - 1 ? (spec(model.design.motor.id).shaft_mm ?? 5) / 1000 : shaftJournal(ctx, shaftIndex).d);
+    const key = hub ? (bore >= 0.012 ? 0.005 : 0.003) : 0;
+    const g = gearGeometry(gear.z, gear.m, gear.face, bore, { hubR: hub ? gear.hub / 2 : 0, hubW: hub ? gear.hubW : 0, key });
+    const o = mesh(`${name}_teeth`, g, isSteel ? 'steel_ground' : 'acetal', node, 'drive', gear.id);
+    gearKey(ctx, name, node, bore, gear, shaftIndex, /wheel|crank/.test(name));
+    posed.push(node);
+    register(`gear ${gear.z}T m${+(gear.m * 1000).toFixed(2)}`, gear.id, 'gear', 'drive', o);
+    accentLine(`${name}_pitch`, Array.from({ length: 64 }, (_, i) => [gear.face / 2 + 0.0004, gear.rp * Math.cos((i / 64) * TWO_PI), gear.rp * Math.sin((i / 64) * TWO_PI)]), node, 'drive');
+    drive.gears.push({ node, shaft: shaftIndex });
+  };
+  train.links.forEach((_, j) => {
+    const si = train.n - 1 - j;
+    const st = train.stages[si];
+    gearMesh(j === 0 ? 'gear_crank' : `gear_s${si + 1}_wheel`, st.wheel, shaftsN[j], P.stage[si], j);
+    gearMesh(si === 0 ? 'gear_motor' : `gear_s${si + 1}_pinion`, st.pinion, shaftsN[j + 1], P.stage[si], j + 1);
+  });
+  drive.gCrank = root.getObjectByName('gear_crank');
+}
+
+/** Shafts plate to plate, 1 mm proud of each: the crank's (unless the crank is one piece with it) and each gear shaft. */
+function driveShafts(ctx, shaftsN) {
+  const { D, P, root, mesh } = ctx;
+  const shaft = (name, centre, x0, x1, r) => {
+    const o = mesh(name, cylX(r, x1 - x0, 16), 'steel_shaft', root, 'drive');
+    o.position.set((x0 + x1) / 2, centre[1], centre[0]);
+    return o;
+  };
+  if (!D.params?.linkage?.crank?.web_t_mm) shaft('shaft_crank', shaftsN[0], P.crankArm - 0.001, P.plateFwd + 0.002, shaftJournal(ctx, 0).d / 2);
+  const gs = D.params?.linkage?.gearShafts ?? [];
+  for (let j = 1; j < shaftsN.length - 1; j++) {
+    const r = gs[j - 1]?.d_mm ? mm(gs[j - 1].d_mm) / 2 : shaftJournal(ctx, j).d / 2;
+    const o = shaft(`shaft_${j}`, shaftsN[j], P.plateAft - P.plateT / 2 - 0.001, P.plateFwd + P.plateT / 2 + 0.001, r);
+    if (gs[j - 1]?.material) gearShaft(ctx, o, gs[j - 1], j, shaftsN[j]);
   }
+}
+
+/** Gearbox plates: a rounded hull around every shaft with a seat for each, at the design's material and thicknesses. */
+function gearboxPlates(ctx, shaftsN) {
+  const { D, P, root, mesh, register, structItem } = ctx;
+  const r = 0.0085;
+  const ring = [];
+  for (const c of shaftsN) for (let k = 0; k < 24; k++) ring.push([c[0] + r * Math.cos((k / 24) * TWO_PI), c[1] + r * Math.sin((k / 24) * TWO_PI)]);
+  const hull = convexHull(ring);
+  const plateShape = () => {
+    const sh = new THREE.Shape();
+    // shape x = -(body z) so alongX() maps it back without mirroring
+    hull.forEach(([z, y], i) => (i ? sh.lineTo(-z, y) : sh.moveTo(-z, y)));
+    sh.closePath();
+    shaftsN.forEach((c, i) => {
+      const h = new THREE.Path();
+      h.absarc(-c[0], c[1], i === shaftsN.length - 1 ? 0.0035 : shaftJournal(ctx, i).D / 2, 0, TWO_PI, true);
+      sh.holes.push(h);
+    });
+    return sh;
+  };
+  const PL = D.params?.linkage?.plates;
+  const t = plateThickness(ctx);
+  const item = structItem(/^gearbox plates/) ?? structItem(/crank, rockers/);
+  const plates = [['plate_aft', P.plateAft, t.aft], ['plate_fwd', P.plateFwd, t.fwd]].map(([name, x, th]) => {
+    const g = new THREE.ExtrudeGeometry(plateShape(), { depth: th, bevelEnabled: false, curveSegments: 24 });
+    g.translate(0, 0, -th / 2);
+    alongX(g);
+    const o = mesh(name, g, PL ? 'alu_machined' : 'carbon_plate', root, 'drive', item?.material_id);
+    o.position.x = x;
+    return o;
+  });
+  register('gearbox plates', item?.material_id, 'gearbox plates', 'drive', plates);
+}
+
+/** Older designs: four titanium standoffs with screw heads holding the plates apart, inside the 15% margin. */
+function plateStandoffs(ctx, shaftsN) {
+  const { P, root, mesh, register } = ctx;
+  const standoffs = [];
+  const lowest = shaftsN.reduce((m, c) => (c[1] < m[1] ? c : m), shaftsN[0]);
+  const highest = shaftsN.reduce((m, c) => (c[1] > m[1] ? c : m), shaftsN[0]);
+  for (const [dz, y] of [[-0.0062, lowest[1] - 0.004], [0.0062, lowest[1] - 0.004], [-0.0062, highest[1] + 0.004], [0.0062, highest[1] + 0.004]]) {
+    const zc = (dz < 0 ? -1 : 1) * 0.0062 + (y < 0 ? lowest[0] : highest[0]);
+    const o = mesh(`standoff_${standoffs.length}`, cylX(0.001, P.plateFwd - P.plateAft + 0.004, 10), 'titanium', root, 'drive');
+    o.position.set((P.plateAft + P.plateFwd) / 2, y, zc);
+    standoffs.push(o);
+    for (const x of [P.plateAft - 0.0022, P.plateFwd + 0.0022]) {
+      const head = mesh(`screw_head_${standoffs.length}_${x > P.plateAft ? 'f' : 'a'}`, cylX(0.0018, 0.0012, 12), 'titanium', root, 'drive');
+      head.position.set(x, y, zc);
+      standoffs.push(head);
+    }
+  }
+  register('fasteners (15% margin)', null, 'fasteners', 'drive', standoffs);
 }
 
 /** The flap motor: outrunner bell, mount, shaft to the pinion. */
@@ -1171,6 +1404,17 @@ function poseWing(ctx, tag, phi, theta, explodeWing) {
   }
 }
 
+/** One side's coupler from the crank pin A to its rocker pin B, and a servo drive's slot pin at B. */
+function poseCoupler(ctx, dp, tag, side, symmetric) {
+  const { drive, segBody } = ctx;
+  // symmetric: both wings at the flight model's stroke angle (as in a flight log); the left pin mirrors the right
+  const B = side > 0 ? dp.right.B : symmetric ? [-dp.right.B[0], dp.right.B[1]] : dp.left.B;
+  const x = drive[tag].x;
+  if (drive[tag].pin) setLocal(drive[tag].pin, new THREE.Matrix4().makeTranslation(x, B[1], B[0]), segBody[tag][0]);
+  const ang = Math.atan2(B[1] - dp.A[1], B[0] - dp.A[0]); // CCW from +z
+  setLocal(drive[tag].coupler, new THREE.Matrix4().makeTranslation(x, dp.A[1], dp.A[0]).multiply(rotCCW(ang - Math.PI / 2)), null);
+}
+
 function updateBird(ctx, state) {
   const { model, D, W, P, train, root, meshes, accents, mats, wings, drive, servos, tailNodes, pushrods, segBody, ss, filmSt, tmp, ghost, exState } = ctx;
   const phase = state.phase ?? 0, amp = state.amp ?? D.cruise?.amp ?? model.law.ampNominal ?? 0.35;
@@ -1178,18 +1422,7 @@ function updateBird(ctx, state) {
   const dp = drivePose(model, phase, amp);
   poseWing(ctx, 'R', dp.right.phi, state.twistR ?? 0, ex.wing ?? 0);
   poseWing(ctx, 'L', state.symmetric ? dp.right.phi : dp.left.phi, state.twistL ?? 0, ex.wing ?? 0);
-  // rocker slot pins and couplers
-  for (const [tag, side] of [['R', 1], ['L', -1]]) {
-    // symmetric: both wings at the flight model's stroke angle (as in a flight log); the left pin mirrors the right
-    const B = side > 0 ? dp.right.B : state.symmetric ? [-dp.right.B[0], dp.right.B[1]] : dp.left.B;
-    const x = drive[tag].x;
-    const pinBody = new THREE.Matrix4().makeTranslation(x, B[1], B[0]);
-    setLocal(drive[tag].pin, pinBody, segBody[tag][0]);
-    const dir = [B[0] - dp.A[0], B[1] - dp.A[1]];
-    const ang = Math.atan2(dir[1], dir[0]); // CCW from +z
-    const Mc = new THREE.Matrix4().makeTranslation(x, dp.A[1], dp.A[0]).multiply(rotCCW(ang - Math.PI / 2));
-    setLocal(drive[tag].coupler, Mc, null);
-  }
+  for (const [tag, side] of [['R', 1], ['L', -1]]) poseCoupler(ctx, dp, tag, side, state.symmetric);
   // crank: pin at +y in its own frame, turned to point at A
   const ca = Math.atan2(dp.A[1] - dp.O2[1], dp.A[0] - dp.O2[0]);
   setLocal(drive.crank, new THREE.Matrix4().makeTranslation(0, dp.O2[1], dp.O2[0]).multiply(rotCCW(ca - Math.PI / 2)), null);
@@ -1245,13 +1478,21 @@ function poseHorn(sv, angle) {
   sv.horn.matrixAutoUpdate = true;
 }
 
+/** Whether a mesh is drawn as itself under a focus: its subsystem's, the twist's ribs and film, or a part id in `also`
+ * (the power sequence shows the servos its regulator feeds). */
+function inFocus(o, focus, also) {
+  if (!focus || o.userData.subsystem === focus) return true;
+  if (focus === 'twist' && o.userData.subsystem === 'wing' && /rib|film/.test(o.name)) return true;
+  return !!also?.has?.(o.userData.partId);
+}
+
 function applyLook(ctx, state) {
   const { model, D, W, P, train, root, meshes, accents, mats, wings, drive, servos, tailNodes, pushrods, segBody, ss, filmSt, tmp, ghost, exState } = ctx;
   const focus = state.focus ?? null;
   const ex = state.explode ?? {};
   for (const o of meshes) {
     const sub = o.userData.subsystem;
-    const on = !focus || sub === focus || (focus === 'twist' && sub === 'wing' && /rib|film/.test(o.name));
+    const on = inFocus(o, focus, state.also);
     const want = on ? mats[o.userData.matName] : ghost;
     if (o.material !== want) o.material = want;
     // out of focus, the film and the edge rods would only veil the part in focus: hide them, ghost the rest
@@ -1294,6 +1535,7 @@ function explodeDir(name) {
   if (/servo_tail_L/.test(name)) return [-0.03, 0.05, -0.05];
   if (/servo_tail_R/.test(name)) return [-0.03, 0.05, 0.05];
   if (/servo_stroke/.test(name)) return [-0.04, 0.07, 0];
+  if (/regulator/.test(name)) return [0.02, -0.06, 0.04];
   return [0, 0, 0];
 }
 
@@ -1307,6 +1549,7 @@ export function buildBird(model, mats, opts = {}) {
   buildCrank(ctx);
   buildGears(ctx);
   buildMotor(ctx);
+  buildFrame(ctx);
   ctx.servos = buildBoxParts(ctx);
   buildWiring(ctx);
   ctx.pushrods = buildPushrods(ctx);

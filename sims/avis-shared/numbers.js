@@ -50,34 +50,80 @@ export function numbers(model, data) {
   };
 }
 
-/** One line per gate for cards and panels, in the gate's own words and numbers. */
+/** One line per gate for cards and panels, in the gate's own words and numbers, each against its limit. */
 export function gateLine(g) {
   if (g.line) return g.line;
-  const m = g.measured ?? {};
+  const m = g.measured ?? {}, L = g.limit ?? {};
   const f = (v, d = 1) => (typeof v === 'number' ? v.toFixed(d) : '—');
-  switch (g.gate) {
-    case 'M1': return `Hand launch: ${f(m.height_lost_m, 2)} m lost${m.robustness_passed === false ? ', fails one robustness corner' : ''}`;
-    case 'M2': return `Endurance ${f(m.endurance_min)} min at ${f(m.cruise_power_w)} W${m.robustness_passed === false ? '; fails at +5% mass' : ''}`;
-    case 'M3': return `30° turn, height held to ${f(m.altitude_dev_m, 1)} m`;
-    case 'M4': return `Rough air: ${m.seeds_passed ?? '—'} of ${m.seeds_run ?? 100} seeds (needs 98)`;
-    case 'M5': return `Belly landing at ${f(m.touchdown_sink_m_s, 2)} m/s sink`;
-    case 'M6': return `Mass ${f(m.total_g, 0)} g from the BOM`;
-    case 'M7': {
-      const s = m.spar_inner?.fos, c = m.coupler?.fos_buckling;
-      return `Structure: inner spar FoS ${f(s, 2)}, coupler buckling ${f(c, 2)} (need 1.5)`;
-    }
-    case 'M8': {
-      const pairs = [['motor', m.motor_rms_2s_max_A, m.motor_continuous_A], ['ESC', m.esc_rms_2s_max_A, m.esc_continuous_A], ['battery', m.battery_rms_2s_max_A, m.battery_continuous_A]].filter((p) => typeof p[1] === 'number' && p[2]);
-      const w = pairs.sort((x, y) => y[1] / y[2] - x[1] / x[2])[0];
-      return w ? `Currents: ${w[0]} ${f(w[1], 1)} A against ${f(w[2], 0)} A continuous` : 'Currents against ratings';
-    }
-    case 'V1': return 'UVLM vs Theodorsen';
-    case 'V2': return `UVLM lift slope: ${f(m.max_error_pct, 1)}% off (limit 3%)`;
-    case 'V3': return 'UVLM thrust vs Garrick';
-    case 'V4': return 'SmartBird power check';
-    case 'V5': return 'Strip model vs UVLM';
-    case 'V6': return 'GPU lattice Boltzmann checks';
-    case 'V7': return 'OpenFOAM vs wind tunnel';
-    default: return g.gate;
+  const lim = (v, d, unit = '') => (typeof v === 'number' ? ` (limit ${f(v, d)}${unit})` : '');
+  const line = GATE_LINES[g.gate];
+  return line ? line(m, L, f, lim) : g.gate;
+}
+
+const GATE_LINES = {
+  M1: (m, L, f, lim) => `Hand launch${typeof m.release_speed_m_s === 'number' ? ` at ${f(m.release_speed_m_s, 0)} m/s, ${f(m.release_pitch_deg, 0)}°` : ''}: climbing from ${f(m.first_1s_window_climbing_s, 2)} s${lim(L.climb_within_s, 0, ' s')}, ${f(m.height_lost_m, 2)} m lost${lim(L.height_lost_m, 1, ' m')}${m.robustness_passed === false ? ', fails' : ''}`,
+  M2: (m, L, f, lim) => `Endurance ${f(m.endurance_min)} min at ${f(m.cruise_power_w)} W${lim(L.endurance_min, 0, ' min')}${m.robustness_passed === false ? '; fails' : ''}`,
+  M3: (m, L, f, lim) => `${f(L.bank_deg ?? 30, 0)}° turn, height held to ${f(m.altitude_dev_m, 1)} m${lim(L.altitude_band_m, 0, ' m')}`,
+  M4: (m, L) => `Rough air: ${m.seeds_passed ?? '—'} of ${m.seeds_run ?? 100} seeds (needs ${L.pass_seeds ?? 98})`,
+  M5: (m, L, f, lim) => `Belly landing at ${f(m.touchdown_sink_m_s, 2)} m/s sink${lim(L.sink_m_s, 1, ' m/s')}`,
+  M6: (m, L, f) => `Mass ${f(m.total_g, 0)} g from the BOM${typeof m.margin_frac === 'number' ? `, ${f(100 * m.margin_frac, 0)}% margin` : ''}`,
+  M7: (m, L, f) => {
+    const need = ` (need ${f(L.factor_of_safety ?? 1.5, 1)})`;
+    const lowest = typeof m.fos_min === 'number' ? `lowest FoS ${f(m.fos_min, 2)}${need}` : '';
+    const named = m.spar_inner || m.coupler ? `inner spar FoS ${f(m.spar_inner?.fos, 2)}, coupler buckling ${f(m.coupler?.fos_buckling, 2)}` : '';
+    return `Structure: ${[lowest, named].filter(Boolean).join('; ') || '—'}${lowest ? '' : need}${m.gears_within_rating === false ? ', gears over rating' : ''}`;
+  },
+  M8: (m) => {
+    const f = (v, d) => v.toFixed(d);
+    const pairs = [['motor', m.motor_rms_2s_max_A, m.motor_continuous_A], ['ESC', m.esc_rms_2s_max_A, m.esc_continuous_A], ['battery', m.battery_rms_2s_max_A, m.battery_continuous_A]].filter((p) => typeof p[1] === 'number' && p[2]);
+    const w = pairs.sort((x, y) => y[1] / y[2] - x[1] / x[2])[0];
+    return w ? `Currents: ${w[0]} ${f(w[1], 1)} A against ${f(w[2], 0)} A continuous` : 'Currents against ratings';
+  },
+  V1: (m, L, f) => `UVLM vs Theodorsen: amplitude ${f(m.max_amp_error_pct)}%, phase ${f(m.max_phase_error_deg)}° off (limits ${f(L.amp_error_pct, 0)}%, ${f(L.phase_error_deg, 0)}°)`,
+  V2: (m, L, f, lim) => `UVLM lift slope: ${f(m.max_error_pct, 1)}% off${typeof m.worst_AR === 'number' ? ` at AR ${f(m.worst_AR, 0)}` : ''}${lim(L.max_error_pct ?? 3, 0, '%')}`,
+  V3: (m, L, f, lim) => `UVLM thrust vs Garrick: ${f(m.max_ct_error_pct)}% off${lim(L.ct_error_pct, 0, '%')}`,
+  V4: (m, L, f) => `SmartBird power: ${f(m.predicted_w)} W against ${f(L.published_w, 0)} W published${Array.isArray(L.band_w) ? ` (band ${f(L.band_w[0])}–${f(L.band_w[1])} W)` : ''}`,
+  V5: (m, L, f) => `Strip model vs UVLM: lift ${f(m.worst_lift_err_pct)}%, thrust ${f(m.worst_thrust_err_pct)}% off (limit ${f(L.lift_err_pct, 0)}%)`,
+  V6: (m) => `GPU lattice Boltzmann checks${Array.isArray(m.failures) ? `: ${m.failures.length} failures` : ''}`,
+  V7: (m, L, f) => `OpenFOAM vs wind tunnel: ${m.points_passed ?? '—'} of ${m.points ?? '—'} points${typeof m.points_unconverged === 'number' ? `, ${m.points_unconverged} unconverged` : ''} (cl ${f(100 * (L.cl_relative ?? NaN), 0)}%, cd ${f(100 * (L.cd_relative ?? NaN), 0)}%)`,
+};
+
+/**
+ * What a failed gate failed, in the gate file's own words: the nominal case, each robustness corner the file marks
+ * false (by its own key), each other check it marks false, and the measured value beside a numeric limit it exceeds.
+ * Empty for a pass.
+ */
+export function gateFailures(g) {
+  if (g.passed !== false) return [];
+  const m = g.measured ?? {};
+  const out = [...(m.nominal_passed === false ? ['nominal case fails'] : []), ...robustnessFailures(m), ...falseChecks(m), ...limitFailures(m, g.limit), ...listedFailures(m)];
+  return out.length ? out : ['fails (the file names no single check)'];
+}
+
+/** The robustness corners a gate file marks false, by their own keys. */
+function robustnessFailures(m) {
+  const corners = m.robustness && typeof m.robustness === 'object' ? Object.entries(m.robustness) : [];
+  const bad = corners.filter(([, v]) => v === false || v?.passed === false).map(([k]) => k);
+  if (bad.length) return [`fails at ${bad.length} of ${corners.length} robustness corners: ${bad.join(', ')}`];
+  return m.robustness_passed === false ? ['fails its robustness check'] : [];
+}
+
+/** Every other check the file marks false. */
+const falseChecks = (m) => Object.entries(m).filter(([k, v]) => v === false && !/^(nominal|robustness)_passed$/.test(k)).map(([k]) => `${k.replace(/_/g, ' ')}: no`);
+
+/** An error or loss over its numeric limit, the measured key beside the limit's. */
+function limitFailures(m, limit) {
+  const out = [];
+  for (const [k, v] of Object.entries(limit ?? {})) {
+    const mk = [k, `max_${k}`].find((x) => typeof m[x] === 'number');
+    if (typeof v === 'number' && mk && /error|err|lost/.test(k) && m[mk] > v) out.push(`${mk.replace(/_/g, ' ')} ${+m[mk].toFixed(2)} against a limit of ${v}`);
   }
+  return out;
+}
+
+/** Failures the file lists itself, and points that did not pass. */
+function listedFailures(m) {
+  const out = Array.isArray(m.failures) ? m.failures.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))) : [];
+  if (typeof m.points === 'number' && typeof m.points_passed === 'number' && m.points_passed < m.points) out.push(`${m.points - m.points_passed} of ${m.points} points fail${typeof m.points_unconverged === 'number' ? `, ${m.points_unconverged} of them unconverged` : ''}`);
+  return out;
 }

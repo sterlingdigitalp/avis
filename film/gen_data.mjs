@@ -6,13 +6,14 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadModel, loadVerification, ROOT } from '../sims/avis-shared/node-load.js';
 import { leftRightAsymmetry } from '../sims/avis-shared/model.js';
-import { gateLine } from '../sims/avis-shared/numbers.js';
+import { gateLine, gateFailures } from '../sims/avis-shared/numbers.js';
 
 const name = process.argv[2] ?? 'larus-gl-2';
 const { model, design, parts, sha256 } = loadModel(name);
-// The page needs the verdict, one line in the gate's own numbers, and the top-level scalar measurements.
+// The page needs the verdict, one line in the gate's own numbers, what a failed gate failed (in the file's own words),
+// and the top-level scalar measurements.
 const scalars = (o) => Object.fromEntries(Object.entries(o ?? {}).filter(([, v]) => typeof v === 'number' || typeof v === 'boolean' || typeof v === 'string'));
-const gates = loadVerification(name).map((g) => ({ gate: g.gate, design: g.design, passed: g.passed, line: gateLine(g), measured: scalars(g.measured), ran_at: g.ran_at, file: g.file }));
+const gates = loadVerification(name).map((g) => ({ gate: g.gate, design: g.design, passed: g.passed, line: gateLine(g), failures: gateFailures(g), measured: scalars(g.measured), ran_at: g.ran_at, file: g.file }));
 const asym = [model.law.ampMin, model.law.ampNominal, model.law.ampMax].map((a) => ({ amp: a, max_left_minus_right_rad: leftRightAsymmetry(model, a) }));
 // Long notes stay in the catalogue; the page needs the numbers.
 const terse = (o) => (Array.isArray(o) ? o.map(terse) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).filter(([k, v]) => !(typeof v === 'string' && v.length > 90) && !/note|basis_text|rating_basis|warning/i.test(k)).map(([k, v]) => [k, terse(v)])) : o);
