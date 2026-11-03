@@ -5,8 +5,10 @@ import { prepare, partsIndex, leftRightAsymmetry } from '../../sims/avis-shared/
 import { buildDesign } from './build.js';
 
 /** Fit issues that are real protrusions (mm > 0.5); slides alone are not issues, they move the CG. */
-export function protrusions(fit) {
-  return fit.issues.filter((i) => i.mm > 0.5);
+export function protrusions(fit, design = null) {
+  // round 14 (params.layout.rule 'clearance'): model.js already counts the running clearance to the shell, so any shortfall is an issue
+  const tol = design?.params?.layout?.rule === 'clearance' ? 0 : 0.5;
+  return fit.issues.filter((i) => i.mm > tol);
 }
 
 /**
@@ -23,7 +25,7 @@ export function packingView(design, { placeholder = false } = {}) {
 /** Packing of a built design: { model, issues, cgShift_m }. */
 export function packDesign(design, catalog) {
   const model = prepare(packingView(design), partsIndex(design, catalog));
-  return { model, issues: protrusions(model.fit), cgShift_m: model.fit.cgShift_m };
+  return { model, issues: protrusions(model.fit, design), cgShift_m: model.fit.cgShift_m };
 }
 
 /** Lump positions from a packing: each lump at the mass-weighted centre of the parts the packing placed for it. */
@@ -61,6 +63,9 @@ export function lumpPositionsFrom(model) {
     }
     if (m > 0) out['gears and bearings'] = c.map((v) => +(v / m).toFixed(4));
     out['crank, rockers, plates'] = [+t.planes.crankArm.toFixed(4), +model.fourBar.O2[1].toFixed(4), 0];
+    // round 14: the crank encoder where the planes put it (readhead and actuator on the crank axis)
+    const e = t.planes.encoder;
+    if (e) out['crank encoder'] = [+((e.readhead[0] + e.actuator[1]) / 2).toFixed(4), +model.fourBar.O2[1].toFixed(4), 0];
   }
   for (const k of Object.keys(out)) if (!out[k]) delete out[k];
   return out;

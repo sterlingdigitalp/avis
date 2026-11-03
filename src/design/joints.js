@@ -121,8 +121,9 @@ export function driveJoints(d, catalog, choice) {
   // F (a + s) / s, which is what it is rated for. The motor bearing then carries F a / s (reported in unchecked).
   let motorLever = null;
   if (choice.motorOutboard) {
-    const a = planes.plateFwd - planes.stage[0];
-    const s0 = planes.motorAft - planes.plateFwd + (choice.motorBearingHalfWidth_mm ?? 2.5) / 1000;
+    // a pinion inside the box (aft of the plate) or, round 14, overhung forward of it with the motor inside the box
+    const a = Math.abs(planes.plateFwd - planes.stage[0]);
+    const s0 = Math.abs((planes.motorFace ?? planes.motorAft) - planes.plateFwd) + (choice.motorBearingHalfWidth_mm ?? 2.5) / 1000;
     motorLever = { a_m: +a.toFixed(5), s_min_m: +s0.toFixed(5), plate_share: (a + s0) / s0, motor_share: a / s0 };
     const ob = part(choice.motorOutboard);
     joints.push({ name: 'motor shaft outboard', part_id: ob.id, count: 1, reacts: `stage 1 mesh at pinion ${train.stages[0].pinion.id}, overhung ${(a * 1000).toFixed(1)} mm from this bearing`, supports: [{ name: 'plate', radial: [{ ch: 'crank_torque', k: +(meshPerNm(0) * motorLever.plate_share).toFixed(6), what: `stage 1 mesh x (a + s) / s, a ${(a * 1000).toFixed(1)} mm, s ${(s0 * 1000).toFixed(1)} mm (nearest a motor bearing can be)` }], axial: [], ...p0Form(ob), part: ratedPart(ob), surface_m_s_per_crank_rad_s: 0 }] });

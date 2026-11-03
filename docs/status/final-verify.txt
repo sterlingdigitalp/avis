@@ -1,0 +1,17 @@
+design: (any)
+V1  pass      {"max_amp_error_pct":3.785,"max_phase_error_deg":2.444,"k":[0.1,0.2,0.3,0.4,0.5],"amp_error_pct":[-0.07,0.87,1
+V2  FAIL      {"reference":"Helmbold at AR 4 and 6, Prandtl lifting line at AR 8-12 (SPEC ruling after round 1), elliptic pl
+V3  pass      {"max_ct_error_pct":1.293,"trend_monotonic":true,"k":[0.1,0.2,0.3,0.4,0.5],"ct_uvlm":[0.000036068,0.00011353,0
+V4  pass      {"method":"published kinematics imposed (2 Hz, 0.3 m plunge, 9 deg pitch at the 3/4-semispan section), body he
+V5  pass     larus-gl-2 {"protocol":"fixed-stroke drive: multipliers fitted on cruise and cruise x1.3 stroke frequency; judged on four
+V6  pass      {"gpu_vs_cpu":[{"case":"thin-bouzidi","max_population_diff":3.3527612686157227e-8,"mean_population_diff":2.868
+V7  FAIL      {"points":26,"points_passed":13,"points_unconverged":8,"cl_max_err":{"value":0.1125,"re":100000,"alpha_deg":-2
+M1  FAIL     larus-gl-2 {"release_speed_m_s":8,"release_pitch_deg":5,"climb_rate_2_to_3s_m_s":0.5535763939390221,"first_1s_window_clim
+M2  pass     larus-gl-2 {"cruise_power_w":69.35951864408514,"cruise_batt_A":5.656536334501836,"endurance_min":18.66866820175744,"usabl
+M3  pass     larus-gl-2 {"heading_change_deg":360.00969451161234,"altitude_dev_m":0.476224937631924,"mean_bank_deg":27.475138490809574
+M4  pass     larus-gl-2 {"seeds_passed":100,"seeds_run":100,"worst_H_m":5,"by_H":{"5":{"runs":23,"pass":23,"worstAlt":4.50365499267059
+M5  pass     larus-gl-2 {"touchdown_sink_m_s":0.6505464449578298,"touchdown_speed_m_s":8.39097889876911,"pitch_deg":1.9850258184469864
+M6  pass     larus-gl-2 {"total_g":1761.9174380177503,"parts_g":836.2374000000001,"structure_g":695.8647200154353,"margin_g":229.81531
+M7  pass     larus-gl-2 {"spar_inner":{"id":"tube-rockwest-pultruded-10x8","moment_Nm":22.862900530893675,"stress_MPa":395.26517876502
+M8  pass     larus-gl-2 {"motor_rms_2s_max_A":22.928046469198872,"motor_continuous_A":26,"motor_rule":"published continuous rating","m
+NOT ALL GATES PASS

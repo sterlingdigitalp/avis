@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { nodeBird } from '../lib/bird-node.mjs';
-import { filmCouplerPlanes, prepare } from '../../sims/avis-shared/model.js';
+import { prepare } from '../../sims/avis-shared/model.js';
 
 const { bird, design, model } = nodeBird('larus-gl-2');
 const P = model.planes;
@@ -13,7 +13,7 @@ const eyePart = design.bom.parts.find((p) => /coupler eyes/.test(p.role));
 const eyeB = model.parts[eyePart.id].specs.b1_mm / 1000; // flanged bushing: b1 is its whole length
 const webT = design.params.linkage.crank.web_t_mm / 1000;
 const span = (lo, hi) => ({ lo, hi });
-// faces may touch (the design's 12 mm crank pin carries two 6 mm eyes with no running clearance); 1 um for rounding
+// v22 on: 0.5 mm running clearance between the eyes and the web (SPEC Assembly clearance); 1 um for rounding
 const apart = (a, b) => a.hi <= b.lo + 1e-6 || b.hi <= a.lo + 1e-6;
 
 test('the drawn coupler eyes lie aft of the crank web and behind one another, never in each other', () => {
@@ -26,25 +26,11 @@ test('the drawn coupler eyes lie aft of the crank web and behind one another, ne
   assert.ok(P.crankPinEnd <= L.lo + 1e-9);
 });
 
-test('the physics keeps its own planes: the film moves only what it draws', () => {
+test("the film draws the physics' own planes, and the crank pin to 1 mm past the left eye", () => {
   const phys = prepare(design, model.parts).planes;
-  assert.equal(phys.couplerR, design.wing.hinge[0] - 0.0045);
-  assert.equal(phys.couplerL, design.wing.hinge[0] - 0.0095);
-  const near = (a, b) => Math.abs(a - b) < 1e-12;
-  assert.ok(!('crankPinEnd' in phys) && !('couplerEye' in phys));
-  // v21's physics planes put two 6 mm eyes 1 mm into each other: the drawing moves the left one, nothing else
-  assert.ok(phys.couplerR - phys.couplerL < eyeB);
-  assert.ok(near(P.couplerR, phys.couplerR));
-  assert.ok(near(P.couplerL, phys.couplerR - eyeB));
-  assert.ok(Math.abs(P.crankPinEnd - (phys.couplerL - eyeB / 2 - 0.001)) < 1e-12, 'the pin is the design\'s length');
-});
-
-test('planes whose eyes already clear each other are drawn where the physics has them', () => {
-  const planes = { crankArm: 0.0015, couplerR: -0.0045, couplerL: -0.0095 };
-  const bare = { ...design, params: {}, bom: { ...design.bom, parts: design.bom.parts.filter((p) => !/^(bearing|bushing)/.test(p.role)) } };
-  const c = filmCouplerPlanes(bare, model.parts, planes);
-  assert.deepEqual([c.couplerR, c.couplerL, c.couplerEye], [-0.0045, -0.0095, 0.003]);
-  assert.ok(Math.abs(c.crankPinEnd - (-0.0095 - 0.0015 - 0.001)) < 1e-12);
+  assert.equal(P.couplerR, phys.couplerR);
+  assert.equal(P.couplerL, phys.couplerL);
+  assert.ok(Math.abs(P.crankPinEnd - (phys.couplerL - eyeB / 2 - 0.001)) < 1e-12, "the pin is the design's length");
 });
 
 /** World x extent of a drawn node (rings and rockers turn about x, so this is the part's own x range). */

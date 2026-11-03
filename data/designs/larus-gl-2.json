@@ -52,7 +52,7 @@
    "bearing": "bearing-skf-618-4",
    "twistRod": "mtube-tigertitanium-ti3al2.5v-6.35x5.54",
    "crankEncoder": "sensor-rls-orbis-br10",
-   "encoderMagnet": "sensor-rls-orbis-actuator-8mm",
+   "encoderMagnet": "sensor-rls-orbis-actuator-10mm",
    "servoRegulator": "regulator-pololu-d36v50f7"
   },
   "twistServoAt": "elbow",
@@ -69,22 +69,22 @@
    "quote": "AM32 'Complementary PWM: Applies PWM to the complementary output during the PWM off time. This acts as a brake slowing the motor when going from a higher duty cycle to lower duty cycle'; default on (EEPROM byte 20 = 1)",
    "source": "https://github.com/AlkaMotors/AM32-MultiRotor-ESC-firmware/wiki/ESC-Settings-Explained"
   },
-  "bodyWidth_m": 0.09,
-  "bodyHeight_m": 0.13,
-  "bodyY_m": -0.02,
+  "bodyWidth_m": 0.11,
+  "bodyHeight_m": 0.14,
+  "bodyY_m": -0.03,
   "lumpPos": {
    "flap motor": [
-    0.093,
-    -0.0208,
-    -0.0222
+    0.0562,
+    0.0177,
+    0.0066
    ],
    "ESC": [
-    0.077,
-    -0.05,
+    0.11,
+    -0.035,
     0
    ],
    "flight controller": [
-    -0.02,
+    -0.029,
     -0.01,
     0
    ],
@@ -94,8 +94,8 @@
     0
    ],
    "receiver and airspeed": [
-    0.1135,
-    -0.026,
+    0.115,
+    -0.035,
     0
    ],
    "tail servos": [
@@ -109,12 +109,17 @@
     0
    ],
    "gears and bearings": [
-    0.029,
-    -0.0324,
-    0.0054
+    0.0446,
+    -0.039,
+    -0.0104
    ],
    "crank, rockers, plates": [
-    0.0015,
+    0.0087,
+    -0.056,
+    0
+   ],
+   "crank encoder": [
+    0.0962,
     -0.056,
     0
    ]
@@ -139,7 +144,7 @@
   },
   "joints": {
    "shoulder": "bushing-igus-GFM-0608-06",
-   "shoulderSpan_mm": 24,
+   "shoulderSpan_mm": 36.6,
    "crankShaft": "bushing-igus-GFM-1012-10",
    "shafts": [
     "bushing-igus-GFM-0810-06",
@@ -245,10 +250,13 @@
     "arm_w_mm": 11,
     "arm_t_mm": 6,
     "boss_od_mm": 23,
-    "boss_len_mm": 8,
+    "boss_len_mm": 7,
     "spar_od_mm": 10,
     "socket_wall_mm": 1.5,
-    "socket_len_mm": 20
+    "socket_len_mm": 20,
+    "hub_relief_od_mm": 13.6,
+    "hub_clear_plate": true,
+    "hub_collar_od_mm": 9
    },
    "coupler": {
     "material": "metal-al-6061-t6",
@@ -270,19 +278,31 @@
      "crank shaft/forward",
      "gear shaft 1/aft"
     ],
-    "t_fwd_mm": 1.2
+    "t_fwd_mm": 1.2,
+    "flange": "face"
    },
    "airframe": {
     "plates": {
-     "edge_mm": 11.3
+     "edge_mm": 11.3,
+     "post_w_mm": 16
     },
     "rail": {
-     "seat_D_mm": 29,
+     "seat_D_mm": 31.5,
      "id_mm": 8,
-     "od_mm": 12,
-     "lock_screws": 3,
+     "od_mm": 13,
+     "lock_screws": 6,
      "arm_t_mm": 8,
-     "sleeve_len_mm": 13
+     "sleeve_len_mm": 13,
+     "dz_mm": 4,
+     "dy_mm": -20.75,
+     "arm_b_mm": 11,
+     "lock_at": "forward",
+     "lock_r_mm": 15,
+     "lock_arc_deg": [
+      40,
+      172
+     ],
+     "lock_t_mm": 1.4
     },
     "panels": {
      "material": "metal-al-6061-t6",
@@ -291,27 +311,33 @@
       {
        "name": "side panel right",
        "kind": "side",
-       "z_mm": 31,
-       "y0_mm": 3,
-       "h_mm": 21.5,
-       "t_mm": 1.2
+       "z_mm": 45,
+       "y0_mm": -20,
+       "h_mm": 29,
+       "t_mm": 0.9
       },
       {
        "name": "side panel left",
        "kind": "side",
-       "z_mm": -31,
-       "y0_mm": 12.8,
-       "h_mm": 11.7,
-       "t_mm": 2.2
+       "z_mm": -45,
+       "y0_mm": -20,
+       "h_mm": 29,
+       "t_mm": 0.9
       },
       {
        "name": "top panel",
        "kind": "top",
-       "y_mm": 56.5,
-       "w_mm": 20,
+       "y_mm": -81,
+       "w_mm": 24,
        "t_mm": 1
       }
      ]
+    },
+    "tray": {
+     "y_mm": -84
+    },
+    "aftTray": {
+     "y_mm": -84
     }
    },
    "fixings": {
@@ -347,6 +373,27 @@
     "flights": 200,
     "flight_s": 1500
    }
+  },
+  "layout": {
+   "rule": "clearance",
+   "running_mm": 0.5,
+   "basis": "SPEC Design freeze, Assembly clearance (2026-11-03); sims/avis-shared/model.js clearancePlanes",
+   "crank_x_mm": 8.7,
+   "eye_gap_mm": 0.5,
+   "horns": {
+    "R": "fwd",
+    "L": "aft"
+   },
+   "horn_gap_mm": 0.5,
+   "horn_pin_past_mm": 0,
+   "encoder": "front",
+   "stage1": "overhung",
+   "links_deg": [
+    157.8,
+    48.7,
+    1.3,
+    110.5
+   ]
   }
  },
  "atmosphere": {
@@ -401,7 +448,7 @@
   "chord_elbow_m": 0.37439345796694495,
   "chord_tip_m": 0.22463607478016698,
   "tail_arm_m": 0.9458361043375452,
-  "wing_loading_N_m2": 25.12867403157495,
+  "wing_loading_N_m2": 25.917761465305155,
   "x_np_m": -0.018995305438456157,
   "x_cg_m": 0.015995784639878233,
   "static_margin": 0.1
@@ -533,91 +580,91 @@
    "kind": "elliptic-loft",
    "sections": [
     {
-     "x_m": 0.30649815255281604,
-     "y_m": -0.02,
+     "x_m": 0.25781312347594765,
+     "y_m": -0.03,
      "width_m": 0,
      "height_m": 0
     },
     {
-     "x_m": 0.2655754345407609,
-     "y_m": -0.02,
-     "width_m": 0.051328026715729225,
-     "height_m": 0.07414048303383111
+     "x_m": 0.21689040546389246,
+     "y_m": -0.03,
+     "width_m": 0.06273425487478017,
+     "height_m": 0.07984359711335659
     },
     {
-     "x_m": 0.22465271652870566,
-     "y_m": -0.02,
-     "width_m": 0.06893874832348033,
-     "height_m": 0.09957819202280492
+     "x_m": 0.17596768745183727,
+     "y_m": -0.03,
+     "width_m": 0.08425847017314263,
+     "height_m": 0.10723805294763608
     },
     {
-     "x_m": 0.1837299985166505,
-     "y_m": -0.02,
-     "width_m": 0.07971169350623943,
-     "height_m": 0.11513911284234585
+     "x_m": 0.13504496943978211,
+     "y_m": -0.03,
+     "width_m": 0.09742540317429263,
+     "height_m": 0.12399596767637246
     },
     {
-     "x_m": 0.14280728050459532,
-     "y_m": -0.02,
-     "width_m": 0.08624833627499189,
-     "height_m": 0.12458093017498828
+     "x_m": 0.09412225142772693,
+     "y_m": -0.03,
+     "width_m": 0.10541463322499008,
+     "height_m": 0.1341640786499874
     },
     {
-     "x_m": 0.10188456249254013,
-     "y_m": -0.02,
-     "width_m": 0.0894819272597682,
-     "height_m": 0.1292516727085541
+     "x_m": 0.05319953341567174,
+     "y_m": -0.03,
+     "width_m": 0.10936679998416114,
+     "height_m": 0.13919410907075055
     },
     {
-     "x_m": 0.060961844480484945,
-     "y_m": -0.02,
-     "width_m": 0.09,
-     "height_m": 0.13
+     "x_m": 0.012276815403616553,
+     "y_m": -0.03,
+     "width_m": 0.11,
+     "height_m": 0.14
     },
     {
-     "x_m": 0.020039126468429758,
-     "y_m": -0.02,
-     "width_m": 0.09,
-     "height_m": 0.13
+     "x_m": -0.028645902608438634,
+     "y_m": -0.03,
+     "width_m": 0.11,
+     "height_m": 0.14
     },
     {
-     "x_m": -0.0208835915436254,
-     "y_m": -0.02,
-     "width_m": 0.09,
-     "height_m": 0.13
+     "x_m": -0.06956862062049379,
+     "y_m": -0.03,
+     "width_m": 0.11,
+     "height_m": 0.14
     },
     {
-     "x_m": -0.061806309555680616,
-     "y_m": -0.02,
-     "width_m": 0.09,
-     "height_m": 0.13
+     "x_m": -0.11049133863254901,
+     "y_m": -0.03,
+     "width_m": 0.11,
+     "height_m": 0.14
     },
     {
-     "x_m": -0.10272902756773578,
-     "y_m": -0.0163265306122449,
-     "width_m": 0.07346938775510203,
-     "height_m": 0.10612244897959185
+     "x_m": -0.15141405664460417,
+     "y_m": -0.024489795918367346,
+     "width_m": 0.08979591836734695,
+     "height_m": 0.1142857142857143
     },
     {
-     "x_m": -0.143651745579791,
-     "y_m": -0.012244897959183675,
-     "width_m": 0.05510204081632653,
-     "height_m": 0.07959183673469389
+     "x_m": -0.19233677465665938,
+     "y_m": -0.018367346938775512,
+     "width_m": 0.0673469387755102,
+     "height_m": 0.08571428571428573
     },
     {
-     "x_m": -0.18457446359184615,
-     "y_m": -0.008163265306122451,
-     "width_m": 0.03673469387755103,
-     "height_m": 0.05306122448979594
+     "x_m": -0.23325949266871454,
+     "y_m": -0.012244897959183678,
+     "width_m": 0.04489795918367348,
+     "height_m": 0.05714285714285716
     },
     {
-     "x_m": -0.22549718160390136,
-     "y_m": -0.004081632653061221,
-     "width_m": 0.0183673469387755,
-     "height_m": 0.026530612244897948
+     "x_m": -0.27418221068076976,
+     "y_m": -0.006122448979591834,
+     "width_m": 0.022448979591836723,
+     "height_m": 0.02857142857142856
     },
     {
-     "x_m": -0.2664198996159565,
+     "x_m": -0.3151049286928249,
      "y_m": 0,
      "width_m": 0.009982,
      "height_m": 0.009982
@@ -630,11 +677,11 @@
     }
    ]
   },
-  "loft_wetted_area_m2": 0.17492236441261616,
-  "CdA_front_m2": 0.0022972896279375363,
-  "CdA_top_m2": 0.041250099756151626,
-  "CdA_side_m2": 0.059583477425552346,
-  "volume_m3": 0.0033602263130660054,
+  "loft_wetted_area_m2": 0.19374457274103926,
+  "CdA_front_m2": 0.003023782929080176,
+  "CdA_top_m2": 0.050416788590851996,
+  "CdA_side_m2": 0.06416682184290254,
+  "volume_m3": 0.0043979302006009234,
   "kMunk": 0.8,
   "cp": [
    0.05,
@@ -642,26 +689,26 @@
    0
   ],
   "length_m": 0.5729180521687726,
-  "width_m": 0.09,
-  "height_m": 0.13,
-  "bottom_y_m": -0.085,
-  "centre_y_m": -0.02
+  "width_m": 0.11,
+  "height_m": 0.14,
+  "bottom_y_m": -0.1,
+  "centre_y_m": -0.03
  },
  "mass": {
-  "total_kg": 1.7082744213756278,
-  "total_g": 1708.2744213756278,
-  "parts_g": 836.0374,
-  "structure_g": 649.4186185875027,
-  "margin_g": 222.8184027881254,
+  "total_kg": 1.7619174380177502,
+  "total_g": 1761.9174380177503,
+  "parts_g": 836.2374000000001,
+  "structure_g": 695.8647200154353,
+  "margin_g": 229.8153180023153,
   "margin_frac": 0.15,
   "lumps": [
    {
     "name": "flap motor",
     "mass_kg": 0.10924999999999999,
     "pos": [
-     0.093,
-     -0.0208,
-     -0.0222
+     0.0562,
+     0.0177,
+     0.0066
     ],
     "gyration_m": 0
    },
@@ -669,17 +716,17 @@
     "name": "gears and bearings",
     "mass_kg": 0.51604801,
     "pos": [
-     0.029,
-     -0.0324,
-     0.0054
+     0.0446,
+     -0.039,
+     -0.0104
     ],
     "gyration_m": 0
    },
    {
     "name": "crank, rockers, plates",
-    "mass_kg": 0.451384749552889,
+    "mass_kg": 0.5011842654862754,
     "pos": [
-     0.0015,
+     0.0087,
      -0.056,
      0
     ],
@@ -699,8 +746,8 @@
     "name": "ESC",
     "mass_kg": 0.006669999999999999,
     "pos": [
-     0.077,
-     -0.05,
+     0.11,
+     -0.035,
      0
     ],
     "gyration_m": 0
@@ -709,7 +756,7 @@
     "name": "flight controller",
     "mass_kg": 0.010349999999999998,
     "pos": [
-     -0.02,
+     -0.029,
      -0.01,
      0
     ],
@@ -719,8 +766,8 @@
     "name": "receiver and airspeed",
     "mass_kg": 0.0046,
     "pos": [
-     0.1135,
-     -0.026,
+     0.115,
+     -0.035,
      0
     ],
     "gyration_m": 0
@@ -747,10 +794,10 @@
    },
    {
     "name": "crank encoder",
-    "mass_kg": 0.01242,
+    "mass_kg": 0.012649999999999998,
     "pos": [
-     0,
-     -0.05,
+     0.0962,
+     -0.056,
      0
     ],
     "gyration_m": 0
@@ -787,7 +834,7 @@
    },
    {
     "name": "fuselage shell and formers",
-    "mass_kg": 0.01318775519739763,
+    "mass_kg": 0.016801255906133673,
     "pos": [
      -0.05,
      0,
@@ -809,7 +856,7 @@
     "name": "battery",
     "mass_kg": 0.16444999999999999,
     "pos": [
-     0.25649815255281605,
+     0.2076977404863906,
      -0.005,
      0
     ],
@@ -841,7 +888,7 @@
    ],
    "one_wing_kg": 0.12066896979783037
   },
-  "x_battery_m": 0.25649815255281605
+  "x_battery_m": 0.2076977404863906
  },
  "motor": {
   "id": "motor-scorpion-sii-3008-1090",
@@ -948,7 +995,7 @@
    {
     "name": "wing film, both faces",
     "material_id": "film-oracover-air-light",
-    "material": "Oracover Air Indoor / Air Light",
+    "material": "ORACOVER Air Light, light scale white (331-099)",
     "mass_g": 23.346666666666668,
     "basis": "17 g/m2 x 1.373 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
@@ -964,7 +1011,7 @@
    {
     "name": "tail surfaces, film, spar and ribs",
     "material_id": "film-oracover-air-light",
-    "material": "Oracover Air Indoor / Air Light",
+    "material": "ORACOVER Air Light, light scale white (331-099)",
     "mass_g": 14.915295266199667,
     "basis": "film 6.4 g + rods 6.1 g + ribs 2.4 g",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
@@ -980,16 +1027,16 @@
    {
     "name": "fuselage film shell",
     "material_id": "film-oracover-air-light",
-    "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 2.6926132151283753,
-    "basis": "0.158 m2",
+    "material": "ORACOVER Air Light, light scale white (331-099)",
+    "mass_g": 3.0597877444640624,
+    "basis": "0.180 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "fuselage formers",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 8.775,
+    "mass_g": 11.550000000000002,
     "basis": "5 off, 50% lightened, 2 mm",
     "source_url": "https://www.wood-database.com/balsa/"
    },
@@ -997,8 +1044,8 @@
     "name": "crank: shaft, web and pin in one piece",
     "material_id": "metal-ti-6al-4v-annealed-bar",
     "material": "Titanium Ti-6Al-4V (Grade 5) annealed bar",
-    "mass_g": 33.36312170225567,
-    "basis": "10/5 mm shaft x 71.0 mm, web 14 x 6 mm over the 12 mm throw, 8 mm pin x 12.0 mm, 15 mm wheel seat x 10 mm (the gear-khk-msgb1-45, 15 mm bore, keyed); 4.43 g/cm3",
+    "mass_g": 39.99295426982317,
+    "basis": "10/5 mm shaft x 94.7 mm, web 14 x 6 mm over the 12 mm throw, 8 mm pin x 14.0 mm, 15 mm wheel seat x 10 mm (the gear-khk-msgb1-45, 15 mm bore, keyed); 4.43 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf"
    },
    {
@@ -1013,8 +1060,8 @@
     "name": "gear shaft 1",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 13.72293224181499,
-    "basis": "8 mm x 72.0 mm with a 15 mm wheel seat for the gear-khk-msgb1-45 (15 mm bore, keyed); 2.81 g/cm3",
+    "mass_g": 12.818957805300448,
+    "basis": "8 mm x 65.6 mm with a 15 mm wheel seat for the gear-khk-msgb1-45 (15 mm bore, keyed); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
@@ -1037,8 +1084,8 @@
     "name": "gear shaft 2",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 10.964221192881451,
-    "basis": "8 mm x 72.0 mm with a 10 mm wheel seat for the gear-khk-ssag1-40j10 (10 mm bore, keyed); 2.81 g/cm3",
+    "mass_g": 10.060246756366912,
+    "basis": "8 mm x 65.6 mm with a 10 mm wheel seat for the gear-khk-ssag1-40j10 (10 mm bore, keyed); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
@@ -1061,8 +1108,8 @@
     "name": "gear shaft 3",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 10.169712410788593,
-    "basis": "8 mm x 72.0 mm; 2.81 g/cm3",
+    "mass_g": 11.511549464989864,
+    "basis": "8 mm x 81.5 mm; 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
@@ -1077,24 +1124,24 @@
     "name": "shoulder pin right",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 2.383526346278576,
-    "basis": "6 mm x 30 mm (bushing centres 24 mm apart plus one bushing length); 2.81 g/cm3",
+    "mass_g": 3.593165967014954,
+    "basis": "6 mm x 43 mm (bushing centres 37 mm apart plus one bushing length), a 9 mm collar x 2.1 mm (the rocker's forward axial stop); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "rocker right",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 21.80967111843872,
-    "basis": "hub 14.5/6 x 18 mm, horn arm 19.6 x 11 x 6 mm, horn boss 23/8 x 8 mm, spar socket 1.5 mm wall x 20 mm; 2.81 g/cm3 (replaces the carbon-plate rocker)",
+    "mass_g": 23.683299384120815,
+    "basis": "hub 14.5/6 x 28 mm, horn arm 19.6 x 11 x 6 mm, horn boss 23/8 x 7 mm, spar socket 1.5 mm wall x 20 mm; 2.81 g/cm3 (replaces the carbon-plate rocker)",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "horn pin right",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 2.259936091286354,
-    "basis": "8 mm x 16 mm; 2.81 g/cm3",
+    "mass_g": 1.906821077022861,
+    "basis": "8 mm x 13.5 mm; 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
@@ -1109,24 +1156,24 @@
     "name": "shoulder pin left",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 2.383526346278576,
-    "basis": "6 mm x 30 mm (bushing centres 24 mm apart plus one bushing length); 2.81 g/cm3",
+    "mass_g": 3.593165967014954,
+    "basis": "6 mm x 43 mm (bushing centres 37 mm apart plus one bushing length), a 9 mm collar x 2.1 mm (the rocker's forward axial stop); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "rocker left",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 21.80967111843872,
-    "basis": "hub 14.5/6 x 18 mm, horn arm 19.6 x 11 x 6 mm, horn boss 23/8 x 8 mm, spar socket 1.5 mm wall x 20 mm; 2.81 g/cm3 (replaces the carbon-plate rocker)",
+    "mass_g": 23.683299384120815,
+    "basis": "hub 14.5/6 x 28 mm, horn arm 19.6 x 11 x 6 mm, horn boss 23/8 x 7 mm, spar socket 1.5 mm wall x 20 mm; 2.81 g/cm3 (replaces the carbon-plate rocker)",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "horn pin left",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 2.259936091286354,
-    "basis": "8 mm x 16 mm; 2.81 g/cm3",
+    "mass_g": 1.906821077022861,
+    "basis": "8 mm x 13.5 mm; 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
@@ -1149,15 +1196,15 @@
     "name": "gearbox plates, 2 off",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 69.67644911944754,
-    "basis": "solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft 91.8 cm2 x 1.6 mm, forward 92.6 cm2 x 1.2 mm; 2.7 g/cm3",
+    "mass_g": 71.03305902494866,
+    "basis": "solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft 91.6 cm2 x 1.6 mm, forward 97.1 cm2 x 1.2 mm; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "gearbox plate bosses",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 31.29120530755042,
+    "mass_g": 27.00128199925722,
     "basis": "bosses 8.5 mm wall round the seats crank shaft/aft, crank shaft/forward, gear shaft 1/aft, as long as the bushing, beyond the plate; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
@@ -1165,48 +1212,48 @@
     "name": "shoulder rail right aft seat boss",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 4.434122411092974,
-    "basis": "ring 29/12 x 3 mm on the aft plate",
+    "mass_g": 5.23729020793729,
+    "basis": "ring 31.5/13 x 3 mm on the aft plate",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "shoulder rail right",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 18.079488730290834,
-    "basis": "12/8 mm tube x 96.0 mm plus a 2 mm lock flange; 2.81 g/cm3",
+    "mass_g": 26.123370354005477,
+    "basis": "13/8 mm tube x 104.4 mm plus a 1.4 mm lock flange (491 mm2); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "shoulder bracket right",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 11.435058245830815,
-    "basis": "two sleeves 16/12 x 13 mm and two arms 10 x 8 x 12.2 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
+    "mass_g": 16.658132626578883,
+    "basis": "two sleeves 17/13 x 13 mm and two arms 11 x 8 x 21.1 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "shoulder rail left aft seat boss",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 4.434122411092974,
-    "basis": "ring 29/12 x 3 mm on the aft plate",
+    "mass_g": 5.23729020793729,
+    "basis": "ring 31.5/13 x 3 mm on the aft plate",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "shoulder rail left",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 18.079488730290834,
-    "basis": "12/8 mm tube x 96.0 mm plus a 2 mm lock flange; 2.81 g/cm3",
+    "mass_g": 26.123370354005477,
+    "basis": "13/8 mm tube x 104.4 mm plus a 1.4 mm lock flange (491 mm2); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "shoulder bracket left",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 11.435058245830815,
-    "basis": "two sleeves 16/12 x 13 mm and two arms 10 x 8 x 12.2 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
+    "mass_g": 16.658132626578883,
+    "basis": "two sleeves 17/13 x 13 mm and two arms 11 x 8 x 21.1 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
@@ -1229,16 +1276,16 @@
     "name": "forward tray",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 14.284806760823871,
-    "basis": "channel 22 x 7 x 0.8 mm sheet (28.8 mm2) x 184 mm (to 174 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
+    "mass_g": 11.691736966549103,
+    "basis": "channel 22 x 7 x 0.8 mm sheet (28.8 mm2) x 150 mm (to 140 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "aft tray",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 7.972019999999999,
-    "basis": "channel 26 x 6 x 0.6 mm sheet (22.8 mm2) x 130 mm (to 120 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
+    "mass_g": 8.49528,
+    "basis": "channel 26 x 6 x 0.6 mm sheet (22.8 mm2) x 138 mm (to 128 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
@@ -1253,24 +1300,24 @@
     "name": "gearbox panels, 3 off",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 22.406328000000002,
-    "basis": "side panel right 21.5 x 1.2 mm, side panel left 11.7 x 2.2 mm, top panel 20 x 1 mm, each 68.0 mm plus two 24 mm flanges; 2.7 g/cm3",
+    "mass_g": 22.549104000000003,
+    "basis": "side panel right 29 x 0.9 mm, side panel left 29 x 0.9 mm, top panel 24 x 1 mm, each 61.6 mm plus two 24 mm flanges; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
-    "name": "M3 screws, 16 off",
+    "name": "M3 screws, 22 off",
     "material_id": "screw-iso4762-m3x8-10.9",
     "material": "ISO 4762 M3 x 8 socket head cap screw, class 10.9",
-    "mass_g": 16,
-    "basis": "16 x 1 g (per part, computed: ISO 4762 M3 maximum head 5.5 mm x 3.0 mm (fasteners.eu ISO 4762 table) plus a 3 mm x 8 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
+    "mass_g": 22,
+    "basis": "22 x 1 g (per part, computed: ISO 4762 M3 maximum head 5.5 mm x 3.0 mm (fasteners.eu ISO 4762 table) plus a 3 mm x 8 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
     "source_url": "https://optimas.com/technical-resources/iso-metric-thread-proof-loads/"
    },
    {
-    "name": "M3 nuts, 14 off",
+    "name": "M3 nuts, 20 off",
     "material_id": "nut-iso4032-m3-10",
     "material": "ISO 4032 M3 hexagon nut, class 10",
-    "mass_g": 5.6000000000000005,
-    "basis": "14 x 0.4 g (per part, computed: ISO 4032 M3 maximum 5.5 mm across flats x 2.4 mm high (fasteners.eu ISO 4032 table) less a 2.5 mm minor-diameter bore, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
+    "mass_g": 8,
+    "basis": "20 x 0.4 g (per part, computed: ISO 4032 M3 maximum 5.5 mm across flats x 2.4 mm high (fasteners.eu ISO 4032 table) less a 2.5 mm minor-diameter bore, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
     "source_url": "https://www.fasteners.eu/standards/ISO/4032/"
    },
    {
@@ -1341,8 +1388,8 @@
      "pinion_rpm": 10000,
      "wheel_rpm": 3333.3333333333335,
      "pitch_line_m_s": 10.471975511965978,
-     "support": "weak",
-     "plane_x_m": 0.060000000000000005,
+     "support": "overhung",
+     "plane_x_m": 0.0825,
      "pinion": {
       "method": "Lewis (KHK plastic gear method)",
       "catalogue": {
@@ -1498,7 +1545,7 @@
      "wheel_rpm": 1500,
      "pitch_line_m_s": 3.1415926535897936,
      "support": "weak",
-     "plane_x_m": 0.0455,
+     "plane_x_m": 0.0607,
      "pinion": {
       "method": "JGMA 401-01 / 402-01 (KHK)",
       "catalogue": {
@@ -1681,8 +1728,8 @@
     "pinion": "gear-khk-msga1-18",
     "gear": "gear-khk-msgb1-45",
     "ratio": 2.5,
-    "pinion_allowable_Nm": 6.523205874009219,
-    "gear_allowable_Nm": 17.39149400218102,
+    "pinion_allowable_Nm": 9.139464914387249,
+    "gear_allowable_Nm": 24.36669213139801,
     "pinion_material": "SCM415",
     "gear_material": "SCM415",
     "pinion_rp_m": 0.009,
@@ -1697,8 +1744,8 @@
      "pinion_rpm": 1500,
      "wheel_rpm": 600,
      "pitch_line_m_s": 1.413716694115407,
-     "support": "weak",
-     "plane_x_m": 0.029,
+     "support": "equidistant",
+     "plane_x_m": 0.044199999999999996,
      "pinion": {
       "method": "JGMA 401-01 / 402-01 (KHK)",
       "catalogue": {
@@ -1706,11 +1753,11 @@
        "surface_Nm": 6.37
       },
       "bending_factor": 1.0673577450866947,
-      "surface_factor": 1.024051157615262,
+      "surface_factor": 1.4347668625411694,
       "half_rule": false,
       "bending_Nm": 12.915028715549004,
-      "surface_Nm": 6.523205874009219,
-      "allowable_Nm": 6.523205874009219,
+      "surface_Nm": 9.139464914387249,
+      "allowable_Nm": 9.139464914387249,
       "conditions": [
        {
         "condition": "mating gear",
@@ -1728,10 +1775,10 @@
        {
         "condition": "gear support",
         "rated": "equidistant, b/d01 0.556, KH-beta 1.039",
-        "actual": "weak, b/d01 0.556, KH-beta 1.456",
-        "holds": false,
+        "actual": "equidistant, b/d01 0.556, KH-beta 1.039",
+        "holds": true,
         "correction": "JGMA 402-01 KH-beta (KHK Table 10.11, contact not predictable)",
-        "surface_factor": 0.7137404580152672
+        "surface_factor": 1
        },
        {
         "condition": "speed",
@@ -1794,11 +1841,11 @@
        "surface_Nm": 44.3
       },
       "bending_factor": 0.9406390891196861,
-      "surface_factor": 0.39258451472191924,
+      "surface_factor": 0.5500381970970206,
       "half_rule": false,
       "bending_Nm": 39.78903346976272,
-      "surface_Nm": 17.39149400218102,
-      "allowable_Nm": 17.39149400218102,
+      "surface_Nm": 24.36669213139801,
+      "allowable_Nm": 24.36669213139801,
       "conditions": [
        {
         "condition": "mating gear",
@@ -1816,10 +1863,10 @@
        {
         "condition": "gear support",
         "rated": "equidistant, b/d01 0.222, KH-beta 1.000",
-        "actual": "weak, b/d01 0.556, KH-beta 1.456",
+        "actual": "equidistant, b/d01 0.556, KH-beta 1.039",
         "holds": false,
         "correction": "JGMA 402-01 KH-beta (KHK Table 10.11, contact not predictable)",
-        "surface_factor": 0.6870229007633587
+        "surface_factor": 0.9625668449197861
        },
        {
         "condition": "speed",
@@ -1898,7 +1945,7 @@
      "wheel_rpm": 240,
      "pitch_line_m_s": 0.5654866776461628,
      "support": "weak",
-     "plane_x_m": 0.0125,
+     "plane_x_m": 0.027700000000000002,
      "pinion": {
       "method": "JGMA 401-01 / 402-01 (KHK)",
       "catalogue": {
@@ -2101,12 +2148,12 @@
     "name": "shoulder pivot right",
     "part_id": "bushing-igus-GFM-0608-06",
     "count": 2,
-    "span_m": 0.024,
+    "span_m": 0.0366,
     "reacts": "the right wing's root force and moment, and the right coupler's force on the rocker horn",
     "supports": [
      {
       "name": "aft",
-      "x_m": -0.012,
+      "x_m": -0.0183,
       "radial": [
        {
         "ch": "root_yz_R",
@@ -2115,12 +2162,12 @@
        },
        {
         "ch": "coupler_R",
-        "k": 0.6875,
+        "k": 0.439891,
         "what": "coupler force on the rocker horn"
        },
        {
         "ch": "root_mperp_R",
-        "k": 41.666667,
+        "k": 27.322404,
         "what": "wing root moment normal to the hinge axis (lead-lag and pitch), as a couple"
        }
       ],
@@ -2158,7 +2205,7 @@
      },
      {
       "name": "forward",
-      "x_m": 0.012,
+      "x_m": 0.0183,
       "radial": [
        {
         "ch": "root_yz_R",
@@ -2167,12 +2214,12 @@
        },
        {
         "ch": "coupler_R",
-        "k": 0.3125,
+        "k": 0.560109,
         "what": "coupler force on the rocker horn"
        },
        {
         "ch": "root_mperp_R",
-        "k": 41.666667,
+        "k": 27.322404,
         "what": "wing root moment normal to the hinge axis (lead-lag and pitch), as a couple"
        }
       ],
@@ -2214,12 +2261,12 @@
     "name": "shoulder pivot left",
     "part_id": "bushing-igus-GFM-0608-06",
     "count": 2,
-    "span_m": 0.024,
+    "span_m": 0.0366,
     "reacts": "the left wing's root force and moment, and the left coupler's force on the rocker horn",
     "supports": [
      {
       "name": "aft",
-      "x_m": -0.012,
+      "x_m": -0.0183,
       "radial": [
        {
         "ch": "root_yz_L",
@@ -2228,12 +2275,12 @@
        },
        {
         "ch": "coupler_L",
-        "k": 0.895833,
+        "k": 0.617486,
         "what": "coupler force on the rocker horn"
        },
        {
         "ch": "root_mperp_L",
-        "k": 41.666667,
+        "k": 27.322404,
         "what": "wing root moment normal to the hinge axis (lead-lag and pitch), as a couple"
        }
       ],
@@ -2271,7 +2318,7 @@
      },
      {
       "name": "forward",
-      "x_m": 0.012,
+      "x_m": 0.0183,
       "radial": [
        {
         "ch": "root_yz_L",
@@ -2280,12 +2327,12 @@
        },
        {
         "ch": "coupler_L",
-        "k": 0.104167,
+        "k": 0.382514,
         "what": "coupler force on the rocker horn"
        },
        {
         "ch": "root_mperp_L",
-        "k": 41.666667,
+        "k": 27.322404,
         "what": "wing root moment normal to the hinge axis (lead-lag and pitch), as a couple"
        }
       ],
@@ -2327,26 +2374,26 @@
     "name": "crank shaft",
     "part_id": "bushing-igus-GFM-1012-10",
     "count": 2,
-    "span_m": 0.068,
+    "span_m": 0.0616,
     "reacts": "both couplers on the shared crank pin and the last stage's mesh",
     "supports": [
      {
       "name": "aft",
-      "x_m": 0.0055,
+      "x_m": 0.014,
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 1.147059,
+        "k": 1.191558,
         "what": "right coupler on the crank pin (overhung)"
        },
        {
         "ch": "coupler_L",
-        "k": 1.220588,
+        "k": 1.297078,
         "what": "left coupler on the crank pin (overhung)"
        },
        {
         "ch": "crank_torque",
-        "k": 42.428003,
+        "k": 36.777861,
         "what": "stage 4 mesh, crank wheel gear-khk-msgb1-45"
        }
       ],
@@ -2373,26 +2420,26 @@
        }
       },
       "surface_m_s_per_crank_rad_s": 0.005,
-      "housing_mm": 10,
-      "housing": "plate boss as long as the part"
+      "housing_mm": 9,
+      "housing": "plate boss as long as the bushing body, flange on the plate face"
      },
      {
       "name": "forward",
-      "x_m": 0.0735,
+      "x_m": 0.0756,
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.147059,
+        "k": 0.191558,
         "what": "right coupler on the crank pin (overhung)"
        },
        {
         "ch": "coupler_L",
-        "k": 0.220588,
+        "k": 0.297078,
         "what": "left coupler on the crank pin (overhung)"
        },
        {
         "ch": "crank_torque",
-        "k": 4.868787,
+        "k": 10.518929,
         "what": "stage 4 mesh, crank wheel gear-khk-msgb1-45"
        }
       ],
@@ -2419,8 +2466,8 @@
        }
       },
       "surface_m_s_per_crank_rad_s": 0.005,
-      "housing_mm": 10,
-      "housing": "plate boss as long as the part"
+      "housing_mm": 9,
+      "housing": "plate boss as long as the bushing body, flange on the plate face"
      }
     ]
    },
@@ -2428,21 +2475,21 @@
     "name": "gear shaft 1",
     "part_id": "bushing-igus-GFM-0810-06",
     "count": 2,
-    "span_m": 0.068,
+    "span_m": 0.0616,
     "reacts": "stage 3 and stage 4 meshes",
     "supports": [
      {
       "name": "aft",
-      "x_m": 0.0055,
+      "x_m": 0.014,
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 12.38063,
+        "k": 9.643631,
         "what": "stage 3 mesh, wheel gear-khk-msgb1-45"
        },
        {
         "ch": "crank_torque",
-        "k": 42.428003,
+        "k": 36.777861,
         "what": "stage 4 mesh, pinion gear-khk-msga1-18"
        }
       ],
@@ -2469,21 +2516,21 @@
        }
       },
       "surface_m_s_per_crank_rad_s": 0.01,
-      "housing_mm": 6,
-      "housing": "plate boss as long as the part"
+      "housing_mm": 5,
+      "housing": "plate boss as long as the bushing body, flange on the plate face"
      },
      {
       "name": "forward",
-      "x_m": 0.0735,
+      "x_m": 0.0756,
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 6.538086,
+        "k": 9.275085,
         "what": "stage 3 mesh, wheel gear-khk-msgb1-45"
        },
        {
         "ch": "crank_torque",
-        "k": 4.868787,
+        "k": 10.518929,
         "what": "stage 4 mesh, pinion gear-khk-msga1-18"
        }
       ],
@@ -2519,21 +2566,21 @@
     "name": "gear shaft 2",
     "part_id": "bushing-igus-GFM-0810-06",
     "count": 2,
-    "span_m": 0.068,
+    "span_m": 0.0616,
     "reacts": "stage 2 and stage 3 meshes",
     "supports": [
      {
       "name": "aft",
-      "x_m": 0.0055,
+      "x_m": 0.014,
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 3.505527,
+        "k": 2.059253,
         "what": "stage 2 mesh, wheel gear-khk-ssag1-40j10"
        },
        {
         "ch": "crank_torque",
-        "k": 12.38063,
+        "k": 9.643631,
         "what": "stage 3 mesh, pinion gear-khk-msga1-18"
        }
       ],
@@ -2565,16 +2612,16 @@
      },
      {
       "name": "forward",
-      "x_m": 0.0735,
+      "x_m": 0.0756,
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 5.007895,
+        "k": 6.454169,
         "what": "stage 2 mesh, wheel gear-khk-ssag1-40j10"
        },
        {
         "ch": "crank_torque",
-        "k": 6.538086,
+        "k": 9.275085,
         "what": "stage 3 mesh, pinion gear-khk-msga1-18"
        }
       ],
@@ -2610,21 +2657,21 @@
     "name": "gear shaft 3",
     "part_id": "bearing-skf-628-8-2z",
     "count": 2,
-    "span_m": 0.068,
+    "span_m": 0.0616,
     "reacts": "stage 1 and stage 2 meshes",
     "supports": [
      {
       "name": "aft",
-      "x_m": 0.0055,
+      "x_m": 0.014,
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.507049,
+        "k": 0.286084,
         "what": "stage 1 mesh, wheel gear-khk-ds1-60"
        },
        {
         "ch": "crank_torque",
-        "k": 3.505527,
+        "k": 2.059253,
         "what": "stage 2 mesh, pinion gear-khk-msga1-18"
        }
       ],
@@ -2649,16 +2696,16 @@
      },
      {
       "name": "forward",
-      "x_m": 0.0735,
+      "x_m": 0.0756,
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 2.046977,
+        "k": 2.840111,
         "what": "stage 1 mesh, wheel gear-khk-ds1-60"
        },
        {
         "ch": "crank_torque",
-        "k": 5.007895,
+        "k": 6.454169,
         "what": "stage 2 mesh, pinion gear-khk-msga1-18"
        }
       ],
@@ -2859,15 +2906,15 @@
     "name": "motor shaft outboard",
     "part_id": "bearing-skf-619-5-2z",
     "count": 1,
-    "reacts": "stage 1 mesh at pinion gear-khk-ds1-20, overhung 13.5 mm from this bearing",
+    "reacts": "stage 1 mesh at pinion gear-khk-ds1-20, overhung 6.9 mm from this bearing",
     "supports": [
      {
       "name": "plate",
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 9.449899,
-        "what": "stage 1 mesh x (a + s) / s, a 13.5 mm, s 5.0 mm (nearest a motor bearing can be)"
+        "k": 6.078583,
+        "what": "stage 1 mesh x (a + s) / s, a 6.9 mm, s 5.0 mm (nearest a motor bearing can be)"
        }
       ],
       "axial": [],
@@ -2897,12 +2944,12 @@
     "name": "motor shaft",
     "carries": "stage 1 mesh, pinion gear-khk-ds1-20",
     "force_per_crank_Nm": 2.554,
-    "motor_bearing_force_per_crank_Nm": 6.8959,
+    "motor_bearing_force_per_crank_Nm": 3.5246,
     "lever": {
-     "a_m": 0.0135,
+     "a_m": 0.0069,
      "s_min_m": 0.005,
-     "plate_share": 3.6999999999999997,
-     "motor_share": 2.6999999999999997
+     "plate_share": 2.38,
+     "motor_share": 1.38
     },
     "note": "with the outboard bearing, the motor bearing nearest the pinion carries at most F a / s; the motor maker publishes its bearing sizes (11 x 5 x 5 and 16 x 5 x 5 mm) but not their maker, designation or positions, so it is reported against the lowest same-size C0 read (NMB L-1150ZZ 276 N), not credited"
    }
@@ -2910,19 +2957,19 @@
   "joints_layout": {
    "source": "sims/avis-shared/model.js placeFourBar, gearTrain, gearPlanes (film workstream), used unchanged",
    "hinge_x_m": 0,
-   "shoulder_span_m": 0.024,
+   "shoulder_span_m": 0.0366,
    "planes_m": {
-    "plateAft": 0.0055,
-    "plateFwd": 0.07350000000000001,
+    "plateAft": 0.014,
+    "plateFwd": 0.0756,
     "stage": [
-     0.060000000000000005,
-     0.0455,
-     0.029,
-     0.0125
+     0.0825,
+     0.0607,
+     0.044199999999999996,
+     0.027700000000000002
     ],
-    "couplerR": -0.0045,
-    "couplerL": -0.0095,
-    "crankArm": 0.0015
+    "couplerR": 0.0021999999999999997,
+    "couplerL": -0.0043,
+    "crankArm": 0.0087
    },
    "max_stroke_velocity_ratio": 0.6593,
    "mesh_force_per_crank_Nm": [
@@ -2960,33 +3007,33 @@
     },
     "sections": [
      {
-      "name": "M at x 5.5 mm",
+      "name": "M at x 14.0 mm",
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.01
+        "k": 0.0118
        },
        {
         "ch": "coupler_L",
-        "k": 0.015
+        "k": 0.0183
        }
       ],
       "axial": []
      },
      {
-      "name": "M at x 12.5 mm",
+      "name": "M at x 27.7 mm",
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.00897059
+        "k": 0.00917565
        },
        {
         "ch": "coupler_L",
-        "k": 0.01345588
+        "k": 0.01423003
        },
        {
         "ch": "crank_torque",
-        "k": 0.29699602
+        "k": 0.5038567
        }
       ],
       "axial": []
@@ -3006,15 +3053,15 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 1.147059
+        "k": 1.191558
        },
        {
         "ch": "coupler_L",
-        "k": 1.220588
+        "k": 1.297078
        },
        {
         "ch": "crank_torque",
-        "k": 42.428003
+        "k": 36.777861
        }
       ],
       "axial": []
@@ -3022,8 +3069,8 @@
     ],
     "uses": {
      "M": [
-      "M at x 5.5 mm",
-      "M at x 12.5 mm"
+      "M at x 14.0 mm",
+      "M at x 27.7 mm"
      ],
      "T": "T",
      "V": "V aft"
@@ -3060,11 +3107,11 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.003
+        "k": 0.0035
        },
        {
         "ch": "coupler_L",
-        "k": 0.008
+        "k": 0.01
        }
       ],
       "axial": []
@@ -3122,11 +3169,11 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.003
+        "k": 0.0035
        },
        {
         "ch": "coupler_L",
-        "k": 0.008
+        "k": 0.01
        }
       ],
       "axial": []
@@ -3299,21 +3346,21 @@
     },
     "sections": [
      {
-      "name": "M at x 12.5 mm",
+      "name": "M at x 27.7 mm",
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.38366043
+        "k": 0.63597444
        }
       ],
       "axial": []
      },
      {
-      "name": "M at x 29.0 mm",
+      "name": "M at x 44.2 mm",
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.50760584
+        "k": 0.62153203
        }
       ],
       "axial": []
@@ -3333,11 +3380,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 12.38063
+        "k": 9.643631
        },
        {
         "ch": "crank_torque",
-        "k": 42.428003
+        "k": 36.777861
        }
       ],
       "axial": []
@@ -3347,11 +3394,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 6.538086
+        "k": 9.275085
        },
        {
         "ch": "crank_torque",
-        "k": 4.868787
+        "k": 10.518929
        }
       ],
       "axial": []
@@ -3359,8 +3406,8 @@
     ],
     "uses": {
      "M": [
-      "M at x 12.5 mm",
-      "M at x 29.0 mm"
+      "M at x 27.7 mm",
+      "M at x 44.2 mm"
      ],
      "T": "T",
      "V": [
@@ -3638,21 +3685,21 @@
     },
     "sections": [
      {
-      "name": "M at x 29.0 mm",
+      "name": "M at x 44.2 mm",
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.37332469
+        "k": 0.35342711
        }
       ],
       "axial": []
      },
      {
-      "name": "M at x 45.5 mm",
+      "name": "M at x 60.7 mm",
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.32328747
+        "k": 0.23436588
        }
       ],
       "axial": []
@@ -3672,11 +3719,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 3.505527
+        "k": 2.059253
        },
        {
         "ch": "crank_torque",
-        "k": 12.38063
+        "k": 9.643631
        }
       ],
       "axial": []
@@ -3686,11 +3733,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 5.007895
+        "k": 6.454169
        },
        {
         "ch": "crank_torque",
-        "k": 6.538086
+        "k": 9.275085
        }
       ],
       "axial": []
@@ -3698,8 +3745,8 @@
     ],
     "uses": {
      "M": [
-      "M at x 29.0 mm",
-      "M at x 45.5 mm"
+      "M at x 44.2 mm",
+      "M at x 60.7 mm"
      ],
      "T": "T",
      "V": [
@@ -3977,21 +4024,21 @@
     },
     "sections": [
      {
-      "name": "M at x 45.5 mm",
+      "name": "M at x 60.7 mm",
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.16050305
+        "k": 0.10952725
        }
       ],
       "axial": []
      },
      {
-      "name": "M at x 60.0 mm",
+      "name": "M at x 75.6 mm",
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.09524078
+        "k": 0.01762278
        }
       ],
       "axial": []
@@ -4011,11 +4058,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.507049
+        "k": 0.286084
        },
        {
         "ch": "crank_torque",
-        "k": 3.505527
+        "k": 2.059253
        }
       ],
       "axial": []
@@ -4025,11 +4072,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 2.046977
+        "k": 2.840111
        },
        {
         "ch": "crank_torque",
-        "k": 5.007895
+        "k": 6.454169
        }
       ],
       "axial": []
@@ -4037,8 +4084,8 @@
     ],
     "uses": {
      "M": [
-      "M at x 45.5 mm",
-      "M at x 60.0 mm"
+      "M at x 60.7 mm",
+      "M at x 75.6 mm"
      ],
      "T": "T",
      "V": [
@@ -4259,15 +4306,15 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.0015
+        "k": 0.00175
        },
        {
         "ch": "coupler_R",
-        "k": 0.0020625
+        "k": 0.00153962
        },
        {
         "ch": "root_mperp_R",
-        "k": 0.125
+        "k": 0.09562841
        }
       ],
       "axial": []
@@ -4281,11 +4328,11 @@
        },
        {
         "ch": "coupler_R",
-        "k": 0.6875
+        "k": 0.439891
        },
        {
         "ch": "root_mperp_R",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -4295,15 +4342,15 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.0015
+        "k": 0.0028
        },
        {
         "ch": "coupler_R",
-        "k": 0.0009375
+        "k": 0.00313661
        },
        {
         "ch": "root_mperp_R",
-        "k": 0.125
+        "k": 0.15300546
        }
       ],
       "axial": []
@@ -4317,11 +4364,11 @@
        },
        {
         "ch": "coupler_R",
-        "k": 0.3125
+        "k": 0.560109
        },
        {
         "ch": "root_mperp_R",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -4337,7 +4384,7 @@
       "V forward"
      ]
     },
-    "note": "the bushing reaction at half the bushing length from the hub face"
+    "note": "the bushing reaction at its centre, measured from the hub face"
    },
    {
     "name": "rocker arm right",
@@ -4490,7 +4537,7 @@
     },
     "dims": {
      "d_mm": 6,
-     "t_mm": 18,
+     "t_mm": 14,
      "e_over_d": 1.2083
     },
     "sections": [
@@ -4555,7 +4602,7 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.004
+        "k": 0.0035
        }
       ],
       "axial": []
@@ -4575,7 +4622,7 @@
      "M": "M root",
      "V": "V root"
     },
-    "note": "the coupler eye at half its length plus 1 mm from the boss face"
+    "note": "the coupler eye at half its length plus 0.5 mm from the boss face"
    },
    {
     "name": "horn boss right",
@@ -4600,7 +4647,7 @@
     },
     "dims": {
      "d_mm": 8,
-     "t_mm": 8,
+     "t_mm": 7,
      "e_over_d": 1.4375
     },
     "sections": [
@@ -4619,7 +4666,7 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.004
+        "k": 0.0035
        }
       ],
       "axial": []
@@ -4709,11 +4756,11 @@
        },
        {
         "ch": "coupler_R",
-        "k": 0.6875
+        "k": 0.439891
        },
        {
         "ch": "root_mperp_R",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -4759,11 +4806,11 @@
        },
        {
         "ch": "coupler_R",
-        "k": 0.3125
+        "k": 0.560109
        },
        {
         "ch": "root_mperp_R",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -4803,15 +4850,15 @@
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 0.0015
+        "k": 0.00175
        },
        {
         "ch": "coupler_L",
-        "k": 0.0026875
+        "k": 0.0021612
        },
        {
         "ch": "root_mperp_L",
-        "k": 0.125
+        "k": 0.09562841
        }
       ],
       "axial": []
@@ -4825,11 +4872,11 @@
        },
        {
         "ch": "coupler_L",
-        "k": 0.895833
+        "k": 0.617486
        },
        {
         "ch": "root_mperp_L",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -4839,15 +4886,15 @@
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 0.0015
+        "k": 0.0028
        },
        {
         "ch": "coupler_L",
-        "k": 0.0003125
+        "k": 0.00214208
        },
        {
         "ch": "root_mperp_L",
-        "k": 0.125
+        "k": 0.15300546
        }
       ],
       "axial": []
@@ -4861,11 +4908,11 @@
        },
        {
         "ch": "coupler_L",
-        "k": 0.104167
+        "k": 0.382514
        },
        {
         "ch": "root_mperp_L",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -4881,7 +4928,7 @@
       "V forward"
      ]
     },
-    "note": "the bushing reaction at half the bushing length from the hub face"
+    "note": "the bushing reaction at its centre, measured from the hub face"
    },
    {
     "name": "rocker arm left",
@@ -5034,7 +5081,7 @@
     },
     "dims": {
      "d_mm": 6,
-     "t_mm": 18,
+     "t_mm": 14,
      "e_over_d": 1.2083
     },
     "sections": [
@@ -5099,7 +5146,7 @@
       "radial": [
        {
         "ch": "coupler_L",
-        "k": 0.004
+        "k": 0.0035
        }
       ],
       "axial": []
@@ -5119,7 +5166,7 @@
      "M": "M root",
      "V": "V root"
     },
-    "note": "the coupler eye at half its length plus 1 mm from the boss face"
+    "note": "the coupler eye at half its length plus 0.5 mm from the boss face"
    },
    {
     "name": "horn boss left",
@@ -5144,7 +5191,7 @@
     },
     "dims": {
      "d_mm": 8,
-     "t_mm": 8,
+     "t_mm": 7,
      "e_over_d": 1.4375
     },
     "sections": [
@@ -5163,7 +5210,7 @@
       "radial": [
        {
         "ch": "coupler_L",
-        "k": 0.004
+        "k": 0.0035
        }
       ],
       "axial": []
@@ -5253,11 +5300,11 @@
        },
        {
         "ch": "coupler_L",
-        "k": 0.895833
+        "k": 0.617486
        },
        {
         "ch": "root_mperp_L",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -5303,11 +5350,11 @@
        },
        {
         "ch": "coupler_L",
-        "k": 0.104167
+        "k": 0.382514
        },
        {
         "ch": "root_mperp_L",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -5341,7 +5388,7 @@
     "dims": {
      "d_mm": 12,
      "D_mm": 29,
-     "t_mm": 10
+     "t_mm": 9
     },
     "sections": [
      {
@@ -5349,15 +5396,15 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 1.147059
+        "k": 1.191558
        },
        {
         "ch": "coupler_L",
-        "k": 1.220588
+        "k": 1.297078
        },
        {
         "ch": "crank_torque",
-        "k": 42.428003
+        "k": 36.777861
        }
       ],
       "axial": []
@@ -5392,7 +5439,7 @@
     "dims": {
      "d_mm": 12,
      "D_mm": 29,
-     "t_mm": 10
+     "t_mm": 9
     },
     "sections": [
      {
@@ -5400,15 +5447,15 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.147059
+        "k": 0.191558
        },
        {
         "ch": "coupler_L",
-        "k": 0.220588
+        "k": 0.297078
        },
        {
         "ch": "crank_torque",
-        "k": 4.868787
+        "k": 10.518929
        }
       ],
       "axial": []
@@ -5443,7 +5490,7 @@
     "dims": {
      "d_mm": 10,
      "D_mm": 27,
-     "t_mm": 6
+     "t_mm": 5
     },
     "sections": [
      {
@@ -5451,11 +5498,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 12.38063
+        "k": 9.643631
        },
        {
         "ch": "crank_torque",
-        "k": 42.428003
+        "k": 36.777861
        }
       ],
       "axial": []
@@ -5498,11 +5545,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 6.538086
+        "k": 9.275085
        },
        {
         "ch": "crank_torque",
-        "k": 4.868787
+        "k": 10.518929
        }
       ],
       "axial": []
@@ -5545,11 +5592,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 3.505527
+        "k": 2.059253
        },
        {
         "ch": "crank_torque",
-        "k": 12.38063
+        "k": 9.643631
        }
       ],
       "axial": []
@@ -5592,11 +5639,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 5.007895
+        "k": 6.454169
        },
        {
         "ch": "crank_torque",
-        "k": 6.538086
+        "k": 9.275085
        }
       ],
       "axial": []
@@ -5639,11 +5686,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 0.507049
+        "k": 0.286084
        },
        {
         "ch": "crank_torque",
-        "k": 3.505527
+        "k": 2.059253
        }
       ],
       "axial": []
@@ -5686,11 +5733,11 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 2.046977
+        "k": 2.840111
        },
        {
         "ch": "crank_torque",
-        "k": 5.007895
+        "k": 6.454169
        }
       ],
       "axial": []
@@ -5733,7 +5780,7 @@
       "radial": [
        {
         "ch": "crank_torque",
-        "k": 9.449899
+        "k": 6.078583
        }
       ],
       "axial": []
@@ -5766,42 +5813,42 @@
      "E_GPa": 71.7
     },
     "dims": {
-     "d_mm": 12,
+     "d_mm": 13,
      "di_mm": 8
     },
     "sections": [
      {
-      "name": "M at x 5.5 mm",
+      "name": "M at x 14.0 mm",
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.00875
+        "k": 0.01615
        },
        {
         "ch": "coupler_R",
-        "k": 0.01203125
+        "k": 0.01420848
        },
        {
         "ch": "root_mperp_R",
-        "k": 0.72916667
+        "k": 0.88251365
        }
       ],
       "axial": []
      },
      {
-      "name": "M at x 12.0 mm",
+      "name": "M at x 18.3 mm",
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.01085294
+        "k": 0.01702256
        },
        {
         "ch": "coupler_R",
-        "k": 0.01271829
+        "k": 0.015457
        },
        {
         "ch": "root_mperp_R",
-        "k": 0.90441177
+        "k": 0.93019479
        }
       ],
       "axial": []
@@ -5811,15 +5858,15 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.0121758
+        "k": 0.02113203
        },
        {
         "ch": "coupler_R",
-        "k": 0.0121758
+        "k": 0.02113203
        },
        {
         "ch": "root_mperp_R",
-        "k": 1.01464965
+        "k": 1.15475547
        }
       ],
       "axial": []
@@ -5829,15 +5876,15 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 1.08088235
+        "k": 1.22727272
        },
        {
         "ch": "coupler_R",
-        "k": 1.14705883
+        "k": 1.19155861
        },
        {
         "ch": "root_mperp_R",
-        "k": 90.07353013
+        "k": 67.06408255
        }
       ],
       "axial": []
@@ -5847,15 +5894,15 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.17647059
+        "k": 0.29707792
        },
        {
         "ch": "coupler_R",
-        "k": 0.20680147
+        "k": 0.26975565
        },
        {
         "ch": "root_mperp_R",
-        "k": 14.70588247
+        "k": 16.23376601
        }
       ],
       "axial": []
@@ -5863,8 +5910,8 @@
     ],
     "uses": {
      "M": [
-      "M at x 5.5 mm",
-      "M at x 12.0 mm"
+      "M at x 14.0 mm",
+      "M at x 18.3 mm"
      ],
      "T": "T",
      "V": [
@@ -5872,7 +5919,7 @@
       "V fwd"
      ]
     },
-    "note": "a 12/8 mm tube on the two plates (x 5.5 and 73.5 mm), the shoulder housings at x -12.0 (overhung) and 12.0 mm, 4 mm outboard and 11.5 mm above the hinge (the bracket arm, 12.2 mm, gives the torsion)"
+    "note": "a 13/8 mm tube on the two plates (x 14.0 and 75.6 mm), the shoulder housings at x -18.3 (overhung) and 18.3 mm, 4 mm outboard and -20.75 mm above the hinge (the bracket arm, 21.1 mm, gives the torsion)"
    },
    {
     "name": "plate seat shoulder rail right aft",
@@ -5896,8 +5943,8 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "d_mm": 12,
-     "D_mm": 29,
+     "d_mm": 13,
+     "D_mm": 31.5,
      "t_mm": 4.6
     },
     "sections": [
@@ -5906,15 +5953,15 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 1.08088235
+        "k": 1.22727272
        },
        {
         "ch": "coupler_R",
-        "k": 1.14705883
+        "k": 1.19155861
        },
        {
         "ch": "root_mperp_R",
-        "k": 90.07353013
+        "k": 67.06408255
        }
       ],
       "axial": []
@@ -5946,8 +5993,8 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "d_mm": 12,
-     "D_mm": 29,
+     "d_mm": 13,
+     "D_mm": 31.5,
      "t_mm": 1.2
     },
     "sections": [
@@ -5956,15 +6003,15 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.17647059
+        "k": 0.29707792
        },
        {
         "ch": "coupler_R",
-        "k": 0.20680147
+        "k": 0.26975565
        },
        {
         "ch": "root_mperp_R",
-        "k": 14.70588247
+        "k": 16.23376601
        }
       ],
       "axial": []
@@ -5984,7 +6031,7 @@
      "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
     },
     "dims": {
-     "d_mm": 12,
+     "d_mm": 13,
      "L_mm": 13
     },
     "sections": [
@@ -5993,15 +6040,15 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.0060879
+        "k": 0.01056601
        },
        {
         "ch": "coupler_R",
-        "k": 0.00837086
+        "k": 0.00929579
        },
        {
         "ch": "root_mperp_R",
-        "k": 0.50732482
+        "k": 0.57737774
        }
       ],
       "axial": []
@@ -6045,9 +6092,9 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "b_mm": 10,
+     "b_mm": 11,
      "h_mm": 8,
-     "lever_mm": 12.176
+     "lever_mm": 21.132
     },
     "sections": [
      {
@@ -6059,11 +6106,11 @@
        },
        {
         "ch": "coupler_R",
-        "k": 0.6875
+        "k": 0.439891
        },
        {
         "ch": "root_mperp_R",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -6084,7 +6131,7 @@
      "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
     },
     "dims": {
-     "d_mm": 12,
+     "d_mm": 13,
      "L_mm": 13
     },
     "sections": [
@@ -6093,15 +6140,15 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.0060879
+        "k": 0.01056601
        },
        {
         "ch": "coupler_R",
-        "k": 0.00380494
+        "k": 0.01183624
        },
        {
         "ch": "root_mperp_R",
-        "k": 0.50732482
+        "k": 0.57737774
        }
       ],
       "axial": []
@@ -6145,9 +6192,9 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "b_mm": 10,
+     "b_mm": 11,
      "h_mm": 8,
-     "lever_mm": 12.176
+     "lever_mm": 21.132
     },
     "sections": [
      {
@@ -6159,11 +6206,11 @@
        },
        {
         "ch": "coupler_R",
-        "k": 0.3125
+        "k": 0.560109
        },
        {
         "ch": "root_mperp_R",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -6184,9 +6231,9 @@
      "shear_N": 2413.3
     },
     "dims": {
-     "n": 3,
-     "r_max_mm": 14,
-     "sum_r2_mm2": 588
+     "n": 6,
+     "r_max_mm": 15,
+     "sum_r2_mm2": 1350
     },
     "sections": [
      {
@@ -6199,15 +6246,15 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.0121758
+        "k": 0.02113203
        },
        {
         "ch": "coupler_R",
-        "k": 0.0121758
+        "k": 0.02113203
        },
        {
         "ch": "root_mperp_R",
-        "k": 1.01464965
+        "k": 1.15475547
        }
       ],
       "axial": []
@@ -6234,7 +6281,7 @@
      "M": "M",
      "F": "F"
     },
-    "note": "a flange on the rail at the aft plate's front face, screwed to it: the rail torque on 3 M3 screws at 14 mm, the root axial force as tension"
+    "note": "a flange on the rail at the forward plate's aft face, screwed to it: the rail torque on 6 M3 screws at 15 mm, the root axial force as tension"
    },
    {
     "name": "shoulder rail right, torsion lock screws in the plate",
@@ -6259,7 +6306,7 @@
     },
     "dims": {
      "d_mm": 3,
-     "t_mm": 1.6,
+     "t_mm": 1.2,
      "e_over_d": 2
     },
     "sections": [
@@ -6268,15 +6315,15 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.2899
+        "k": 0.23480033
        },
        {
         "ch": "coupler_R",
-        "k": 0.2899
+        "k": 0.23480033
        },
        {
         "ch": "root_mperp_R",
-        "k": 24.158325
+        "k": 12.83061633
        }
       ],
       "axial": []
@@ -6309,42 +6356,42 @@
      "E_GPa": 71.7
     },
     "dims": {
-     "d_mm": 12,
+     "d_mm": 13,
      "di_mm": 8
     },
     "sections": [
      {
-      "name": "M at x 5.5 mm",
+      "name": "M at x 14.0 mm",
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 0.00875
+        "k": 0.01615
        },
        {
         "ch": "coupler_L",
-        "k": 0.01567708
+        "k": 0.0199448
        },
        {
         "ch": "root_mperp_L",
-        "k": 0.72916667
+        "k": 0.88251365
        }
       ],
       "axial": []
      },
      {
-      "name": "M at x 12.0 mm",
+      "name": "M at x 18.3 mm",
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 0.01085294
+        "k": 0.01702256
        },
        {
         "ch": "coupler_L",
-        "k": 0.0147909
+        "k": 0.02008254
        },
        {
         "ch": "root_mperp_L",
-        "k": 0.90441177
+        "k": 0.93019479
        }
       ],
       "axial": []
@@ -6354,15 +6401,15 @@
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 0.0121758
+        "k": 0.02113203
        },
        {
         "ch": "coupler_L",
-        "k": 0.0121758
+        "k": 0.02113203
        },
        {
         "ch": "root_mperp_L",
-        "k": 1.01464965
+        "k": 1.15475547
        }
       ],
       "axial": []
@@ -6372,15 +6419,15 @@
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 1.08088235
+        "k": 1.22727272
        },
        {
         "ch": "coupler_L",
-        "k": 1.22058812
+        "k": 1.29707773
        },
        {
         "ch": "root_mperp_L",
-        "k": 90.07353013
+        "k": 67.06408255
        }
       ],
       "axial": []
@@ -6390,15 +6437,15 @@
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 0.17647059
+        "k": 0.29707792
        },
        {
         "ch": "coupler_L",
-        "k": 0.2405024
+        "k": 0.35048065
        },
        {
         "ch": "root_mperp_L",
-        "k": 14.70588247
+        "k": 16.23376601
        }
       ],
       "axial": []
@@ -6406,8 +6453,8 @@
     ],
     "uses": {
      "M": [
-      "M at x 5.5 mm",
-      "M at x 12.0 mm"
+      "M at x 14.0 mm",
+      "M at x 18.3 mm"
      ],
      "T": "T",
      "V": [
@@ -6415,7 +6462,7 @@
       "V fwd"
      ]
     },
-    "note": "a 12/8 mm tube on the two plates (x 5.5 and 73.5 mm), the shoulder housings at x -12.0 (overhung) and 12.0 mm, 4 mm outboard and 11.5 mm above the hinge (the bracket arm, 12.2 mm, gives the torsion)"
+    "note": "a 13/8 mm tube on the two plates (x 14.0 and 75.6 mm), the shoulder housings at x -18.3 (overhung) and 18.3 mm, 4 mm outboard and -20.75 mm above the hinge (the bracket arm, 21.1 mm, gives the torsion)"
    },
    {
     "name": "plate seat shoulder rail left aft",
@@ -6439,8 +6486,8 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "d_mm": 12,
-     "D_mm": 29,
+     "d_mm": 13,
+     "D_mm": 31.5,
      "t_mm": 4.6
     },
     "sections": [
@@ -6449,15 +6496,15 @@
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 1.08088235
+        "k": 1.22727272
        },
        {
         "ch": "coupler_L",
-        "k": 1.22058812
+        "k": 1.29707773
        },
        {
         "ch": "root_mperp_L",
-        "k": 90.07353013
+        "k": 67.06408255
        }
       ],
       "axial": []
@@ -6489,8 +6536,8 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "d_mm": 12,
-     "D_mm": 29,
+     "d_mm": 13,
+     "D_mm": 31.5,
      "t_mm": 1.2
     },
     "sections": [
@@ -6499,15 +6546,15 @@
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 0.17647059
+        "k": 0.29707792
        },
        {
         "ch": "coupler_L",
-        "k": 0.2405024
+        "k": 0.35048065
        },
        {
         "ch": "root_mperp_L",
-        "k": 14.70588247
+        "k": 16.23376601
        }
       ],
       "axial": []
@@ -6527,7 +6574,7 @@
      "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
     },
     "dims": {
-     "d_mm": 12,
+     "d_mm": 13,
      "L_mm": 13
     },
     "sections": [
@@ -6536,15 +6583,15 @@
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 0.0060879
+        "k": 0.01056601
        },
        {
         "ch": "coupler_L",
-        "k": 0.01090748
+        "k": 0.01304873
        },
        {
         "ch": "root_mperp_L",
-        "k": 0.50732482
+        "k": 0.57737774
        }
       ],
       "axial": []
@@ -6588,9 +6635,9 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "b_mm": 10,
+     "b_mm": 11,
      "h_mm": 8,
-     "lever_mm": 12.176
+     "lever_mm": 21.132
     },
     "sections": [
      {
@@ -6602,11 +6649,11 @@
        },
        {
         "ch": "coupler_L",
-        "k": 0.895833
+        "k": 0.617486
        },
        {
         "ch": "root_mperp_L",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -6627,7 +6674,7 @@
      "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
     },
     "dims": {
-     "d_mm": 12,
+     "d_mm": 13,
      "L_mm": 13
     },
     "sections": [
@@ -6636,15 +6683,15 @@
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 0.0060879
+        "k": 0.01056601
        },
        {
         "ch": "coupler_L",
-        "k": 0.00126832
+        "k": 0.0080833
        },
        {
         "ch": "root_mperp_L",
-        "k": 0.50732482
+        "k": 0.57737774
        }
       ],
       "axial": []
@@ -6688,9 +6735,9 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "b_mm": 10,
+     "b_mm": 11,
      "h_mm": 8,
-     "lever_mm": 12.176
+     "lever_mm": 21.132
     },
     "sections": [
      {
@@ -6702,11 +6749,11 @@
        },
        {
         "ch": "coupler_L",
-        "k": 0.104167
+        "k": 0.382514
        },
        {
         "ch": "root_mperp_L",
-        "k": 41.666667
+        "k": 27.322404
        }
       ],
       "axial": []
@@ -6727,9 +6774,9 @@
      "shear_N": 2413.3
     },
     "dims": {
-     "n": 3,
-     "r_max_mm": 14,
-     "sum_r2_mm2": 588
+     "n": 6,
+     "r_max_mm": 15,
+     "sum_r2_mm2": 1350
     },
     "sections": [
      {
@@ -6742,15 +6789,15 @@
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 0.0121758
+        "k": 0.02113203
        },
        {
         "ch": "coupler_L",
-        "k": 0.0121758
+        "k": 0.02113203
        },
        {
         "ch": "root_mperp_L",
-        "k": 1.01464965
+        "k": 1.15475547
        }
       ],
       "axial": []
@@ -6777,7 +6824,7 @@
      "M": "M",
      "F": "F"
     },
-    "note": "a flange on the rail at the aft plate's front face, screwed to it: the rail torque on 3 M3 screws at 14 mm, the root axial force as tension"
+    "note": "a flange on the rail at the forward plate's aft face, screwed to it: the rail torque on 6 M3 screws at 15 mm, the root axial force as tension"
    },
    {
     "name": "shoulder rail left, torsion lock screws in the plate",
@@ -6802,7 +6849,7 @@
     },
     "dims": {
      "d_mm": 3,
-     "t_mm": 1.6,
+     "t_mm": 1.2,
      "e_over_d": 2
     },
     "sections": [
@@ -6811,15 +6858,15 @@
       "radial": [
        {
         "ch": "root_yz_L",
-        "k": 0.2899
+        "k": 0.23480033
        },
        {
         "ch": "coupler_L",
-        "k": 0.2899
+        "k": 0.23480033
        },
        {
         "ch": "root_mperp_L",
-        "k": 24.158325
+        "k": 12.83061633
        }
       ],
       "axial": []
@@ -6849,19 +6896,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 0.9473361
+        "k": 0.9558361
        },
        {
         "ch": "sf_origin",
-        "k": 0.04142284
+        "k": 0.0417945
        },
        {
         "ch": "wdot",
-        "k": 0.02736077
+        "k": 0.02749924
        },
        {
         "ch": "w2",
-        "k": 0.02736077
+        "k": 0.02749924
        }
       ],
       "axial": []
@@ -6889,11 +6936,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.04153644
+        "k": 0.0413125
        },
        {
         "ch": "w2",
-        "k": 0.04153644
+        "k": 0.0413125
        }
       ],
       "axial": []
@@ -6904,7 +6951,7 @@
      "T": "T",
      "V": "V"
     },
-    "note": "the tail force and the tail and boom inertia at 947 mm (boom at half that); torsion from the tail force at 326 mm (half the V-tail span plus its height off the boom)"
+    "note": "the tail force and the tail and boom inertia at 956 mm (boom at half that); torsion from the tail force at 326 mm (half the V-tail span plus its height off the boom)"
    },
    {
     "name": "tail boom in the aft clamp, bearing",
@@ -6925,19 +6972,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 13.46494868
+        "k": 14.7332773
        },
        {
         "ch": "sf_origin",
-        "k": 0.61533598
+        "k": 0.6707943
        },
        {
         "ch": "wdot",
-        "k": 0.40154657
+        "k": 0.43641652
        },
        {
         "ch": "w2",
-        "k": 0.40154657
+        "k": 0.43641652
        }
       ],
       "axial": []
@@ -6946,7 +6993,7 @@
     "uses": {
      "F": "F"
     },
-    "note": "the boom moment as a couple between clamps 76 mm apart, on Rock West's transverse compressive estimate (half)"
+    "note": "the boom moment as a couple between clamps 70 mm apart, on Rock West's transverse compressive estimate (half)"
    },
    {
     "name": "tail boom aft clamp screws",
@@ -6970,19 +7017,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 13.46494868
+        "k": 14.7332773
        },
        {
         "ch": "sf_origin",
-        "k": 0.61533598
+        "k": 0.6707943
        },
        {
         "ch": "wdot",
-        "k": 0.40154657
+        "k": 0.43641652
        },
        {
         "ch": "w2",
-        "k": 0.40154657
+        "k": 0.43641652
        }
       ],
       "axial": []
@@ -6992,19 +7039,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 0.43327287
+        "k": 0.4434195
        },
        {
         "ch": "sf_origin",
-        "k": 0.00492269
+        "k": 0.00536635
        },
        {
         "ch": "wdot",
-        "k": 0.00321237
+        "k": 0.00349133
        },
        {
         "ch": "w2",
-        "k": 0.00321237
+        "k": 0.00349133
        }
       ],
       "axial": []
@@ -7014,19 +7061,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 0.05385979
+        "k": 0.05893311
        },
        {
         "ch": "sf_origin",
-        "k": 0.00246134
+        "k": 0.00268318
        },
        {
         "ch": "wdot",
-        "k": 0.00160619
+        "k": 0.00174567
        },
        {
         "ch": "w2",
-        "k": 0.00160619
+        "k": 0.00174567
        }
       ],
       "axial": []
@@ -7044,11 +7091,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.04153644
+        "k": 0.0413125
        },
        {
         "ch": "w2",
-        "k": 0.04153644
+        "k": 0.0413125
        }
       ],
       "axial": []
@@ -7094,19 +7141,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 37.68053648
+        "k": 39.03946008
        },
        {
         "ch": "sf_origin",
-        "k": 0.6592887
+        "k": 0.71870786
        },
        {
         "ch": "wdot",
-        "k": 0.43022828
+        "k": 0.46758897
        },
        {
         "ch": "w2",
-        "k": 0.43022828
+        "k": 0.46758897
        }
       ],
       "axial": []
@@ -7148,19 +7195,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 0.05385979
+        "k": 0.05893311
        },
        {
         "ch": "sf_origin",
-        "k": 0.00246134
+        "k": 0.00268318
        },
        {
         "ch": "wdot",
-        "k": 0.00160619
+        "k": 0.00174567
        },
        {
         "ch": "w2",
-        "k": 0.00160619
+        "k": 0.00174567
        }
       ],
       "axial": []
@@ -7190,19 +7237,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 12.46494868
+        "k": 13.7332773
        },
        {
         "ch": "sf_origin",
-        "k": 0.54503737
+        "k": 0.60049569
        },
        {
         "ch": "wdot",
-        "k": 0.36001013
+        "k": 0.39510402
        },
        {
         "ch": "w2",
-        "k": 0.36001013
+        "k": 0.39510402
        }
       ],
       "axial": []
@@ -7211,7 +7258,7 @@
     "uses": {
      "F": "F"
     },
-    "note": "the boom moment as a couple between clamps 76 mm apart, on Rock West's transverse compressive estimate (half)"
+    "note": "the boom moment as a couple between clamps 70 mm apart, on Rock West's transverse compressive estimate (half)"
    },
    {
     "name": "tail boom forward clamp screws",
@@ -7235,19 +7282,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 12.46494868
+        "k": 13.7332773
        },
        {
         "ch": "sf_origin",
-        "k": 0.54503737
+        "k": 0.60049569
        },
        {
         "ch": "wdot",
-        "k": 0.36001013
+        "k": 0.39510402
        },
        {
         "ch": "w2",
-        "k": 0.36001013
+        "k": 0.39510402
        }
       ],
       "axial": []
@@ -7257,19 +7304,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 0.42527287
+        "k": 0.4354195
        },
        {
         "ch": "sf_origin",
-        "k": 0.0043603
+        "k": 0.00480397
        },
        {
         "ch": "wdot",
-        "k": 0.00288008
+        "k": 0.00316083
        },
        {
         "ch": "w2",
-        "k": 0.00288008
+        "k": 0.00316083
        }
       ],
       "axial": []
@@ -7279,19 +7326,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 0.04985979
+        "k": 0.05493311
        },
        {
         "ch": "sf_origin",
-        "k": 0.00218015
+        "k": 0.00240198
        },
        {
         "ch": "wdot",
-        "k": 0.00144004
+        "k": 0.00158042
        },
        {
         "ch": "w2",
-        "k": 0.00144004
+        "k": 0.00158042
        }
       ],
       "axial": []
@@ -7309,11 +7356,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.04153644
+        "k": 0.0413125
        },
        {
         "ch": "w2",
-        "k": 0.04153644
+        "k": 0.0413125
        }
       ],
       "axial": []
@@ -7359,19 +7406,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 36.60910791
+        "k": 37.96803151
        },
        {
         "ch": "sf_origin",
-        "k": 0.58396868
+        "k": 0.64338856
        },
        {
         "ch": "wdot",
-        "k": 0.38572506
+        "k": 0.42332558
        },
        {
         "ch": "w2",
-        "k": 0.38572506
+        "k": 0.42332558
        }
       ],
       "axial": []
@@ -7413,19 +7460,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 0.04985979
+        "k": 0.05493311
        },
        {
         "ch": "sf_origin",
-        "k": 0.00218015
+        "k": 0.00240198
        },
        {
         "ch": "wdot",
-        "k": 0.00144004
+        "k": 0.00158042
        },
        {
         "ch": "w2",
-        "k": 0.00144004
+        "k": 0.00158042
        }
       ],
       "axial": []
@@ -7473,11 +7520,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.04153644
+        "k": 0.0413125
        },
        {
         "ch": "w2",
-        "k": 0.04153644
+        "k": 0.0413125
        }
       ],
       "axial": []
@@ -7522,15 +7569,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.03052543
+        "k": 0.02585275
        },
        {
         "ch": "wdot",
-        "k": 0.00778379
+        "k": 0.00530952
        },
        {
         "ch": "w2",
-        "k": 0.00778379
+        "k": 0.00530952
        }
       ],
       "axial": []
@@ -7540,15 +7587,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.03052543
+        "k": 0.02585275
        },
        {
         "ch": "wdot",
-        "k": 0.00778379
+        "k": 0.00530952
        },
        {
         "ch": "w2",
-        "k": 0.00778379
+        "k": 0.00530952
        }
       ],
       "axial": []
@@ -7586,11 +7633,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.04333712
+        "k": 0.03548869
        },
        {
         "ch": "w2",
-        "k": 0.04333712
+        "k": 0.03548869
        }
       ],
       "axial": []
@@ -7604,11 +7651,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00095342
+        "k": 0.00078075
        },
        {
         "ch": "w2",
-        "k": 0.00095342
+        "k": 0.00078075
        }
       ],
       "axial": []
@@ -7618,15 +7665,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.03052543
+        "k": 0.02585275
        },
        {
         "ch": "wdot",
-        "k": 0.00778379
+        "k": 0.00530952
        },
        {
         "ch": "w2",
-        "k": 0.00778379
+        "k": 0.00530952
        }
       ],
       "axial": []
@@ -7640,11 +7687,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.04333712
+        "k": 0.03548869
        },
        {
         "ch": "w2",
-        "k": 0.04333712
+        "k": 0.03548869
        }
       ],
       "axial": []
@@ -7694,11 +7741,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.07463634
+        "k": 0.06111935
        },
        {
         "ch": "w2",
-        "k": 0.07463634
+        "k": 0.06111935
        }
       ],
       "axial": []
@@ -7740,15 +7787,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.03052543
+        "k": 0.02585275
        },
        {
         "ch": "wdot",
-        "k": 0.00778379
+        "k": 0.00530952
        },
        {
         "ch": "w2",
-        "k": 0.00778379
+        "k": 0.00530952
        }
       ],
       "axial": []
@@ -7780,11 +7827,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.04218913
+        "k": 0.03416579
        },
        {
         "ch": "w2",
-        "k": 0.04218913
+        "k": 0.03416579
        }
       ],
       "axial": []
@@ -7816,11 +7863,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00061237
+        "k": 0.00076994
        },
        {
         "ch": "w2",
-        "k": 0.00061237
+        "k": 0.00076994
        }
       ],
       "axial": []
@@ -7852,11 +7899,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00053562
+        "k": 0.00055296
        },
        {
         "ch": "w2",
-        "k": 0.00053562
+        "k": 0.00055296
        }
       ],
       "axial": []
@@ -7900,15 +7947,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.00713738
+        "k": 0.00796589
        },
        {
         "ch": "wdot",
-        "k": 0.00048758
+        "k": 0.0005482
        },
        {
         "ch": "w2",
-        "k": 0.00048758
+        "k": 0.0005482
        }
       ],
       "axial": []
@@ -7918,15 +7965,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.00713738
+        "k": 0.00796589
        },
        {
         "ch": "wdot",
-        "k": 0.00048758
+        "k": 0.0005482
        },
        {
         "ch": "w2",
-        "k": 0.00048758
+        "k": 0.0005482
        }
       ],
       "axial": []
@@ -7964,11 +8011,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00454807
+        "k": 0.00463413
        },
        {
         "ch": "w2",
-        "k": 0.00454807
+        "k": 0.00463413
        }
       ],
       "axial": []
@@ -7982,11 +8029,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00013644
+        "k": 0.00013902
        },
        {
         "ch": "w2",
-        "k": 0.00013644
+        "k": 0.00013902
        }
       ],
       "axial": []
@@ -7996,15 +8043,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.00713738
+        "k": 0.00796589
        },
        {
         "ch": "wdot",
-        "k": 0.00048758
+        "k": 0.0005482
        },
        {
         "ch": "w2",
-        "k": 0.00048758
+        "k": 0.0005482
        }
       ],
       "axial": []
@@ -8018,11 +8065,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00454807
+        "k": 0.00463413
        },
        {
         "ch": "w2",
-        "k": 0.00454807
+        "k": 0.00463413
        }
       ],
       "axial": []
@@ -8072,11 +8119,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.01080154
+        "k": 0.01100582
        },
        {
         "ch": "w2",
-        "k": 0.01080154
+        "k": 0.01100582
        }
       ],
       "axial": []
@@ -8118,15 +8165,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.00713738
+        "k": 0.00796589
        },
        {
         "ch": "wdot",
-        "k": 0.00048758
+        "k": 0.0005482
        },
        {
         "ch": "w2",
-        "k": 0.00048758
+        "k": 0.0005482
        }
       ],
       "axial": []
@@ -8194,11 +8241,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00023143
+        "k": 0.00031749
        },
        {
         "ch": "w2",
-        "k": 0.00023143
+        "k": 0.00031749
        }
       ],
       "axial": []
@@ -8271,11 +8318,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.01069003
+        "k": 0.00647742
        },
        {
         "ch": "w2",
-        "k": 0.01069003
+        "k": 0.00647742
        },
        {
         "ch": "crank_torque",
@@ -8303,15 +8350,15 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00023518
+        "k": 0.0001425
        },
        {
         "ch": "w2",
-        "k": 0.00023518
+        "k": 0.0001425
        },
        {
         "ch": "crank_torque",
-        "k": 0.03703339
+        "k": 0.02017681
        }
       ],
       "axial": []
@@ -8325,11 +8372,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.01069003
+        "k": 0.00647742
        },
        {
         "ch": "w2",
-        "k": 0.01069003
+        "k": 0.00647742
        }
       ],
       "axial": []
@@ -8379,11 +8426,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00534501
+        "k": 0.00323871
        },
        {
         "ch": "w2",
-        "k": 0.00534501
+        "k": 0.00323871
        },
        {
         "ch": "crank_torque",
@@ -8433,15 +8480,15 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00023518
+        "k": 0.0001425
        },
        {
         "ch": "w2",
-        "k": 0.00023518
+        "k": 0.0001425
        },
        {
         "ch": "crank_torque",
-        "k": 0.03703339
+        "k": 0.02017681
        }
       ],
       "axial": []
@@ -8469,15 +8516,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.01242
+        "k": 0.01265
        },
        {
         "ch": "wdot",
-        "k": 0.000621
+        "k": 0.0014081
        },
        {
         "ch": "w2",
-        "k": 0.000621
+        "k": 0.0014081
        }
       ],
       "axial": []
@@ -8486,7 +8533,7 @@
     "uses": {
      "F": "F"
     },
-    "note": "2 x tie-hellermanntyton-t18r: the readhead on its bracket to the aft plate's crank boss"
+    "note": "2 x tie-hellermanntyton-t18r: the readhead on its bracket to the forward plate's outer face, round the crank stub"
    },
    {
     "name": "pod formers ties",
@@ -8498,7 +8545,7 @@
     },
     "dims": {
      "n": 5,
-     "extra_N": 0.7198
+     "extra_N": 0.9474
     },
     "sections": [
      {
@@ -8506,15 +8553,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.01318776
+        "k": 0.01680126
        },
        {
         "ch": "wdot",
-        "k": 0.00065939
+        "k": 0.00084006
        },
        {
         "ch": "w2",
-        "k": 0.00065939
+        "k": 0.00084006
        }
       ],
       "axial": []
@@ -8523,7 +8570,7 @@
     "uses": {
      "F": "F"
     },
-    "note": "5 x tie-hellermanntyton-t18r (balsa formers to the boom and trays: no published bond strength on balsa); the pod's inertia plus its drag at 25 m/s (0.72 N)"
+    "note": "5 x tie-hellermanntyton-t18r (balsa formers to the boom and trays: no published bond strength on balsa); the pod's inertia plus its drag at 25 m/s (0.95 N)"
    },
    {
     "name": "pitot-static probe ties",
@@ -8624,7 +8671,7 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "b_mm": 81.8,
+     "b_mm": 94,
      "t_mm": 1.6
     },
     "sections": [
@@ -8633,43 +8680,43 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 1.08088235
+        "k": 1.22727272
        },
        {
         "ch": "coupler_R",
-        "k": 1.14705883
+        "k": 1.19155861
        },
        {
         "ch": "root_mperp_R",
-        "k": 90.07353013
+        "k": 67.06408255
        },
        {
         "ch": "root_yz_L",
-        "k": 1.08088235
+        "k": 1.22727272
        },
        {
         "ch": "coupler_L",
-        "k": 1.22058812
+        "k": 1.29707773
        },
        {
         "ch": "root_mperp_L",
-        "k": 90.07353013
+        "k": 67.06408255
        },
        {
         "ch": "tail_F",
-        "k": 13.46494868
+        "k": 14.7332773
        },
        {
         "ch": "sf_origin",
-        "k": 0.61533598
+        "k": 0.6707943
        },
        {
         "ch": "wdot",
-        "k": 0.40154657
+        "k": 0.43641652
        },
        {
         "ch": "w2",
-        "k": 0.40154657
+        "k": 0.43641652
        }
       ],
       "axial": []
@@ -8679,27 +8726,27 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.03134559
+        "k": 0.03559091
        },
        {
         "ch": "coupler_R",
-        "k": 0.03326471
+        "k": 0.0345552
        },
        {
         "ch": "root_mperp_R",
-        "k": 2.61213237
+        "k": 1.94485839
        },
        {
         "ch": "root_yz_L",
-        "k": 0.03134559
+        "k": 0.03559091
        },
        {
         "ch": "coupler_L",
-        "k": 0.03539706
+        "k": 0.03761525
        },
        {
         "ch": "root_mperp_L",
-        "k": 2.61213237
+        "k": 1.94485839
        }
       ],
       "axial": []
@@ -8709,7 +8756,7 @@
      "F": "F",
      "M": "M"
     },
-    "note": "the section 17.0 mm up, 81.8 mm wide: both rails' reactions and the boom clamp force, the rails' at their 29 mm offset as in-plane bending"
+    "note": "the section -16.5 mm up, 94.0 mm wide: both rails' reactions and the boom clamp force, the rails' at their 29 mm offset as in-plane bending"
    },
    {
     "name": "aft plate post to the boom clamp",
@@ -8733,7 +8780,7 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "b_mm": 12,
+     "b_mm": 16,
      "t_mm": 1.6
     },
     "sections": [
@@ -8742,19 +8789,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 13.46494868
+        "k": 14.7332773
        },
        {
         "ch": "sf_origin",
-        "k": 0.61533598
+        "k": 0.6707943
        },
        {
         "ch": "wdot",
-        "k": 0.40154657
+        "k": 0.43641652
        },
        {
         "ch": "w2",
-        "k": 0.40154657
+        "k": 0.43641652
        }
       ],
       "axial": []
@@ -8764,19 +8811,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 0.04712732
+        "k": 0.69246403
        },
        {
         "ch": "sf_origin",
-        "k": 0.00215368
+        "k": 0.03152733
        },
        {
         "ch": "wdot",
-        "k": 0.00140541
+        "k": 0.02051158
        },
        {
         "ch": "w2",
-        "k": 0.00140541
+        "k": 0.02051158
        }
       ],
       "axial": []
@@ -8786,7 +8833,7 @@
      "F": "F",
      "M": "M"
     },
-    "note": "a 12 mm post 3.5 mm from the plate's outline to the pad: the pad force axially and at the post length"
+    "note": "a 16 mm post 47.0 mm from the plate's outline to the pad: the pad force axially and at the post length"
    },
    {
     "name": "aft plate post to the aft tray",
@@ -8810,7 +8857,7 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "b_mm": 12,
+     "b_mm": 16,
      "t_mm": 1.6
     },
     "sections": [
@@ -8823,11 +8870,11 @@
        },
        {
         "ch": "wdot",
-        "k": 0.00454807
+        "k": 0.00463413
        },
        {
         "ch": "w2",
-        "k": 0.00454807
+        "k": 0.00463413
        }
       ],
       "axial": []
@@ -8837,15 +8884,15 @@
       "radial": [
        {
         "ch": "sf_origin",
-        "k": 0.00018769
+        "k": 0.00006935
        },
        {
         "ch": "wdot",
-        "k": 0.00001231
+        "k": 0.00000463
        },
        {
         "ch": "w2",
-        "k": 0.00001231
+        "k": 0.00000463
        }
       ],
       "axial": []
@@ -8855,7 +8902,7 @@
      "F": "F",
      "M": "M"
     },
-    "note": "a 12 mm post 2.7 mm from the plate's outline to the pad: the pad force axially and at the post length"
+    "note": "a 16 mm post 1.0 mm from the plate's outline to the pad: the pad force axially and at the post length"
    },
    {
     "name": "forward plate below the rail seats",
@@ -8879,7 +8926,7 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "b_mm": 84.55,
+     "b_mm": 94,
      "t_mm": 1.2
     },
     "sections": [
@@ -8888,43 +8935,43 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.17647059
+        "k": 0.29707792
        },
        {
         "ch": "coupler_R",
-        "k": 0.20680147
+        "k": 0.26975565
        },
        {
         "ch": "root_mperp_R",
-        "k": 14.70588247
+        "k": 16.23376601
        },
        {
         "ch": "root_yz_L",
-        "k": 0.17647059
+        "k": 0.29707792
        },
        {
         "ch": "coupler_L",
-        "k": 0.2405024
+        "k": 0.35048065
        },
        {
         "ch": "root_mperp_L",
-        "k": 14.70588247
+        "k": 16.23376601
        },
        {
         "ch": "tail_F",
-        "k": 12.46494868
+        "k": 13.7332773
        },
        {
         "ch": "sf_origin",
-        "k": 0.54503737
+        "k": 0.60049569
        },
        {
         "ch": "wdot",
-        "k": 0.36001013
+        "k": 0.39510402
        },
        {
         "ch": "w2",
-        "k": 0.36001013
+        "k": 0.39510402
        }
       ],
       "axial": []
@@ -8934,27 +8981,27 @@
       "radial": [
        {
         "ch": "root_yz_R",
-        "k": 0.00511765
+        "k": 0.00861526
        },
        {
         "ch": "coupler_R",
-        "k": 0.00599724
+        "k": 0.00782291
        },
        {
         "ch": "root_mperp_R",
-        "k": 0.42647059
+        "k": 0.47077921
        },
        {
         "ch": "root_yz_L",
-        "k": 0.00511765
+        "k": 0.00861526
        },
        {
         "ch": "coupler_L",
-        "k": 0.00697457
+        "k": 0.01016394
        },
        {
         "ch": "root_mperp_L",
-        "k": 0.42647059
+        "k": 0.47077921
        }
       ],
       "axial": []
@@ -8964,7 +9011,7 @@
      "F": "F",
      "M": "M"
     },
-    "note": "the section 17.0 mm up, 84.6 mm wide: both rails' reactions and the boom clamp force, the rails' at their 29 mm offset as in-plane bending"
+    "note": "the section -16.5 mm up, 94.0 mm wide: both rails' reactions and the boom clamp force, the rails' at their 29 mm offset as in-plane bending"
    },
    {
     "name": "forward plate post to the boom clamp",
@@ -8988,7 +9035,7 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "b_mm": 12,
+     "b_mm": 16,
      "t_mm": 1.2
     },
     "sections": [
@@ -8997,19 +9044,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 12.46494868
+        "k": 13.7332773
        },
        {
         "ch": "sf_origin",
-        "k": 0.54503737
+        "k": 0.60049569
        },
        {
         "ch": "wdot",
-        "k": 0.36001013
+        "k": 0.39510402
        },
        {
         "ch": "w2",
-        "k": 0.36001013
+        "k": 0.39510402
        }
       ],
       "axial": []
@@ -9019,19 +9066,19 @@
       "radial": [
        {
         "ch": "tail_F",
-        "k": 0.04362732
+        "k": 0.38166484
        },
        {
         "ch": "sf_origin",
-        "k": 0.00190763
+        "k": 0.01668852
        },
        {
         "ch": "wdot",
-        "k": 0.00126004
+        "k": 0.01098043
        },
        {
         "ch": "w2",
-        "k": 0.00126004
+        "k": 0.01098043
        }
       ],
       "axial": []
@@ -9041,7 +9088,76 @@
      "F": "F",
      "M": "M"
     },
-    "note": "a 12 mm post 3.5 mm from the plate's outline to the pad: the pad force axially and at the post length"
+    "note": "a 16 mm post 27.8 mm from the plate's outline to the pad: the pad force axially and at the post length"
+   },
+   {
+    "name": "forward plate post to the forward tray",
+    "kind": "plate",
+    "check": "plate",
+    "material": {
+     "id": "metal-al-6061-t6",
+     "name": "Aluminium 6061-T6 / T651",
+     "density_g_cm3": 2.7,
+     "yield_MPa": 240,
+     "shear_MPa": null,
+     "shear_yield_MPa": 138.6,
+     "bearing_yield_MPa": 193,
+     "bearing_e_over_d_min": 2,
+     "bearing_counted_at_half": true,
+     "ultimate_MPa": 260,
+     "bearing_standard": "EN 1999-1-1",
+     "bearing_standard_lists_alloy": null,
+     "basis": "specified minimum Rp0.2 240 MPa (EN 754-2 drawn and EN 755-2 extruded bar, EN 485-2 sheet/plate 0.4-12.5 mm; the same for every form and size used) in full; shear yield by von Mises from it (no minimum shear published); bearing yield 386 MPa at e/D = 2.0 from the ASM sheet, which cites no source or basis, so counted at half (SPEC ruling after round 6): 193 MPa where e/D >= 2.0 Round 8: the 2 mm sheet row confirmed for temper T6 itself (not T651): EN 485-2 EN AW-6061 T6 Rm >= 290, Rp0.2 >= 240 MPa (from 0.6 mm), A50 7% at 1.5-3 mm (Metallservice EN 485-2 table, https://www.metallservice.ch/msm/msm-home/services/metall-lexion/mechanische-kennwerte-f%C3%BCr-walzblankes-al ; Alumeco plate table row \"EN AW-6061;1.5;3;T6;240\", https://www.alumeco.com/aluminium/data/mechanical-properties/plates/). EN 485-2 T6 row confirmed.",
+     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+     "E_GPa": 68.9
+    },
+    "dims": {
+     "b_mm": 16,
+     "t_mm": 1.2
+    },
+    "sections": [
+     {
+      "name": "F",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.17572
+       },
+       {
+        "ch": "wdot",
+        "k": 0.03548869
+       },
+       {
+        "ch": "w2",
+        "k": 0.03548869
+       }
+      ],
+      "axial": []
+     },
+     {
+      "name": "M",
+      "radial": [
+       {
+        "ch": "sf_origin",
+        "k": 0.00017572
+       },
+       {
+        "ch": "wdot",
+        "k": 0.00003549
+       },
+       {
+        "ch": "w2",
+        "k": 0.00003549
+       }
+      ],
+      "axial": []
+     }
+    ],
+    "uses": {
+     "F": "F",
+     "M": "M"
+    },
+    "note": "a 16 mm post 1.0 mm from the plate's outline to the pad: the pad force axially and at the post length"
    },
    {
     "name": "gearbox side panel right",
@@ -9065,9 +9181,9 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "h_mm": 21.5,
-     "b_mm": 68,
-     "t_mm": 1.2
+     "h_mm": 29,
+     "b_mm": 61.6,
+     "t_mm": 0.9
     },
     "sections": [
      {
@@ -9075,47 +9191,47 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.48437829
+        "k": 0.41766516
        },
        {
         "ch": "coupler_L",
-        "k": 0.58809585
+        "k": 0.56675044
        },
        {
         "ch": "crank_torque",
-        "k": 13.23270332
+        "k": 13.83306399
        },
        {
         "ch": "root_yz_R",
-        "k": 0.35059095
+        "k": 0.35448852
        },
        {
         "ch": "root_mperp_R",
-        "k": 29.21591205
+        "k": 19.3709579
        },
        {
         "ch": "root_yz_L",
-        "k": 0.35059095
+        "k": 0.35448852
        },
        {
         "ch": "root_mperp_L",
-        "k": 29.21591205
+        "k": 19.3709579
        },
        {
         "ch": "tail_F",
-        "k": 29.95476353
+        "k": 24.87148721
        },
        {
         "ch": "sf_origin",
-        "k": 1.59926675
+        "k": 1.37450051
        },
        {
         "ch": "wdot",
-        "k": 0.91750461
+        "k": 0.75289996
        },
        {
         "ch": "w2",
-        "k": 0.91750461
+        "k": 0.75289996
        }
       ],
       "axial": []
@@ -9124,7 +9240,7 @@
     "uses": {
      "V": "V"
     },
-    "note": "x-y plane at z 31 mm, y 3 to 24.5 mm: half the forward plate's net force (every force on it summed as a magnitude) plus its torsion about the crank axis over the sides' 62 mm spacing"
+    "note": "x-y plane at z 45 mm, y -20 to 9 mm: half the forward plate's net force (every force on it summed as a magnitude) plus its torsion about the crank axis over the sides' 90 mm spacing"
    },
    {
     "name": "gearbox side panel right flange bond",
@@ -9136,7 +9252,7 @@
      "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
     },
     "dims": {
-     "w_mm": 21.5,
+     "w_mm": 29,
      "L_mm": 24
     },
     "sections": [
@@ -9145,47 +9261,47 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.48437829
+        "k": 0.41766516
        },
        {
         "ch": "coupler_L",
-        "k": 0.58809585
+        "k": 0.56675044
        },
        {
         "ch": "crank_torque",
-        "k": 13.23270332
+        "k": 13.83306399
        },
        {
         "ch": "root_yz_R",
-        "k": 0.35059095
+        "k": 0.35448852
        },
        {
         "ch": "root_mperp_R",
-        "k": 29.21591205
+        "k": 19.3709579
        },
        {
         "ch": "root_yz_L",
-        "k": 0.35059095
+        "k": 0.35448852
        },
        {
         "ch": "root_mperp_L",
-        "k": 29.21591205
+        "k": 19.3709579
        },
        {
         "ch": "tail_F",
-        "k": 29.95476353
+        "k": 24.87148721
        },
        {
         "ch": "sf_origin",
-        "k": 1.59926675
+        "k": 1.37450051
        },
        {
         "ch": "wdot",
-        "k": 0.91750461
+        "k": 0.75289996
        },
        {
         "ch": "w2",
-        "k": 0.91750461
+        "k": 0.75289996
        }
       ],
       "axial": []
@@ -9218,9 +9334,9 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "h_mm": 11.7,
-     "b_mm": 68,
-     "t_mm": 2.2
+     "h_mm": 29,
+     "b_mm": 61.6,
+     "t_mm": 0.9
     },
     "sections": [
      {
@@ -9228,47 +9344,47 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.48437829
+        "k": 0.41766516
        },
        {
         "ch": "coupler_L",
-        "k": 0.58809585
+        "k": 0.56675044
        },
        {
         "ch": "crank_torque",
-        "k": 13.23270332
+        "k": 13.83306399
        },
        {
         "ch": "root_yz_R",
-        "k": 0.35059095
+        "k": 0.35448852
        },
        {
         "ch": "root_mperp_R",
-        "k": 29.21591205
+        "k": 19.3709579
        },
        {
         "ch": "root_yz_L",
-        "k": 0.35059095
+        "k": 0.35448852
        },
        {
         "ch": "root_mperp_L",
-        "k": 29.21591205
+        "k": 19.3709579
        },
        {
         "ch": "tail_F",
-        "k": 29.95476353
+        "k": 24.87148721
        },
        {
         "ch": "sf_origin",
-        "k": 1.59926675
+        "k": 1.37450051
        },
        {
         "ch": "wdot",
-        "k": 0.91750461
+        "k": 0.75289996
        },
        {
         "ch": "w2",
-        "k": 0.91750461
+        "k": 0.75289996
        }
       ],
       "axial": []
@@ -9277,7 +9393,7 @@
     "uses": {
      "V": "V"
     },
-    "note": "x-y plane at z -31 mm, y 12.8 to 24.5 mm: half the forward plate's net force (every force on it summed as a magnitude) plus its torsion about the crank axis over the sides' 62 mm spacing"
+    "note": "x-y plane at z -45 mm, y -20 to 9 mm: half the forward plate's net force (every force on it summed as a magnitude) plus its torsion about the crank axis over the sides' 90 mm spacing"
    },
    {
     "name": "gearbox side panel left flange bond",
@@ -9289,7 +9405,7 @@
      "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
     },
     "dims": {
-     "w_mm": 11.7,
+     "w_mm": 29,
      "L_mm": 24
     },
     "sections": [
@@ -9298,47 +9414,47 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.48437829
+        "k": 0.41766516
        },
        {
         "ch": "coupler_L",
-        "k": 0.58809585
+        "k": 0.56675044
        },
        {
         "ch": "crank_torque",
-        "k": 13.23270332
+        "k": 13.83306399
        },
        {
         "ch": "root_yz_R",
-        "k": 0.35059095
+        "k": 0.35448852
        },
        {
         "ch": "root_mperp_R",
-        "k": 29.21591205
+        "k": 19.3709579
        },
        {
         "ch": "root_yz_L",
-        "k": 0.35059095
+        "k": 0.35448852
        },
        {
         "ch": "root_mperp_L",
-        "k": 29.21591205
+        "k": 19.3709579
        },
        {
         "ch": "tail_F",
-        "k": 29.95476353
+        "k": 24.87148721
        },
        {
         "ch": "sf_origin",
-        "k": 1.59926675
+        "k": 1.37450051
        },
        {
         "ch": "wdot",
-        "k": 0.91750461
+        "k": 0.75289996
        },
        {
         "ch": "w2",
-        "k": 0.91750461
+        "k": 0.75289996
        }
       ],
       "axial": []
@@ -9371,8 +9487,8 @@
      "E_GPa": 68.9
     },
     "dims": {
-     "h_mm": 20,
-     "b_mm": 68,
+     "h_mm": 24,
+     "b_mm": 61.6,
      "t_mm": 1
     },
     "sections": [
@@ -9381,11 +9497,11 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.35386047
+        "k": 0.46131365
        },
        {
         "ch": "coupler_L",
-        "k": 0.4610904
+        "k": 0.64755865
        },
        {
         "ch": "crank_torque",
@@ -9393,35 +9509,35 @@
        },
        {
         "ch": "root_yz_R",
-        "k": 0.17647059
+        "k": 0.29707792
        },
        {
         "ch": "root_mperp_R",
-        "k": 14.70588247
+        "k": 16.23376601
        },
        {
         "ch": "root_yz_L",
-        "k": 0.17647059
+        "k": 0.29707792
        },
        {
         "ch": "root_mperp_L",
-        "k": 14.70588247
+        "k": 16.23376601
        },
        {
         "ch": "tail_F",
-        "k": 12.46494868
+        "k": 13.7332773
        },
        {
         "ch": "sf_origin",
-        "k": 0.83000737
+        "k": 0.88546569
        },
        {
         "ch": "wdot",
-        "k": 0.41403728
+        "k": 0.43707013
        },
        {
         "ch": "w2",
-        "k": 0.41403728
+        "k": 0.43707013
        }
       ],
       "axial": []
@@ -9430,7 +9546,7 @@
     "uses": {
      "V": "V"
     },
-    "note": "x-z plane at y 56.5 mm, 20 mm wide: the forward plate's whole net force"
+    "note": "x-z plane at y -81 mm, 24 mm wide: the forward plate's whole net force"
    },
    {
     "name": "gearbox top panel flange bond",
@@ -9442,7 +9558,7 @@
      "basis": "3771 psi (26.0 MPa) on sand-blasted aluminium, ISO 4587, typical ('typical values only, and do not constitute a product specification'): counted at half. The EU TDS's specified '> 19 MPa' (method A501) names no substrate in that line and is not used."
     },
     "dims": {
-     "w_mm": 20,
+     "w_mm": 24,
      "L_mm": 24
     },
     "sections": [
@@ -9451,11 +9567,11 @@
       "radial": [
        {
         "ch": "coupler_R",
-        "k": 0.35386047
+        "k": 0.46131365
        },
        {
         "ch": "coupler_L",
-        "k": 0.4610904
+        "k": 0.64755865
        },
        {
         "ch": "crank_torque",
@@ -9463,35 +9579,35 @@
        },
        {
         "ch": "root_yz_R",
-        "k": 0.17647059
+        "k": 0.29707792
        },
        {
         "ch": "root_mperp_R",
-        "k": 14.70588247
+        "k": 16.23376601
        },
        {
         "ch": "root_yz_L",
-        "k": 0.17647059
+        "k": 0.29707792
        },
        {
         "ch": "root_mperp_L",
-        "k": 14.70588247
+        "k": 16.23376601
        },
        {
         "ch": "tail_F",
-        "k": 12.46494868
+        "k": 13.7332773
        },
        {
         "ch": "sf_origin",
-        "k": 0.83000737
+        "k": 0.88546569
        },
        {
         "ch": "wdot",
-        "k": 0.41403728
+        "k": 0.43707013
        },
        {
         "ch": "w2",
-        "k": 0.41403728
+        "k": 0.43707013
        }
       ],
       "axial": []
@@ -9510,104 +9626,1370 @@
     "rails": {
      "right": [
       0.029,
-      0.0315
+      -0.0007500000000000007
      ],
      "left": [
       -0.029,
-      0.0315
+      -0.0007500000000000007
      ]
     },
     "boom_y_m": 0.062,
-    "clamp_spacing_m": 0.07600000000000001,
-    "tail_lever_m": 0.9473361043375451,
+    "clamp_spacing_m": 0.0696,
+    "tail_lever_m": 0.9558361043375452,
     "trays": {
      "forward": {
-      "y_m": -0.03,
-      "length_m": 0.21699815255281604
+      "y_m": -0.084,
+      "length_m": 0.1660977404863906
      },
      "aft": {
-      "y_m": -0.076,
-      "length_m": 0.11950000000000001
+      "y_m": -0.084,
+      "length_m": 0.128
      }
     },
     "plates": {
      "aft": {
-      "area_m2": 0.009202273265408022,
-      "hull_area_m2": 0.008207794314622263,
+      "area_m2": 0.00916340375464377,
+      "hull_area_m2": 0.00747540375464377,
       "posts": [
        {
         "to": "boom clamp",
-        "length_m": 0.003499999999999996,
-        "area_m2": 0.00044199999999999996
+        "length_m": 0.047,
+        "area_m2": 0.001152,
+        "post_m": [
+         -0.008,
+         0.008,
+         0.015,
+         0.062
+        ],
+        "pad_m": [
+         -0.01,
+         0.01,
+         0.052,
+         0.072
+        ]
        },
        {
         "to": "aft tray",
-        "length_m": 0.0027065792321466775,
-        "area_m2": 0.00055247895078576
+        "length_m": 0.0010000000000000009,
+        "area_m2": 0.000536,
+        "post_m": [
+         -0.008,
+         0.008,
+         -0.084,
+         -0.083
+        ],
+        "pad_m": [
+         -0.013,
+         0.013,
+         -0.094,
+         -0.074
+        ]
        }
       ],
-      "cut_y_m": 0.017,
-      "cut_width_m": 0.08179720302421732
+      "cut_y_m": -0.0165,
+      "cut_width_m": 0.094,
+      "outline_m": [
+       [
+        -0.047,
+        -0.02
+       ],
+       [
+        -0.04699,
+        -0.02017
+       ],
+       [
+        -0.0454,
+        -0.04551
+       ],
+       [
+        -0.04522,
+        -0.04692
+       ],
+       [
+        -0.04491,
+        -0.04831
+       ],
+       [
+        -0.04448,
+        -0.04967
+       ],
+       [
+        -0.04394,
+        -0.05098
+       ],
+       [
+        -0.04328,
+        -0.05224
+       ],
+       [
+        -0.04252,
+        -0.05344
+       ],
+       [
+        -0.04165,
+        -0.05457
+       ],
+       [
+        -0.04069,
+        -0.05562
+       ],
+       [
+        -0.01341,
+        -0.08241
+       ],
+       [
+        -0.01329,
+        -0.08253
+       ],
+       [
+        -0.01315,
+        -0.08264
+       ],
+       [
+        -0.013,
+        -0.08273
+       ],
+       [
+        -0.01285,
+        -0.08281
+       ],
+       [
+        -0.01268,
+        -0.08288
+       ],
+       [
+        -0.01252,
+        -0.08293
+       ],
+       [
+        -0.01235,
+        -0.08297
+       ],
+       [
+        -0.01217,
+        -0.08299
+       ],
+       [
+        -0.012,
+        -0.083
+       ],
+       [
+        0.012,
+        -0.083
+       ],
+       [
+        0.01217,
+        -0.08299
+       ],
+       [
+        0.01235,
+        -0.08297
+       ],
+       [
+        0.01252,
+        -0.08293
+       ],
+       [
+        0.01268,
+        -0.08288
+       ],
+       [
+        0.01285,
+        -0.08281
+       ],
+       [
+        0.013,
+        -0.08273
+       ],
+       [
+        0.01315,
+        -0.08264
+       ],
+       [
+        0.01329,
+        -0.08253
+       ],
+       [
+        0.01341,
+        -0.08241
+       ],
+       [
+        0.01353,
+        -0.08229
+       ],
+       [
+        0.01364,
+        -0.08215
+       ],
+       [
+        0.01373,
+        -0.082
+       ],
+       [
+        0.04673,
+        -0.021
+       ],
+       [
+        0.04681,
+        -0.02085
+       ],
+       [
+        0.04688,
+        -0.02068
+       ],
+       [
+        0.04693,
+        -0.02052
+       ],
+       [
+        0.04697,
+        -0.02035
+       ],
+       [
+        0.04699,
+        -0.02017
+       ],
+       [
+        0.047,
+        -0.02
+       ],
+       [
+        0.047,
+        0.009
+       ],
+       [
+        0.04699,
+        0.00917
+       ],
+       [
+        0.04697,
+        0.00935
+       ],
+       [
+        0.04693,
+        0.00952
+       ],
+       [
+        0.04688,
+        0.00968
+       ],
+       [
+        0.04681,
+        0.00985
+       ],
+       [
+        0.04673,
+        0.01
+       ],
+       [
+        0.04664,
+        0.01015
+       ],
+       [
+        0.04653,
+        0.01029
+       ],
+       [
+        0.04641,
+        0.01041
+       ],
+       [
+        0.04629,
+        0.01053
+       ],
+       [
+        0.04615,
+        0.01064
+       ],
+       [
+        0.046,
+        0.01073
+       ],
+       [
+        0.04585,
+        0.01081
+       ],
+       [
+        0.04568,
+        0.01088
+       ],
+       [
+        0.04552,
+        0.01093
+       ],
+       [
+        0.03308,
+        0.01446
+       ],
+       [
+        0.03173,
+        0.01476
+       ],
+       [
+        0.03037,
+        0.01494
+       ],
+       [
+        0.029,
+        0.015
+       ],
+       [
+        -0.029,
+        0.015
+       ],
+       [
+        -0.03037,
+        0.01494
+       ],
+       [
+        -0.03173,
+        0.01476
+       ],
+       [
+        -0.03308,
+        0.01446
+       ],
+       [
+        -0.04552,
+        0.01093
+       ],
+       [
+        -0.04568,
+        0.01088
+       ],
+       [
+        -0.04585,
+        0.01081
+       ],
+       [
+        -0.046,
+        0.01073
+       ],
+       [
+        -0.04615,
+        0.01064
+       ],
+       [
+        -0.04629,
+        0.01053
+       ],
+       [
+        -0.04641,
+        0.01041
+       ],
+       [
+        -0.04653,
+        0.01029
+       ],
+       [
+        -0.04664,
+        0.01015
+       ],
+       [
+        -0.04673,
+        0.01
+       ],
+       [
+        -0.04681,
+        0.00985
+       ],
+       [
+        -0.04688,
+        0.00968
+       ],
+       [
+        -0.04693,
+        0.00952
+       ],
+       [
+        -0.04697,
+        0.00935
+       ],
+       [
+        -0.04699,
+        0.00917
+       ],
+       [
+        -0.047,
+        0.009
+       ]
+      ]
      },
      "fwd": {
-      "area_m2": 0.009239321791540947,
-      "hull_area_m2": 0.008797321791540948,
+      "area_m2": 0.00970591197681715,
+      "hull_area_m2": 0.008405252098625299,
       "posts": [
        {
         "to": "boom clamp",
-        "length_m": 0.003499999999999996,
-        "area_m2": 0.00044199999999999996
+        "length_m": 0.02779124238699069,
+        "area_m2": 0.000844659878191851,
+        "post_m": [
+         -0.008,
+         0.008,
+         0.03421,
+         0.062
+        ],
+        "pad_m": [
+         -0.01,
+         0.01,
+         0.052,
+         0.072
+        ]
+       },
+       {
+        "to": "forward tray",
+        "length_m": 0.0010000000000000009,
+        "area_m2": 0.00045599999999999997,
+        "post_m": [
+         -0.008,
+         0.008,
+         -0.084,
+         -0.083
+        ],
+        "pad_m": [
+         -0.011,
+         0.011,
+         -0.094,
+         -0.074
+        ]
        }
       ],
-      "cut_y_m": 0.017,
-      "cut_width_m": 0.0845519922778971
+      "cut_y_m": -0.0165,
+      "cut_width_m": 0.094,
+      "outline_m": [
+       [
+        -0.047,
+        -0.02
+       ],
+       [
+        -0.04699,
+        -0.02017
+       ],
+       [
+        -0.0454,
+        -0.04551
+       ],
+       [
+        -0.04522,
+        -0.04692
+       ],
+       [
+        -0.04491,
+        -0.04831
+       ],
+       [
+        -0.04448,
+        -0.04967
+       ],
+       [
+        -0.04394,
+        -0.05098
+       ],
+       [
+        -0.04328,
+        -0.05224
+       ],
+       [
+        -0.04252,
+        -0.05344
+       ],
+       [
+        -0.04165,
+        -0.05457
+       ],
+       [
+        -0.04069,
+        -0.05562
+       ],
+       [
+        -0.01341,
+        -0.08241
+       ],
+       [
+        -0.01329,
+        -0.08253
+       ],
+       [
+        -0.01315,
+        -0.08264
+       ],
+       [
+        -0.013,
+        -0.08273
+       ],
+       [
+        -0.01285,
+        -0.08281
+       ],
+       [
+        -0.01268,
+        -0.08288
+       ],
+       [
+        -0.01252,
+        -0.08293
+       ],
+       [
+        -0.01235,
+        -0.08297
+       ],
+       [
+        -0.01217,
+        -0.08299
+       ],
+       [
+        -0.012,
+        -0.083
+       ],
+       [
+        0.012,
+        -0.083
+       ],
+       [
+        0.01217,
+        -0.08299
+       ],
+       [
+        0.01235,
+        -0.08297
+       ],
+       [
+        0.01252,
+        -0.08293
+       ],
+       [
+        0.01268,
+        -0.08288
+       ],
+       [
+        0.01285,
+        -0.08281
+       ],
+       [
+        0.013,
+        -0.08273
+       ],
+       [
+        0.01315,
+        -0.08264
+       ],
+       [
+        0.01329,
+        -0.08253
+       ],
+       [
+        0.01341,
+        -0.08241
+       ],
+       [
+        0.01353,
+        -0.08229
+       ],
+       [
+        0.01364,
+        -0.08215
+       ],
+       [
+        0.01373,
+        -0.082
+       ],
+       [
+        0.04673,
+        -0.021
+       ],
+       [
+        0.04681,
+        -0.02085
+       ],
+       [
+        0.04688,
+        -0.02068
+       ],
+       [
+        0.04693,
+        -0.02052
+       ],
+       [
+        0.04697,
+        -0.02035
+       ],
+       [
+        0.04699,
+        -0.02017
+       ],
+       [
+        0.047,
+        -0.02
+       ],
+       [
+        0.047,
+        0.009
+       ],
+       [
+        0.04699,
+        0.00917
+       ],
+       [
+        0.04697,
+        0.00935
+       ],
+       [
+        0.04693,
+        0.00952
+       ],
+       [
+        0.04688,
+        0.00968
+       ],
+       [
+        0.04681,
+        0.00985
+       ],
+       [
+        0.04673,
+        0.01
+       ],
+       [
+        0.04664,
+        0.01015
+       ],
+       [
+        0.04653,
+        0.01029
+       ],
+       [
+        0.04641,
+        0.01041
+       ],
+       [
+        0.04629,
+        0.01053
+       ],
+       [
+        0.04615,
+        0.01064
+       ],
+       [
+        0.01682,
+        0.03228
+       ],
+       [
+        0.01551,
+        0.03311
+       ],
+       [
+        0.01413,
+        0.03383
+       ],
+       [
+        0.0127,
+        0.03442
+       ],
+       [
+        0.01122,
+        0.03489
+       ],
+       [
+        0.0097,
+        0.03523
+       ],
+       [
+        0.00816,
+        0.03543
+       ],
+       [
+        0.00661,
+        0.0355
+       ],
+       [
+        0.00506,
+        0.03543
+       ],
+       [
+        0.00352,
+        0.03523
+       ],
+       [
+        0.002,
+        0.03489
+       ],
+       [
+        0.00052,
+        0.03442
+       ],
+       [
+        -0.00091,
+        0.03383
+       ],
+       [
+        -0.04585,
+        0.01081
+       ],
+       [
+        -0.046,
+        0.01073
+       ],
+       [
+        -0.04615,
+        0.01064
+       ],
+       [
+        -0.04629,
+        0.01053
+       ],
+       [
+        -0.04641,
+        0.01041
+       ],
+       [
+        -0.04653,
+        0.01029
+       ],
+       [
+        -0.04664,
+        0.01015
+       ],
+       [
+        -0.04673,
+        0.01
+       ],
+       [
+        -0.04681,
+        0.00985
+       ],
+       [
+        -0.04688,
+        0.00968
+       ],
+       [
+        -0.04693,
+        0.00952
+       ],
+       [
+        -0.04697,
+        0.00935
+       ],
+       [
+        -0.04699,
+        0.00917
+       ],
+       [
+        -0.047,
+        0.009
+       ]
+      ]
      }
     },
     "counts": {
-     "screws": 16,
-     "nuts": 14,
+     "screws": 22,
+     "nuts": 20,
      "tieS": 19,
      "tieL": 0
     }
    },
    "clearances_mm": {
     "right": {
-     "gear-khk-ds1-60 (stage 0)": -3.5,
-     "gear-khk-ds1-20 (stage 0)": 56.2,
-     "gear-khk-ssag1-40j10 (stage 1)": 35.5,
-     "gear-khk-msga1-18 (stage 1)": 17.5,
-     "gear-khk-msgb1-45 (stage 2)": 34.5,
-     "gear-khk-msga1-18 (stage 2)": 46.5,
-     "gear-khk-msgb1-45 (stage 3)": 62.7,
-     "gear-khk-msga1-18 (stage 3)": 48,
-     "rocker hub": -1.1
+     "gear-khk-ds1-60 (stage 0)": -16.7,
+     "gear-khk-ds1-20 (stage 0)": 11.5,
+     "gear-khk-ssag1-40j10 (stage 1)": 14.7,
+     "gear-khk-msga1-18 (stage 1)": 4.3,
+     "gear-khk-msgb1-45 (stage 2)": 42.5,
+     "gear-khk-msga1-18 (stage 2)": 25.7,
+     "gear-khk-msgb1-45 (stage 3)": 32.4,
+     "gear-khk-msga1-18 (stage 3)": 56,
+     "rocker hub": 7.4
     },
     "left": {
-     "gear-khk-ds1-60 (stage 0)": 8.5,
-     "gear-khk-ds1-20 (stage 0)": 35.7,
-     "gear-khk-ssag1-40j10 (stage 1)": 27.2,
-     "gear-khk-msga1-18 (stage 1)": 29.5,
-     "gear-khk-msgb1-45 (stage 2)": 50.8,
-     "gear-khk-msga1-18 (stage 2)": 38.2,
-     "gear-khk-msgb1-45 (stage 3)": 62.7,
-     "gear-khk-msga1-18 (stage 3)": 64.3,
-     "rocker hub": -1.1
+     "gear-khk-ds1-60 (stage 0)": 15.6,
+     "gear-khk-ds1-20 (stage 0)": 22.6,
+     "gear-khk-ssag1-40j10 (stage 1)": 1,
+     "gear-khk-msga1-18 (stage 1)": 36.6,
+     "gear-khk-msgb1-45 (stage 2)": 13.3,
+     "gear-khk-msga1-18 (stage 2)": 12,
+     "gear-khk-msgb1-45 (stage 3)": 32.4,
+     "gear-khk-msga1-18 (stage 3)": 26.8,
+     "rocker hub": 7.4
     },
     "panels": {
      "side panel right": {
-      "clearance_mm": -8.2,
+      "clearance_mm": -6.6,
       "nearest": "gear-khk-ds1-60 (stage 0)"
      },
      "side panel left": {
-      "clearance_mm": 1.3,
-      "nearest": "shoulder rail left"
+      "clearance_mm": 5.3,
+      "nearest": "gear-khk-msgb1-45 (stage 2)"
      },
      "top panel": {
-      "clearance_mm": 20.2,
-      "nearest": "gear-khk-ds1-60 (stage 0)"
+      "clearance_mm": 1.5,
+      "nearest": "gear-khk-msgb1-45 (stage 3)"
      }
     }
    }
+  },
+  "clearance": {
+   "rule": "SPEC Design freeze, Assembly clearance (2026-11-03): at least 0.5 mm between every pair of parts that does not share a joint, through the full stroke; at least 0.5 mm running clearance between parts stacked on one pin (no catalogue thrust washer is credited); parts joined directly may touch but never interpenetrate (round 14), gears in mesh excepted",
+   "required_mm": 0.5,
+   "method": "parts as prisms along body x (rings, capsules, convex polygons with holes in the (z, y) plane); gap sqrt(gx^2 + g2^2), overlap as the smaller penetration; src/design/clearance.js",
+   "sampling": {
+    "crank_phases_per_amplitude": 360,
+    "amplitudes_rad": [
+     0.6632251157578453
+    ],
+    "refine": "golden-section search between the neighbouring samples for every moving pair under 10 mm"
+   },
+   "parts": 61,
+   "solids": 133,
+   "pairs_checked": 8592,
+   "pairs_joined_checked_at_zero": 412,
+   "pairs_exempt": 186,
+   "solid_pairs_clashing": 0,
+   "joints": [
+    {
+     "a": "crank encoder actuator",
+     "b": "crank/shaft",
+     "why": "on the crank shaft by its three set screws (maker's fixing)"
+    },
+    {
+     "a": "crank encoder readhead",
+     "b": "gearbox plate forward",
+     "why": "on its bracket to the forward plate's outer face"
+    },
+    {
+     "a": "motor",
+     "b": "gearbox plate forward",
+     "why": "screwed to the forward plate"
+    },
+    {
+     "a": "stage 1 wheel gear-khk-ds1-60",
+     "b": "gear shaft 3/shaft",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 1 wheel gear-khk-ds1-60",
+     "b": "gear shaft 3/wheel seat",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 1 pinion gear-khk-ds1-20",
+     "b": "motor/shaft",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 1 pinion gear-khk-ds1-20",
+     "b": "motor/wheel seat",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 1 wheel gear-khk-ds1-60",
+     "b": "stage 1 pinion gear-khk-ds1-20",
+     "why": "gears in mesh"
+    },
+    {
+     "a": "stage 2 wheel gear-khk-ssag1-40j10",
+     "b": "gear shaft 2/shaft",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 2 wheel gear-khk-ssag1-40j10",
+     "b": "gear shaft 2/wheel seat",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 2 pinion gear-khk-msga1-18",
+     "b": "gear shaft 3/shaft",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 2 pinion gear-khk-msga1-18",
+     "b": "gear shaft 3/wheel seat",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 2 wheel gear-khk-ssag1-40j10",
+     "b": "stage 2 pinion gear-khk-msga1-18",
+     "why": "gears in mesh"
+    },
+    {
+     "a": "stage 3 wheel gear-khk-msgb1-45",
+     "b": "gear shaft 1/shaft",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 3 wheel gear-khk-msgb1-45",
+     "b": "gear shaft 1/wheel seat",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 3 pinion gear-khk-msga1-18",
+     "b": "gear shaft 2/shaft",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 3 pinion gear-khk-msga1-18",
+     "b": "gear shaft 2/wheel seat",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 3 wheel gear-khk-msgb1-45",
+     "b": "stage 3 pinion gear-khk-msga1-18",
+     "why": "gears in mesh"
+    },
+    {
+     "a": "stage 4 wheel gear-khk-msgb1-45",
+     "b": "crank/shaft",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 4 wheel gear-khk-msgb1-45",
+     "b": "crank/wheel seat",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 4 pinion gear-khk-msga1-18",
+     "b": "gear shaft 1/shaft",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 4 pinion gear-khk-msga1-18",
+     "b": "gear shaft 1/wheel seat",
+     "why": "gear on its shaft (bore on the shaft or seat)"
+    },
+    {
+     "a": "stage 4 wheel gear-khk-msgb1-45",
+     "b": "stage 4 pinion gear-khk-msga1-18",
+     "why": "gears in mesh"
+    },
+    {
+     "a": "crank shaft journal aft (bushing-igus-GFM-1012-10)",
+     "b": "crank/shaft",
+     "why": "journal on its shaft"
+    },
+    {
+     "a": "crank shaft journal aft (bushing-igus-GFM-1012-10)",
+     "b": "gearbox plate aft",
+     "why": "pressed in its plate seat"
+    },
+    {
+     "a": "crank shaft journal forward (bushing-igus-GFM-1012-10)",
+     "b": "crank/shaft",
+     "why": "journal on its shaft"
+    },
+    {
+     "a": "crank shaft journal forward (bushing-igus-GFM-1012-10)",
+     "b": "gearbox plate forward",
+     "why": "pressed in its plate seat"
+    },
+    {
+     "a": "gear shaft 1 journal aft (bushing-igus-GFM-0810-06)",
+     "b": "gear shaft 1/shaft",
+     "why": "journal on its shaft"
+    },
+    {
+     "a": "gear shaft 1 journal aft (bushing-igus-GFM-0810-06)",
+     "b": "gearbox plate aft",
+     "why": "pressed in its plate seat"
+    },
+    {
+     "a": "gear shaft 1 journal forward (bushing-igus-GFM-0810-06)",
+     "b": "gear shaft 1/shaft",
+     "why": "journal on its shaft"
+    },
+    {
+     "a": "gear shaft 1 journal forward (bushing-igus-GFM-0810-06)",
+     "b": "gearbox plate forward",
+     "why": "pressed in its plate seat"
+    },
+    {
+     "a": "gear shaft 2 journal aft (bushing-igus-GFM-0810-06)",
+     "b": "gear shaft 2/shaft",
+     "why": "journal on its shaft"
+    },
+    {
+     "a": "gear shaft 2 journal aft (bushing-igus-GFM-0810-06)",
+     "b": "gearbox plate aft",
+     "why": "pressed in its plate seat"
+    },
+    {
+     "a": "gear shaft 2 journal forward (bushing-igus-GFM-0810-06)",
+     "b": "gear shaft 2/shaft",
+     "why": "journal on its shaft"
+    },
+    {
+     "a": "gear shaft 2 journal forward (bushing-igus-GFM-0810-06)",
+     "b": "gearbox plate forward",
+     "why": "pressed in its plate seat"
+    },
+    {
+     "a": "gear shaft 3 journal aft (bearing-skf-628-8-2z)",
+     "b": "gear shaft 3/shaft",
+     "why": "journal on its shaft"
+    },
+    {
+     "a": "gear shaft 3 journal aft (bearing-skf-628-8-2z)",
+     "b": "gearbox plate aft",
+     "why": "pressed in its plate seat"
+    },
+    {
+     "a": "gear shaft 3 journal forward (bearing-skf-628-8-2z)",
+     "b": "gear shaft 3/shaft",
+     "why": "journal on its shaft"
+    },
+    {
+     "a": "gear shaft 3 journal forward (bearing-skf-628-8-2z)",
+     "b": "gearbox plate forward",
+     "why": "pressed in its plate seat"
+    },
+    {
+     "a": "motor shaft outboard journal forward (bearing-skf-619-5-2z)",
+     "b": "motor/shaft",
+     "why": "journal on its shaft"
+    },
+    {
+     "a": "motor shaft outboard journal forward (bearing-skf-619-5-2z)",
+     "b": "gearbox plate forward",
+     "why": "pressed in its plate seat"
+    },
+    {
+     "a": "shoulder bracket R aft",
+     "b": "shoulder rail right",
+     "why": "bonded on the rail"
+    },
+    {
+     "a": "shoulder bushing R aft",
+     "b": "shoulder bracket R aft",
+     "why": "pressed in the housing"
+    },
+    {
+     "a": "shoulder bushing R aft",
+     "b": "rocker R/shoulder pin",
+     "why": "journal on the shoulder pin"
+    },
+    {
+     "a": "shoulder bracket R forward",
+     "b": "shoulder rail right",
+     "why": "bonded on the rail"
+    },
+    {
+     "a": "shoulder bushing R forward",
+     "b": "shoulder bracket R forward",
+     "why": "pressed in the housing"
+    },
+    {
+     "a": "shoulder bushing R forward",
+     "b": "rocker R/shoulder pin",
+     "why": "journal on the shoulder pin"
+    },
+    {
+     "a": "coupler R crank bushing",
+     "b": "coupler R",
+     "why": "pressed in the eye"
+    },
+    {
+     "a": "coupler R crank bushing",
+     "b": "crank/pin",
+     "why": "journal on its pin"
+    },
+    {
+     "a": "coupler R horn bushing",
+     "b": "coupler R",
+     "why": "pressed in the eye"
+    },
+    {
+     "a": "coupler R horn bushing",
+     "b": "rocker R/horn pin",
+     "why": "journal on its pin"
+    },
+    {
+     "a": "shoulder bracket L aft",
+     "b": "shoulder rail left",
+     "why": "bonded on the rail"
+    },
+    {
+     "a": "shoulder bushing L aft",
+     "b": "shoulder bracket L aft",
+     "why": "pressed in the housing"
+    },
+    {
+     "a": "shoulder bushing L aft",
+     "b": "rocker L/shoulder pin",
+     "why": "journal on the shoulder pin"
+    },
+    {
+     "a": "shoulder bracket L forward",
+     "b": "shoulder rail left",
+     "why": "bonded on the rail"
+    },
+    {
+     "a": "shoulder bushing L forward",
+     "b": "shoulder bracket L forward",
+     "why": "pressed in the housing"
+    },
+    {
+     "a": "shoulder bushing L forward",
+     "b": "rocker L/shoulder pin",
+     "why": "journal on the shoulder pin"
+    },
+    {
+     "a": "coupler L crank bushing",
+     "b": "coupler L",
+     "why": "pressed in the eye"
+    },
+    {
+     "a": "coupler L crank bushing",
+     "b": "crank/pin",
+     "why": "journal on its pin"
+    },
+    {
+     "a": "coupler L horn bushing",
+     "b": "coupler L",
+     "why": "pressed in the eye"
+    },
+    {
+     "a": "coupler L horn bushing",
+     "b": "rocker L/horn pin",
+     "why": "journal on its pin"
+    },
+    {
+     "a": "shoulder rail right",
+     "b": "gearbox plate aft",
+     "why": "seated in the plate"
+    },
+    {
+     "a": "shoulder rail right",
+     "b": "gearbox plate forward",
+     "why": "seated in the plate"
+    },
+    {
+     "a": "shoulder rail left",
+     "b": "gearbox plate aft",
+     "why": "seated in the plate"
+    },
+    {
+     "a": "shoulder rail left",
+     "b": "gearbox plate forward",
+     "why": "seated in the plate"
+    },
+    {
+     "a": "gearbox side panel right",
+     "b": "gearbox plate aft",
+     "why": "flange bonded to the plate"
+    },
+    {
+     "a": "gearbox side panel right",
+     "b": "gearbox plate forward",
+     "why": "flange bonded to the plate"
+    },
+    {
+     "a": "gearbox side panel left",
+     "b": "gearbox plate aft",
+     "why": "flange bonded to the plate"
+    },
+    {
+     "a": "gearbox side panel left",
+     "b": "gearbox plate forward",
+     "why": "flange bonded to the plate"
+    },
+    {
+     "a": "gearbox top panel",
+     "b": "gearbox plate aft",
+     "why": "flange bonded to the plate"
+    },
+    {
+     "a": "gearbox top panel",
+     "b": "gearbox plate forward",
+     "why": "flange bonded to the plate"
+    },
+    {
+     "a": "boom clamp aft",
+     "b": "tail boom",
+     "why": "bonded on the boom"
+    },
+    {
+     "a": "boom clamp aft",
+     "b": "gearbox plate aft",
+     "why": "screwed to the plate"
+    },
+    {
+     "a": "boom clamp forward",
+     "b": "tail boom",
+     "why": "bonded on the boom"
+    },
+    {
+     "a": "boom clamp forward",
+     "b": "gearbox plate forward",
+     "why": "screwed to the plate"
+    },
+    {
+     "a": "forward tray",
+     "b": "gearbox plate forward",
+     "why": "screwed to the plate"
+    },
+    {
+     "a": "aft tray",
+     "b": "gearbox plate aft",
+     "why": "screwed to the plate"
+    },
+    {
+     "a": "packed battery",
+     "b": "forward tray",
+     "why": "tied to the tray"
+    },
+    {
+     "a": "packed esc",
+     "b": "forward tray",
+     "why": "tied to the tray"
+    },
+    {
+     "a": "packed fc",
+     "b": "aft tray",
+     "why": "tied to the tray"
+    },
+    {
+     "a": "packed gps",
+     "b": "aft tray",
+     "why": "tied to the tray"
+    },
+    {
+     "a": "packed receiver",
+     "b": "forward tray",
+     "why": "tied to the tray"
+    },
+    {
+     "a": "packed airspeed",
+     "b": "forward tray",
+     "why": "tied to the tray"
+    },
+    {
+     "a": "packed servo_tail_L",
+     "b": "aft tray",
+     "why": "tied to the tray"
+    },
+    {
+     "a": "packed servo_tail_R",
+     "b": "aft tray",
+     "why": "tied to the tray"
+    }
+   ],
+   "min_by_class": {
+    "moving / fixed": {
+     "a": "crank/web",
+     "b": "crank shaft journal aft (bushing-igus-GFM-1012-10)/flange",
+     "gap_mm": 0.5,
+     "class": "moving / fixed",
+     "phase_deg": 0,
+     "amp_rad": 0.6632251157578453
+    },
+    "moving / moving": {
+     "a": "crank/web",
+     "b": "coupler R/crank eye",
+     "gap_mm": 0.5,
+     "class": "moving / moving",
+     "phase_deg": 0,
+     "amp_rad": 0.6632251157578453
+    },
+    "shaft or pin stack": {
+     "a": "coupler R/crank eye",
+     "b": "coupler L/crank eye",
+     "gap_mm": 0.5,
+     "class": "shaft or pin stack",
+     "phase_deg": 0,
+     "amp_rad": 0.6632251157578453
+    },
+    "fixed / fixed": {
+     "a": "gearbox plate aft/post 1 (boom clamp)",
+     "b": "tail boom/tube",
+     "gap_mm": 0.5,
+     "class": "fixed / fixed"
+    }
+   },
+   "clashes": [],
+   "pod_shell": {
+    "rule": "packed parts against the pod loft (model.js boxProtrusion), the same 0.5 mm",
+    "rows": [
+     {
+      "part": "motor (its can)",
+      "gap_mm": 0.76
+     },
+     {
+      "part": "packed battery",
+      "gap_mm": 0.647
+     },
+     {
+      "part": "packed esc",
+      "gap_mm": 30.71
+     },
+     {
+      "part": "packed fc",
+      "gap_mm": 24.651
+     },
+     {
+      "part": "packed gps",
+      "gap_mm": 4.574
+     },
+     {
+      "part": "packed receiver",
+      "gap_mm": 39.687
+     },
+     {
+      "part": "packed airspeed",
+      "gap_mm": 24.933
+     },
+     {
+      "part": "packed servo_tail_L",
+      "gap_mm": 21.454
+     },
+     {
+      "part": "packed servo_tail_R",
+      "gap_mm": 21.454
+     },
+     {
+      "part": "packed regulator",
+      "gap_mm": 33.105
+     },
+     {
+      "part": "stage 4 wheel 45T (gear-khk-msgb1-45) tip circle",
+      "gap_mm": 15.993
+     },
+     {
+      "part": "stage 4 pinion 18T (gear-khk-msga1-18) tip circle",
+      "gap_mm": 13.904
+     },
+     {
+      "part": "stage 3 wheel 45T (gear-khk-msgb1-45) tip circle",
+      "gap_mm": 0.521
+     },
+     {
+      "part": "stage 3 pinion 18T (gear-khk-msga1-18) tip circle",
+      "gap_mm": 34.219
+     },
+     {
+      "part": "stage 2 wheel 40T (gear-khk-ssag1-40j10) tip circle",
+      "gap_mm": 23.282
+     },
+     {
+      "part": "stage 2 pinion 18T (gear-khk-msga1-18) tip circle",
+      "gap_mm": 22.413
+     },
+     {
+      "part": "stage 1 wheel 60T (gear-khk-ds1-60) tip circle",
+      "gap_mm": 0.671
+     },
+     {
+      "part": "stage 1 pinion 20T (gear-khk-ds1-20) tip circle",
+      "gap_mm": 6.477
+     }
+    ],
+    "clashes": []
+   },
+   "assumptions": [
+    "crank encoder (round 14): readhead as its ring envelope (outer diameter, through-hole, thickness with connector), the actuator at the ride height from the readhead's face, coaxial with the crank (model.js clearancePlanes)",
+    "gear hubs on the forward side of the face (model.js stagePlanes allots each stage its hub width there)",
+    "plate journals: a flanged bushing's flange on the plate's outer face, its body through the plate inward; a bearing flush with the outer face, inward",
+    "gearbox plates and their posts: a clearance hole for the tail boom, the running clearance round it; the posts and pads to the boom clamps and trays as the airframe states them (airframe.js platePosts)",
+    "rocker arm centred on the horn boss (the physics states only its section); horn boss 0.5 mm from the coupler eye (forward of it; R fwd, L aft), horn pin from the boss's far face through the eye to 0 mm past it (linkage.js horn pin); spar socket along the spar from the hub",
+    "frame (structure.airframe): rails from the aft housing's sleeve to the forward plate's outer face; panels between the plate planes; boom clamps on the plates' outer faces with the screw flange below the boom; trays as channels, flanges up, from the plate face for their stated length"
+   ],
+   "passed": true
   }
  },
  "bom": {
@@ -9734,15 +11116,15 @@
     "pos": null
    },
    {
-    "id": "sensor-rls-orbis-actuator-8mm",
-    "name": "Orbis magnetic actuator, 8 mm inner diameter (ring magnet in a hub for the BR10 readhead)",
+    "id": "sensor-rls-orbis-actuator-10mm",
+    "name": "Orbis magnetic actuator BA100, 10 mm inner diameter (ring magnet in a hub, for the BR10 readhead)",
     "role": "crank encoder magnet",
     "count": 1,
-    "unit_mass_g": 5.5,
-    "mass_g": 5.5,
+    "unit_mass_g": 5.7,
+    "mass_g": 5.7,
     "source_url": "https://cdn.rls.si/documents/datasheets/BRD01.pdf",
     "verified": "datasheet",
-    "retrieved": "2026-11-02",
+    "retrieved": "2026-11-03",
     "pos": null
    },
    {
@@ -9950,7 +11332,7 @@
    {
     "name": "wing film, both faces",
     "material_id": "film-oracover-air-light",
-    "material": "Oracover Air Indoor / Air Light",
+    "material": "ORACOVER Air Light, light scale white (331-099)",
     "mass_g": 23.346666666666668,
     "basis": "17 g/m2 x 1.373 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
@@ -9966,7 +11348,7 @@
    {
     "name": "tail surfaces, film, spar and ribs",
     "material_id": "film-oracover-air-light",
-    "material": "Oracover Air Indoor / Air Light",
+    "material": "ORACOVER Air Light, light scale white (331-099)",
     "mass_g": 14.915295266199667,
     "basis": "film 6.4 g + rods 6.1 g + ribs 2.4 g",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
@@ -9982,16 +11364,16 @@
    {
     "name": "fuselage film shell",
     "material_id": "film-oracover-air-light",
-    "material": "Oracover Air Indoor / Air Light",
-    "mass_g": 2.6926132151283753,
-    "basis": "0.158 m2",
+    "material": "ORACOVER Air Light, light scale white (331-099)",
+    "mass_g": 3.0597877444640624,
+    "basis": "0.180 m2",
     "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
    },
    {
     "name": "fuselage formers",
     "material_id": "balsa-wood-database",
     "material": "Balsa, average dried",
-    "mass_g": 8.775,
+    "mass_g": 11.550000000000002,
     "basis": "5 off, 50% lightened, 2 mm",
     "source_url": "https://www.wood-database.com/balsa/"
    },
@@ -9999,8 +11381,8 @@
     "name": "crank: shaft, web and pin in one piece",
     "material_id": "metal-ti-6al-4v-annealed-bar",
     "material": "Titanium Ti-6Al-4V (Grade 5) annealed bar",
-    "mass_g": 33.36312170225567,
-    "basis": "10/5 mm shaft x 71.0 mm, web 14 x 6 mm over the 12 mm throw, 8 mm pin x 12.0 mm, 15 mm wheel seat x 10 mm (the gear-khk-msgb1-45, 15 mm bore, keyed); 4.43 g/cm3",
+    "mass_g": 39.99295426982317,
+    "basis": "10/5 mm shaft x 94.7 mm, web 14 x 6 mm over the 12 mm throw, 8 mm pin x 14.0 mm, 15 mm wheel seat x 10 mm (the gear-khk-msgb1-45, 15 mm bore, keyed); 4.43 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/07/Titanium-Ti-6Al-4V-Grade-5-Annealed-Bar-Data-Sheet.pdf"
    },
    {
@@ -10015,8 +11397,8 @@
     "name": "gear shaft 1",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 13.72293224181499,
-    "basis": "8 mm x 72.0 mm with a 15 mm wheel seat for the gear-khk-msgb1-45 (15 mm bore, keyed); 2.81 g/cm3",
+    "mass_g": 12.818957805300448,
+    "basis": "8 mm x 65.6 mm with a 15 mm wheel seat for the gear-khk-msgb1-45 (15 mm bore, keyed); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
@@ -10039,8 +11421,8 @@
     "name": "gear shaft 2",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 10.964221192881451,
-    "basis": "8 mm x 72.0 mm with a 10 mm wheel seat for the gear-khk-ssag1-40j10 (10 mm bore, keyed); 2.81 g/cm3",
+    "mass_g": 10.060246756366912,
+    "basis": "8 mm x 65.6 mm with a 10 mm wheel seat for the gear-khk-ssag1-40j10 (10 mm bore, keyed); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
@@ -10063,8 +11445,8 @@
     "name": "gear shaft 3",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 10.169712410788593,
-    "basis": "8 mm x 72.0 mm; 2.81 g/cm3",
+    "mass_g": 11.511549464989864,
+    "basis": "8 mm x 81.5 mm; 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
@@ -10079,24 +11461,24 @@
     "name": "shoulder pin right",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 2.383526346278576,
-    "basis": "6 mm x 30 mm (bushing centres 24 mm apart plus one bushing length); 2.81 g/cm3",
+    "mass_g": 3.593165967014954,
+    "basis": "6 mm x 43 mm (bushing centres 37 mm apart plus one bushing length), a 9 mm collar x 2.1 mm (the rocker's forward axial stop); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "rocker right",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 21.80967111843872,
-    "basis": "hub 14.5/6 x 18 mm, horn arm 19.6 x 11 x 6 mm, horn boss 23/8 x 8 mm, spar socket 1.5 mm wall x 20 mm; 2.81 g/cm3 (replaces the carbon-plate rocker)",
+    "mass_g": 23.683299384120815,
+    "basis": "hub 14.5/6 x 28 mm, horn arm 19.6 x 11 x 6 mm, horn boss 23/8 x 7 mm, spar socket 1.5 mm wall x 20 mm; 2.81 g/cm3 (replaces the carbon-plate rocker)",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "horn pin right",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 2.259936091286354,
-    "basis": "8 mm x 16 mm; 2.81 g/cm3",
+    "mass_g": 1.906821077022861,
+    "basis": "8 mm x 13.5 mm; 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
@@ -10111,24 +11493,24 @@
     "name": "shoulder pin left",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 2.383526346278576,
-    "basis": "6 mm x 30 mm (bushing centres 24 mm apart plus one bushing length); 2.81 g/cm3",
+    "mass_g": 3.593165967014954,
+    "basis": "6 mm x 43 mm (bushing centres 37 mm apart plus one bushing length), a 9 mm collar x 2.1 mm (the rocker's forward axial stop); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "rocker left",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 21.80967111843872,
-    "basis": "hub 14.5/6 x 18 mm, horn arm 19.6 x 11 x 6 mm, horn boss 23/8 x 8 mm, spar socket 1.5 mm wall x 20 mm; 2.81 g/cm3 (replaces the carbon-plate rocker)",
+    "mass_g": 23.683299384120815,
+    "basis": "hub 14.5/6 x 28 mm, horn arm 19.6 x 11 x 6 mm, horn boss 23/8 x 7 mm, spar socket 1.5 mm wall x 20 mm; 2.81 g/cm3 (replaces the carbon-plate rocker)",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "horn pin left",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 2.259936091286354,
-    "basis": "8 mm x 16 mm; 2.81 g/cm3",
+    "mass_g": 1.906821077022861,
+    "basis": "8 mm x 13.5 mm; 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
@@ -10151,15 +11533,15 @@
     "name": "gearbox plates, 2 off",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 69.67644911944754,
-    "basis": "solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft 91.8 cm2 x 1.6 mm, forward 92.6 cm2 x 1.2 mm; 2.7 g/cm3",
+    "mass_g": 71.03305902494866,
+    "basis": "solid outlines (the hull of every seat and rail seat, posts to the pads; no lightening credited): aft 91.6 cm2 x 1.6 mm, forward 97.1 cm2 x 1.2 mm; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "gearbox plate bosses",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 31.29120530755042,
+    "mass_g": 27.00128199925722,
     "basis": "bosses 8.5 mm wall round the seats crank shaft/aft, crank shaft/forward, gear shaft 1/aft, as long as the bushing, beyond the plate; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
@@ -10167,48 +11549,48 @@
     "name": "shoulder rail right aft seat boss",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 4.434122411092974,
-    "basis": "ring 29/12 x 3 mm on the aft plate",
+    "mass_g": 5.23729020793729,
+    "basis": "ring 31.5/13 x 3 mm on the aft plate",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "shoulder rail right",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 18.079488730290834,
-    "basis": "12/8 mm tube x 96.0 mm plus a 2 mm lock flange; 2.81 g/cm3",
+    "mass_g": 26.123370354005477,
+    "basis": "13/8 mm tube x 104.4 mm plus a 1.4 mm lock flange (491 mm2); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "shoulder bracket right",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 11.435058245830815,
-    "basis": "two sleeves 16/12 x 13 mm and two arms 10 x 8 x 12.2 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
+    "mass_g": 16.658132626578883,
+    "basis": "two sleeves 17/13 x 13 mm and two arms 11 x 8 x 21.1 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "shoulder rail left aft seat boss",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 4.434122411092974,
-    "basis": "ring 29/12 x 3 mm on the aft plate",
+    "mass_g": 5.23729020793729,
+    "basis": "ring 31.5/13 x 3 mm on the aft plate",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "shoulder rail left",
     "material_id": "metal-al-7075-t6",
     "material": "Aluminium 7075-T6 / T651",
-    "mass_g": 18.079488730290834,
-    "basis": "12/8 mm tube x 96.0 mm plus a 2 mm lock flange; 2.81 g/cm3",
+    "mass_g": 26.123370354005477,
+    "basis": "13/8 mm tube x 104.4 mm plus a 1.4 mm lock flange (491 mm2); 2.81 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-7075-T6-7075-T651.pdf"
    },
    {
     "name": "shoulder bracket left",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 11.435058245830815,
-    "basis": "two sleeves 16/12 x 13 mm and two arms 10 x 8 x 12.2 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
+    "mass_g": 16.658132626578883,
+    "basis": "two sleeves 17/13 x 13 mm and two arms 11 x 8 x 21.1 mm to the housings (the housing rings are the shoulder housings' items); 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
@@ -10231,16 +11613,16 @@
     "name": "forward tray",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 14.284806760823871,
-    "basis": "channel 22 x 7 x 0.8 mm sheet (28.8 mm2) x 184 mm (to 174 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
+    "mass_g": 11.691736966549103,
+    "basis": "channel 22 x 7 x 0.8 mm sheet (28.8 mm2) x 150 mm (to 140 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
     "name": "aft tray",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 7.972019999999999,
-    "basis": "channel 26 x 6 x 0.6 mm sheet (22.8 mm2) x 130 mm (to 120 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
+    "mass_g": 8.49528,
+    "basis": "channel 26 x 6 x 0.6 mm sheet (22.8 mm2) x 138 mm (to 128 mm from the plate, with a 10 mm root flange); 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
@@ -10255,24 +11637,24 @@
     "name": "gearbox panels, 3 off",
     "material_id": "metal-al-6061-t6",
     "material": "Aluminium 6061-T6 / T651",
-    "mass_g": 22.406328000000002,
-    "basis": "side panel right 21.5 x 1.2 mm, side panel left 11.7 x 2.2 mm, top panel 20 x 1 mm, each 68.0 mm plus two 24 mm flanges; 2.7 g/cm3",
+    "mass_g": 22.549104000000003,
+    "basis": "side panel right 29 x 0.9 mm, side panel left 29 x 0.9 mm, top panel 24 x 1 mm, each 61.6 mm plus two 24 mm flanges; 2.7 g/cm3",
     "source_url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf"
    },
    {
-    "name": "M3 screws, 16 off",
+    "name": "M3 screws, 22 off",
     "material_id": "screw-iso4762-m3x8-10.9",
     "material": "ISO 4762 M3 x 8 socket head cap screw, class 10.9",
-    "mass_g": 16,
-    "basis": "16 x 1 g (per part, computed: ISO 4762 M3 maximum head 5.5 mm x 3.0 mm (fasteners.eu ISO 4762 table) plus a 3 mm x 8 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
+    "mass_g": 22,
+    "basis": "22 x 1 g (per part, computed: ISO 4762 M3 maximum head 5.5 mm x 3.0 mm (fasteners.eu ISO 4762 table) plus a 3 mm x 8 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
     "source_url": "https://optimas.com/technical-resources/iso-metric-thread-proof-loads/"
    },
    {
-    "name": "M3 nuts, 14 off",
+    "name": "M3 nuts, 20 off",
     "material_id": "nut-iso4032-m3-10",
     "material": "ISO 4032 M3 hexagon nut, class 10",
-    "mass_g": 5.6000000000000005,
-    "basis": "14 x 0.4 g (per part, computed: ISO 4032 M3 maximum 5.5 mm across flats x 2.4 mm high (fasteners.eu ISO 4032 table) less a 2.5 mm minor-diameter bore, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
+    "mass_g": 8,
+    "basis": "20 x 0.4 g (per part, computed: ISO 4032 M3 maximum 5.5 mm across flats x 2.4 mm high (fasteners.eu ISO 4032 table) less a 2.5 mm minor-diameter bore, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c))",
     "source_url": "https://www.fasteners.eu/standards/ISO/4032/"
    },
    {
@@ -10300,10 +11682,10 @@
     "source_url": "https://www.tigertitanium.com/Store/ProductTube/80617"
    }
   ],
-  "parts_g": 836.0374,
-  "structure_g": 649.4186185875027,
-  "margin_g": 222.8184027881254,
-  "total_g": 1708.2744213756282
+  "parts_g": 836.2374000000001,
+  "structure_g": 695.8647200154353,
+  "margin_g": 229.8153180023153,
+  "total_g": 1761.9174380177508
  },
  "electrical": {
   "avionics_A_5V": 0.415,
@@ -10388,36 +11770,37 @@
   "Round 10: flight step 3840 Hz: the airframe channel w2 moved 10.8% at half of 1/1920 s and 2.9% at half of 1/3840 s; the flight model's aerodynamic internal states (the lifting-line circulation, one frozen-Jacobian Newton step per flight step, and the strip lag states) advance once per step, so it converges at first order in the step.",
   "Round 11: the section model's negative stall is kept inside the measured UIUC sweep with its own transition width (E387 stalls at -6.3 deg at Re 1e5 and 2e5, where the tables show the drag doubling; the round-10 fit had put it at -53 to -253 deg).",
   "Round 11: a bushing is judged on the length its housing supports (structure.joints[].supports[].housing_mm): the plate thickness in an unbossed plate seat, the part's own length in a boss, shoulder housing or coupler eye.",
-  "Round 12: the belly landing is flown by the controller's own approach-and-flare law (control.landing): approach at 9.033 m/s, 1.23 x the slowest steady glide over the robustness corners (VREF per 14 CFR 25.125), feed-forward from that speed's glide row, exponential flare; field elevation known to the controller (the launch point's baro reference).",
+  "Round 12: the belly landing is flown by the controller's own approach-and-flare law (control.landing): approach at 9.187 m/s, 1.23 x the slowest steady glide over the robustness corners (VREF per 14 CFR 25.125), feed-forward from that speed's glide row, exponential flare; field elevation known to the controller (the launch point's baro reference).",
   "Round 12: gear life factors at the declared design life (200 flights of 1500 s, every load cycle at the M7 peak, each gear's own revolutions at the rating crank frequency): JGMA 401-01 K_L and 402-01 K_HL as KHK prints them, a count reading the table row at or above it (no source states a rule between rows); Duracon from KHK Fig. 11.3 read off the printed curve less 0.05 kgf/mm2.",
   "Round 12: the servos run behind a Pololu step-down regulator: torque and speed at its published voltage less its 4% accuracy (or the lowest pack voltage less the dropout read off its curve), stall current at the voltage plus 4%, battery draw through the lower end of its published typical efficiency.",
-  "Round 12: the calm-air stroke envelope keeps 0.6 of every rated member's rating (rough-air member peaks measured up to 1.58 x the calm edge); the crank governor's drive clamp is 26 A; the hand launch flaps at 2.6 Hz (control.launchLaw)."
+  "Round 12: the calm-air stroke envelope keeps 0.6 of every rated member's rating (rough-air member peaks measured up to 1.58 x the calm edge); the crank governor's drive clamp is 26 A; the hand launch flaps at 2.6 Hz (control.launchLaw).",
+  "Round 14: the drive planes keep 0.5 mm running clearance along the crank pin and at the plate-adjacent stages (model.js clearancePlanes); plate bushing flanges on the plate faces; rocker hubs that far clear of the shoulder bushings; Layout (SPEC layout freedom, ROUND14.set): horn stacks R fwd, L aft of their eyes between shoulder housings spread to the stacks' length; the aft plate just forward of the crank web; rails below the hinges; stage 1 overhung forward of the forward plate with the motor inside the box; the encoder (10 mm actuator) on a crank stub forward of stage 1; the stated gear fold [157.8,48.7,1.3,110.5] deg. Assembly clearance check passed (structure.clearance)."
  ],
  "packing": {
   "checker": "sims/avis-shared/model.js prepare/layoutParts/fitReport (film workstream), used as is",
   "body_m": {
-   "width": 0.09,
-   "height": 0.13,
-   "centre_y": -0.02
+   "width": 0.11,
+   "height": 0.14,
+   "centre_y": -0.03
   },
   "protrusions": [],
-  "residual_cg_shift_m": -0.002176465299413658,
+  "residual_cg_shift_m": -0.0016232315648215894,
   "slides": [
-   "battery moved -26 mm along x from its mass lump to fit"
+   "battery moved -20 mm along x from its mass lump to fit"
   ],
   "lump_positions": {
    "flap motor": [
-    0.093,
-    -0.0208,
-    -0.0222
+    0.0562,
+    0.0177,
+    0.0066
    ],
    "ESC": [
-    0.077,
-    -0.05,
+    0.11,
+    -0.035,
     0
    ],
    "flight controller": [
-    -0.02,
+    -0.029,
     -0.01,
     0
    ],
@@ -10427,8 +11810,8 @@
     0
    ],
    "receiver and airspeed": [
-    0.1135,
-    -0.026,
+    0.115,
+    -0.035,
     0
    ],
    "tail servos": [
@@ -10442,12 +11825,17 @@
     0
    ],
    "gears and bearings": [
-    0.029,
-    -0.0324,
-    0.0054
+    0.0446,
+    -0.039,
+    -0.0104
    ],
    "crank, rockers, plates": [
-    0.0015,
+    0.0087,
+    -0.056,
+    0
+   ],
+   "crank encoder": [
+    0.0962,
     -0.056,
     0
    ]
@@ -10466,11 +11854,11 @@
   "file": "data/calibration/larus-gl-2.json",
   "source": "uvlm",
   "multipliers": {
-   "lift": 0.9919728958646853,
-   "suction": 0.938348704742442,
-   "induced": 1.0209941059529088,
-   "lag": 0.9910552708617101,
-   "apparentMass": 0.9938151735431808,
+   "lift": 0.9915893043474321,
+   "suction": 0.9360234684197125,
+   "induced": 1.0218565804193598,
+   "lag": 0.9908380137569572,
+   "apparentMass": 0.9936938276548725,
    "drag": 1
   },
   "fitted_wing": {
@@ -10493,213 +11881,213 @@
   "envelope": [
    {
     "amp": 0.6632251157578453,
-    "freqMax": 3.317859892070295,
+    "freqMax": 3.2471099780849695,
     "limitedBy": "members",
     "atV": 10,
     "method": "flight test",
     "edge_peaks": {
-     "crankTorque": 10.7617,
-     "rootBend": 16.5852,
-     "elbowBend": 4.2011,
-     "couplerForce": 1113.0958,
-     "twistTorque": 0.3924,
-     "loadFactor": 2.5478,
-     "motorRms": 20.9698,
-     "battMean": 14.0751,
-     "crankFreqRatio": 0.891,
-     "airspeed": 11.0783,
+     "crankTorque": 10.7942,
+     "rootBend": 15.9594,
+     "elbowBend": 3.9349,
+     "couplerForce": 1042.0594,
+     "twistTorque": 0.3749,
+     "loadFactor": 2.4921,
+     "motorRms": 20.4323,
+     "battMean": 13.3628,
+     "crankFreqRatio": 0.896,
+     "airspeed": 11.0642,
      "dutySat": 0,
-     "bearingRatio": 0.5733,
-     "memberRatio": 0.5967
+     "bearingRatio": 0.5596,
+     "memberRatio": 0.5976
     }
    }
   ],
   "envelopeBest": {
    "amp": 0.6632251157578453,
-   "freqMax": 3.317859892070295,
+   "freqMax": 3.2471099780849695,
    "limitedBy": "members",
    "atV": 10,
    "method": "flight test",
    "edge_peaks": {
-    "crankTorque": 10.7617,
-    "rootBend": 16.5852,
-    "elbowBend": 4.2011,
-    "couplerForce": 1113.0958,
-    "twistTorque": 0.3924,
-    "loadFactor": 2.5478,
-    "motorRms": 20.9698,
-    "battMean": 14.0751,
-    "crankFreqRatio": 0.891,
-    "airspeed": 11.0783,
+    "crankTorque": 10.7942,
+    "rootBend": 15.9594,
+    "elbowBend": 3.9349,
+    "couplerForce": 1042.0594,
+    "twistTorque": 0.3749,
+    "loadFactor": 2.4921,
+    "motorRms": 20.4323,
+    "battMean": 13.3628,
+    "crankFreqRatio": 0.896,
+    "airspeed": 11.0642,
     "dutySat": 0,
-    "bearingRatio": 0.5733,
-    "memberRatio": 0.5967
+    "bearingRatio": 0.5596,
+    "memberRatio": 0.5976
    }
   },
-  "freqMax": 3.317859892070295,
+  "freqMax": 3.2471099780849695,
   "dt": 0.00026041666666666666,
   "glide": [
    {
     "V": 7,
-    "theta": 0.04367032116053092,
-    "gamma": -0.1633377927691607,
-    "tail": 0.11106624239295751,
-    "sink": 1.1382873117951513,
-    "LD": 6.067738808941716,
-    "stalled": 0.05847487586723659
+    "theta": 0.04993116352950104,
+    "gamma": -0.16906960042647842,
+    "tail": 0.12130123456296021,
+    "sink": 1.177857018286953,
+    "LD": 5.858259640431041,
+    "stalled": 0.07403833391636748
    },
    {
     "V": 7.5,
-    "theta": 0.017187051907748208,
-    "gamma": -0.1441399259595861,
-    "tail": 0.07585167129950447,
-    "sink": 1.0773099602285636,
-    "LD": 6.889589699788013,
-    "stalled": 0.02464346845693306
+    "theta": 0.01993156062711266,
+    "gamma": -0.14893108472476557,
+    "tail": 0.07988374020463503,
+    "sink": 1.11285851095094,
+    "LD": 6.664797725868417,
+    "stalled": 0.02826934598181469
    },
    {
     "V": 8,
-    "theta": -0.005264161940774566,
-    "gamma": -0.13248398244474266,
-    "tail": 0.0525162131757935,
-    "sink": 1.0567740999329374,
-    "LD": 7.503869189252664,
-    "stalled": 0.01323592289967043
+    "theta": -0.0022298252743074842,
+    "gamma": -0.13597670572349435,
+    "tail": 0.0558578578676274,
+    "sink": 1.0844645252687661,
+    "LD": 7.308819277168508,
+    "stalled": 0.01486358112402673
    },
    {
     "V": 8.5,
-    "theta": -0.019721850271520236,
-    "gamma": -0.12143104232215898,
-    "tail": 0.038655228818003595,
-    "sink": 1.0296291009126262,
-    "LD": 8.194609684565334,
-    "stalled": 0.008382509312210733
+    "theta": -0.017144028758317803,
+    "gamma": -0.12468409239467826,
+    "tail": 0.04157074388432195,
+    "sink": 1.057070917232214,
+    "LD": 7.978664810035984,
+    "stalled": 0.009281937794130066
    },
    {
     "V": 9,
-    "theta": -0.0327727485761139,
-    "gamma": -0.11300489723961084,
-    "tail": 0.027082266496026113,
-    "sink": 1.0148808299521455,
-    "LD": 8.81147360637033,
-    "stalled": 0.005760214907148529
+    "theta": -0.030614684201743268,
+    "gamma": -0.11604194932232358,
+    "tail": 0.029592225175890535,
+    "sink": 1.0420352364676027,
+    "LD": 8.578857845561828,
+    "stalled": 0.006291301414046764
    },
    {
     "V": 9.5,
-    "theta": -0.04470399387902797,
-    "gamma": -0.10699519709183858,
-    "tail": 0.01778153803808093,
-    "sink": 1.0145160919411693,
-    "LD": 9.310521601033853,
-    "stalled": 0.004275615506227637
+    "theta": -0.04289512248152605,
+    "gamma": -0.10985792586010851,
+    "tail": 0.019988347644152703,
+    "sink": 1.0415523005840182,
+    "LD": 9.066017134465271,
+    "stalled": 0.0046064953837455
    },
    {
     "V": 10,
-    "theta": -0.055771663495907856,
-    "gamma": -0.10288371855149947,
-    "tail": 0.010141699650683001,
-    "sink": 1.02702309541568,
-    "LD": 9.685392095857166,
-    "stalled": 0.003408647077898488
+    "theta": -0.05427186618202354,
+    "gamma": -0.10561637749665807,
+    "tail": 0.012111806393287853,
+    "sink": 1.0542013171710727,
+    "LD": 9.432996875078402,
+    "stalled": 0.0036170335282405728
    },
    {
     "V": 10.5,
-    "theta": -0.06610396182456652,
-    "gamma": -0.10022679899302663,
-    "tail": 0.003758553669571292,
-    "sink": 1.0506203402103262,
-    "LD": 9.943940093895147,
-    "stalled": 0.002915742293408551
+    "theta": -0.06488532199127019,
+    "gamma": -0.10286767014264996,
+    "tail": 0.005540026966381656,
+    "sink": 1.07820663280344,
+    "LD": 9.686913830998293,
+    "stalled": 0.003040130768662628
    },
    {
     "V": 11,
-    "theta": -0.07572232347885334,
-    "gamma": -0.09861199533763083,
-    "tail": -0.0016472893190914075,
-    "sink": 1.082974755526749,
-    "LD": 10.107862145729023,
-    "stalled": 0.002676700407465193
+    "theta": -0.0747694729057938,
+    "gamma": -0.10119838487727144,
+    "tail": -0.000019113335959368254,
+    "sink": 1.1112831688114642,
+    "LD": 9.847824783866963,
+    "stalled": 0.0027366998031532037
    },
    {
     "V": 12,
-    "theta": -0.09580087437302019,
-    "gamma": -0.10032837012099041,
-    "tail": -0.010459813380552853,
-    "sink": 1.2019216907607488,
-    "LD": 9.933805208493668,
-    "stalled": 0.0027160920878280806
+    "theta": -0.09536514379071329,
+    "gamma": -0.10290818894715964,
+    "tail": -0.009076674874249631,
+    "sink": 1.23271980612454,
+    "LD": 9.683072685171588,
+    "stalled": 0.0026749044365336817
    },
    {
     "V": 13,
-    "theta": -0.11244718979541392,
-    "gamma": -0.10280147283000435,
-    "tail": -0.016903434695117233,
-    "sink": 1.334066478899832,
-    "LD": 9.693195767457278,
-    "stalled": 0.0032415228729389205
+    "theta": -0.11231481812639901,
+    "gamma": -0.10528903023348661,
+    "tail": -0.015665938355880954,
+    "sink": 1.3662298372420987,
+    "LD": 9.462543286345547,
+    "stalled": 0.0031151110559890223
    },
    {
     "V": 14,
-    "theta": -0.13129024215406626,
-    "gamma": -0.1103758755823171,
-    "tail": -0.022110753306255587,
-    "sink": 1.5421265566086924,
-    "LD": 9.023128904056449,
-    "stalled": 0.00410671281356628
+    "theta": -0.1309279008193746,
+    "gamma": -0.11232649102385157,
+    "tail": -0.0209648608160335,
+    "sink": 1.5692660424060731,
+    "LD": 8.865145720691443,
+    "stalled": 0.003902900272740089
    }
   ],
-  "dThetaPerG": 0.07387105400279878,
+  "dThetaPerG": 0.07619074346817885,
   "trim": [
    {
     "V": 10,
-    "theta": 0.07040082746845354,
-    "freq": 1.9151292911271396,
-    "tail": 0.033969180470109134,
+    "theta": 0.07421784171207993,
+    "freq": 1.9754971866668893,
+    "tail": 0.03712501412559816,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 10.5,
-    "theta": 0.05420622586603726,
-    "freq": 1.9215019375611981,
-    "tail": 0.024838087602192374,
+    "theta": 0.059504871777438226,
+    "freq": 1.9766454455312559,
+    "tail": 0.027524112865954575,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 11,
-    "theta": 0.040024876567869676,
-    "freq": 1.9270551045106064,
-    "tail": 0.017090752186256632,
+    "theta": 0.04633274991711177,
+    "freq": 1.9951654195989423,
+    "tail": 0.019816282066968473,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 12,
-    "theta": 0.020703536788020078,
-    "freq": 2.0079329412726428,
-    "tail": 0.004604971439357339,
+    "theta": 0.02477801415460968,
+    "freq": 2.0616914682968126,
+    "tail": 0.006673041129364951,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 13,
-    "theta": 0.003767972349606331,
-    "freq": 2.1288988781800797,
-    "tail": -0.005127954381219155,
+    "theta": 0.008770917599709367,
+    "freq": 2.187336724966238,
+    "tail": -0.0032009446103905543,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
    },
    {
     "V": 14,
-    "theta": -0.009733975198530385,
-    "freq": 2.2941327115208465,
-    "tail": -0.012936533660343138,
+    "theta": -0.004376880418918414,
+    "freq": 2.35903200528376,
+    "tail": -0.011180874622437465,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988
@@ -10708,89 +12096,89 @@
   "trimDetail": [
    {
     "V": 10,
-    "power_w": 37.86537758734763,
-    "Irms_A": 9.706447128218374,
-    "stalled": 0.026817023431326692,
-    "crankPeak_Nm": 5.235835903813827,
-    "freq": 1.5517847140169818,
-    "theta_deg": 3.8736800688708835,
-    "tail_deg": 1.8947154923436622
+    "power_w": 40.052449920174915,
+    "Irms_A": 10.064445598550707,
+    "stalled": 0.031001502736324463,
+    "crankPeak_Nm": 5.434584663690282,
+    "freq": 1.592691191302233,
+    "theta_deg": 4.214495307285127,
+    "tail_deg": 2.143234313744252
    },
    {
     "V": 10.5,
-    "power_w": 38.38340658247507,
-    "Irms_A": 9.770425272343171,
-    "stalled": 0.022169376513995545,
-    "crankPeak_Nm": 5.290547100348645,
-    "freq": 1.5521372841610384,
-    "theta_deg": 2.950117220655621,
-    "tail_deg": 1.264122789442392
+    "power_w": 40.13214373680577,
+    "Irms_A": 10.083566503312586,
+    "stalled": 0.023574868881619603,
+    "crankPeak_Nm": 5.464270212427684,
+    "freq": 1.5793517663740544,
+    "theta_deg": 3.200746065369479,
+    "tail_deg": 1.4116615665831096
    },
    {
     "V": 11,
-    "power_w": 39.216857941157244,
-    "Irms_A": 9.84543427279346,
-    "stalled": 0.0208613641053433,
-    "crankPeak_Nm": 5.340218234671549,
-    "freq": 1.5632779515686144,
-    "theta_deg": 2.1669491595035093,
-    "tail_deg": 0.7770650121675469
+    "power_w": 41.167573212433545,
+    "Irms_A": 10.195800124316209,
+    "stalled": 0.02186643003102051,
+    "crankPeak_Nm": 5.533465577146611,
+    "freq": 1.5939174355119283,
+    "theta_deg": 2.4092612153586463,
+    "tail_deg": 0.9244825928224589
    },
    {
     "V": 12,
-    "power_w": 42.004256673972,
-    "Irms_A": 10.10756270746364,
-    "stalled": 0.02270081993433824,
-    "crankPeak_Nm": 5.458750974374135,
-    "freq": 1.606981619184108,
-    "theta_deg": 0.903221956550404,
-    "tail_deg": 0.009108331754545382
+    "power_w": 43.935116582494864,
+    "Irms_A": 10.45954104281221,
+    "stalled": 0.02316948987465479,
+    "crankPeak_Nm": 5.663636603964567,
+    "freq": 1.6372400378757517,
+    "theta_deg": 1.1136201045131096,
+    "tail_deg": 0.1344369151088862
    },
    {
     "V": 13,
-    "power_w": 46.736260355417706,
-    "Irms_A": 10.60094184520218,
-    "stalled": 0.028932866507063764,
-    "crankPeak_Nm": 5.712382417324637,
-    "freq": 1.6888065085393638,
-    "theta_deg": -0.05608803818415937,
-    "tail_deg": -0.541258217396394
+    "power_w": 48.87935904800117,
+    "Irms_A": 10.974200699095519,
+    "stalled": 0.029201947964085675,
+    "crankPeak_Nm": 5.933778563372313,
+    "freq": 1.7177422039264845,
+    "theta_deg": 0.1258913861541724,
+    "tail_deg": -0.43257285488780545
    },
    {
     "V": 14,
-    "power_w": 53.27869140451789,
-    "Irms_A": 11.292271535157344,
-    "stalled": 0.039031530937866044,
-    "crankPeak_Nm": 6.052754886692004,
-    "freq": 1.793500886200939,
-    "theta_deg": -0.8307480016730246,
-    "tail_deg": -0.9997461011635947
+    "power_w": 55.71621485185892,
+    "Irms_A": 11.689727758345573,
+    "stalled": 0.039322119416088375,
+    "crankPeak_Nm": 6.28611053642055,
+    "freq": 1.8217228847524842,
+    "theta_deg": -0.6711793789988425,
+    "tail_deg": -0.903731706789367
    }
   ],
   "Vcruise": 10,
   "Vmin": 9.5,
-  "Md": 33.27058042090546,
-  "Ld": -24.436613052631493,
-  "Nd": -23.55767569597054,
-  "Tf": 2.9081515884238973,
-  "Mq": 2.139465668204447,
-  "Lp": 4.037256375892834,
-  "Nr": 1.2071651239088714,
+  "Md": 33.25401887258034,
+  "Ld": -24.464536014789715,
+  "Nd": -23.517932163115027,
+  "Tf": 3.003800306361662,
+  "Mq": 2.143445758196705,
+  "Lp": 4.038080968342966,
+  "Nr": 1.2027012998500988,
   "inertia": {
-   "Ix": 0.0841852553644961,
-   "Iy": 0.11910239072013355,
-   "Iz": 0.04469640649486208,
-   "xCg": 0.01471206464775558,
-   "m": 1.708274421375628
+   "Ix": 0.08467264262318057,
+   "Iy": 0.11566488924518467,
+   "Iz": 0.04165617737582269,
+   "xCg": 0.014751148552265166,
+   "m": 1.7619174380177505
   },
-  "kTheta": 0.2050058813756479,
+  "kTheta": 0.20464422351620765,
   "kQ": 0,
-  "kPhi": 0.4345650832579939,
+  "kPhi": 0.43427786371380384,
   "kP": 0,
-  "kR": 0.025621481921396703,
-  "kFv": 0.1468522504273449,
-  "kFc": 0.17622270051281388,
-  "kFcFf": 0.24002143694222028,
+  "kR": 0.02556987773220103,
+  "kFv": 0.14664069331491814,
+  "kFc": 0.17596883197790178,
+  "kFcFf": 0.2396756591827903,
   "kH": 0.5,
   "kGamma": 1,
   "kIGamma": 0.15,
@@ -10799,12 +12187,12 @@
   "kChi": 1,
   "maxBank": 0.6108652381980153,
   "diffMax": 0.3141592653589793,
-  "diffRate_rad_s": 9.073979862174596,
+  "diffRate_rad_s": 9.031390865859604,
   "diffLimit": {
    "geometric_rad": 0.3141592653589793,
-   "servo_rad": 3.0274094332026324,
-   "twist_torque_trim_Nm": 0.18036976227905718,
-   "twist_torque_per_rad": 0.27736050497181364,
+   "servo_rad": 2.9953998939793642,
+   "twist_torque_trim_Nm": 0.1843108433919545,
+   "twist_torque_per_rad": 0.2790087325957469,
    "servo_stall_Nm": 1.0200535714285714,
    "servo_speed_rad_s": 11.023132117858923,
    "supply_V": 7.2
@@ -10825,116 +12213,116 @@
   "trimFlight": [
    {
     "V": 10,
-    "theta": 0.07040082746845354,
-    "freq": 1.9151292911271396,
-    "tail": 0.033969180470109134,
+    "theta": 0.07421784171207993,
+    "freq": 1.9754971866668893,
+    "tail": 0.03712501412559816,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 64.46360348851995,
-    "flight_power_regen_credit_w": 61.10825491603598,
-    "flight_V": 10.063475436548057,
+    "flight_power_w": 69.70493880441802,
+    "flight_power_regen_credit_w": 66.25742000708998,
+    "flight_V": 10.064082459577957,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.013244613527583545,
-     "speed_err_m_s": 0.06347543654805676,
-     "freq_drift_frac": 0.010039732910529774,
-     "tail_drift_rad": 0.0013012167708980407
+     "climb_m_s": 0.018159506907945426,
+     "speed_err_m_s": 0.064082459577957,
+     "freq_drift_frac": 0.011019854867118461,
+     "tail_drift_rad": 0.001134537431239542
     }
    },
    {
     "V": 10.5,
-    "theta": 0.05420622586603726,
-    "freq": 1.9215019375611981,
-    "tail": 0.024838087602192374,
+    "theta": 0.059504871777438226,
+    "freq": 1.9766454455312559,
+    "tail": 0.027524112865954575,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 65.82912559900036,
-    "flight_power_regen_credit_w": 62.62063700792467,
-    "flight_V": 10.544947481744858,
+    "flight_power_w": 70.03418074301078,
+    "flight_power_regen_credit_w": 66.67427568193303,
+    "flight_V": 10.55215663425981,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.0022383162803564054,
-     "speed_err_m_s": 0.04494748174485785,
-     "freq_drift_frac": 0.0059902812943870435,
-     "tail_drift_rad": 0.0006333899608407245
+     "climb_m_s": 0.01686762959696749,
+     "speed_err_m_s": 0.05215663425980921,
+     "freq_drift_frac": 0.005570138209508299,
+     "tail_drift_rad": 0.0006299259672931309
     }
    },
    {
     "V": 11,
-    "theta": 0.040024876567869676,
-    "freq": 1.9270551045106064,
-    "tail": 0.017090752186256632,
+    "theta": 0.04633274991711177,
+    "freq": 1.9951654195989423,
+    "tail": 0.019816282066968473,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 68.68000753739875,
-    "flight_power_regen_credit_w": 65.6618421273401,
-    "flight_V": 11.037858437256215,
+    "flight_power_w": 71.46677573490258,
+    "flight_power_regen_credit_w": 68.22598428541053,
+    "flight_V": 11.02369103248621,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.009833882167858396,
-     "speed_err_m_s": 0.03785843725621518,
-     "freq_drift_frac": 0.0007618549370640682,
-     "tail_drift_rad": 0.0005941829637228363
+     "climb_m_s": 0.012249384256401678,
+     "speed_err_m_s": 0.023691032486210517,
+     "freq_drift_frac": 0.004453863528692448,
+     "tail_drift_rad": 0.000594207692162358
     }
    },
    {
     "V": 12,
-    "theta": 0.020703536788020078,
-    "freq": 2.0079329412726428,
-    "tail": 0.004604971439357339,
+    "theta": 0.02477801415460968,
+    "freq": 2.0616914682968126,
+    "tail": 0.006673041129364951,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 72.31362588079351,
-    "flight_power_regen_credit_w": 69.38070630880726,
-    "flight_V": 12.026576076252494,
+    "flight_power_w": 77.5690291120057,
+    "flight_power_regen_credit_w": 74.5182565399594,
+    "flight_V": 12.042360596830733,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.008643064239561257,
-     "speed_err_m_s": 0.026576076252494474,
-     "freq_drift_frac": 0.004475425159824267,
-     "tail_drift_rad": 0.0005021828846514635
+     "climb_m_s": 0.028209000631038955,
+     "speed_err_m_s": 0.04236059683073279,
+     "freq_drift_frac": 0.0018214340115246981,
+     "tail_drift_rad": 0.00048741783595482487
     }
    },
    {
     "V": 13,
-    "theta": 0.003767972349606331,
-    "freq": 2.1288988781800797,
-    "tail": -0.005127954381219155,
+    "theta": 0.008770917599709367,
+    "freq": 2.187336724966238,
+    "tail": -0.0032009446103905543,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 80.81647288111073,
-    "flight_power_regen_credit_w": 77.8824416136207,
-    "flight_V": 13.032129815410446,
+    "flight_power_w": 84.12051323722827,
+    "flight_power_regen_credit_w": 81.004000227177,
+    "flight_V": 13.04059801383734,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.016043854741909135,
-     "speed_err_m_s": 0.03212981541044613,
-     "freq_drift_frac": 0.0007904382034997909,
-     "tail_drift_rad": 0.00034067743908803
+     "climb_m_s": 0.020568531829668314,
+     "speed_err_m_s": 0.04059801383733941,
+     "freq_drift_frac": 0.00006371301149979496,
+     "tail_drift_rad": 0.0004100370451766153
     }
    },
    {
     "V": 14,
-    "theta": -0.009733975198530385,
-    "freq": 2.2941327115208465,
-    "tail": -0.012936533660343138,
+    "theta": -0.004376880418918414,
+    "freq": 2.35903200528376,
+    "tail": -0.011180874622437465,
     "amp": 0.6632251157578453,
     "sym": 0,
     "dyn": 0.5235987755982988,
-    "flight_power_w": 92.60927953660813,
-    "flight_power_regen_credit_w": 89.45667212079603,
-    "flight_V": 14.047687976456695,
+    "flight_power_w": 96.65126028872994,
+    "flight_power_regen_credit_w": 93.32509335309318,
+    "flight_V": 14.05541391567486,
     "converged": true,
     "convergence": {
-     "climb_m_s": 0.01743724709286192,
-     "speed_err_m_s": 0.04768797645669487,
-     "freq_drift_frac": 0.000591566489529821,
-     "tail_drift_rad": 0.00024348907438278937
+     "climb_m_s": 0.030944577611423097,
+     "speed_err_m_s": 0.05541391567486009,
+     "freq_drift_frac": 0.0007109140965192479,
+     "tail_drift_rad": 0.0004027719399909233
     }
    }
   ],
@@ -10957,7 +12345,7 @@
   "envelopeFrozen": [
    {
     "amp": 0.6632251157578453,
-    "freqMax": 3.5503141616267606,
+    "freqMax": 3.545044838743828,
     "limitedBy": "motor_current",
     "atV": 14
    }
@@ -10973,36 +12361,36 @@
   },
   "launchClimb_m_s": 3,
   "landing": {
-   "Vapp_m_s": 9.033,
+   "Vapp_m_s": 9.187,
    "kV": 0.03,
    "kIV": 0.02,
    "iMax_rad": 0.1,
-   "flareH_m": 1.522,
+   "flareH_m": 1.563,
    "tau_s": 1.5,
    "sinkTd_m_s": 0.3,
    "kS": 0.3,
    "kIS": 0.1,
-   "Vfloor_m_s": 8.078,
+   "Vfloor_m_s": 8.216,
    "kFloor": 0.05,
    "dThetaMin_rad": -0.2,
    "dThetaMax_rad": 0.25,
    "basis": {
-    "stall_reference_m_s": 7.34375,
+    "stall_reference_m_s": 7.46875,
     "stall_reference_corner": "aero0.9 mass1.05 cg5mm",
     "stall_reference_rule": "slowest converged steady parked-wing glide trim (src/design/trim.js trimGlide) over nominal and the 8 robustness corners, to 0.05 m/s; the 1-g stall lies below it",
-    "vref": "1.23 x 7.34375 m/s (14 CFR 25.125(b)(2)(i): VREF not less than 1.23 VSR0)",
-    "floor": "1.1 x 7.34375 m/s",
-    "flare_height": "tau x the nominal glide table's sink at Vapp (1.015 m/s)",
+    "vref": "1.23 x 7.46875 m/s (14 CFR 25.125(b)(2)(i): VREF not less than 1.23 VSR0)",
+    "floor": "1.1 x 7.46875 m/s",
+    "flare_height": "tau x the nominal glide table's sink at Vapp (1.042 m/s)",
     "per_corner_m_s": {
-     "nominal": 6.84375,
-     "aero0.9 mass0.95 cg-5mm": 6.96875,
-     "aero0.9 mass0.95 cg5mm": 7,
-     "aero0.9 mass1.05 cg-5mm": 7.3125,
-     "aero0.9 mass1.05 cg5mm": 7.34375,
-     "aero1.1 mass0.95 cg-5mm": 6.40625,
-     "aero1.1 mass0.95 cg5mm": 6.40625,
-     "aero1.1 mass1.05 cg-5mm": 6.71875,
-     "aero1.1 mass1.05 cg5mm": 6.75
+     "nominal": 6.9375,
+     "aero0.9 mass0.95 cg-5mm": 7.09375,
+     "aero0.9 mass0.95 cg5mm": 7.09375,
+     "aero0.9 mass1.05 cg-5mm": 7.4375,
+     "aero0.9 mass1.05 cg5mm": 7.46875,
+     "aero1.1 mass0.95 cg-5mm": 6.46875,
+     "aero1.1 mass0.95 cg5mm": 6.5,
+     "aero1.1 mass1.05 cg-5mm": 6.8125,
+     "aero1.1 mass1.05 cg5mm": 6.84375
     },
     "sensors": "pitot airspeed, baro and IMU height and climb rate (BOM sensors), at the controller rate, through its 20 ms delay line",
     "law": "src/physics/control.js landingLaw"
@@ -11080,25 +12468,25 @@
    ]
   ],
   "amplitude_rad": [
-   0.0301941960595019,
-   0.05235987755982989,
-   0.07731808586334879,
-   0.09861110273767963,
-   0.10838494654884787,
-   0.10419615634406147,
-   0.091106186954104,
-   0.06684611035138283,
-   0.029321531433504737,
-   0.05235987755982989,
-   0.07801621756414652,
-   0.10053096491487337,
-   0.11152653920243766,
-   0.10838494654884787,
-   0.09599310885968812,
-   0.07330382858376185
+   0.030892327760299633,
+   0.052708943410228755,
+   0.07644542123735164,
+   0.09686577348568529,
+   0.10559241974565693,
+   0.10035643198967395,
+   0.08639379797371932,
+   0.0635299847725936,
+   0.029670597283903602,
+   0.052185344634630454,
+   0.07714355293814937,
+   0.09878563566287905,
+   0.10873401239924674,
+   0.10506882097005864,
+   0.09285151620609834,
+   0.07068583470577035
   ],
   "rule": "SPEC ruling after cfd round 3: settled points only; linear in effective-angle amplitude between them; held below the smallest; beyond the largest the last slope continued where it lowers eta_s, held where it would raise it; SPEC eta_s default 0.6 not used",
-  "amplitude_change_deg_max": 0.31
+  "amplitude_change_deg_max": 0.11
  },
  "launch": {
   "release_speed_m_s": 8,
@@ -11123,9 +12511,9 @@
   "launchClimb": 3
  },
  "selection": {
-  "pipeline": "src/design/round12.mjs",
+  "pipeline": "src/design/round14.mjs",
   "candidate": "larus",
-  "basis": "explicit round-11 parameters (ROUND11.candidates.larus, ROUND11_OPT and --set/--opt) over round 10's rules (ROUND10 over ROUND9 on the Larus v18 base, which carries the rule parameters); round 12: control.landing (ROUND12.landing), gear life factors (set.gearRating.life)",
+  "basis": "explicit round-11 parameters (ROUND11.candidates.larus, ROUND11_OPT and --set/--opt) over round 10's rules (ROUND10 over ROUND9 on the Larus v18 base, which carries the rule parameters); round 12: control.landing (ROUND12.landing), gear life factors (set.gearRating.life); round 14: v21 plus assembly clearance corrections (ROUND14.set: params.layout, plates.flange)",
   "set": {
    "parts": {
     "motor": "motor-scorpion-sii-3008-1090",
@@ -11141,14 +12529,16 @@
      "gear-khk-msgb1-45",
      "gear-khk-msga1-18",
      "gear-khk-msgb1-45"
-    ]
+    ],
+    "encoderMagnet": "sensor-rls-orbis-actuator-10mm"
    },
    "joints": {
     "shafts": [
      "bushing-igus-GFM-0810-06",
      "bushing-igus-GFM-0810-06",
      "bearing-skf-628-8-2z"
-    ]
+    ],
+    "shoulderSpan_mm": 36.6
    },
    "servoSupply": "regulator",
    "chargeLimit": null,
@@ -11161,7 +12551,8 @@
    },
    "linkage": {
     "plates": {
-     "edge_mm": 11.3
+     "edge_mm": 11.3,
+     "flange": "face"
     },
     "crank": {
      "shaft_id_mm": 5,
@@ -11169,21 +12560,37 @@
     },
     "rocker": {
      "arm_t_mm": 6,
-     "boss_od_mm": 23
+     "boss_od_mm": 23,
+     "boss_len_mm": 7,
+     "hub_relief_od_mm": 13.6,
+     "hub_clear_plate": true,
+     "hub_collar_od_mm": 9
     },
     "coupler": {
      "body_d_mm": 5
     },
     "airframe": {
      "plates": {
-      "edge_mm": 11.3
+      "edge_mm": 11.3,
+      "post_w_mm": 16
      },
      "rail": {
-      "od_mm": 12,
+      "od_mm": 13,
       "id_mm": 8,
-      "lock_screws": 3,
+      "lock_screws": 6,
       "arm_t_mm": 8,
-      "sleeve_len_mm": 13
+      "sleeve_len_mm": 13,
+      "dz_mm": 4,
+      "dy_mm": -20.75,
+      "seat_D_mm": 31.5,
+      "arm_b_mm": 11,
+      "lock_at": "forward",
+      "lock_r_mm": 15,
+      "lock_arc_deg": [
+       40,
+       172
+      ],
+      "lock_t_mm": 1.4
      },
      "panels": {
       "material": "metal-al-6061-t6",
@@ -11192,27 +12599,33 @@
        {
         "name": "side panel right",
         "kind": "side",
-        "z_mm": 31,
-        "y0_mm": 3,
-        "h_mm": 21.5,
-        "t_mm": 1.2
+        "z_mm": 45,
+        "y0_mm": -20,
+        "h_mm": 29,
+        "t_mm": 0.9
        },
        {
         "name": "side panel left",
         "kind": "side",
-        "z_mm": -31,
-        "y0_mm": 12.8,
-        "h_mm": 11.7,
-        "t_mm": 2.2
+        "z_mm": -45,
+        "y0_mm": -20,
+        "h_mm": 29,
+        "t_mm": 0.9
        },
        {
         "name": "top panel",
         "kind": "top",
-        "y_mm": 56.5,
-        "w_mm": 20,
+        "y_mm": -81,
+        "w_mm": 24,
         "t_mm": 1
        }
       ]
+     },
+     "tray": {
+      "y_mm": -84
+     },
+     "aftTray": {
+      "y_mm": -84
      }
     }
    },
@@ -11232,6 +12645,27 @@
      "tau_s": 0.002
     },
     "path": "encoder (SPI, 50 kHz updates) and battery sense read at each 960 Hz tick; duty to the ESC by DShot600 (26.7 us frame); applied at the next tick (one 1.04 ms period of latency, held between ticks)"
+   },
+   "layout": {
+    "rule": "clearance",
+    "running_mm": 0.5,
+    "basis": "SPEC Design freeze, Assembly clearance (2026-11-03); sims/avis-shared/model.js clearancePlanes",
+    "crank_x_mm": 8.7,
+    "eye_gap_mm": 0.5,
+    "horns": {
+     "R": "fwd",
+     "L": "aft"
+    },
+    "horn_gap_mm": 0.5,
+    "horn_pin_past_mm": 0,
+    "encoder": "front",
+    "stage1": "overhung",
+    "links_deg": [
+     157.8,
+     48.7,
+     1.3,
+     110.5
+    ]
    }
   },
   "opt": {
@@ -11257,31 +12691,31 @@
   "sustained_climb": [
    {
     "V_target_m_s": 10,
-    "sustained_climb_m_s": 1.362,
-    "mean_airspeed_m_s": 10.26,
+    "sustained_climb_m_s": 1.235,
+    "mean_airspeed_m_s": 10.2,
     "climb_cmd_m_s": 1.5,
-    "mean_batt_A": 12.39,
-    "motor_rms_2s_max_A": 20.99,
+    "mean_batt_A": 12.04,
+    "motor_rms_2s_max_A": 21.01,
     "altitude_m": 1404.37
    },
    {
     "V_target_m_s": 12,
-    "sustained_climb_m_s": 1.449,
-    "mean_airspeed_m_s": 11.8,
+    "sustained_climb_m_s": 1.325,
+    "mean_airspeed_m_s": 11.45,
     "climb_cmd_m_s": 1.5,
-    "mean_batt_A": 13.01,
-    "motor_rms_2s_max_A": 21.77,
+    "mean_batt_A": 12.54,
+    "motor_rms_2s_max_A": 21.63,
     "altitude_m": 1404.37
    }
   ],
-  "best_sustained_climb_m_s": 1.449,
-  "best_climb_speed_m_s": 11.8,
+  "best_sustained_climb_m_s": 1.325,
+  "best_climb_speed_m_s": 11.45,
   "corridor_elevation_m": 1444.37,
   "method": "src/physics/scenarios.js runClimb: closed loop with the flight controller, its stroke envelope and current limit; climb from 15 s to 45 s of steady climb, no wind, battery full; best over commanded climb rates 0.5-3 m/s",
   "for_environment": "the corridor can be re-solved to this climb with a margin: a gradient at speed V is climb / V",
-  "ran_at": "2026-11-03T07:40:50.359Z"
+  "ran_at": "2026-11-03T11:40:07.348Z"
  },
- "version": 21,
- "version_written": "2026-11-03T07:41:07.214Z",
- "supersedes_sha256": "f0e13d9ac69d300468cdfb247f8d2b0da85c6e0acf3e69ba87713d5b4ba2d967"
+ "version": 22,
+ "version_written": "2026-11-03T11:40:10.142Z",
+ "supersedes_sha256": "2d2981bebd1c235bc673f273ffb72d4c93ab7fc278a8cd5a0e4456131a281a6c"
 }

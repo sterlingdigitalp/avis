@@ -101,7 +101,7 @@ function crankMembers(cx) {
     const od = c.shaft_od_mm / 1000, id = (c.shaft_id_mm ?? 0) / 1000, tw = c.web_t_mm / 1000, bw = c.web_b_mm / 1000, dp = eyeD.d;
     const xw = planes.crankArm - tw / 2; // the web's aft face
     const pinL = xw - (planes.couplerL - eyeD.B / 2 - 0.001);
-    const lenS = planes.plateFwd + plateT / 2 + 0.001 - (planes.crankArm + tw / 2);
+    const lenS = (planes.crankEnd ?? planes.plateFwd + plateT / 2 + 0.001) - (planes.crankArm + tw / 2); // round 14: to an encoder stub
     const wheel = train.stages[n - 1].wheel;
     const seatL = (wheel.face ?? 0.01);
     const v = ringV(od, id, lenS) + bw * tw * (d.drive.a + (od + dp) / 2) + rodV(dp, pinL) + (c.seat_od_mm ? ringV(c.seat_od_mm / 1000, od, seatL) : 0);
@@ -122,6 +122,8 @@ function crankMembers(cx) {
   }
 }
 
+const plateTOf = (cx) => cx.plateT ?? 0.002;
+
 /** Gear shaft j (crank side first): the wheel of stage n-1-j and the pinion of stage n-j, with their keys. */
 function gearShaftMembers(cx, j) {
   // ---- Gear shafts j = 1..n-1 (crank side first): the wheel of stage n-1-j and the pinion of stage n-j.
@@ -137,8 +139,11 @@ function gearShaftMembers(cx, j) {
     const ms = shaftMomentSections(planes.plateAft, planes.plateFwd, loads, 'M');
     const Tk = 1 / below(kw);
     const wheel = train.stages[kw].wheel;
-    const v = rodV((g.mass_d_mm ?? g.d_mm) / 1000, shaftLen) + (g.seat_od_mm ? ringV(g.seat_od_mm / 1000, g.d_mm / 1000, wheel.face ?? 0.01) : 0);
-    item(`gear shaft ${j}`, m, v, `${g.mass_d_mm ?? g.d_mm} mm x ${(shaftLen * 1000).toFixed(1)} mm${g.seat_od_mm ? ` with a ${g.seat_od_mm} mm wheel seat for the ${wheel.id} (${boreText(catalog, wheel.id)}, keyed)` : ''}; ${m.density_g_cm3} g/cm3`);
+    // round 14: a shaft carrying a gear outside the plates (stage 1 overhung) runs to that gear's far face
+    const far = (si, gg) => planes.stage[si] + (gg.face ?? 0) / 2 + (gg.hubW ?? 0) - (planes.plateFwd + plateTOf(cx) / 2 + 0.001);
+    const len = shaftLen + Math.max(0, far(kw, wheel), far(kp, train.stages[kp].pinion));
+    const v = rodV((g.mass_d_mm ?? g.d_mm) / 1000, len) + (g.seat_od_mm ? ringV(g.seat_od_mm / 1000, g.d_mm / 1000, wheel.face ?? 0.01) : 0);
+    item(`gear shaft ${j}`, m, v, `${g.mass_d_mm ?? g.d_mm} mm x ${(len * 1000).toFixed(1)} mm${g.seat_od_mm ? ` with a ${g.seat_od_mm} mm wheel seat for the ${wheel.id} (${boreText(catalog, wheel.id)}, keyed)` : ''}; ${m.density_g_cm3} g/cm3`);
     members.push({ name: `gear shaft ${j}`, kind: 'shaft', check: 'round', material: m, dims: { d_mm: g.d_mm }, sections: [...ms.map((q) => sect(q.name, q.radial)), sect('T', [{ ch: 'crank_torque', k: +Tk.toFixed(8) }]), ...jt.supports.map((sp) => sect(`V ${sp.name}`, sp.radial.map((t) => ({ ch: t.ch, k: t.k }))))], uses: { M: ms.map((q) => q.name), T: 'T', V: jt.supports.map((sp) => `V ${sp.name}`) }, note: `wheel ${wheel.id} and pinion ${train.stages[kp].pinion.id}; checked at ${g.d_mm} mm everywhere` });
     if (g.wheelKey) members.push(keyMember(`key, wheel ${wheel.id} on gear shaft ${j}`, catalog, g.wheelKey, m, g.seat_od_mm, [{ ch: 'crank_torque', k: +Tk.toFixed(8) }], items));
     if (g.pinionKey) members.push(keyMember(`key, pinion ${train.stages[kp].pinion.id} on gear shaft ${j}`, catalog, g.pinionKey, m, g.d_mm, [{ ch: 'crank_torque', k: +Tk.toFixed(8) }], items));
@@ -161,22 +166,49 @@ export function rockerHubLength(d, rocker, span, bushingB) {
   return span - bushingB - 2 * run;
 }
 
+/**
+ * The rocker hub along body x (m). v21 and the clearance rule: centred on the hinge, rockerHubLength long. Round 14:
+ * rocker.hub_clear_plate ends it the running clearance aft of the aft gearbox plate (the shoulder pin alone passes the
+ * plate's x), and rocker.hub_relief_od_mm turns it down to that diameter where the coupler eyes pass (their planes
+ * and the running clearance either side), so the eyes clear it while the rest keeps the edge distance of hub_od_mm.
+ * A hub ended short of the forward bushing keeps its axial stop there by a collar on the shoulder pin (rocker.
+ * hub_collar_od_mm), from the hub's face to the running clearance short of that bushing's flange.
+ * -> { x: [aft, fwd], relief: [aft, fwd] | null, collar: [aft, fwd] | null, seat_m: the length at full diameter,
+ * levers: { aft, forward } } where the levers are each bushing centre's distance from the hub face beside it (the
+ * shoulder pin's bending arms; the collar is the pin's own, so it does not shorten its arm).
+ */
+export function rockerHub(d, rocker, span, bushingB, planes, eyeB) {
+  const x0 = d.wing.hinge[0], hubL = rockerHubLength(d, rocker, span, bushingB);
+  const run = (d.params?.layout?.running_mm ?? 0.5) / 1000;
+  const a = x0 - hubL / 2;
+  let b = x0 + hubL / 2;
+  if (rocker?.hub_clear_plate && planes) b = Math.min(b, planes.plateAft - d.params.linkage.plates.t_mm / 2000 - run);
+  let relief = null;
+  if (Number.isFinite(rocker?.hub_relief_od_mm) && planes && eyeB) relief = [Math.max(a, planes.couplerL - eyeB / 2 - run), Math.min(b, planes.couplerR + eyeB / 2 + run)];
+  const stop = x0 + span / 2 - bushingB / 2 - run; // the forward bushing's flange face, less the running clearance
+  const collar = Number.isFinite(rocker?.hub_collar_od_mm) && b < stop - 1e-9 ? [b, stop] : null;
+  return { x: [a, b], relief, collar, seat_m: b - a - (relief ? relief[1] - relief[0] : 0), levers: { aft: a - (x0 - span / 2), forward: x0 + span / 2 - b } };
+}
+
 /** One side's shoulder pin, rocker (hub, horn boss), horn pin, coupler eye and shoulder housings. */
 function wingSideMembers(cx, side, w) {
   // ---- Shoulder pins: clamped in the rocker hub between the two bushings; bending within each bushing.
   const { d, L, lay, members, mat, item, jointByName, eye, eyeD, shoulder, shD, span } = cx;
     const m = mat(L.shoulderPin.material);
     const jt = jointByName(`shoulder pivot ${side}`);
-    item(`shoulder pin ${side}`, m, rodV(shD.d, span + shD.B), `${(shD.d * 1000).toFixed(0)} mm x ${((span + shD.B) * 1000).toFixed(0)} mm (bushing centres ${(span * 1000).toFixed(0)} mm apart plus one bushing length); ${m.density_g_cm3} g/cm3`);
     const r = L.rocker, mr = mat(r.material);
-    const hubL = rockerHubLength(d, r, span, shD.B);
-    // the bushing reaction at its centre, from the hub face (v21: half the bushing length; v22: plus the running gap)
-    const pinLever = span / 2 - hubL / 2;
-    members.push({ name: `shoulder pin ${side}`, kind: 'pin', check: 'round', material: m, dims: { d_mm: +(shD.d * 1000).toFixed(3) }, sections: jt.supports.flatMap((sp) => [sect(`M ${sp.name}`, scale(sp.radial, pinLever)), sect(`V ${sp.name}`, sp.radial.map((t) => ({ ch: t.ch, k: t.k })))]), uses: { M: jt.supports.map((sp) => `M ${sp.name}`), V: jt.supports.map((sp) => `V ${sp.name}`) }, note: pinLever > shD.B / 2 + 1e-9 ? 'the bushing reaction at its centre, measured from the hub face' : 'the bushing reaction at half the bushing length from the hub face' });
+    const hub = rockerHub(d, r, span, shD.B, cx.planes, eyeD.B), hubL = hub.x[1] - hub.x[0];
+    const collarL = hub.collar ? hub.collar[1] - hub.collar[0] : 0;
+    item(`shoulder pin ${side}`, m, rodV(shD.d, span + shD.B) + (collarL ? ringV(r.hub_collar_od_mm / 1000, shD.d, collarL) : 0), `${(shD.d * 1000).toFixed(0)} mm x ${((span + shD.B) * 1000).toFixed(0)} mm (bushing centres ${(span * 1000).toFixed(0)} mm apart plus one bushing length)${collarL ? `, a ${r.hub_collar_od_mm} mm collar x ${(collarL * 1000).toFixed(1)} mm (the rocker's forward axial stop)` : ''}; ${m.density_g_cm3} g/cm3`);
+    // the bushing reaction at its centre, from the hub face beside it (v21: half the bushing length; v22: plus the
+    // running gap; round 14: the forward face may end short of the aft plate)
+    const pinLever = Math.max(hub.levers.aft, hub.levers.forward);
+    members.push({ name: `shoulder pin ${side}`, kind: 'pin', check: 'round', material: m, dims: { d_mm: +(shD.d * 1000).toFixed(3) }, sections: jt.supports.flatMap((sp) => [sect(`M ${sp.name}`, scale(sp.radial, hub.levers[sp.name] ?? pinLever)), sect(`V ${sp.name}`, sp.radial.map((t) => ({ ch: t.ch, k: t.k })))]), uses: { M: jt.supports.map((sp) => `M ${sp.name}`), V: jt.supports.map((sp) => `V ${sp.name}`) }, note: pinLever > shD.B / 2 + 1e-9 ? 'the bushing reaction at its centre, measured from the hub face' : 'the bushing reaction at half the bushing length from the hub face' });
     // Rocker: hub on the shoulder pin, horn arm of the rocker length c, horn boss for the horn pin, spar socket.
     const c = linkageAt(lay.law, d.drive.ampNominal).c;
     const sparOD = (r.spar_od_mm ?? 10) / 1000;
-    const vR = ringV(r.hub_od_mm / 1000, shD.d, hubL) + c * (r.arm_w_mm / 1000) * (r.arm_t_mm / 1000) + ringV(r.boss_od_mm / 1000, eyeD.d, r.boss_len_mm / 1000) + ringV(sparOD + 2 * r.socket_wall_mm / 1000, sparOD, r.socket_len_mm / 1000);
+    const relL = hub.relief ? hub.relief[1] - hub.relief[0] : 0;
+    const vR = ringV(r.hub_od_mm / 1000, shD.d, hubL - relL) + (relL ? ringV(r.hub_relief_od_mm / 1000, shD.d, relL) : 0) + c * (r.arm_w_mm / 1000) * (r.arm_t_mm / 1000) + ringV(r.boss_od_mm / 1000, eyeD.d, r.boss_len_mm / 1000) + ringV(sparOD + 2 * r.socket_wall_mm / 1000, sparOD, r.socket_len_mm / 1000);
     item(`rocker ${side}`, mr, vR, `hub ${r.hub_od_mm}/${(shD.d * 1000).toFixed(0)} x ${(hubL * 1000).toFixed(0)} mm, horn arm ${(c * 1000).toFixed(1)} x ${r.arm_w_mm} x ${r.arm_t_mm} mm, horn boss ${r.boss_od_mm}/${(eyeD.d * 1000).toFixed(0)} x ${r.boss_len_mm} mm, spar socket ${r.socket_wall_mm} mm wall x ${r.socket_len_mm} mm; ${mr.density_g_cm3} g/cm3 (replaces the carbon-plate rocker)`);
     // Round 7: the rocker's horn arm in bending (the coupler force at the rocker length) and the carbon spar in its
     // socket: the root flap moment (the coupler force times c) and the lead-lag moment as edge pressure on the tube,
@@ -186,12 +218,14 @@ function wingSideMembers(cx, side, w) {
     const cf = materialOf(cx.catalog, 'composite-rockwest-t-rnd-393-transverse');
     members.push({ name: `spar root socket ${side}`, kind: 'seat', check: 'seat', material: cf, dims: { d_mm: r.spar_od_mm ?? 10, t_mm: r.socket_len_mm, crush: true }, sections: [sect('F', [{ ch: `root_yz_${w}`, k: 1 }]), sect('M', [{ ch: `coupler_${w}`, k: +c.toFixed(6) }, { ch: `root_mperp_${w}`, k: 1 }])], uses: { F: 'F', M: 'M' }, note: 'carbon tube bearing on the socket: Rock West calls these tubes not good for crush resistance and publishes CLT estimates only (counted at half)' });
     members.push({ name: `spar root bond ${side}`, kind: 'bond', check: 'bond', material: { id: 'adhesive-araldite-2011', shear_MPa: materialOf(cx.catalog, 'adhesive-araldite-2011').shear_MPa }, dims: { d_mm: r.spar_od_mm ?? 10, L_mm: r.socket_len_mm }, sections: [sect('F', [{ ch: `root_x_${w}`, k: 1 }])], uses: { F: 'F' } });
-    members.push({ name: `rocker hub ${side}`, kind: 'seat', check: 'seat', material: mr, dims: { d_mm: +(shD.d * 1000).toFixed(3), t_mm: +(hubL * 1000).toFixed(3), e_over_d: +(r.hub_od_mm / 2 / (shD.d * 1000)).toFixed(4) }, sections: [sect('F', [{ ch: `root_yz_${w}`, k: 1 }, { ch: `coupler_${w}`, k: 1 }]), sect('M', [{ ch: `root_mperp_${w}`, k: 1 }])], uses: { F: 'F', M: 'M' }, note: 'the wing root force and moment and the coupler force into the shoulder pin over the hub length' });
+    members.push({ name: `rocker hub ${side}`, kind: 'seat', check: 'seat', material: mr, dims: { d_mm: +(shD.d * 1000).toFixed(3), t_mm: +(hub.seat_m * 1000).toFixed(3), e_over_d: +(r.hub_od_mm / 2 / (shD.d * 1000)).toFixed(4) }, sections: [sect('F', [{ ch: `root_yz_${w}`, k: 1 }, { ch: `coupler_${w}`, k: 1 }]), sect('M', [{ ch: `root_mperp_${w}`, k: 1 }])], uses: { F: 'F', M: 'M' }, note: 'the wing root force and moment and the coupler force into the shoulder pin over the hub length' });
     // Horn pin: pressed in the horn boss, the coupler eye cantilevered beside it.
     const mh = mat(L.hornPin.material);
-    const lever = eyeD.B / 2 + 0.001;
-    item(`horn pin ${side}`, mh, rodV(eyeD.d, r.boss_len_mm / 1000 + eyeD.B + 0.002), `${(eyeD.d * 1000).toFixed(0)} mm x ${(r.boss_len_mm + eyeD.B * 1000 + 2).toFixed(0)} mm; ${mh.density_g_cm3} g/cm3`);
-    members.push({ name: `horn pin ${side}`, kind: 'pin', check: 'round', material: mh, dims: { d_mm: +(eyeD.d * 1000).toFixed(3) }, sections: [sect('M root', [{ ch: `coupler_${w}`, k: +lever.toFixed(6) }]), sect('V root', [{ ch: `coupler_${w}`, k: 1 }])], uses: { M: 'M root', V: 'V root' }, note: 'the coupler eye at half its length plus 1 mm from the boss face' });
+    // the eye's gap to the boss and the pin's length past the eye: params.layout (round 14), else 1 mm each (v21)
+    const gapH = (d.params?.layout?.horn_gap_mm ?? 1) / 1000, pastH = (d.params?.layout?.horn_pin_past_mm ?? 1) / 1000;
+    const lever = eyeD.B / 2 + gapH, pinLen = r.boss_len_mm / 1000 + eyeD.B + gapH + pastH;
+    item(`horn pin ${side}`, mh, rodV(eyeD.d, pinLen), `${(eyeD.d * 1000).toFixed(0)} mm x ${(pinLen * 1000).toFixed(1).replace(/\.0$/, '')} mm; ${mh.density_g_cm3} g/cm3`);
+    members.push({ name: `horn pin ${side}`, kind: 'pin', check: 'round', material: mh, dims: { d_mm: +(eyeD.d * 1000).toFixed(3) }, sections: [sect('M root', [{ ch: `coupler_${w}`, k: +lever.toFixed(6) }]), sect('V root', [{ ch: `coupler_${w}`, k: 1 }])], uses: { M: 'M root', V: 'V root' }, note: `the coupler eye at half its length plus ${+(gapH * 1000).toFixed(2)} mm from the boss face` });
     members.push({ name: `horn boss ${side}`, kind: 'seat', check: 'seat', material: mr, dims: { d_mm: +(eyeD.d * 1000).toFixed(3), t_mm: r.boss_len_mm, e_over_d: +(r.boss_od_mm / 2 / (eyeD.d * 1000)).toFixed(4) }, sections: [sect('F', [{ ch: `coupler_${w}`, k: 1 }]), sect('M', [{ ch: `coupler_${w}`, k: +lever.toFixed(6) }])], uses: { F: 'F', M: 'M' } });
     // Coupler link: one piece with its two eyes (no bonded end fitting: no published bond strength to carbon).
     members.push({ name: `coupler eye ${side}`, kind: 'end fitting', check: 'lug', material: mat(L.coupler.material), dims: { d_mm: +(eyeD.D * 1000).toFixed(3), D_mm: L.coupler.eye_od_mm, t_mm: +(eyeD.B * 1000).toFixed(3) }, sections: [sect('F', [{ ch: `coupler_${w}`, k: 1 }])], uses: { F: 'F' }, note: `the eye round the ${eye.id} bushing (both ends alike)` });

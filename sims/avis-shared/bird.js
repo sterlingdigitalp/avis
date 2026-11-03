@@ -854,7 +854,7 @@ function buildEncoder(ctx, c) {
  * The machined linkage a design lists in params.linkage (v21 on): per side an aluminium rocker (hub on the shoulder
  * pin between its two bushings, horn arm of the rocker length, horn boss, spar socket), its horn pin, the shoulder
  * pin and the two shoulder housings round the bushings; one-piece coupler links with an eye round a bushing at each
- * end. The coupler's eye rides at its coupler plane (model.filmCouplerPlanes); the horn boss sits forward of the eye,
+ * end. The coupler's eye rides at its coupler plane (the physics' own, model.gearPlanes); the horn boss sits forward of the eye,
  * HORN_GAP clear of it, as the design's horn pin length (boss + eye + 2 mm) has it.
  */
 function buildMetalLinkage(ctx, L) {

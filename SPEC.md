@@ -184,10 +184,11 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
   - **Hold rule.** The 1° rule above covers only the high side. Below the band, the round 8 hold rule stands.
   - **Final verdicts.** A gate verdict counts as final only if the same verdict holds with η_s at the 0.6 default everywhere. A strip held at the smallest point's value therefore cannot decide a gate.
   - **v21.** Its verdicts are the same under the table and at 0.6, and M4 still passes at a uniform 0.50.
+  - **v22.** Its verdicts are also the same under the table and at 0.6. M4 no longer passes at a uniform 0.50 (two corners at 96/100) or 0.55 (96 and 97). This is reported, not acted on: those points are information, not gates.
 
 ### Design freeze (2026-11-03, operator decision after physics round 13)
 
-- **Frozen design.** Larus GL-2 v21 is the final design. No v22 is built, and the gates stay exactly as declared.
+- **Frozen design.** Larus GL-2 v21 is the final design. No v22 is built, and the gates stay exactly as declared. (Later the same day, the assembly findings below made v22, and then v23, out of corrections only. The gates did not move.)
 - **M1 stands as a fail.** M1 fails at its worst corners, and it is reported that way in the film's gates card, the README and `tools/verify.mjs`, with its own numbers.
 - **Why no closure.** Round 13 showed the conflict. Closing M1 at an 8 m/s release needs wing loading ≤ about 20.4 N/m², and that breaks M4 and M7 at the gear train. A train strong enough for that adds mass that breaks M1 again.
 - **What may still change.** Only freeze verification: V5 and its calibration on v21 itself, and the gate set re-flown if that calibration changes. Everything else stays as built.
@@ -205,6 +206,18 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
     - rail, tray and panel routing, battery placement, and the pod through its fit rule.
   - **Replacements.** A part is replaced only where it physically cannot fit.
   - **Correction.** These are corrected as v22 = v21 plus clearance corrections. Nothing changes for any gate's sake: same parts wherever they fit, same planform, kinematics and controller. The full gate set is flown again on v22, and v22 becomes the frozen design.
+  - **How the check reads joints** (round 14). Parts that share a joint or a fastened face are checked at zero gap: they may touch, but never interpenetrate. Only unjoined parts get the 0.5 mm.
+  - **The pod** (round 14). Under the clearance rule, the pod fit keeps 0.5 mm between the shell and every enclosed part, gear tip circles and the motor included.
+  - **The gear fold** (round 14). The design states the train's shaft positions; the build no longer chooses them. In v22, stage 1 overhangs forward of the forward plate and the motor sits inside the box, because gear shaft 2 would otherwise pass inside the DS1-60's tip circle.
+  - **v22 result.** v22 has 0 clashing pairs through the stroke and 0 against the pod. It is 53.6 g heavier than v21 (1761.9 g), and no gate verdict moved: M1 still fails. The 8 mm encoder actuator is replaced by the maker's 10 mm BA100, the one part that could not fit.
+- **Support and containment** (2026-11-03, found in round 14). A part that floats is no more built than one that passes through another.
+  - **Support.** Every packed part rests on the structure that carries it: a tray, panel or plate, through a stated fixing. Its tie's length and mass come from that real load path. The joint rule above applies: touch, never interpenetrate.
+  - **Containment.** Every part meant to be inside the pod stays inside the loft, 0.5 mm clear. A part may pass through the skin only at a declared opening, such as the tail boom, the wing roots through the stroke, or the pitot. A fitting left outside counts in the pod's drag.
+  - **v22 breaks both.**
+    - The packed parts sit at their mass positions, up to about 80 mm above their trays at y −84 mm (the battery is at about y −5 mm).
+    - The forward tray's tip stands 32.6 mm out of the loft, and the boom clamps 22–27 mm.
+    - The pitot probe is not in the check.
+  - **Correction.** These are corrected as v23 = v22 plus support and containment corrections, under the same layout freedom and the same rules. The full gate set is flown again on v23, and v23 becomes the frozen design.
 
 ### Public repository
 

@@ -1795,17 +1795,22 @@
   "id": "film-oracover-air-light",
   "category": "wing_film",
   "manufacturer": "Lanitz-Prena (Oracover)",
-  "name": "Oracover Air Indoor / Air Light",
+  "name": "ORACOVER Air Light, light scale white (331-099)",
   "mass_g": 17,
   "specs": {
    "mass_basis": "per_m2",
    "areal_density_g_m2": 17,
    "thickness_um": 12,
-   "note": "approx. value per page"
+   "colour": "light scale white",
+   "product": "ORACOVER AIR LIGHT",
+   "order_numbers": { "2 m roll": "331-099-002", "10 m roll": "331-099-010" },
+   "areal_density_basis": "Lanitz technical data sheet (read 2026-11-03), 'ORACOVER AIR (AIR INDOOR und AIR LIGHT)': Stärke 12 µm, Gewicht ca. 17 g/m² (approximate, one figure for both products). The ruling makes the TDS figure the value used.",
+   "catalogue_2010": "Lanitz-Prena ORACOVER product information 2010 (English), technical table: 'LIGHT ... approx. 18 / approx. 12 µm' (INDOOR approx. 17); colour list under ORACOVER AIR LIGHT: 'light scale white 331-099-002 331-099-010'. https://www.hyperflight.co.uk/extras/Oracover-Product-Information_2010_engl.pdf (maker's catalogue, retailer-hosted), read 2026-11-03",
+   "note": "Corrected 2026-11-03: the entry used to merge AIR INDOOR (transparent colours, 331-000 to 331-059) with AIR LIGHT. AIR LIGHT comes only in chrome colours and light scale white; the bird flies outdoors and is covered in light scale white on every surface."
   },
   "price_usd": null,
   "source_url": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets",
-  "retrieved": "2026-11-02",
+  "retrieved": "2026-11-03",
   "verified": "manufacturer-page"
  },
  {
@@ -6283,7 +6288,8 @@
    "magnet_text": "Diametrically magnetized ring magnet required. Magnet (ID) masses: 12 mm: 3.8 g; 16 mm: 6.4 g; 22 mm: 12.7 g; 30 mm: 16.8 g. Magnetic actuator (ID) masses: 6 mm: 6.0 g; 8 mm: 5.5 g; 10 mm: 5.7 g; 12 mm: 8.7 g; 14 mm: 13.7 g; 15 mm: 7.1 g; 20 mm: 25 g; 24 mm: 55 g",
    "temperature_text": "Operating \u201340 \u00b0C to +105 \u00b0C",
    "mass_basis": "readhead only; magnet extra",
-   "mass_note": "datasheet BRD01_16 Issue 16 (8th May 2026), Mechanical data: 'Mass Readhead 5.3 g'"
+   "mass_note": "datasheet BRD01_16 Issue 16 (8th May 2026), Mechanical data: 'Mass Readhead 5.3 g'",
+   "dimensions": { "od_mm": 45, "id_mm": 15.8, "thickness_mm": 6.9, "slot_mm": 9.1, "mounting": "3 x 4 mm metallised mounting holes on a 34 mm circle, 3 x M2 DIN 912 screws and spacers (not provided)", "basis": "BRD01_16 p.4 'BR10 Readhead' drawing: 45 max outer diameter, 15.8 min through-hole, 9.1 min slot, 6.9 max thick with connector (5.1 max PCB stack, 1.25 max board), read 2026-11-03" }
   },
   "price_usd": null,
   "source_url": "https://cdn.rls.si/documents/datasheets/BRD01.pdf",
@@ -6305,6 +6311,30 @@
   "price_usd": null,
   "source_url": "https://cdn.rls.si/documents/datasheets/BRD01.pdf",
   "retrieved": "2026-11-02",
+  "verified": "datasheet"
+ },
+ {
+  "id": "sensor-rls-orbis-actuator-10mm",
+  "category": "sensor",
+  "manufacturer": "RLS (Renishaw associate)",
+  "name": "Orbis magnetic actuator BA100, 10 mm inner diameter (ring magnet in a hub, for the BR10 readhead)",
+  "mass_g": 5.7,
+  "specs": {
+   "role": "diametrically magnetised actuator for the Orbis BR10 through-hole encoder, on a 10 mm shaft",
+   "inner_diameter_mm": 10,
+   "od_mm": 22,
+   "h_mm": 9.5,
+   "ride_height_mm": 4,
+   "part_number_text": "BRD01 'Magnet type compatibility 12 - BM120A190A1ABA00 or actuator BA060-BA100': the BR10 readhead ordered with magnet type 12 reads actuators BA060 to BA100",
+   "fixing_text": "Fastener 3x M3, DIN 913 (included); ID tolerance H7; recommended shaft tolerance g6; specifications valid on a non-ferrous shaft",
+   "ride_height_text": "Axial (dZ) displacement (ride height), magnet with 12 mm ID: 4 mm +-1 mm (the actuator family read with magnet type 12)",
+   "mass_basis": "per part",
+   "mass_note": "BRD01_16 mechanical data, 'Magnetic actuator (ID) masses: ... 10 mm: 5.7 g'; 'Available actuators: ID 10, OD 22, H 9.5'",
+   "replaces": "sensor-rls-orbis-actuator-8mm (8 mm bore; the crank shaft is 10 mm, round 14 assembly clearance)"
+  },
+  "price_usd": null,
+  "source_url": "https://cdn.rls.si/documents/datasheets/BRD01.pdf",
+  "retrieved": "2026-11-03",
   "verified": "datasheet"
  },
  {

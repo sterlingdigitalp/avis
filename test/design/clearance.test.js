@@ -205,3 +205,176 @@ test('the gear fold reads the motor from the catalogue ("37.5 dia x 33.75" mm) a
   assert.deepEqual(motorOf({ params: {}, mass: { lumps: [] } }, {}), { md: [0.035, 0.04], lumpM: [0.04, 0, 0] });
   assert.deepEqual(motorOf({ params: { parts: { motor: 'x' } }, mass: { lumps: [] } }, { x: { specs: { dimensions_text_mm: 'none' } } }).md, [0.035, 0.04]);
 });
+
+// ---- Round 14: the layout that assembles, and the check's fixes ------------------------------------------------
+import { hornStack, sleeveX, lockFlangeShape, MESH } from '../../src/design/clearance.js';
+import { rockerHub } from '../../src/design/linkage.js';
+import { ROUND14 } from '../../src/design/round14.mjs';
+import { encoderDims, journalDims } from '../../sims/avis-shared/model.js';
+import { protrusions } from '../../src/design/fit.js';
+import { lockFlangeCircles, hullOf } from '../../src/design/airframe.js';
+
+/** v21's own parameters with round 14's layout, joints, parts and linkage blocks (as round14.mjs builds them). */
+function asR14(d) {
+  const S = ROUND14.set, p = d.params, A = p.linkage.airframe;
+  p.layout = { ...S.layout };
+  p.joints = { ...p.joints, ...S.joints };
+  p.parts = { ...p.parts, ...S.parts };
+  const L = S.linkage;
+  p.linkage = { ...p.linkage, plates: { ...p.linkage.plates, ...L.plates }, rocker: { ...p.linkage.rocker, ...L.rocker }, airframe: { ...A, ...L.airframe, plates: { ...A.plates, ...L.airframe.plates }, rail: { ...A.rail, ...L.airframe.rail } } };
+  d.bom.parts.find((q) => q.role === 'crank encoder magnet').id = S.parts.encoderMagnet; // as buildDesign lists it
+  return d;
+}
+let V14;
+const once14 = () => (V14 ??= run(asR14(v21())));
+
+test('round 14 planes by hand: eyes, web, plates, stages, overhung stage 1, the motor inside, the encoder stub (mm)', () => {
+  const { lay } = once14();
+  const P = lay.planes, mmv = (v) => v * 1000;
+  // web centre 8.7, 6 mm thick; right eye 0.5 aft of it (6 mm GFM-0810-06), left eye 0.5 aft of that
+  near(mmv(P.crankArm), 8.7); near(mmv(P.couplerR), 8.7 - 3 - 0.5 - 3); near(mmv(P.couplerL), 2.2 - 6 - 0.5);
+  // aft plate past the 1 mm flange of GFM-1012-10, half its 1.6 mm
+  near(mmv(P.plateAft), 11.7 + 0.5 + 1 + 0.8);
+  // crank stage past the crank boss (body 9 mm less the plate), MSGB1-45 face 10, hub 5; 1.5 mm between stages
+  near(mmv(P.stage[3]), 14.8 + 7.4 + 0.5 + 5); near(mmv(P.stage[2]), 37.7 + 1.5 + 5); near(mmv(P.stage[1]), 54.2 + 1.5 + 5);
+  // forward plate past stage 2's hub and the forward journals (5 mm less the 1.2 mm plate), half the plate
+  near(mmv(P.plateFwd), 70.7 + 3.8 + 0.5 + 0.6);
+  // stage 1 past the 619/5's outward 4 mm (from the inner face) and the running gap; the motor 1.5 mm aft of the plate
+  near(mmv(P.stage[0]), 75.6 - 0.6 + 4 + 0.5 + 3); assert.equal(P.stage1, 'overhung');
+  near(mmv(P.motorFace), 75.6 - 1 - 1.5); near(mmv(P.motorX[0]), 73.1 - 33.75);
+  // the encoder forward of stage 1's 6 mm teeth: BR10 6.9 mm, ride 4 mm, BA100 9.5 mm; the crank shaft to its end
+  near(mmv(P.encoder.readhead[0]), 82.5 + 3 + 0.5); near(mmv(P.encoder.readhead[1]), 92.9); near(mmv(P.encoder.actuator[0]), 96.9); near(mmv(P.encoder.actuator[1]), 106.4);
+  near(mmv(P.crankEnd), 106.4);
+});
+
+test('round 14 horn stacking and bracket sleeves, by hand', () => {
+  const Ly = ROUND14.set.layout;
+  const L = hornStack(Ly, 'L', -0.0043, 0.006, 0.007), R = hornStack(Ly, 'R', 0.0022, 0.006, 0.007);
+  [[L.boss, [-14.8, -7.8]], [L.pin, [-14.8, -1.3]], [R.boss, [5.7, 12.7]], [R.pin, [-0.8, 12.7]]].forEach(([a, b]) => { near(a[0] * 1000, b[0], 1e-9); near(a[1] * 1000, b[1], 1e-9); });
+  // v21: boss 1 mm forward of the eye, the pin to 1 mm past it
+  const v = hornStack({}, 'R', -0.0045, 0.006, 0.008);
+  near(v.boss[0] * 1000, -0.5, 1e-9); near(v.boss[1] * 1000, 7.5, 1e-9); near(v.pin[0] * 1000, -8.5, 1e-9);
+  // a sleeve centred on a housing forward of the aft plate would sit in the plate: it starts 0.5 mm clear of it instead
+  const ax = { P: { plateAft: 0.014, plateFwd: 0.0965 }, tA: 0.0016, tF: 0.0012, Ly };
+  const f = sleeveX(ax, 0.0183, 0.013), a = sleeveX(ax, -0.0183, 0.013);
+  near(f[0] * 1000, 15.3, 1e-9); near(f[1] * 1000, 28.3, 1e-9); near(a[0] * 1000, -24.8, 1e-9); near(a[1] * 1000, -11.8, 1e-9);
+});
+
+test('round 14: the left eye clears the left aft housing by stacking along x (clash 2), the horns clear each other', () => {
+  const { r } = once14();
+  // the left eye (-7.3 to -1.3 mm) 8 mm forward of the left aft housing's counterbore (-16.3 to -15.3 mm)
+  near(pair(r, 'coupler L/horn eye', 'shoulder bracket L aft/housing counterbore'), 8, R3);
+  assert.ok(pair(r, 'coupler R/horn eye', 'rocker L/horn boss') >= 0.5);
+  assert.ok(pair(r, 'rocker R/horn pin', 'coupler L/horn eye') >= 0.5);
+  near(pair(r, 'rocker L/horn boss', 'shoulder bracket L aft/housing counterbore'), 0.5, R3); // boss from -14.8 mm
+  // the hub turned down to 13.6 mm where the eyes pass: the eye's inner edge is the rocker length less 12.25 mm from
+  // the axis, 0.53 mm off the relief
+  const c = linkageAt(driveLayout(asR14(v21()), catalog).law, v21().drive.ampNominal).c * 1000;
+  near(pair(r, 'rocker R/hub relief', 'coupler R/horn eye'), c - 24.5 / 2 - 13.6 / 2, 0.02);
+});
+
+test('round 14 rocker hub by hand: relief at the eyes, forward end clear of the aft plate, the seat at full diameter', () => {
+  const d = asR14(v21());
+  const { lay } = once14();
+  const h = rockerHub(d, d.params.linkage.rocker, 0.0366, 0.006, lay.planes, 0.006);
+  // 36.6 - 6 - 2 x 0.5 = 29.6 mm centred on the hinge; forward end 0.5 mm aft of the plate's aft face (14.0 - 0.8)
+  near(h.x[0] * 1000, -14.8, 1e-9); near(h.x[1] * 1000, 12.7, 1e-9);
+  // relief from 0.5 mm aft of the left eye (-7.3) to 0.5 mm forward of the right eye (5.2)
+  near(h.relief[0] * 1000, -7.8, 1e-9); near(h.relief[1] * 1000, 5.7, 1e-9); near(h.seat_m * 1000, 27.5 - 13.5, 1e-9);
+  // the shoulder pin's arms: bushing centres at -18.3 and 18.3 mm
+  near(h.levers.aft * 1000, 3.5, 1e-9); near(h.levers.forward * 1000, 5.6, 1e-9);
+  // the pin's collar from the hub's face to 0.5 mm short of the forward bushing's flange (18.3 - 3 = 15.3 mm)
+  near(h.collar[0] * 1000, 12.7, 1e-9); near(h.collar[1] * 1000, 14.8, 1e-9);
+  const { r } = once14();
+  near(pair(r, 'rocker R/pin collar', 'shoulder bushing R forward/flange'), 0.5, R3);
+  assert.ok(pair(r, 'rocker R/pin collar', 'gearbox plate aft/plate') >= 0.5 - R3);
+  const hub = once14().lay && run(asR14(v21())); // members on the round-14 layout
+  const lm = driveMembers(asR14(v21()), catalog, asR14(v21()).params.linkage, lay, driveJoints(asR14(v21()), catalog, asR14(v21()).params.joints).joints);
+  const m = lm.members.find((q) => q.name === 'rocker hub right');
+  near(m.dims.t_mm, 14, 1e-9); assert.ok(m.dims.e_over_d >= 1.2);
+  assert.ok(hub.r.passed !== undefined);
+});
+
+test('round 14: joined parts are checked at zero gap and never interpenetrate; gears in mesh are exempt', () => {
+  const { r } = once14();
+  const rows = Object.values(r.all_pairs);
+  const joined = rows.filter((q) => q.joined);
+  assert.ok(joined.length > 50);
+  for (const q of joined) assert.ok(q.gap_mm >= -1e-4, `${q.a} / ${q.b} ${q.gap_mm}`);
+  assert.ok(!rows.some((q) => q.joined === MESH));
+  assert.ok(!rows.some((q) => /^stage 4 wheel/.test(q.a) && /^stage 4 pinion/.test(q.b)));
+  // a bushing flange sits in its housing's counterbore, touching; a bracket arm stops at the rail's surface
+  near(pair(r, 'shoulder bushing R aft/flange', 'shoulder bracket R aft/housing counterbore'), 0, R3);
+  near(pair(r, 'shoulder bracket R aft/arm', 'shoulder rail right/tube'), 0, R3);
+});
+
+test('round 14: zero clashes through the stroke on v21\'s own parameters with the round-14 layout', () => {
+  const { r } = once14();
+  assert.deepEqual(r.clashes, []);
+  assert.equal(r.required_mm, 0.5);
+});
+
+test('the boom passes the plates and posts through a running-clearance hole; the clamp blocks are bored for it', () => {
+  const { r } = once14();
+  const rows = Object.values(r.all_pairs).filter((q) => /^tail boom\/tube$/.test(q.a) || /^tail boom\/tube$/.test(q.b));
+  const plate = rows.filter((q) => /gearbox plate/.test(q.a + q.b));
+  assert.ok(plate.length >= 4);
+  for (const q of plate) assert.ok(q.gap_mm >= 0.5 - R3);
+  near(Math.min(...plate.map((q) => q.gap_mm)), 0.5, R3);
+  const clamps = rows.filter((x) => /^boom clamp/.test(x.a) || /^boom clamp/.test(x.b));
+  assert.equal(clamps.length, 2);
+  for (const q of clamps) near(q.gap_mm, 0, R3);
+});
+
+test('round 14 parts: the encoder\'s catalogue sizes, the outward motor bearing, the lock flange, the strict shell fit', () => {
+  const d = asR14(v21());
+  const e = encoderDims(d, partsIndex(d, catalog));
+  assert.deepEqual([e.readhead_od, e.readhead_id, e.readhead_t, e.ride, e.actuator_od, e.actuator_id, e.actuator_h].map((v) => +(v * 1000).toFixed(3)), [45, 15.8, 6.9, 4, 22, 10, 9.5]);
+  // the actuator's bore is the crank shaft's diameter (the 8 mm one it replaces was not)
+  assert.equal(catalog.find((p) => p.id === 'sensor-rls-orbis-actuator-10mm').specs.inner_diameter_mm, d.params.linkage.crank.shaft_od_mm);
+  assert.equal(catalog.find((p) => p.id === 'sensor-rls-orbis-actuator-8mm').specs.inner_diameter_mm, 8);
+  assert.ok(Object.values(encoderDims({ params: {} }, {})).every((v) => v === 0)); // no encoder in the design: nothing placed
+  const dims = journalDims(catalog.find((p) => p.id === 'bearing-skf-619-5-2z').specs);
+  const x = plateJournalX({ flange: 'face' }, 'fwd', 0.0965, 0.0012, dims, true);
+  near(x.body[0] * 1000, 95.9, 1e-9); near(x.body[1] * 1000, 99.9, 1e-9);
+  // six M3 lands on a 15 mm arc from 40 to 172 degrees (6.5 mm or more apart, an M3 head 5.5 mm): by hand
+  const cs = lockFlangeCircles({ ...d.params.linkage.airframe.rail, ...ROUND14.set.linkage.airframe.rail }, [0, 0], 1);
+  assert.equal(cs.length, 7); near(cs[1].c[0] * 1000, 15 * Math.cos((40 * Math.PI) / 180), 1e-9); near(cs[6].c[0] * 1000, 15 * Math.cos((172 * Math.PI) / 180), 1e-9);
+  for (let i = 2; i < 7; i++) assert.ok(Math.hypot(cs[i].c[0] - cs[i - 1].c[0], cs[i].c[1] - cs[i - 1].c[1]) >= 0.0065);
+  assert.ok(hullOf(cs).area_m2 > 0);
+  assert.ok(lockFlangeShape({ ...ROUND14.set.linkage.airframe.rail }, [0.0265, 0.001], 1, 0.0065).kind === 'poly');
+  const fit = { issues: [{ mm: 0.3 }, { mm: 0 }] };
+  assert.equal(protrusions(fit, d).length, 1); assert.equal(protrusions(fit, v21()).length, 0);
+});
+
+test('plane geometry, mutation follow-up: asymmetric crossings, scaled and small polygons, corners, V-shaped minima', () => {
+  // two bars crossing off-centre: the crossing test must see it (endpoint distances alone give 0.2)
+  near(segSegDist([0, 0], [4, 1], [1, -1], [1.5, 3]), 0);
+  near(gap2(cap([0, 0], [4, 1], 0.1), cap([1, -1], [1.5, 3], 0.1)), -0.2);
+  // apart, no crossing: the nearest endpoint to the other segment
+  near(segSegDist([0, 0], [1, 0], [2, -1], [2, 3]), 1);
+  // a 3 x 2 box: depth inside is scaled by the edge lengths, and outside a corner it is the corner distance
+  const box = [[0, 0], [3, 0], [3, 2], [0, 2]];
+  near(polySd(box, [1.5, 0.5]), -0.5); near(polySd(box, [2.5, 1]), -0.5);
+  near(polySd(box, [4, 3]), Math.SQRT2); near(polySd(box, [1, -0.25]), 0.25);
+  // a millimetre-sized polygon of either winding (the check's own scale): its sign comes from its area alone
+  const small = [[0, 0], [0.003, 0], [0.003, 0.002], [0, 0.002]];
+  near(polySd([...small].reverse(), [0.0015, 0.0005]), -0.0005, 1e-12); near(polySd(small, [0.0015, 0.0005]), -0.0005, 1e-12);
+  // a bar passing a box's corner at a slant: the nearest point lies inside the bar, found by the golden-section search
+  // (the bar's line x + y = 2 passes sqrt(2) from the corner (2, 2), its nearest point the bar's middle)
+  near(gap2(cap([-1, 3], [3, -1], 0.1), poly(box)), -1.1, 1e-6); // through the 3 x 2 box: deepest at (1, 1), 1 from the edges, less r
+  near(gap2(cap([-1, 3], [3, -1], 0.1), poly([[2, 2], [3, 2], [3, 3], [2, 3]])), Math.hypot(1, 1) - 0.1, 1e-6);
+  // gaps of prisms: touching in x and overlapping in the plane is zero, not a clearance
+  near(gap3([0, 1], [1, 2], -1), 0); near(gap3([0, 1], [1.5, 2], 0), 0.5); near(gap3([0, 1], [0.5, 2], 0.3), 0.3);
+  // a ring in a polygon's hole, and a ring whose bore holds a capsule or a polygon
+  near(gap2(poly(box, [{ c: [1.5, 1], r: 0.5 }]), ring([1.5, 1], 0.3)), 0.2);
+  near(gap2(cap([1.4, 1], [1.6, 1], 0.1), ring([1.5, 1], 2, 0.5)), 0.5 - 0.1 - 0.1);
+  near(gap2(poly([[1.4, 0.9], [1.6, 0.9], [1.6, 1.1], [1.4, 1.1]]), ring([1.5, 1], 2, 0.5)), 0.5 - Math.hypot(0.1, 0.1));
+});
+
+test('the round-14 assumption line states the layout it describes, only for the round-14 layout', () => {
+  const line = round14Note(ROUND14.set.layout, { passed: true, clashes: [], required_mm: 0.5 });
+  assert.match(line, /horn stacks R fwd, L aft/); assert.match(line, /stage 1 overhung/);
+  assert.match(line, new RegExp(JSON.stringify(ROUND14.set.layout.links_deg).replace(/[[\]]/g, '\\$&')));
+  assert.doesNotMatch(round14Note({ running_mm: 0.5 }, { passed: true, clashes: [], required_mm: 0.5 }), /overhung/);
+});

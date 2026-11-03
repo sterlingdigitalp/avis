@@ -17,23 +17,64 @@ import { writeDesignAtomic } from './io.js';
 import { validateDesign } from './schema.js';
 import { buildRound12, ROUND12 } from './round12.mjs';
 
+// The stated gear fold (model.js gearTrain: link angles from the crank, degrees) and the gearbox panels.
+const LINKS_DEG = [157.8, 48.7, 1.3, 110.5];
+const PANELS = [
+  { name: 'side panel right', kind: 'side', z_mm: 45, y0_mm: -20, h_mm: 29, t_mm: 0.9 },
+  { name: 'side panel left', kind: 'side', z_mm: -45, y0_mm: -20, h_mm: 29, t_mm: 0.9 },
+  { name: 'top panel', kind: 'top', y_mm: -81, w_mm: 24, t_mm: 1 }, // the horizontal ('top' kind) panel, now under the gears
+];
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEG = Math.PI / 180;
 
 /**
- * Round 14 corrections over v21 (ROUND12.set), each forced by a clash the clearance check measures on v21:
- *  - layout 'clearance' with 0.5 mm running clearance: the coupler eyes side by side on the crank pin, 0.5 mm apart
- *    and 0.5 mm aft of the crank web (v21: 1 mm into each other); the aft plate moved forward so the crank bushing's
- *    1 mm flange sits on its aft face 0.5 mm from the web (v21: the web 0.2 mm from the plate); the crank stage moved
- *    forward of the aft-plate bosses and journals on its two shafts, and the forward plate forward of stage 1's
- *    journals, by 0.5 mm (v21: the bosses 7 mm into the crank wheel and 3.2 mm into the stage-4 pinion).
- *  - plates.flange 'face': the plate bushings' flanges on the plate faces, so a boss is as long as the bushing body
- *    and the seat holds the body (b1 - b2), as the SPEC reads clash 3.
+ * Round 14 corrections over v21 (ROUND12.set), each forced by a clash the clearance check measures (src/design/
+ * clearance.js; the clash ledger is in docs/status/final-gates-larus.txt). Layout only, by the SPEC's layout freedom;
+ * every member keeps its own sizing rule, and the parts are v21's except the encoder actuator:
+ *  - layout 'clearance', 0.5 mm running clearance (model.js clearancePlanes): the coupler eyes side by side on the crank
+ *    pin, 0.5 mm apart and 0.5 mm aft of the crank web; the aft plate 0.5 mm forward of the web past the crank bushing's
+ *    flange, so the crank overhang is the clearance agent's v22 candidate's; plate bushing flanges on the plate faces.
+ *  - horn stacking: the two horns pass within 11 mm of each other, so the stacks sit at different x: the right boss
+ *    forward of its eye, the left boss aft of its eye (horns), each 0.5 mm from its eye, the horn pins flush with the
+ *    eyes; the horn bosses 7 mm long (v21 8 mm), so the right boss ends 0.5 mm aft of the aft plate.
+ *  - shoulder spacing 36.6 mm (v21 24 mm): both stacks between the housings (an eye or boss overlaps a housing radially
+ *    by up to 2.4 mm, so it may not share its x), the forward housings 0.5 mm forward of the aft plate; the crank web
+ *    8.7 mm forward of the hinge (crank_x_mm); the rocker hub turned down to 13.6 mm where the coupler eyes pass (they
+ *    clear it by 0.5 mm; elsewhere it keeps v21's 14.5 mm and its edge distance) and ended 0.5 mm aft of the aft plate;
+ *    a 9 mm collar on the shoulder pin from there to 0.5 mm short of the forward bushing keeps the forward axial stop.
+ *  - the rails 20.75 mm below and 4 mm outboard of the hinges (v21 11.5 mm above, in the spar sockets' sweep), 13/8 mm,
+ *    seats 31.5 mm (1.2 d0 edge distance), bracket arms 11 mm wide; the aft plate's hull then clears the rocker hubs; the lock flange (1.4 mm)
+ *    at the forward plate's aft face, its six screws on a 15 mm arc up and over the rail (lock_arc_deg).
+ *  - stage 1 overhung forward of the forward plate and the motor inside the box on the forward plate's aft face
+ *    (stage1 'overhung'): gear shaft 2 sits 29 mm from gear shaft 3, inside the DS1-60's 31 mm tip circle, so no shaft
+ *    that spans the plates may pass stage 1. The fold is stated (links_deg), chosen against every part.
+ *  - the encoder: the catalogue's 8 mm actuator cannot go on the 10 mm crank shaft, so the maker's 10 mm actuator
+ *    (BA100), on a stub of the crank shaft forward of stage 1 (encoder 'front'; inside the box it lengthened the box,
+ *    and the gears' moved CG pushed the battery and the pod's nose aft until no pod in the fit grid held the gears).
+ *  - frame routing: side panels at z +-45 mm, y -20 to 9 mm, the horizontal panel (named 'top panel', its kind) a floor
+ *    at y -81 mm (v21's at 56.5 mm touched the boom), trays below the drive (forward -66.5 mm, aft -84 mm), plate posts 16 mm wide (the boom posts
+ *    are longer). The pod follows by the fit rule, which now keeps every packed part, tip circle and the motor can the
+ *    running clearance inside the loft (model.js layoutParts, fit.js protrusions).
  */
+const R12 = ROUND12.set, RL = R12.linkage, RA = RL.airframe;
 export const ROUND14 = {
   set: {
-    layout: { rule: 'clearance', running_mm: 0.5, basis: 'SPEC Design freeze, Assembly clearance (2026-11-03); sims/avis-shared/model.js clearancePlanes' },
-    linkage: { plates: { ...ROUND12.set.linkage.plates, flange: 'face' } },
+    layout: { rule: 'clearance', running_mm: 0.5, basis: 'SPEC Design freeze, Assembly clearance (2026-11-03); sims/avis-shared/model.js clearancePlanes', crank_x_mm: 8.7, eye_gap_mm: 0.5, horns: { R: 'fwd', L: 'aft' }, horn_gap_mm: 0.5, horn_pin_past_mm: 0, encoder: 'front', stage1: 'overhung', links_deg: LINKS_DEG },
+    joints: { ...R12.joints, shoulderSpan_mm: 36.6 },
+    parts: { encoderMagnet: 'sensor-rls-orbis-actuator-10mm' },
+    linkage: {
+      plates: { ...RL.plates, flange: 'face' },
+      rocker: { ...RL.rocker, boss_len_mm: 7, hub_relief_od_mm: 13.6, hub_clear_plate: true, hub_collar_od_mm: 9 },
+      airframe: {
+        ...RA,
+        plates: { ...RA.plates, post_w_mm: 16 },
+        rail: { ...RA.rail, od_mm: 13, dz_mm: 4, dy_mm: -20.75, seat_D_mm: 31.5, arm_b_mm: 11, lock_at: 'forward', lock_screws: 6, lock_r_mm: 15, lock_arc_deg: [40, 172], lock_t_mm: 1.4 },
+        tray: { y_mm: -84 },
+        aftTray: { y_mm: -84 },
+        panels: { ...RA.panels, list: PANELS },
+      },
+    },
   },
 };
 
@@ -55,7 +96,8 @@ export async function buildRound14({ base, set = {}, opt = {}, catalog, fit = tr
 /** The design's round-14 assumption line, with the clearance check's verdict. */
 export function round14Note(layout, c) {
   const verdict = !c ? 'not run' : c.passed ? 'passed' : `FAILED: ${c.clashes.length} part pairs under ${c.required_mm} mm${c.pod_shell?.clashes.length ? `, ${c.pod_shell.clashes.length} against the pod` : ''}`;
-  return `Round 14: the drive planes keep ${layout.running_mm} mm running clearance along the crank pin and at the plate-adjacent stages (model.js clearancePlanes); plate bushing flanges on the plate faces; rocker hubs that far clear of the shoulder bushings; assembly clearance check ${verdict} (structure.clearance).`;
+  const lay = layout.stage1 === 'overhung' ? ` Layout (SPEC layout freedom, ROUND14.set): horn stacks ${Object.entries(layout.horns ?? {}).map(([t, w]) => `${t} ${w}`).join(', ')} of their eyes between shoulder housings spread to the stacks' length; the aft plate just forward of the crank web; rails below the hinges; stage 1 overhung forward of the forward plate with the motor inside the box; the encoder (10 mm actuator) on a crank stub forward of stage 1; the stated gear fold ${JSON.stringify(layout.links_deg)} deg.` : '';
+  return `Round 14: the drive planes keep ${layout.running_mm} mm running clearance along the crank pin and at the plate-adjacent stages (model.js clearancePlanes); plate bushing flanges on the plate faces; rocker hubs that far clear of the shoulder bushings;${lay} Assembly clearance check ${verdict} (structure.clearance).`;
 }
 
 const arg = (k) => (process.argv.includes(k) ? process.argv[process.argv.indexOf(k) + 1] : null);

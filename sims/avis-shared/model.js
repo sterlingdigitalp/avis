@@ -238,8 +238,11 @@ export function gearTrain(design, parts, fourBar) {
   const train = { gears: g, stages, ratio, ratioDesign: design.drive.gearRatio, n };
   train.planes = stagePlanes(design, train, parts);
   const { md, lumpM } = motorOf(design, parts);
-  const fold = { stages, n, planes: train.planes, loft: design.body.loft, md, lumpM, O2: fourBar.O2, motorX: [train.planes.motorAft, train.planes.motorAft + md[1]] };
-  const best = foldSearch((ang) => trainCost(fold, ang), n);
+  const fold = { stages, n, planes: train.planes, loft: design.body.loft, md, lumpM, O2: fourBar.O2, motorX: train.planes.motorX ?? [train.planes.motorAft, train.planes.motorAft + md[1]] };
+  // Round 14: a design may state its fold (params.layout.links_deg, one angle per link from the crank, counter-clockwise
+  // from +z), chosen against the parts this search does not see (rails, panels, the motor inside the box).
+  const stated = design.params?.layout?.links_deg;
+  const best = Array.isArray(stated) && stated.length === n ? { ang: stated.map((a) => (a * Math.PI) / 180) } : foldSearch((ang) => trainCost(fold, ang), n);
   train.links = best.ang;
   train.shafts = trainChain(fourBar.O2, stages, n, best.ang);
   train.centres = { crank: train.shafts[0], motor: train.shafts[n] };
@@ -339,21 +342,6 @@ export function couplerEyeLength(design, parts) {
 }
 
 /**
- * Film only: where the two couplers are drawn on the crank pin. The physics' planes (stagePlanes, which src/design
- * sizes the crank pin from) are kept wherever their eyes clear each other and the web. Where they would overlap
- * (v21: two 6 mm eyes on planes 5 mm apart, 1 mm into each other), the right eye is drawn against the web's aft face
- * and the left eye against the right one, so both stay on the design's own crank pin. The physics never reads this.
- */
-export function filmCouplerPlanes(design, parts, planes) {
-  const eye = couplerEyeLength(design, parts);
-  const couplerR = Math.min(planes.couplerR, planes.crankArm - crankWebThickness(design) / 2 - eye / 2);
-  const couplerL = Math.min(planes.couplerL, couplerR - eye);
-  // the crank pin as the design sizes it (src/design/linkage.js crankMembers): to 1 mm past the physics' left eye
-  const pinEnd = Math.min(planes.couplerL - eye / 2 - 0.001, couplerL - eye / 2);
-  return { couplerR, couplerL, couplerEye: eye, crankPinEnd: pinEnd };
-}
-
-/**
  * Length (m) a plate journal's body occupies along its seat: a flanged bushing whose flange sits on the plate's face
  * (params.linkage.plates.flange 'face', v22 on) has its body b1 - b2 in the seat; otherwise (v21) the whole part.
  */
@@ -370,30 +358,93 @@ export function journalBodyLength(plates, dims) {
  *    plate by their body length less the plate), and the forward plate that far forward of stage 1 by the same rule
  *    for the forward plate's journals on stage 1's shafts.
  * Everything else is stagePlanes' (the crank web 1.5 mm forward of the hinge, 1.5 mm between stages, the motor).
+ *
+ * Round 14 layout options (params.layout; each absent keeps the rule above):
+ *  - crank_x_mm: the crank web's centre this far forward of the hinge (the shoulder spacing and horn stacking decide it);
+ *  - eye_gap_mm: the gap between the two coupler eyes on the crank pin;
+ *  - encoder 'front' (with stage1 'overhung'): the crank encoder (readhead, ride height, actuator: their catalogue
+ *    dimensions) on a stub of the crank shaft forward of stage 1, each running gap the running clearance;
+ *  - stage1 'overhung': stage 1 outside the box, forward of the forward plate (its wheel overhung on its shaft, the
+ *    pinion on the motor shaft through the forward plate), and the motor inside the box, screwed to the forward plate's
+ *    aft face (its can aft of it). The forward plate then follows stage 2 by the same rule as above.
+ * motorX is the motor can's [aft, forward] faces and motorFace the face it is screwed by (its shaft side).
  */
 function clearancePlanes(design, train, parts) {
-  const run = (design.params.layout.running_mm ?? 0.5) / 1000;
-  const x0 = design.wing.hinge[0], plateT = 0.002;
-  const L = design.params.linkage, J = design.params.joints;
-  const tA = L.plates.t_mm / 1000, tF = (L.plates.t_fwd_mm ?? L.plates.t_mm) / 1000;
-  const dims = (id) => journalDims(parts?.[id]?.specs);
-  const eye = dims(J.couplerEyes).B;
-  const crankArm = x0 + 0.0015, tw = crankWebThickness(design);
+  const k = planeKit(design, train, parts), { Ly, J, run, x0, plateT, tA, tF, dims, beyond } = k;
+  const eye = dims(J.couplerEyes).B, tw = crankWebThickness(design);
+  const crankArm = x0 + (Ly.crank_x_mm ?? 1.5) / 1000;
   const plateAft = crankArm + tw / 2 + run + dims(J.crankShaft).flangeB + tA / 2;
-  const shaftJ = (k) => (k === 0 ? J.crankShaft : k === train.n ? J.motorOutboard : J.shafts?.[k - 1] ?? J.shafts?.at(-1));
-  const beyond = (k, tp) => (shaftJ(k) ? Math.max(0, journalBodyLength(L.plates, dims(shaftJ(k))) - tp) : 0);
-  const stage = new Array(train.n);
-  let x = plateAft + tA / 2 + Math.max(beyond(0, tA), beyond(1, tA)) + run;
-  for (let s = train.n - 1; s >= 0; s--) {
-    const st = train.stages[s];
-    const w = Math.max(st.wheel.face, st.pinion.face);
-    const hub = Math.max(st.wheel.hubW, st.pinion.hubW);
-    stage[s] = x + w / 2;
-    x += w + hub + (s > 0 ? 0.0015 : 0);
-  }
-  const plateFwd = x + Math.max(beyond(train.n - 1, tF), beyond(train.n, tF)) + run + tF / 2;
+  const over = Ly.stage1 === 'overhung' && train.n > 1;
+  const last = over ? 1 : 0; // the forward-most stage inside the box
+  const { stage, x } = boxStages(train, last, plateAft + tA / 2 + Math.max(beyond(0, tA), beyond(1, tA)) + run);
+  const kw = train.n - 1 - last; // the last inside stage's wheel shaft (its pinion shaft is kw + 1)
+  const plateFwd = x + Math.max(beyond(kw, tF), beyond(kw + 1, tF)) + run + tF / 2;
+  const md = motorOf(design, parts ?? {}).md;
+  const m = over ? overhungStage1(train.stages[0], plateFwd, plateT, tF, run, k.outboardB, md) : { motorFace: plateFwd + plateT / 2 + 0.0015, motorX: null };
+  if (over) stage[0] = m.stage0;
+  const motorX = m.motorX ?? [m.motorFace, m.motorFace + md[1]];
+  // encoder 'front': on a stub of the crank shaft forward of stage 1's teeth (its wheel's hub clears the crank in the
+  // plane), so the box stays as long as its three stages
+  const encoder = over && Ly.encoder === 'front' ? encoderPlanes(encoderDims(design, parts), m.stage0 + m.w0 / 2 + run) : null;
   const couplerR = crankArm - tw / 2 - run - eye / 2;
-  return { crankArm, plateAft, stage, plateFwd, plateT, motorAft: plateFwd + plateT / 2 + 0.0015, couplerR, couplerL: couplerR - eye - run, rule: 'clearance' };
+  return { crankArm, plateAft, stage, plateFwd, plateT, motorAft: motorX[0], motorX, motorFace: m.motorFace, stage1: over ? 'overhung' : 'inside', ...(encoder ? { encoder } : {}), shoulderAft: k.shoulderAft, crankEnd: Math.max(plateFwd + plateT / 2 + 0.001, encoder ? encoder.actuator[1] : -Infinity), couplerR, couplerL: couplerR - eye - k.eyeGap, rule: 'clearance' };
+}
+
+/**
+ * What the clearance planes read of the design: the running clearance, the plates, the journals' catalogue sizes and
+ * how far a journal reaches past its plate (beyond), the eye gap, the motor's outboard bearing width, and the aft
+ * shoulder housings' aft face (the crank shaft ends 1 mm proud of the forward plate, or at an encoder stub's end).
+ */
+function planeKit(design, train, parts) {
+  const Ly = design.params.layout, J = design.params.joints, L = design.params.linkage;
+  const run = (Ly.running_mm ?? 0.5) / 1000, x0 = design.wing.hinge[0];
+  const dims = (id) => journalDims(parts?.[id]?.specs);
+  const shaftJ = (k) => (k === 0 ? J.crankShaft : k === train.n ? J.motorOutboard : J.shafts?.[k - 1] ?? J.shafts?.at(-1));
+  return {
+    Ly, J, run, x0, plateT: 0.002, dims,
+    tA: L.plates.t_mm / 1000, tF: (L.plates.t_fwd_mm ?? L.plates.t_mm) / 1000,
+    beyond: (k, tp) => (shaftJ(k) ? Math.max(0, journalBodyLength(L.plates, dims(shaftJ(k))) - tp) : 0),
+    eyeGap: Ly.eye_gap_mm != null ? Ly.eye_gap_mm / 1000 : run,
+    outboardB: J.motorOutboard ? dims(J.motorOutboard).B : null,
+    shoulderAft: x0 - (J.shoulderSpan_mm ?? 24) / 2000 - dims(J.shoulder).B / 2,
+  };
+}
+
+/** Stage planes inside the box, crank stage first, from x: each stage its widest face and hub, 1.5 mm between. */
+function boxStages(train, last, x) {
+  const stage = new Array(train.n);
+  for (let s = train.n - 1; s >= last; s--) {
+    const st = train.stages[s];
+    stage[s] = x + Math.max(st.wheel.face, st.pinion.face) / 2;
+    x += Math.max(st.wheel.face, st.pinion.face) + Math.max(st.wheel.hubW, st.pinion.hubW) + (s > last ? 0.0015 : 0);
+  }
+  return { stage, x };
+}
+
+/**
+ * Stage 1 overhung forward of the forward plate, the motor inside the box on the plate's aft face: the gears clear the
+ * shaft ends (1 mm proud of the plate, as every shaft is drawn and checked) and the motor's outboard bearing (seated
+ * from the plate's inner face outward) by the running gap. -> { stage0, w0, motorFace, motorX }
+ */
+function overhungStage1(st, plateFwd, plateT, tF, run, outboardB, md) {
+  const ob = outboardB != null ? plateFwd - tF / 2 + outboardB : -Infinity;
+  const w0 = Math.max(st.wheel.face, st.pinion.face);
+  const motorFace = plateFwd - plateT / 2 - 0.0015;
+  return { stage0: Math.max(plateFwd + plateT / 2 + 0.001, ob) + run + w0 / 2, w0, motorFace, motorX: [motorFace - md[1], motorFace] };
+}
+
+/** The encoder from x along the crank: readhead, its ride height, the actuator. -> planes.encoder (m) */
+function encoderPlanes(e, x) {
+  const a = x + e.readhead_t + e.ride;
+  return { readhead: [x, x + e.readhead_t], actuator: [a, a + e.actuator_h], od: { readhead: e.readhead_od, actuator: e.actuator_od }, id: { readhead: e.readhead_id, actuator: e.actuator_id } };
+}
+
+/** The crank encoder's catalogue dimensions (m): readhead ring and thickness, ride height, actuator ring and height (0 if absent). */
+export function encoderDims(design, parts) {
+  const P = design.params?.parts ?? {};
+  const rh = parts?.[P.crankEncoder]?.specs?.dimensions ?? {}, ac = parts?.[P.encoderMagnet]?.specs ?? {};
+  const v = (o, k) => (o[k] ?? 0) / 1000;
+  return { readhead_od: v(rh, 'od_mm'), readhead_id: v(rh, 'id_mm'), readhead_t: v(rh, 'thickness_mm'), ride: v(ac, 'ride_height_mm'), actuator_od: v(ac, 'od_mm'), actuator_id: v(ac, 'inner_diameter_mm'), actuator_h: v(ac, 'h_mm') };
 }
 
 /** x planes of the drive: crank disc at the hinge, aft plate, one plane per stage (crank wheel first), front plate. */
@@ -439,6 +490,21 @@ export function gearAngles(train, crank) {
 // Parts layout: catalogue boxes at the design's mass-lump positions, checked against the loft
 // ---------------------------------------------------------------------------------------------------------------
 
+/** The motor can's signed gap (m) to the loft: its round end faces at both x ends (positive inside). */
+function motorShellGap(loft, box, md, c) {
+  let worst = -Infinity;
+  for (const x of [box.x0, box.x1]) {
+    const h = loftHalf(loft, x);
+    if (!h) return -Infinity;
+    for (let k = 0; k < 72; k++) {
+      const a = (k / 72) * TWO_PI;
+      const r = Math.hypot((c[1] + (md[0] / 2) * Math.sin(a) - h.y) / h.hh, (c[0] + (md[0] / 2) * Math.cos(a)) / h.hw);
+      worst = Math.max(worst, (r - 1) * Math.min(h.hh, h.hw));
+    }
+  }
+  return -worst;
+}
+
 /** Half extents of the loft at x, or null outside it. */
 function loftHalf(loft, x) {
   const s = bodySectionAt(loft, x);
@@ -475,11 +541,15 @@ function boxAt(x, y, z, sx, sy, sz) {
  * to 15 mm, to the nearest place it fits. The shift is recorded, so a CG change is reported, not hidden. If nothing
  * fits, the least bad place is kept and its protrusion reported.
  */
-function placeBox(loft, name, at, size, others, { rotate = true } = {}) {
-  const clash = (b) => others.some((o) => b.x0 < o.x1 - 1e-4 && b.x1 > o.x0 + 1e-4 && b.y0 < o.y1 - 1e-4 && b.y1 > o.y0 + 1e-4 && b.z0 < o.z1 - 1e-4 && b.z1 > o.z0 + 1e-4);
+function placeBox(loft, name, at, size, others, { rotate = true, gap = -1e-4, shell = null } = {}) {
+  // two boxes clash when they come closer than `gap` on every axis (by default, overlap by more than 0.1 mm)
+  const g = gap;
+  const clash = (b) => others.some((o) => b.x0 < o.x1 + g && b.x1 > o.x0 - g && b.y0 < o.y1 + g && b.y1 > o.y0 - g && b.z0 < o.z1 + g && b.z1 > o.z0 - g);
   const [a0, a1, a2] = size;
   const orients = rotate ? [[a0, a1, a2], [a0, a2, a1], [a1, a0, a2], [a1, a2, a0], [a2, a0, a1], [a2, a1, a0]] : [size];
-  const score = (b) => boxProtrusion(loft, b).out + (clash(b) ? 1 : 0);
+  // Round 14 (the clearance rule): `shell` is the clearance a part keeps inside the loft, and a place fits only with it.
+  const tol = shell != null ? 0 : 0.0005;
+  const score = (b) => boxProtrusion(loft, b).out + (shell ?? 0) + (clash(b) ? 1 : 0);
   let best = null;
   for (let k = 0; k <= 60; k++) {
     for (const dy of [0, -0.003, 0.003, -0.006, 0.006, -0.01, 0.01, -0.015, 0.015]) {
@@ -489,12 +559,12 @@ function placeBox(loft, name, at, size, others, { rotate = true } = {}) {
           const b = boxAt(at[0] + sgn * k * 0.001, at[1] + dy, at[2], sz[0], sz[1], sz[2]);
           const sc = score(b);
           const cost = k + Math.abs(dy) * 1000 + o * 0.5;
-          if (sc <= 0.0005 && (!best || best.sc > 0.0005 || cost < best.cost)) best = { b, sc, cost, o };
-          else if (!best || (best.sc > 0.0005 && sc < best.sc)) best = { b, sc, cost, o };
+          if (sc <= tol && (!best || best.sc > tol || cost < best.cost)) best = { b, sc, cost, o };
+          else if (!best || (best.sc > tol && sc < best.sc)) best = { b, sc, cost, o };
         }
       }
     }
-    if (best && best.sc <= 0.0005) break;
+    if (best && best.sc <= tol) break;
   }
   const bx = best.b;
   return { name, box: bx, orient: orients[best.o], shift: [bx.cx - at[0], bx.cy - at[1], bx.cz - at[2]], protrusion: Math.max(0, best.sc > 0.5 ? best.sc - 1 : best.sc), clash: best.sc > 0.5 };
@@ -565,7 +635,29 @@ function driveReserve(train, fourBar, planes) {
       z1 = Math.max(z1, c[0] + r);
     }
   });
-  return { x0: planes.couplerL - 0.004, x1: planes.plateFwd + planes.plateT / 2, y0, y1, z0, z1 };
+  // Round 14: an overhung stage 1 sits forward of the forward plate, so the box reaches its far face and hubs.
+  const s0 = train.stages[0];
+  const x1 = planes.stage1 === 'overhung' ? Math.max(planes.plateFwd + planes.plateT / 2, planes.stage[0] + Math.max(s0.wheel.face, s0.pinion.face) / 2 + Math.max(s0.wheel.hubW, s0.pinion.hubW), planes.crankEnd ?? -Infinity) : planes.plateFwd + planes.plateT / 2;
+  // Round 14 (the clearance rule): the box starts at the aft shoulder housings, so it holds the whole shoulder assembly
+  // (both horn stacks sit between the housings).
+  const x0 = planes.shoulderAft != null ? Math.min(planes.couplerL - 0.004, planes.shoulderAft) : planes.couplerL - 0.004;
+  return { x0, x1, y0, y1, z0, z1 };
+}
+
+/**
+ * The motor: a cylinder along x on its shaft's centre, at its lump (forward of the box it may slide forward to it).
+ * Round 14: a motor inside the box (stage 1 overhung) is screwed to the forward plate's aft face, so it cannot slide;
+ * under the clearance rule its can's end circles keep packGap inside the loft (shell_gap_m is their signed gap).
+ */
+function placeMotor(design, loft, spec, train, planes, packGap) {
+  const md = parseDims(spec?.dimensions_text_mm)?.values ?? [0.035, 0.04];
+  const ml = lump(design, 'flap motor');
+  const c = train.centres?.motor ?? [0, 0];
+  const x = planes.stage1 === 'overhung' ? (planes.motorX[0] + planes.motorX[1]) / 2 : Math.max(ml.pos[0], planes.motorAft + md[1] / 2);
+  const box = boxAt(x, c[1], c[0], md[1], md[0], md[0]);
+  const shell = packGap != null ? { shell_gap_m: motorShellGap(loft, box, md, c) } : {};
+  const protrusion = packGap != null ? Math.max(0, packGap - shell.shell_gap_m) : Math.max(0, boxProtrusion(loft, box).out);
+  return { name: 'motor', box, shift: [x - ml.pos[0], c[1] - ml.pos[1], c[0] - ml.pos[2]], ...shell, protrusion, cylinder: { r: md[0] / 2, len: md[1] } };
 }
 
 export function layoutParts(design, parts, train, fourBar) {
@@ -576,21 +668,18 @@ export function layoutParts(design, parts, train, fourBar) {
   const out = [];
   const FR4 = 1850; // kg/m3, glass-epoxy board, for boards whose catalogue entry lists fewer than three sizes
   const placed = [];
+  // Round 14 (params.layout.rule 'clearance'): packed parts keep the running clearance to each other and the drive box.
+  const packGap = design.params?.layout?.rule === 'clearance' ? (design.params.layout.running_mm ?? 0.5) / 1000 : undefined;
   const put = (name, role, size, at, subsystem, extra = {}) => {
-    const p = placeBox(loft, name, at, size, placed);
+    const p = placeBox(loft, name, at, size, placed, { gap: packGap, shell: packGap ?? null });
     placed.push(p.box);
     out.push({ ...p, role, id: P(role)?.id, subsystem, ...extra });
     return p;
   };
-  // Motor: a cylinder along x, its shaft aft to the stage-1 pinion.
-  const md = parseDims(spec('flap motor')?.dimensions_text_mm)?.values ?? [0.035, 0.04];
-  const ml = lump(design, 'flap motor');
-  const motorC = train.centres?.motor ?? [0, 0];
   const planes = gearPlanes(design, train);
-  const motorX = Math.max(ml.pos[0], planes.motorAft + md[1] / 2);
-  const motorBox = boxAt(motorX, motorC[1], motorC[0], md[1], md[0], md[0]);
-  out.push({ name: 'motor', role: 'flap motor', id: P('flap motor').id, subsystem: 'drive', box: motorBox, shift: [motorX - ml.pos[0], motorC[1] - ml.pos[1], motorC[0] - ml.pos[2]], protrusion: Math.max(0, boxProtrusion(loft, motorBox).out), cylinder: { r: md[0] / 2, len: md[1] } });
-  placed.push(motorBox);
+  const motor = placeMotor(design, loft, spec('flap motor'), train, planes, packGap);
+  out.push({ ...motor, role: 'flap motor', id: P('flap motor').id, subsystem: 'drive' });
+  placed.push(motor.box);
   // The drive's swept volume is kept clear: crank, couplers and both gear stages, plate to plate.
   if (train.links?.length) placed.push(driveReserve(train, fourBar, planes));
   // Battery: long axis along x, at the design's battery station.
@@ -627,7 +716,8 @@ export function layoutParts(design, parts, train, fourBar) {
         const r = h ? Math.hypot((y - h.y) / h.hh, z / h.hw) : Infinity;
         worst = Math.max(worst, (r - 1) * (h ? Math.min(h.hh, h.hw) : 1));
       }
-      gearFit.push({ name, id: gear.id, x, protrusion: Math.max(0, worst) });
+      // under the clearance rule a tip circle must keep the running clearance inside the loft; gap_m is its signed gap
+      gearFit.push({ name, id: gear.id, x, protrusion: Math.max(0, worst + (packGap ?? 0)), gap_m: -worst });
     }
   }
   // Crank axis against the loft bottom.
@@ -720,12 +810,19 @@ export function prepare(design, parts) {
 export function prepareFilm(design, parts) {
   const model = prepare(design, parts);
   packRegulator(model, design, parts);
-  model.planes = { ...model.planes, ...filmCouplerPlanes(design, parts, model.planes) };
+  // the physics' own coupler planes (v22: clear of each other and the web); the crank pin as src/design sizes it,
+  // to 1 mm past the left coupler's eye (linkage.js crankMembers)
+  const eye = couplerEyeLength(design, parts);
+  model.planes = { ...model.planes, couplerEye: eye, crankPinEnd: model.planes.couplerL - eye / 2 - 0.001 };
   return model;
 }
 
-/** The servo regulator, packed last against the physics' layout so no other part moves (film only). */
-function packRegulator(model, design, parts) {
+/**
+ * The servo regulator, packed last against the physics' layout so no other part moves. The film packs it in
+ * prepareFilm; src/design/clearance.js packs it the same way for the assembly clearance check (round 14), so the
+ * physics checks the part where the film draws it; neither changes any other part's place or the body fit.
+ */
+export function packRegulator(model, design, parts) {
   const reg = design.bom.parts.find((p) => p.role === 'servo regulator');
   const at = lump(design, 'power module and regulator');
   if (!reg || !at) return;
@@ -733,7 +830,8 @@ function packRegulator(model, design, parts) {
   const size = d?.values.length >= 3 ? [d.values[0], d.values[2], d.values[1]] : sizeOf(parts[reg.id]?.specs, reg.unit_mass_g, (v) => [v[0], v[2], v[1]], 1850, model.layout.assumptions, 'servo regulator');
   const boxes = model.layout.parts.map((p) => p.box);
   if (model.train.links?.length) boxes.push(driveReserve(model.train, model.fourBar, model.planes));
-  model.layout.parts.push({ ...placeBox(design.body.loft, 'regulator', at.pos, size, boxes), role: reg.role, id: reg.id, subsystem: 'power' });
+  const gap = design.params?.layout?.rule === 'clearance' ? (design.params.layout.running_mm ?? 0.5) / 1000 : undefined;
+  model.layout.parts.push({ ...placeBox(design.body.loft, 'regulator', at.pos, size, boxes, { gap }), role: reg.role, id: reg.id, subsystem: 'power' });
   model.fit = fitReport(model);
 }
 
@@ -742,10 +840,11 @@ export function fitReport(model) {
   const issues = [];
   const L = model.layout;
   if (L.crankBelowLoft_m != null && L.crankBelowLoft_m > 0) issues.push({ part: 'crank axis', text: `crank axis ${(L.crankBelowLoft_m * 1000).toFixed(0)} mm below the body loft (ground link ${(model.law.d * 1000).toFixed(0)} mm from a hinge ${(model.design.wing.hinge[2] * 1000).toFixed(0)} mm off centre)`, mm: L.crankBelowLoft_m * 1000 });
-  for (const g of L.gearFit) if (g.protrusion > 0.0005) issues.push({ part: g.name, text: `${g.name} (${g.id}) tip circle ${(g.protrusion * 1000).toFixed(0)} mm outside the loft`, mm: g.protrusion * 1000 });
+  const tol = model.design.params?.layout?.rule === 'clearance' ? 1e-7 : 0.0005; // round 14: no shortfall at all
+  for (const g of L.gearFit) if (g.protrusion > tol) issues.push({ part: g.name, text: `${g.name} (${g.id}) tip circle ${(g.protrusion * 1000).toFixed(0)} mm outside the loft`, mm: g.protrusion * 1000 });
   for (const p of L.parts) {
-    if (p.protrusion > 0.0005) issues.push({ part: p.name, text: `${p.name} ${(p.protrusion * 1000).toFixed(0)} mm outside the loft${Math.abs(p.shift[0]) > 1e-4 ? ` after a ${(p.shift[0] * 1000).toFixed(0)} mm slide along x` : ''}`, mm: p.protrusion * 1000 });
-    if (p.protrusion <= 0.0005 && Math.abs(p.shift[0]) > 1e-4) issues.push({ part: p.name, text: `${p.name} moved ${(p.shift[0] * 1000).toFixed(0)} mm along x from its mass lump to fit`, mm: 0, shift: p.shift[0] });
+    if (p.protrusion > tol) issues.push({ part: p.name, text: `${p.name} ${(p.protrusion * 1000).toFixed(0)} mm outside the loft${Math.abs(p.shift[0]) > 1e-4 ? ` after a ${(p.shift[0] * 1000).toFixed(0)} mm slide along x` : ''}`, mm: p.protrusion * 1000 });
+    if (p.protrusion <= tol && Math.abs(p.shift[0]) > 1e-4) issues.push({ part: p.name, text: `${p.name} moved ${(p.shift[0] * 1000).toFixed(0)} mm along x from its mass lump to fit`, mm: 0, shift: p.shift[0] });
     if (p.clash) issues.push({ part: p.name, text: `${p.name} overlaps another part`, mm: 0 });
   }
   // CG shift from the slides, for physics.

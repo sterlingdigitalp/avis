@@ -180,12 +180,16 @@ function af_shoulders(ax) {
       members.push({ name: `shoulder bracket ${side} ${nm}, arm`, kind: 'web', check: 'web', material: mat(ra.arm_material), dims: { b_mm: ra.arm_b_mm, h_mm: ra.arm_t_mm, lever_mm: +(dy * 1000).toFixed(3) }, sections: [sect('F', Fb)], uses: { F: 'F' }, note: 'the housing boss to the rail sleeve, the bushing force at the arm length' });
     }
     const lockG = circleGroup(ra.lock_screws, ra.lock_r_mm);
-    bolts(`shoulder rail ${side}, torsion lock screws`, lockG, [], Trail, [], rootX, `a flange on the rail at the aft plate's front face, screwed to it: the rail torque on ${ra.lock_screws} M3 screws at ${ra.lock_r_mm} mm, the root axial force as tension`);
-    screwSeat(`shoulder rail ${side}, torsion lock screws in the plate`, perScrewShear(lockG, [], Trail), tAft);
+    // round 14: rail.lock_at 'forward' puts the lock flange at the forward plate's aft face (else the aft plate's front face)
+    const lockFwd = ra.lock_at === 'forward';
+    bolts(`shoulder rail ${side}, torsion lock screws`, lockG, [], Trail, [], rootX, `a flange on the rail at the ${lockFwd ? 'forward plate\'s aft' : 'aft plate\'s front'} face, screwed to it: the rail torque on ${ra.lock_screws} M3 screws at ${ra.lock_r_mm} mm, the root axial force as tension`);
+    screwSeat(`shoulder rail ${side}, torsion lock screws in the plate`, perScrewShear(lockG, [], Trail), lockFwd ? tFwd : tAft);
     counts.screws += ra.lock_screws; counts.nuts += ra.lock_screws;
     const railLen = gap + plateT + (xA - xa) + ra.sleeve_len_mm / 2000 + 0.002;
     if (ra.aft_boss_mm) item(`shoulder rail ${side} aft seat boss`, mat(L.plates.material), PI4 * ((ra.seat_D_mm / 1000) ** 2 - (ra.od_mm / 1000) ** 2) * (ra.aft_boss_mm / 1000), `ring ${ra.seat_D_mm}/${ra.od_mm} x ${ra.aft_boss_mm} mm on the aft plate`);
-    item(`shoulder rail ${side}`, rm, PI4 * ((ra.od_mm / 1000) ** 2 - (ra.id_mm / 1000) ** 2) * railLen + PI4 * ((ra.od_mm + 8) ** 2 - ra.od_mm ** 2) * 1e-6 * 0.002, `${ra.od_mm}/${ra.id_mm} mm tube x ${(railLen * 1000).toFixed(1)} mm plus a 2 mm lock flange; ${rm.density_g_cm3} g/cm3`);
+    const flangeOD = lockFlangeOD(ra);
+    const flangeA = ra.lock_arc_deg ? hullOf(lockFlangeCircles(ra, [0, 0], 1)).area_m2 - PI4 * (ra.od_mm / 1000) ** 2 : PI4 * (flangeOD ** 2 - ra.od_mm ** 2) * 1e-6;
+    item(`shoulder rail ${side}`, rm, PI4 * ((ra.od_mm / 1000) ** 2 - (ra.id_mm / 1000) ** 2) * railLen + flangeA * (ra.lock_t_mm ?? 2) / 1000, `${ra.od_mm}/${ra.id_mm} mm tube x ${(railLen * 1000).toFixed(1)} mm plus a ${ra.lock_t_mm ?? 2} mm lock flange (${(flangeA * 1e6).toFixed(0)} mm2); ${rm.density_g_cm3} g/cm3`);
     const al6 = mat(ra.arm_material);
     const sleeveV = 2 * PI4 * ((ra.od_mm + 2 * ra.sleeve_wall_mm) ** 2 - ra.od_mm ** 2) * 1e-9 * ra.sleeve_len_mm;
     const armV = 2 * (ra.arm_b_mm * ra.arm_t_mm * dy * 1000) * 1e-9;
@@ -279,7 +283,8 @@ function af_motor(ax) {
   const Tm = [{ ch: 'crank_torque', k: 1 / (G * (d.drive.gearEfficiency ?? 0.85)) }];
   const motorIn = inertialTerms(mot.m, mot.r);
   const mg = { ...circleGroup(mo.screws, mo.circle_r_mm), lever_mm: mo.circle_r_mm * Math.SQRT2, n_far: 2 };
-  const pinOff = Math.abs(xF + plateT / 2 - planes.stage[0]);
+  // the pinion's offset from the plate face the motor is screwed to (round 14: the aft face, the pinion overhung forward)
+  const pinOff = Math.abs((planes.stage1 === 'overhung' ? xF - plateT / 2 : xF + plateT / 2) - planes.stage[0]);
   bolts('motor mount screws', mg, addTerms(motorIn, F0), Tm, addTerms(scaleTerms(motorIn, mo.overhang_mm / 1000), scaleTerms(F0, pinOff)), motorIn, `${mo.screws} M3 in the motor's own threads on a ${2 * mo.circle_r_mm} mm circle: the motor's inertia and the first mesh force (${s0.pinion.id}) in shear, the motor torque (crank torque / G / efficiency) as torsion, both forces at their offsets as prying`);
   screwSeat('motor mount screws in the plate', perScrewShear(mg, addTerms(motorIn, F0), Tm), tFwd);
   flangePlate('forward plate under the motor', 2 * mo.circle_r_mm + 12, addTerms(scaleTerms(motorIn, mo.overhang_mm / 1000), scaleTerms(F0, pinOff)), mo.doubler_mm);
@@ -293,7 +298,8 @@ function af_encoder(ax) {
   // ---- Crank encoder on the aft plate --------------------------------------------------------------------------------
   const enc = lump('crank encoder');
   if (enc) {
-    members.push({ name: 'crank encoder ties', kind: 'tie', check: 'tie', tie: { id: tieS.id, loop_N: tieS.loop_N }, dims: { n: A.encoder.ties }, sections: [sect('F', inertialTerms(enc.m, enc.r))], uses: { F: 'F' }, note: `${A.encoder.ties} x ${tieS.id}: the readhead on its bracket to the aft plate's crank boss` });
+    const front = ax.planes.encoder && ax.planes.encoder.readhead[0] > ax.planes.plateFwd; // round 14: on the crank's forward stub
+    members.push({ name: 'crank encoder ties', kind: 'tie', check: 'tie', tie: { id: tieS.id, loop_N: tieS.loop_N }, dims: { n: A.encoder.ties }, sections: [sect('F', inertialTerms(enc.m, enc.r))], uses: { F: 'F' }, note: `${A.encoder.ties} x ${tieS.id}: the readhead on its bracket to ${front ? 'the forward plate\'s outer face, round the crank stub' : 'the aft plate\'s crank boss'}` });
     counts.tieS += A.encoder.ties;
   }
 
@@ -354,7 +360,9 @@ function platePosts(ax, pl, poly, pmat) {
     if (!(Lp > 0)) continue;
     const pw = A.plates.post_w_mm;
     members.push({ name: `${pl === 'aft' ? 'aft' : 'forward'} plate post to the ${nm}`, kind: 'plate', check: 'plate', material: pmat, dims: { b_mm: pw, t_mm: pl === 'aft' ? tAft : tFwd }, sections: [sect('F', Fp), sect('M', scaleTerms(Fp, Lp))], uses: { F: 'F', M: 'M' }, note: `a ${pw} mm post ${(Lp * 1000).toFixed(1)} mm from the plate's outline to the pad: the pad force axially and at the post length` });
-    posts.push({ to: nm, length_m: Lp, area_m2: pw / 1000 * Lp + (padW / 1000) * (2 * A.plates.pad_mm / 1000) });
+    // the post and its pad as [z, y] boxes (m), for the assembly clearance check (src/design/clearance.js)
+    const r5 = (v) => +v.toFixed(5), hw = pw / 2000, pad = A.plates.pad_mm / 1000;
+    posts.push({ to: nm, length_m: Lp, area_m2: pw / 1000 * Lp + (padW / 1000) * (2 * pad), post_m: [r5(c[0] - hw), r5(c[0] + hw), r5(Math.min(edge, c[1])), r5(Math.max(edge, c[1]))], pad_m: [r5(c[0] - padW / 2000), r5(c[0] + padW / 2000), r5(c[1] - pad), r5(c[1] + pad)] });
   }
   return posts;
 }
@@ -481,6 +489,25 @@ function clearances(cx, railPos, A) {
     panels[nm] = { clearance_mm: +worst.toFixed(1), nearest: what };
   }
   out.panels = panels;
+  return out;
+}
+
+/**
+ * The rail lock flange's outer diameter (mm). v21 took the rail plus 8 mm, too small for screws on lock_r_mm; round 14
+ * (rail.lock_at set) takes the screw circle plus an M3 head and its edge each side (lock_r + 3.5 mm in radius).
+ */
+export function lockFlangeOD(ra) {
+  return ra.lock_at ? 2 * (ra.lock_r_mm + 3.5) : ra.od_mm + 8;
+}
+
+/**
+ * Round 14 (rail.lock_arc_deg [a0, a1]): the lock flange as the hull of the rail (plus 2 mm) and its screws' lands, M3
+ * heads with their edge (3.5 mm radius), on an arc of lock_r_mm; angles from +z counter-clockwise, sg -1 mirrors them.
+ */
+export function lockFlangeCircles(ra, c, sg) {
+  const [a0, a1] = ra.lock_arc_deg.map((a) => (a * Math.PI) / 180), n = ra.lock_screws, r = ra.lock_r_mm / 1000;
+  const out = [{ c, r: ra.od_mm / 2000 + 0.002 }];
+  for (let i = 0; i < n; i++) { const a = n > 1 ? a0 + ((a1 - a0) * i) / (n - 1) : a0; out.push({ c: [c[0] + sg * r * Math.cos(a), c[1] + r * Math.sin(a)], r: 0.0035 }); }
   return out;
 }
 
