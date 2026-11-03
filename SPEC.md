@@ -158,6 +158,29 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
   - **Cycle counts.** A gear's cycles are its own revolutions, not the crank's.
 - **Controller laws are design.** Landing approach speed, flare, and launch pitch and stroke schedules are flight-controller code. They may be changed if they use only BOM sensors, run at the controller rate and carry the 20 ms delay. Every robustness corner still applies, including aero 0.9 for any slow approach.
 
+### Rulings after CFD round 3 (2026-11-03)
+
+- **What counts as settled.** The settling rule fixed before the runs decides: the last 3 whole cycles lie within ±0.05 of their mean, after at least 6 cycles. The last-3 mean is the point's value.
+  - **Start-up breakdown.** All three v17 stations stall once, at cycle 3 or 4, and never again. The round 2 and round 3 runs of each station match through cycle 6, so this is the start-up, not flight.
+  - **Not counted.** The "long run after the first episode" figure includes the recovery cycles straight after that breakdown. It is reported, but it does not count.
+  - **Direction.** After recovery, η_s keeps rising by 0.01–0.015 per cycle, so the last-3 mean sits below where each run is heading.
+- **Which points enter the table.** Only points marked `settled: true`.
+  - **No verdict means out.** Points with no settled verdict stay out: the pure-plunge protocol points and the v14 points.
+  - **Superseded runs.** A shorter run of the same case that an extension supersedes stays out. It is never averaged with its extension.
+  - **Current table.** The table is the three round 3 points:
+
+    | α_eff amplitude | η_s |
+    |---|---|
+    | 5.91° | 0.732 |
+    | 6.24° | 0.699 |
+    | 6.88° | 0.659 |
+- **Beyond the largest measured amplitude.**
+  - **Lowering slope.** Where the last segment's slope lowers η_s, continue that slope. Today it is −0.063 per degree.
+  - **Raising slope.** Where it would raise η_s, hold the last point's value instead.
+  - **The rule underneath.** η_s never goes above a value that was measured. Below the smallest amplitude, hold that point's value, as before.
+  - **Reporting.** Report every strip that falls outside the measured band, with its amplitude.
+  - **New CFD needed.** If any strip lies more than 1° beyond the band, the gates are not final until a new CFD point covers it.
+
 ### Public repository
 
 `github.com/sterlingdigitalp/avis` is public. UIUC-derived tables and airfoil coordinate files stay local and gitignored (`data/references/airfoil-e387.json`, `data/references/airfoils/`), because their licence terms are unclear or reserved. Our own CFD polars are ours to publish. Copernicus terrain, if used, requires the notice in `data/references/credits.md` in the film credits and README.
