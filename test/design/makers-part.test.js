@@ -312,8 +312,11 @@ test('the motor\'s figures from a hand-built catalogue: the thermal entry when t
   // 3 x 4.20 V x 10 A = 126 W: exactly the published power, within; the published 3S on a 3S pack, within
   const a = f({ cells: 3 });
   assert.equal(a.power.within, true); assert.equal(a['voltage (cells)'].within, true);
-  assert.equal(a.temperature.published, 'wire 180 C, magnets 200 C'); assert.match(a.temperature.checked_by, /no motor thermal model/);
-  assert.equal(f({ cells: 3 }, [mot]).temperature.published, null);
+  // round 19: a thermal entry with no published limit (the materials' ratings only) is disclosed, and counted; no entry
+  // at all leaves the limit unread, not counted
+  assert.equal(a.temperature.published, 'wire 180 C, magnets 200 C'); assert.match(a.temperature.checked_by, /publishes no temperature limit .* continuous current and power are the figures checked/);
+  assert.equal(a.temperature.counted, undefined);
+  assert.equal(f({ cells: 3 }, [mot]).temperature.published, null); assert.equal(f({ cells: 3 }, [mot]).temperature.counted, false);
   // a pack charged above 4.20 V a cell (its shift), or limited below it
   assert.equal(f({ cells: 3, cell_shift_V: 0.1 }).power.within, false);
   assert.match(f({ cells: 3, charge_limit_V_per_cell: 4.1 }).power.basis, /12\.3 V/);

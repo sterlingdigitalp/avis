@@ -71,7 +71,8 @@ export const POD = {
     { name: 'slots aft', edge: ['wing roots and horn slots', 'aft'] },
     { name: 'mid aft', x_mm: [-68.5, -67.5] },
     { name: 'cone start', section_near_mm: -110.5 },
-    // round 18: the pushrod exits run from this former aft to the tail kink's (see windows)
+    // round 18: the pushrod exits run from this former aft to the tail kink's (see windows); round 19: the exits closed,
+    // the exit guides' lugs bonded on its aft face (tail-mech.js exitGuide)
     { name: 'pushrod exits forward', x_mm: [-208, -207] },
     { name: 'tail kink', section_near_mm: -274.2 },
     { name: 'tail end', end: 'tail' },
@@ -90,22 +91,30 @@ export const POD = {
     { name: 'mid', from: 'nose kink', to: 'cone start', deg: [330, 0, 20, 40, 70, 110, 140, 160, 180, 210, 236, 252, 270, 288, 304] },
     // 324/5 and 175/216 deg: the tail pushrod exits' polar edges (round 18: from the drawn pushrods, whose skin crossing
     // reaches 357.0 / 183.0 deg; was 355 / 185); 35 and 145 (were 30 and 150) so the rods beside them stay 0.5 mm apart
-    // where the cone closes on its 10 mm end disc
+    // where the cone closes on its 10 mm end disc (round 19: the exits closed, the film spans 324-5 and 175-216 deg over
+    // the exit guides, its cut bonded round each)
     { name: 'cone', from: 'cone start', to: 'tail end', deg: [324, 5, 35, 70, 110, 145, 175, 216, 250, 290], piece_err_mm: 4 },
   ],
   windows: [
     { name: 'wing roots and horn slots', x_mm: [-28, 15.2], polar_deg: [-30, 210], openings: ['wing root, right', 'wing root, left', 'horn slots'], why: 'the spars, rocker sockets and horn eyes sweep through the slots; the bridges between the slots are too narrow to frame, and the aft shoulder brackets stand within 3 mm of the skin, so the cut runs from the aft plate to clear of the brackets (round 18: aft to x -28, past where the twist-servo leads\' pod runs come up under the skin at x -27.2)' },
-    { name: 'pitot exit', between: ['nose end', 'nose kink'], polar_deg: [314, 345], openings: ['pitot'], why: 'the probe leaves the nose here, beside the battery\'s front right corner (0.67 mm inside the loft at x 231: no film can clear it between rods the probe leaves room for)' },
-    // round 18, from the drawn pushrods (tail-mech.js): each meets the skin's 0.5 mm band at x -256.6 to -225.0, polar
-    // 334.6-357.0 deg (R) and 183.0-205.4 (L); forward of x -212 it is more than 4 mm inside (clear of the forward
-    // former's band). Aft, the cut runs on to the tail kink's former (x -273.7): the pushrod is fed in along its axis,
-    // and its drawn pieces (each one section over 20 mm of x) sweep 3 mm inward of the true rod over the last 20 mm,
-    // through any former between x -270 and -237; the true rod there is 1.5-5.5 mm outside the skin
-    { name: 'tail pushrod exit R', between: ['pushrod exits forward', 'tail kink'], polar_deg: [-36, 5], openings: [], why: 'the right tail pushrod leaves the cone here' },
-    { name: 'tail pushrod exit L', between: ['pushrod exits forward', 'tail kink'], polar_deg: [175, 216], openings: [], why: 'the left tail pushrod leaves the cone here' },
+    // round 19 (decision 2): the pitot exit (round 18: a window from the nose kink's former to the nose end, polar
+    // 314-345 deg) is closed: the probe leaves the nose through a cut of its own size in the film, bonded round it
+    // (holders). The window was there because the battery's front right corner stood 0.71 mm inside the loft, 0.14 mm
+    // under the film's chord from 314 to 345 deg; the nose is now stretched NOSE_EXTRA_MM further than the pack moves
+    // (round17.mjs), which puts the corner deeper under that chord, and no rod fits between the corner and the probe
+    // (the nose tray's flange and base corners leave none clear of both)
+    // round 19 (decision 2): the tail pushrod exits (round 18: windows from the 'pushrod exits forward' former to the
+    // tail kink's, polar 324-5 and 175-216 deg) are closed: each pushrod runs out through an exit guide (tail-mech.js
+    // exitGuide) whose cut in the film is bonded round it (holders), so the film spans those panels again
   ],
   holders: [
     { opening: 'boom posts', parts: '^gearbox plate (aft|forward)$', why: 'the gearbox plates\' posts stand through the top to the boom clamps; the film\'s cut edge is bonded round each post (the aft post lies in the slots\' window)' },
+    // round 19: the exit guides hold the film's edge round them (the film carries no load: the guide is held by its lug
+    // on the former); each pushrod meets the skin only inside its guide's crossing (through)
+    // round 19: the pitot probe holds the film's edge round it ("a hole of its own diameter", round 15's declaration)
+    { opening: 'pitot', parts: '^pitot-static probe$', why: 'the film\'s cut edge is closed and bonded round the probe where it leaves the nose (the probe is held by its ties on the nose tray\'s flange; the film carries no load)' },
+    { opening: 'tail pushrod guides', parts: '^tail pushrod guide [RL]$', why: 'the film\'s cut edge is closed and bonded round each exit guide where it crosses the skin (the guide is held by its lug on the former; the film carries no load)' },
+    { opening: 'tail pushrod exits', through: '^tail pushrod guide [RL]$', why: 'each pushrod meets the skin only inside its exit guide, which runs through the skin with the film closed round it' },
   ],
 };
 
@@ -646,13 +655,13 @@ export function coveringRecord(asm, d, catalog, opts = {}) {
     ...Object.entries(COVERING_SOURCES).map(([k, id]) => ({ kind: 'rule source', what: k, id, ok: src[k] != null })),
     ...loftEndRows(cx), ...cx.bays.flatMap((b) => bayRows(cx, b)), ...G.windows.map((w) => windowRow(cx, w)), ...openingRows(cx),
     ...clear.worst.map((c) => ({ kind: 'film clearance', ...c, ok: c.clear_mm >= cx.required * 1000 - 1e-6 })),
-    ...rodRows(cx, byId(catalog, G.P.longeron)), ...postBondRows(cx),
+    ...rodRows(cx, byId(catalog, G.P.longeron)), ...postBondRows(cx), ...sealRows(cx),
     ...ribPanels(asm, d, cx.poses[0], { ...opts, adhesive_N_per_m: src.adhesive }),
   ];
   const failed = rows.filter((r) => !r.ok).map(rowLabel);
   return {
     rule: 'SPEC Design freeze, Function completeness, "The covering spans only what is supported" (2026-11-03): every surface the loft draws has structure under it; the pod film between rings within the catenoid bound 2h/R < 1.3255 (stated assumption, MathWorld), between longerons on the chord, clear of every enclosed part by 0.5 mm; every cut framed; the wing and tail films\' load on their ribs by Myers (Model Aviation 1992) against the film\'s published adhesive power; src/design/pod-structure.js',
-    rows, failed, assumptions: coveringAssumptions(byId(catalog, G.P.longeron)), film_clearance_min_mm: clear.min_mm, open: openDrag(G, openDragSources(catalog)), passed: failed.length === 0,
+    rows, failed, assumptions: coveringAssumptions(byId(catalog, G.P.longeron)), film_clearance_min_mm: clear.min_mm, open: openDrag(G, openDragSources(catalog), sealLeaks(asm)), passed: failed.length === 0,
   };
 }
 
@@ -682,16 +691,21 @@ export function openDragSources(catalog) {
  *  - the pod's interior joins them, so air can pass through: the interior sits at the largest window's pressure (it has
  *    about 4x the others' area), so the others draw air in; their drag is the through-flow source's coefficient on their
  *    area (the smaller side: the largest window against all the others). Summed with the cavity term: conservative.
- * -> { windows: [{ name, area_m2 }], Cd, cavity_CdA_m2, through_CdA_m2, CdA_m2, basis }.
+ *  - round 19: a sealed exit's leak (leaks: [{ name, area_m2 }], the annulus an exit guide leaves round its pushrod) is a
+ *    path of its own for the through-flow (on the smaller side with the windows), not a cavity (it has no depth to
+ *    trap a vortex: the flow passes along the annulus). The cooling inlet and outlet are not here: the build-needs
+ *    record counts them, at Cd 1.0 on their area (above this term's C_Di).
+ * -> { windows: [{ name, area_m2 }], leaks, Cd, cavity_CdA_m2, through_CdA_m2, CdA_m2, basis }.
  */
-export function openDrag(G, src = {}) {
+export function openDrag(G, src = {}, leaks = []) {
   const windows = G.windows.filter((w) => !w.covered_by).map((w) => ({ name: w.name, area_m2: +loftArea(G.loft, w.x[0], w.x[1], (x, a) => inArc(a, w.polar, true)).toFixed(6) }));
-  const A = windows.reduce((s, w) => s + w.area_m2, 0), Amax = Math.max(0, ...windows.map((w) => w.area_m2));
-  const Cd = src.cavity ?? CD_OPEN, cav = Cd * A, thr = src.through != null ? src.through * Math.min(Amax, A - Amax) : 0;
+  const paths = [...windows, ...leaks], A = windows.reduce((s, w) => s + w.area_m2, 0), Ap = paths.reduce((s, w) => s + w.area_m2, 0), Amax = Math.max(0, ...paths.map((w) => w.area_m2));
+  const Cd = src.cavity ?? CD_OPEN, cav = Cd * A, thr = src.through != null ? src.through * Math.min(Amax, Ap - Amax) : 0;
+  const lk = leaks.length ? `; the seals' leaks (${leaks.map((l) => `${l.name} ${(l.area_m2 * 1e6).toFixed(2)} mm2`).join(', ')}) as through-flow paths on the smaller side, not cavities` : '';
   const basis = src.cavity != null
-    ? `each open window as a cavity at Cd ${Cd} on its opening's area (${OPEN_DRAG_SOURCES.cavity}: the top of the published low-speed range, a conservative ceiling), plus the through-flow the pod's interior allows between them at C_Di ${src.through ?? 0} on the smaller side's area (${OPEN_DRAG_SOURCES.through} Fig. 10: the inlet holes' drag at internal p/q -0.95, conservative against the body-alone -0.055 at the window, drag-ref-freeman-naca-443-akron-hull-cp, since the window may also feel the wing root's suction). Not in the containment record's frontal area (a cut has no material)`
+    ? `each open window as a cavity at Cd ${Cd} on its opening's area (${OPEN_DRAG_SOURCES.cavity}: the top of the published low-speed range, a conservative ceiling), plus the through-flow the pod's interior allows between them at C_Di ${src.through ?? 0} on the smaller side's area (${OPEN_DRAG_SOURCES.through} Fig. 10: the inlet holes' drag at internal p/q -0.95, conservative against the body-alone -0.055 at the window, drag-ref-freeman-naca-443-akron-hull-cp, since the window may also feel the wing root's suction)${lk}. Not in the containment record's frontal area (a cut has no material)`
     : `the open windows' area on the loft at Cd ${CD_OPEN}: an upper bound (stated assumption: the flow over a cut is taken as wholly stopped; no cavity-drag source in the catalogue). Not in the containment record's frontal area (a cut has no material)`;
-  return { windows, Cd, cavity_CdA_m2: +cav.toFixed(6), through_CdA_m2: +thr.toFixed(6), CdA_m2: +(cav + thr).toFixed(6), basis };
+  return { windows, leaks, Cd, cavity_CdA_m2: +cav.toFixed(6), through_CdA_m2: +thr.toFixed(6), CdA_m2: +(cav + thr).toFixed(6), basis };
 }
 
 /** A failed row's label: its kind and what it is about. */
@@ -728,9 +742,17 @@ function windowRow({ G, asm, bays, drawn, runDrawn }, w) {
   return { kind: 'window', name: w.name, x_mm: w.x.map(r3), polar_deg: w.polar, framed_x: edgesX, framed_polar: edgesP, ...(w.covered_by ? { covered_by: cover } : { open: true }), why: w.why, ok: edgesX.every(Boolean) && edgesP.every(Boolean) && (!w.covered_by || cover.length > 0) };
 }
 
-/** Each declared opening's solids: its crossing of the skin in a window, or on a part that holds the film's edge. */
+/**
+ * Each declared opening's solids: its crossing of the skin in a window, on a part that holds the film's edge, or (a
+ * holder stating `through`) inside the crossing of a part that runs through the skin and holds the film's edge round it
+ * (round 19: a pushrod inside its exit guide's crossing, in x and polar angle).
+ */
 function openingRows({ G, byPart, poses, required, decl }) {
-  const rows = [];
+  const rows = [], cache = new Map();
+  const crossOf = (pid) => {
+    if (!cache.has(pid)) cache.set(pid, unionCrossing((byPart.get(pid)?.solids ?? []).map((s) => crossing(G.loft, s, poses, required)).filter(Boolean)));
+    return cache.get(pid);
+  };
   for (const o of decl.openings ?? []) {
     const holder = G.P.holders.find((h) => h.opening === o.name);
     for (const id of o.solids ?? [o.part]) {
@@ -738,14 +760,52 @@ function openingRows({ G, byPart, poses, required, decl }) {
       for (const s of (byPart.get(pid)?.solids ?? []).filter((v) => !sname || v.name === sname)) {
         const c = crossing(G.loft, s, poses, required);
         if (!c) continue;
-        const inWin = G.windows.find((w) => c.x[0] >= w.x[0] - 1e-9 && c.x[1] <= w.x[1] + 1e-9 && arcWithin(c.polar, w.polar));
-        const held = !inWin && holder && new RegExp(holder.parts).test(pid);
-        rows.push({ kind: 'opening', opening: o.name, solid: `${pid}/${s.name}`, x_mm: c.x.map(r3), polar_deg: c.polar.map((v) => +v.toFixed(1)), in: inWin ? `window: ${inWin.name}` : held ? `held by the part (${holder.why})` : null, ok: !!(inWin || held) });
+        const where = openingIn(G, holder, pid, c, [...byPart.keys()], crossOf);
+        rows.push({ kind: 'opening', opening: o.name, solid: `${pid}/${s.name}`, x_mm: c.x.map(r3), polar_deg: c.polar.map((v) => +v.toFixed(1)), in: where, ok: where != null });
       }
     }
   }
   return rows;
 }
+
+/** Where a crossing c of part pid meets the film: a window, the part holding its edge, or another part it runs through. */
+function openingIn(G, holder, pid, c, ids, crossOf) {
+  const within = (g) => !!g && c.x[0] >= g.x[0] - 1e-9 && c.x[1] <= g.x[1] + 1e-9 && arcWithin(c.polar, g.polar);
+  const inWin = G.windows.find((w) => within({ x: w.x, polar: w.polar }));
+  if (inWin) return `window: ${inWin.name}`;
+  if (holder?.parts && new RegExp(holder.parts).test(pid)) return `held by the part (${holder.why})`;
+  const via = holder?.through ? ids.filter((q) => q !== pid && new RegExp(holder.through).test(q)).find((q) => within(crossOf(q))) : null;
+  return via ? `through ${via} (${holder.why})` : null;
+}
+
+/** The skin crossings of a part's solids as one: their x range and the shortest polar arc holding them all, or null. */
+export function unionCrossing(cs) {
+  if (!cs.length) return null;
+  const as = cs.flatMap((c) => { const span = norm360(c.polar[1] - c.polar[0]); return Array.from({ length: 9 }, (_, k) => norm360(c.polar[0] + (span * k) / 8)); });
+  const srt = [...as].sort((p, q) => p - q);
+  let gap = -1, at = 0;
+  for (let i = 0; i < srt.length; i++) { const g = norm360(srt[(i + 1) % srt.length] - srt[i]); if (g > gap) { gap = g; at = i; } }
+  return { x: [Math.min(...cs.map((c) => c.x[0])), Math.max(...cs.map((c) => c.x[1]))], polar: [srt[(at + 1) % srt.length], srt[at]] };
+}
+
+/**
+ * Round 19: each exit seal (a part stating `seal`: an exit guide) as the covering record checks it: the window it
+ * replaces is not open, its leak (the annulus) stated, the pushrod clear of its bore over the commanded travel (the
+ * smallest radial clearance against the rod's largest excursion), and its lug's face on the former's band over at least
+ * the area its bond member rates (the drawn overlap, sampled at 0.05 mm).
+ */
+function sealRows({ G, asm, byPart }) {
+  return asm.parts.filter((p) => p.seal).map((p) => {
+    const s = p.seal, lug = byPart.get(s.lug), fm = byPart.get(s.former);
+    const face = lug && fm ? fm.solids.filter((q) => Math.abs(q.x[0] - lug.solids[0].x[1]) < 1e-9 && q.shape.kind === 'poly') : [];
+    const overlap = face.length ? overlapArea(face.map((q) => q.shape), lug.solids[0].shape) : 0;
+    const open = G.windows.some((w) => w.name === s.replaces);
+    return { kind: 'exit seal', name: p.id, replaces: s.replaces, window_open: open, leak_mm2: +(s.leak_m2 * 1e6).toFixed(2), leak_basis: s.leak_basis, clearance_mm: r3(s.clearance_m), excursion_mm: r3(s.excursion_m), travel_basis: s.travel_basis, lug_overlap_mm2: +(overlap * 1e6).toFixed(2), lug_bond_rated_mm2: s.lug_bond_mm2, ok: !open && s.leak_m2 > 0 && s.excursion_m < s.clearance_m && overlap * 1e6 >= s.lug_bond_mm2 };
+  });
+}
+
+/** The leaks the seals leave (each sealing part's stated `seal.leak_m2`), for the through-flow term. */
+export const sealLeaks = (asm) => asm.parts.filter((p) => p.seal && p.seal.leak_m2 > 0).map((p) => ({ name: `${p.id} annulus`, area_m2: +p.seal.leak_m2.toFixed(9) }));
 
 /**
  * Each plate former's bond on its gearbox plate's post as drawn: the former's face on the post's face, and the band's
@@ -801,7 +861,8 @@ function coveringAssumptions(lr) {
     `pod film: a membrane under uniform tension with no pressure difference (the soap-film model of covering-ref-catenoid-critical-ratio, MathWorld, Minimal Surface of Revolution, Eq. 26: a film between two coaxial rings exists only for 2h/R < ${CATENOID_2H_OVER_R}); a stated assumption, not a covering maker's rule (none publishes a span: SOURCES-covering.md). Elliptic or unequal rings: R is the smaller semi-axis of the smaller ring. Shrink film's non-isotropic stress and the flight's pressure difference are not modelled`,
     'pod panels: between two longerons the film is taken to lie on the straight chord between them at every x (a plane is the zero-pressure film between two straight edges; the formers under the chord only lift it, and are not credited); every solid inside the pod must clear that chord by the containment\'s 0.5 mm',
     `longeron bends: a rod is straight between the formers it rests on and bends through each, on the circle through that former and its neighbours; its strain against the lower published compressive strength over the upper published modulus (${sc} MPa / ${Emax} GPa) at FoS 1.5`,
-    'windows: the film is cut round each one and its edge bonded to the formers and longerons framing it; a fixed part crossing the skin (a gearbox post) holds the film\'s edge bonded round it',
+    'windows: the film is cut round each one and its edge bonded to the formers and longerons framing it; a fixed part crossing the skin (a gearbox post, round 19 a pushrod\'s exit guide) holds the film\'s edge bonded round it',
+    'round 19, the exit guides: the film\'s edge bonded round each guide (the maker\'s hotmelt on the woven carbon) carries no load: the guide is held by its lug\'s two rated bonds (tail-mech.js guideMembers), and the film\'s pull on it is its unpublished shrink tension, as at every framed edge; it seals, and the annulus between the guide\'s bore and the pushrod is the exit\'s only leak (counted in the open-window drag\'s through-flow)',
     'the film\'s shrink tension is not published: the longerons\' bow between formers under it is not quantified',
   ];
 }

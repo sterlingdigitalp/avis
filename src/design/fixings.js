@@ -6,7 +6,7 @@
 // draws each screw with its head and shank in its hole, and each nut.
 import { byId } from './catalog.js';
 import { fastenerGeometry } from './completeness.js';
-import { lockFlangeCircles, panelFlanges } from './airframe.js';
+import { lockFlangeCircles, panelFlanges, seatRingBoss } from './airframe.js';
 
 const m = (v) => v / 1000;
 
@@ -78,7 +78,8 @@ function lockBolts(ax, { tF, tAm, bolt }) {
   for (const [side, sg] of [['right', 1], ['left', -1]]) for (const q of lockFlangeCircles(ra, railPos[side], sg).slice(1)) {
     const joint = `rail lock ${side}`, rail = `shoulder rail ${side}`;
     if (ra.lock_at === 'forward') bolt(joint, 'x', q.c, xF + tF / 2, -1, tF + lt, ['gearbox plate forward', rail]);
-    else if (outerAft) bolt(joint, 'x', q.c, xA + tAm / 2, -1, tAm + boss + lt, ['gearbox plate aft', ...(boss ? [`${rail} aft seat boss`] : []), rail], { plate: 'aft', headInside: true });
+    // round 19 (members3): a boss shaped like the lock flange is machined with the plate (one part), a seat ring is its own
+    else if (outerAft) bolt(joint, 'x', q.c, xA + tAm / 2, -1, tAm + boss + lt, ['gearbox plate aft', ...(boss && seatRingBoss(ra) ? [`${rail} aft seat boss`] : []), rail], { plate: 'aft', headInside: true });
     else bolt(joint, 'x', q.c, xA - tAm / 2, 1, tAm + lt, ['gearbox plate aft', rail]);
   }
 }

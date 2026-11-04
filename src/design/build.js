@@ -375,8 +375,10 @@ export function buildDesign(params, catalog) {
   const tmG = (list) => list.reduce((a, q) => a + byId(catalog, q.id).mass_g * q.count, 0), tmS = (re) => (tailMech?.structure ?? []).filter((q) => re.test(q.name));
   // round 17: the tail servos' own solids (the twist servo may be the same part: its solids are the wing's)
   lump('tail servos', 2 * tailP.mass_g + tmG(tmPart(/servo arms/)), -0.08, 0.0, 0, 0, [`${tailP.id}@^packed servo_tail_`, ...tmPart(/servo arms/).map((q) => `${q.id}@^tail servo arm `)]);
-  // round 17: the tail's pushrods with their plugs, rod ends and screws, a lump of their own along the boom
-  if (tailMech) lump('tail pushrods', tmS(/pushrod/).reduce((a, q) => a + q.mass_g, 0) + tmG(tmPart(/rod ends|linkage screws/)), -0.5, 0.0, 0, 0, [...tmS(/pushrod/).map((q) => q.name), ...tmPart(/rod ends|linkage screws/).map((q) => q.id)]);
+  // round 17: the tail's pushrods with their plugs, rod ends and screws, a lump of their own along the boom; round 19:
+  // the rod ends and screws by their tail parts ('id@^tail '): the twist drive's links use the same KBRM-02 and M2 x 6
+  // ids, and those pieces are the wing's (massprops.js: a bare id put them in this lump's centroid)
+  if (tailMech) lump('tail pushrods', tmS(/pushrod/).reduce((a, q) => a + q.mass_g, 0) + tmG(tmPart(/rod ends|linkage screws/)), -0.5, 0.0, 0, 0, [...tmS(/pushrod/).map((q) => q.name), ...tmPart(/rod ends|linkage screws/).map((q) => `${q.id}@^tail `)]);
   if (strokeP) lump('stroke servo', strokeP.mass_g + strokeLinkG, -0.03, 0.0, 0, 0, [strokeP.id]);
   // Round 5: the crank encoder sits on the crank axis with its magnet; a separate power module or servo regulator sits
   // with the flight controller.

@@ -114,12 +114,15 @@ test('the hatch window is read from params.layout.hatch: its formers and the rod
   const { d } = base(), G = PS.podGeometry(d, catalog), h = d.params.layout.hatch;
   const aft = G.formers.find((f) => f.name === 'hatch aft'), fwd = G.formers.find((f) => f.name === 'hatch forward');
   assert.ok(Math.abs(aft.x[1] - h.x_mm[0] / 1000) < 1e-12 && Math.abs(fwd.x[0] - h.x_mm[1] / 1000) < 1e-12);
-  const moved = structuredClone(d);
-  moved.params.layout.hatch = { x_mm: [160, 238], polar_deg: [30, 150] };
-  const G2 = PS.podGeometry(moved, catalog);
-  assert.ok(Math.abs(G2.formers.find((f) => f.name === 'hatch aft').x[1] - 0.16) < 1e-12);
+  // round 19: the window moved to stations of the unstretched nose (x 160 and 238 mm) as the nose stretch takes them
+  // (pod-structure.js stretched: round17.mjs's PACK_FWD_MM and NOSE_EXTRA_MM), so it holds the nose kink at any stretch
+  const moved = structuredClone(d), xs = [160, 238].map((x) => PS.stretched(d.body.loft, x));
+  moved.params.layout.hatch = { x_mm: xs, polar_deg: [30, 150] };
+  const G2 = PS.podGeometry(moved, catalog), kinkMid = G.formers.find((f) => f.name === 'nose kink').mid;
+  assert.ok(xs[0] / 1000 < kinkMid && xs[1] / 1000 > kinkMid, 'the moved window spans the nose kink');
+  assert.ok(Math.abs(G2.formers.find((f) => f.name === 'hatch aft').x[1] - xs[0] / 1000) < 1e-12);
   const r70 = G2.runs.filter((r) => /^pod longeron mid 70/.test(r.id));
-  assert.ok(r70.some((r) => Math.abs(r.x[1] - 0.16) < 1e-12), 'the top rods stop at the moved window\'s edge');
+  assert.ok(r70.some((r) => Math.abs(r.x[1] - xs[0] / 1000) < 1e-12), 'the top rods stop at the moved window\'s edge');
   const kink = G2.formers.find((f) => f.name === 'nose kink');
   assert.deepEqual(kink.arcs, [[150, 30]], 'a former across the window is an arc ending at its edges');
 });
@@ -209,10 +212,11 @@ test('an opening whose crossing lies in no window, on no part that holds the fil
 test('a window whose polar edge is on no longeron is not framed', () => {
   const { d, lay } = base();
   const dd = structuredClone(d);
-  dd.params.pod = { ...dd.params.pod, windows: PS.POD.windows.map((w) => (w.name === 'tail pushrod exit R' ? { ...w, polar_deg: [-40, 5] } : w)) };
+  // round 19: the tail pushrod exits and the pitot exit are closed; a test window there with its lower edge off any rod
+  dd.params.pod = { ...dd.params.pod, windows: [...PS.POD.windows, { name: 'test window', between: ['hatch forward', 'nose kink'], polar_deg: [310, 345], openings: [], why: 'a test' }] };
   const { asm } = fullAssembly(dd, catalog);
   const r = record(asm, dd, lay);
-  const row = r.rows.find((q) => q.kind === 'window' && q.name === 'tail pushrod exit R');
+  const row = r.rows.find((q) => q.kind === 'window' && q.name === 'test window');
   assert.equal(row.ok, false);
   assert.deepEqual(row.framed_polar, [false, true]);
 });
@@ -224,9 +228,12 @@ test('a longeron run over a sharp kink of the loft fails its bend; the drawn set
   // the nose's rods run on past the nose kink to the next former (the mid set starting there)
   const dd = structuredClone(d);
   dd.params.pod = { ...dd.params.pod, longerons: PS.POD.longerons.filter((s) => s.name !== 'nose corner' && s.name !== 'nose sides').map((s) => (s.name === 'nose' ? { ...s, to: 'nose 176' } : s.name === 'mid' ? { ...s, from: 'nose 176' } : s)) };
-  const G = PS.podGeometry(dd, catalog), run = G.runs.find((q) => q.id === 'pod longeron nose 270');
-  const k = PS.runKinks(dd.body.loft, run).find((q) => Math.abs(q.x - 0.2169) < 1e-3);
-  assert.ok(k && k.angle > 20 * Math.PI / 180 && 0.00075 / k.radius > 0.0034, 'the nose kink (about 25 deg) bends the rod past its strain allowance');
+  // round 19: at the nose kink's former wherever the nose stretch puts it; the allowance from the rod's catalogue figures
+  // (its lower compressive strength over its upper modulus, at FoS 1.5: rod-ec-1-5mm)
+  const G = PS.podGeometry(dd, catalog), run = G.runs.find((q) => q.id === 'pod longeron nose 270'), xk = G.formers.find((f) => f.name === 'nose kink').mid;
+  const k = PS.runKinks(dd.body.loft, run).find((q) => Math.abs(q.x - xk) < 1e-9);
+  const lr = catalog.find((q) => q.id === 'rod-ec-1-5mm').specs, allow = lr.compressive_strength_lengthways_mpa_range[0] / (lr.tensile_modulus_lengthways_gpa_range.at(-1) * 1000) / 1.5;
+  assert.ok(k && k.angle > 10 * Math.PI / 180 && 0.00075 / k.radius > allow, `the nose kink (${k && (k.angle * 180 / Math.PI).toFixed(1)} deg) bends the rod past its strain allowance`);
 });
 
 test('the wing and tail films: Myers\' suction on each rib bond within the film\'s adhesive power; one rib holds no panel', () => {
@@ -284,7 +291,12 @@ test('the members carry the pod\'s inertia and its drag', () => {
   const lump = d.mass.lumps.find((l) => l.name === 'fuselage shell and formers');
   const kSf = bond.sections[0].radial.filter((t) => t.ch === 'sf_origin').reduce((a, t) => a + t.k, 0);
   const D = 0.5 * (d.atmosphere?.rho_kg_m3 ?? d.atmosphere?.rho ?? 1) * 25 ** 2 * d.body.CdA_front_m2;
-  assert.ok(kSf >= lump.mass_kg + D / 9.80665 - 1e-9, 'each post bond: at least the pod\'s whole inertia and its whole drag');
+  // round 19: statics, the pod's centroid against its two plate formers (inside them with the nose stretched, outside
+  // without): the more loaded support carries max(lever) / span of its inertia, never less than half
+  const xs = PS.podGeometry(d, catalog).formers.filter((f) => f.plate).map((f) => f.mid).sort((a, b) => a - b);
+  const kSup = Math.max(xs[1] - lump.pos[0], lump.pos[0] - xs[0]) / (xs[1] - xs[0]);
+  // (members.js terms are stated to 8 decimals: two rounded terms, so within 2e-8 kg)
+  assert.ok(kSup >= 0.5 && kSf >= lump.mass_kg * kSup + D / 9.80665 - 2e-8, 'each post bond: the pod\'s inertia on the more loaded support and its whole drag');
 });
 
 test('every pod solid is in an assembly step, and none passes through another; the covering goes on after its structure', () => {
@@ -342,7 +354,8 @@ test('the cantilever members: each part\'s mass, lever and rod group as drawn, i
     ['the cone', f('cone start'), -Infinity, f('cone start').mid, f('cone start').mid - 1e-4, (f('cone start').mid - f('pushrod exits forward').mid) * 1000],
     // its longest bay: the slots' (the aft plate's former to the one at the slots' aft edge) or one of the two aft of it
     ['the pod aft of the slots', f('aft plate'), -Infinity, f('aft plate').x[0], (win.x[0] + win.x[1]) / 2, Math.max(f('aft plate').mid - f('slots aft').mid, f('slots aft').mid - f('mid aft').mid, f('mid aft').mid - f('cone start').mid) * 1000],
-    ['the nose', f('forward plate'), f('forward plate').x[1], Infinity, f('forward plate').mid + 1e-4, 40.9],
+    // round 19: the nose's longest bay forward of the forward plate's former, from the formers (the nose stretch moves them)
+    ['the nose', f('forward plate'), f('forward plate').x[1], Infinity, f('forward plate').mid + 1e-4, (() => { const m = G.formers.map((q) => q.mid).filter((v) => v >= f('forward plate').mid - 1e-9).sort((a, b) => a - b); return Math.max(...m.slice(1).map((v, i) => v - m[i])) * 1000; })()],
   ];
   for (const [nm, fs, x0, x1, xg, L] of cases) {
     const strut = d.structure.members.find((m) => m.name === `pod longerons carrying ${nm}`), sh = drawnShare(asm, d, x0, x1), gr = drawnGroup(asm, xg);
@@ -363,7 +376,8 @@ test('the post bonds carry the pod as a beam on its two plate formers, and its d
   const { d } = base(), G = PS.podGeometry(d, catalog), lump = d.mass.lumps.find((l) => l.name === 'fuselage shell and formers');
   const xs = G.formers.filter((f) => f.plate).map((f) => f.mid).sort((a, b) => a - b), xc = lump.pos[0];
   const kSup = Math.max(xs[1] - xc, xc - xs[0]) / (xs[1] - xs[0]);
-  assert.ok(kSup > 1, 'the pod\'s centroid lies outside its two supports');
+  // round 19: with the nose stretched the centroid lies between the two supports (kSup < 1), without it ahead of them
+  assert.ok(kSup >= 0.5 && (kSup > 1) === (xc < xs[0] || xc > xs[1]), `the more loaded support's share ${kSup}`);
   const D = 0.5 * (d.atmosphere?.rho_kg_m3 ?? d.atmosphere?.rho ?? 1) * 25 ** 2 * d.body.CdA_front_m2;
   const bond = d.structure.members.find((m) => m.name === 'pod former bonds on the gearbox posts');
   near(kOf(bond, 'sf_origin'), lump.mass_kg * kSup + D / 9.80665, 1e-6, 'post bond per g');
@@ -397,7 +411,9 @@ test('bays: 2h/R from the loft, the longerons holding them; with no longerons a 
   const { d, asm, lay } = base(), r = record(asm, d, lay), loft = d.body.loft;
   for (const b of r.rows.filter((q) => q.kind === 'bay')) {
     const L = (b.x_mm[1] - b.x_mm[0]) / 1000, R = Math.min(...[b.x_mm[1] / 1000 - 1e-9, b.x_mm[0] / 1000 + 1e-9].map((x) => { const h = PS.sectionAt(loft, x); return Math.min(h.hw, h.hh); }));
-    near(b.two_h_over_R, L / R, 1e-3, `bay ${b.between}`);
+    // (the record states 2h/R to 4 decimals: round 19, with the nose stretched, the 'nose 94' former stands ~1 mm from the
+    // hatch's aft one, a bay whose 2h/R is ~0.02, where that rounding alone is 0.3%)
+    assert.ok(Math.abs(b.two_h_over_R - L / R) <= 1e-3 * (L / R) + 5e-5, `bay ${b.between}: ${b.two_h_over_R} against ${L / R}`);
     assert.equal(b.held_by, 'panels between longerons');
   }
   const over = r.rows.filter((q) => q.kind === 'bay' && q.two_h_over_R > 1.3255);
@@ -409,22 +425,28 @@ test('bays: 2h/R from the loft, the longerons holding them; with no longerons a 
   const nose = r2.rows.filter((q) => q.kind === 'bay' && (q.between[0] === 'nose end' || q.between[0] === 'hatch forward'));
   assert.equal(nose.length, 2);
   assert.ok(nose.every((q) => q.held_by === 'rings only'));
-  // the nose end's bay is past the bound (no film between its rings); the one aft of the hatch's forward former (17.6 mm
-  // long since the window ends at x 234) is within it, its neck stated
+  // the nose end's bay is past the bound (no film between its rings); round 19: the one aft of the hatch's forward
+  // former (17.6 mm long unstretched, 1.45 x that with the pack 97 mm forward) by the rule, whichever side of it the
+  // nose stretch puts it: within the bound it holds, its neck stated; past it, it fails with no neck
   const [end, aft] = nose;
   assert.ok(!end.ok && end.two_h_over_R > 1.3255 && end.catenoid_neck_mm === null, JSON.stringify(end));
-  assert.ok(aft.ok && aft.two_h_over_R < 1.3255 && aft.catenoid_neck_mm > 0, JSON.stringify(aft));
+  const within = aft.two_h_over_R < 1.3255;
+  assert.ok(aft.ok === within && (within ? aft.catenoid_neck_mm > 0 : aft.catenoid_neck_mm === null), JSON.stringify(aft));
 });
 
 test('the bend rows are the circle through three supports; the loft ends on its discs', () => {
   const { d, asm, lay } = base(), G = PS.podGeometry(d, catalog), run = G.runs.find((q) => q.id === 'pod longeron mid 270');
-  const k = PS.runKinks(d.body.loft, run), at = k.find((q) => Math.abs(q.x - 0.176) < 1e-3), L = run.line, i = L.findIndex((v) => Math.abs(v.x - at.x) < 1e-9);
+  // round 19: at the 'nose 176' former wherever the nose stretch puts it
+  const x176 = G.formers.find((f) => f.name === 'nose 176').mid;
+  const k = PS.runKinks(d.body.loft, run), at = k.find((q) => Math.abs(q.x - x176) < 1e-9), L = run.line, i = L.findIndex((v) => Math.abs(v.x - at.x) < 1e-9);
   const P = (v) => [v.x, ...v.p], u = P(L[i]).map((c, j) => c - P(L[i - 1])[j]), v = P(L[i + 1]).map((c, j) => c - P(L[i])[j]);
   const ang = Math.acos(u.reduce((a, c, j) => a + c * v[j], 0) / (Math.hypot(...u) * Math.hypot(...v)));
   near(at.angle, ang, 1e-9, 'the bend\'s angle');
   near(at.radius, Math.hypot(...P(L[i + 1]).map((c, j) => c - P(L[i - 1])[j])) / (2 * Math.sin(ang)), 1e-9, 'the bend\'s radius');
-  assert.ok(at.angle > 0.1 && at.radius > 0.3 && at.radius < 0.4, JSON.stringify(at));
+  // round 19: a real bend (the ogive's), its row the record's: the strain r / R at it, within the allowance
   const r = record(asm, d, lay), ends = r.rows.filter((q) => q.kind === 'loft end');
+  const row = r.rows.find((q) => q.kind === 'longeron bend' && q.run === run.id && Math.abs(q.x_mm - at.x * 1000) < 1e-3);
+  assert.ok(at.angle > 0.01 && row && Math.abs(row.strain - 0.00075 / at.radius) <= 1e-3 * row.strain && row.ok === (0.00075 / at.radius <= row.allowable), JSON.stringify({ at, row }));
   assert.deepEqual(ends.map((q) => [q.what, q.ok, q.loft_x_mm === q.structure_x_mm, q.drawn]), [['nose', true, true, true], ['tail', true, true, true]]);
   const noNose = record(withParts(asm, asm.parts.filter((p) => p.id !== 'pod former nose end')), d, lay);
   assert.ok(noNose.failed.includes('loft end: nose') && !noNose.failed.includes('loft end: tail'));
@@ -434,9 +456,11 @@ test('the bend rows are the circle through three supports; the loft ends on its 
 
 test('openings and windows: the crossings as measured, a hatch only where the window is', () => {
   const { d, asm, lay } = base(), r = record(asm, d, lay);
-  const pit = r.rows.find((q) => q.kind === 'opening' && q.opening === 'pitot');
-  assert.ok(pit.ok && pit.in === 'window: pitot exit');
-  assert.ok(pit.x_mm[0] > 217.39 && pit.x_mm[1] < 249.64 && pit.polar_deg[0] > 320 && pit.polar_deg[1] < 342, JSON.stringify(pit));
+  // round 19: the pitot exit closed: the film's cut round the probe, the probe holding its edge; its crossing on the
+  // nose between the nose kink's former and the nose end, at the probe's own polar angles
+  const pit = r.rows.find((q) => q.kind === 'opening' && q.opening === 'pitot'), G = PS.podGeometry(d, catalog), fx = (n) => G.formers.find((q) => q.name === n).x;
+  assert.ok(pit.ok && /^held by the part/.test(pit.in) && !G.windows.some((w) => /pitot/.test(w.name)), JSON.stringify(pit));
+  assert.ok(pit.x_mm[0] > fx('nose kink')[1] * 1000 && pit.x_mm[1] < fx('nose end')[0] * 1000 && pit.polar_deg[0] > 320 && pit.polar_deg[1] < 342, JSON.stringify(pit));
   const sock = r.rows.find((q) => q.kind === 'opening' && q.solid === 'rocker R/spar socket');
   assert.ok(sock.polar_deg[0] > 20 && sock.polar_deg[1] < 60 && sock.x_mm[0] < 0 && sock.x_mm[1] > 0);
   const hatch = r.rows.find((q) => q.kind === 'window' && q.name === 'hatch');
@@ -483,7 +507,9 @@ test('the open windows\' drag: the cavity source\'s Cd on every open window, the
   const { d, asm, lay } = base();
   const o = record(asm, d, lay).open;
   const A = o.windows.reduce((s, w) => s + w.area_m2, 0), Amax = Math.max(...o.windows.map((w) => w.area_m2));
-  assert.ok(o.windows.length >= 3 && o.windows.some((w) => /slot/.test(w.name)), o.windows.map((w) => w.name).join(', '));
+  // round 19: the pushrod exits closed (with v24's tied tail there are no pushrods, so no guides and no leaks either)
+  assert.deepEqual(o.windows.map((w) => w.name), ['wing roots and horn slots'], 'round 19: the pitot exit closed too');
+  assert.ok(!o.windows.some((w) => /pushrod/.test(w.name)) && o.leaks.length === 0);
   assert.ok(!o.windows.some((w) => /hatch/.test(w.name)), 'the hatch is closed by its cover');
   assert.equal(o.Cd, 0.108);
   assert.ok(Math.abs(o.cavity_CdA_m2 - 0.108 * A) < 2e-6);

@@ -18,7 +18,7 @@
 // mesh). Two parts of one rigid assembly that are not joined to each other are checked like any other pair.
 import { drivePose, gearAngles, linkageAt, journalDims, journalBodyLength, journalEdges, partsIndex, prepare, boxProtrusion, parseDims, packRegulator, loftHalf } from '../../sims/avis-shared/model.js';
 import { byId } from './catalog.js';
-import { AIRFRAME_DEFAULTS, mergeDefaults, lockFlangeOD, hullOf, lockFlangeCircles, panelFlanges, formerPieces, formerGeometry, clampFlange } from './airframe.js';
+import { AIRFRAME_DEFAULTS, mergeDefaults, lockFlangeOD, hullOf, lockFlangeCircles, panelFlanges, formerPieces, formerGeometry, clampFlange, seatRingBoss, lockPadCircles } from './airframe.js';
 import { driveLayout as driveLayoutOf } from './joints.js';
 import { rockerHub, pinWasher, crankPinEnd, hornStack, hornSide, shaftEndRetainer, actuatorBond } from './linkage.js';
 import { fastenerGeometry, completenessRecord } from './completeness.js';
@@ -889,7 +889,7 @@ export function lockFlangeShape(rail, c, sg, railR) {
   return poly(hullOf(lockFlangeCircles(rail, c, sg)).poly, [{ c, r: railR }]);
 }
 
-function frameParts({ A, af, P, plateT, tA, tF, x0, span, railR, d, catalog, plateIds, assumptions, add, join }) {
+function frameParts({ A, af, P, plateT, tA, tF, x0, span, railR, d, catalog, plateIds, assumptions, add, join, parts }) {
   const xA = P.plateAft, xF = P.plateFwd, gap = xF - xA, xa = x0 - span / 2;
   for (const [side, c] of Object.entries(af.rails ?? {})) {
     const railLen = gap + plateT + (xA - xa) + mm(A.rail.sleeve_len_mm) / 2 + 0.002;
@@ -899,7 +899,13 @@ function frameParts({ A, af, P, plateT, tA, tF, x0, span, railR, d, catalog, pla
     // flange aft of the plate (and of that boss)
     const bossT = A.rail.aft_boss_at === 'aft face' ? mm(A.rail.aft_boss_mm ?? 0) : 0;
     const fx = A.rail.lock_at === 'forward' ? [xF - tF / 2 - lt, xF - tF / 2] : A.rail.lock_at === 'aft outer' ? [xA - tA / 2 - bossT - lt, xA - tA / 2 - bossT] : [xA + tA / 2, xA + tA / 2 + lt];
-    if (bossT) {
+    if (bossT && !seatRingBoss(A.rail)) {
+      // round 19 (members3, rail.aft_boss_shape 'lock flange'): a pad under the lock flange (airframe.js lockPadCircles),
+      // machined with the aft plate, so it is a solid of the plate (no joint), weighed on its own BOM line (airframe.js)
+      const pp = parts.find((q) => q.id === plateIds.aft), bom = `shoulder rail ${side} aft seat boss`;
+      pp.solids.push({ ...S(`lock pad (rail ${side})`, [xA - tA / 2 - bossT, xA - tA / 2], poly(hullOf(lockPadCircles(A.rail, c, side === 'right' ? 1 : -1)).poly, [{ c, r: railR }])), bom });
+      pp.bom = [...new Set([...pp.bom, bom])];
+    } else if (bossT) {
       const bid = add(`shoulder rail ${side} aft seat boss`, [S('ring', [xA - tA / 2 - bossT, xA - tA / 2], ring(c, mm(A.rail.seat_D_mm) / 2, railR))], { bom: `shoulder rail ${side} aft seat boss` });
       join(bid, plateIds.aft, 'on the plate\'s aft face (machined with it)');
       join(bid, `shoulder rail ${side}`, 'the rail through its bore, its lock flange on its face');

@@ -600,8 +600,10 @@ export function rockerHubLength(d, rocker, span, bushingB) {
  * A hub ended short of the forward bushing keeps its axial stop there by a collar on the shoulder pin (rocker.
  * hub_collar_od_mm), from the hub's face to the running clearance short of that bushing's flange.
  * -> { x: [aft, fwd], relief: [aft, fwd] | null, collar: [aft, fwd] | null, seat_m: the length at full diameter,
- * levers: { aft, forward } } where the levers are each bushing centre's distance from the hub face beside it (the
- * shoulder pin's bending arms; the collar is the pin's own, so it does not shorten its arm).
+ * levers: { aft, forward, collar } } where the levers are each bushing centre's distance from the hub face beside it (the
+ * shoulder pin's bending arms; the collar is the pin's own, so it does not shorten its arm) and, with a collar, the
+ * forward bushing centre's distance from the collar's forward end (round 19: where the pin steps down from the
+ * collar's diameter to its own, the arm of its own section; the collar's section takes the arm to the hub face).
  */
 export function rockerHub(d, rocker, span, bushingB, planes, eyeB) {
   const x0 = d.wing.hinge[0], hubL = rockerHubLength(d, rocker, span, bushingB);
@@ -613,7 +615,24 @@ export function rockerHub(d, rocker, span, bushingB, planes, eyeB) {
   if (Number.isFinite(rocker?.hub_relief_od_mm) && planes && eyeB) relief = [Math.max(a, planes.couplerL - eyeB / 2 - run), Math.min(b, planes.couplerR + eyeB / 2 + run)];
   const stop = x0 + span / 2 - bushingB / 2 - run; // the forward bushing's flange face, less the running clearance
   const collar = Number.isFinite(rocker?.hub_collar_od_mm) && b < stop - 1e-9 ? [b, stop] : null;
-  return { x: [a, b], relief, collar, seat_m: b - a - (relief ? relief[1] - relief[0] : 0), levers: { aft: a - (x0 - span / 2), forward: x0 + span / 2 - b } };
+  return { x: [a, b], relief, collar, seat_m: b - a - (relief ? relief[1] - relief[0] : 0), levers: { aft: a - (x0 - span / 2), forward: x0 + span / 2 - b, ...(collar ? { collar: x0 + span / 2 - collar[1] } : {}) } };
+}
+
+/**
+ * One side's shoulder pin as M7 members (split out of wingSideMembers in round 19). Round 19 (sized to the FoS rule at
+ * the sealed design's trims): the pin is a stepped shaft where its collar fills the forward gap (the collar is the pin's
+ * own, one piece with it: clearance.js draws it as the pin's), so its own section is checked at the collar's forward end
+ * (the forward bushing's arm there) and the collar's section at the hub face (the whole forward arm); with no collar the
+ * pin's own section takes the whole arm, as before.
+ */
+function shoulderPinMembers(side, m, r, jt, hub, shD, pinLever) {
+  const stepped = Number.isFinite(hub.levers.collar);
+  const ownLever = (sp) => (sp.name === 'forward' && stepped ? hub.levers.collar : hub.levers[sp.name] ?? pinLever);
+  const note = stepped ? 'the bushing reaction at its centre, measured from the hub face aft and from the collar\'s forward end forward (where the pin steps down to its own section)' : pinLever > shD.B / 2 + 1e-9 ? 'the bushing reaction at its centre, measured from the hub face' : 'the bushing reaction at half the bushing length from the hub face';
+  const out = [{ name: `shoulder pin ${side}`, kind: 'pin', check: 'round', material: m, dims: { d_mm: +(shD.d * 1000).toFixed(3) }, sections: jt.supports.flatMap((sp) => [sect(`M ${sp.name}`, scale(sp.radial, ownLever(sp))), sect(`V ${sp.name}`, sp.radial.map((t) => ({ ch: t.ch, k: t.k })))]), uses: { M: jt.supports.map((sp) => `M ${sp.name}`), V: jt.supports.map((sp) => `V ${sp.name}`) }, note }];
+  const spF = jt.supports.find((sp) => sp.name === 'forward');
+  if (stepped && spF) out.push({ name: `shoulder pin ${side} at its collar`, kind: 'pin', check: 'round', material: m, dims: { d_mm: r.hub_collar_od_mm }, sections: [sect('M forward', scale(spF.radial, hub.levers.forward)), sect('V forward', spF.radial.map((t) => ({ ch: t.ch, k: t.k })))], uses: { M: 'M forward', V: 'V forward' }, note: `the pin's own ${r.hub_collar_od_mm} mm collar at the hub face: the forward bushing reaction at its centre, ${(hub.levers.forward * 1000).toFixed(2)} mm away` });
+  return out;
 }
 
 /** One side's shoulder pin, rocker (hub, horn boss), horn pin, coupler eye and shoulder housings. */
@@ -629,7 +648,7 @@ function wingSideMembers(cx, side, w) {
     // the bushing reaction at its centre, from the hub face beside it (v21: half the bushing length; v22: plus the
     // running gap; round 14: the forward face may end short of the aft plate)
     const pinLever = Math.max(hub.levers.aft, hub.levers.forward);
-    members.push({ name: `shoulder pin ${side}`, kind: 'pin', check: 'round', material: m, dims: { d_mm: +(shD.d * 1000).toFixed(3) }, sections: jt.supports.flatMap((sp) => [sect(`M ${sp.name}`, scale(sp.radial, hub.levers[sp.name] ?? pinLever)), sect(`V ${sp.name}`, sp.radial.map((t) => ({ ch: t.ch, k: t.k })))]), uses: { M: jt.supports.map((sp) => `M ${sp.name}`), V: jt.supports.map((sp) => `V ${sp.name}`) }, note: pinLever > shD.B / 2 + 1e-9 ? 'the bushing reaction at its centre, measured from the hub face' : 'the bushing reaction at half the bushing length from the hub face' });
+    members.push(...shoulderPinMembers(side, m, r, jt, hub, shD, pinLever));
     // Rocker: hub on the shoulder pin, horn arm of the rocker length c, horn boss for the horn pin, spar socket.
     const c = linkageAt(lay.law, d.drive.ampNominal).c;
     const sparOD = (r.spar_od_mm ?? 10) / 1000;

@@ -122,19 +122,14 @@ export function flapChains(asm, d, catalog) {
 
 /**
  * The ratings record: each servo's supply inside its published rows (torque and speed at the lowest supply voltage,
- * never beyond a row) and its published voltage range (the stall current at the highest); the regulator's input range
+ * never beyond a row) and its published voltage range (the stall current at the highest), and (round 19) its highest
+ * supply voltage inside the published rows too, torque, speed and stall current alike; the regulator's input range
  * holding the pack's whole range; the ESC rated for the pack's cells. -> { rule, rows, failed, passed }.
  */
 export function ratingsRecord(d, catalog) {
   const sup = d.electrical?.servo_supply ?? null, rows = [];
   const lo = sup?.performance_V ?? d.electrical?.servo_supply_V, hi = sup?.current_V ?? lo;
-  for (const [role, sv] of Object.entries(d.servos ?? {})) {
-    const part = byId(catalog, sv.id), perf = (part.specs.performance ?? []).map((r) => r.voltage_v).filter(Number.isFinite);
-    const rowLo = Math.min(...perf), rowHi = Math.max(...perf), range = servoVoltageRange(part);
-    const okRow = lo >= rowLo - 1e-9 && lo <= rowHi + 1e-9, okRange = !!range && hi <= range[1] + 1e-9 && lo >= range[0] - 1e-9;
-    rows.push({ what: `${role} servo ${sv.id}: torque and speed at ${lo} V`, published: `rows ${perf.join(', ')} V`, ok: okRow, ...(okRow ? {} : { why: `${lo} V is outside the published rows ${rowLo}-${rowHi} V (no extrapolation)` }) });
-    rows.push({ what: `${role} servo ${sv.id}: supply ${lo}-${hi} V`, published: range ? `${range[0]}-${range[1]} V (${part.specs.voltage_range_text})` : 'no published range', ok: okRange, ...(okRange ? {} : { why: `the supply ${lo}-${hi} V is outside the published range` }) });
-  }
+  for (const [role, sv] of Object.entries(d.servos ?? {})) rows.push(...servoSupplyRows(role, sv, lo, hi, catalog));
   if (sup?.part) {
     const reg = byId(catalog, sup.part).specs, [a, b] = sup.input_V ?? [NaN, NaN];
     const ok = a >= reg.min_input_v - 1e-9 && b <= reg.max_input_v + 1e-9;
@@ -155,6 +150,23 @@ export function ratingsRecord(d, catalog) {
   };
 }
 
+/** One servo's ratings rows at a supply lo-hi V: lo inside its published rows (torque and speed), lo-hi inside its
+ * published range, and (round 19) hi inside its published rows too, torque, speed and stall current alike. */
+function servoSupplyRows(role, sv, lo, hi, catalog) {
+  const rows = [];
+  const part = byId(catalog, sv.id), perf = (part.specs.performance ?? []).map((r) => r.voltage_v).filter(Number.isFinite);
+  const rowLo = Math.min(...perf), rowHi = Math.max(...perf), range = servoVoltageRange(part);
+  const okRow = lo >= rowLo - 1e-9 && lo <= rowHi + 1e-9, okRange = !!range && hi <= range[1] + 1e-9 && lo >= range[0] - 1e-9;
+  rows.push({ what: `${role} servo ${sv.id}: torque and speed at ${lo} V`, published: `rows ${perf.join(', ')} V`, ok: okRow, ...(okRow ? {} : { why: `${lo} V is outside the published rows ${rowLo}-${rowHi} V (no extrapolation)` }) });
+  rows.push({ what: `${role} servo ${sv.id}: supply ${lo}-${hi} V`, published: range ? `${range[0]}-${range[1]} V (${part.specs.voltage_range_text})` : 'no published range', ok: okRange, ...(okRange ? {} : { why: `the supply ${lo}-${hi} V is outside the published range` }) });
+  // round 19 (SPEC "Servo voltage covers current too"): every voltage the supply presents inside the published rows,
+  // its highest too (the stall current there is read from a row, never scaled beyond the top one)
+  const curV = (part.specs.stall_current ?? []).map((q) => q.voltage_v).filter(Number.isFinite), curHi = curV.length ? Math.max(...curV) : Infinity;
+  const okHi = hi <= rowHi + 1e-9 && hi <= curHi + 1e-9;
+  rows.push({ what: `${role} servo ${sv.id}: highest supply ${hi} V inside its published rows`, published: `torque and speed rows ${perf.join(', ')} V; stall current ${curV.length ? `rows ${curV.join(', ')} V` : 'published without a voltage'}`, ok: okHi, ...(okHi ? {} : { why: `${hi} V is above the published top row ${Math.min(rowHi, curHi)} V (no extrapolation, current included)` }) });
+  return rows;
+}
+
 // ---- round 18: the maker's-part ruling's conditions (SPEC "Maker's part", operator's decision 2026-11-03) -------------
 
 /** The pack at full charge (4.20 V a cell, or its charge limit), as build.js batteryServoSupply takes it. */
@@ -173,7 +185,7 @@ export function motorFigures(d, catalog) {
   const s = part.specs, th = catalog.find((p) => p.id === `thermal-ref-${m.id.replace(/^motor-/, '')}`)?.specs ?? null;
   const out = [];
   const I = s.continuous_current_a, P = s.continuous_power_w, Vf = packFullV(bt);
-  if (Number.isFinite(I)) out.push({ figure: 'current', published: I, units: 'A', within: null, checked_by: "M8: the motor's RMS current over 2 s windows within its continuous rating (missions.mjs); the flight envelope's motor_current ratio", basis: s.continuous_rating_note ?? `continuous ${I} A` });
+  if (Number.isFinite(I)) out.push({ figure: 'current', published: I, units: 'A', within: null, checked_by: "M8: the motor's RMS current over 2 s windows within its continuous rating (missions.mjs); the flight envelope's motor_current ratio", basis: `${s.continuous_rating_note ?? `continuous ${I} A`}${th?.rating_conditions_text ? `; stated for (the maker's manual): ${th.rating_conditions_text} (the 'continuous rating conditions' row holds the motor to it derated)` : ''}` });
   if (Number.isFinite(P) && Number.isFinite(I)) {
     const ok = Vf * I <= P + 1e-9;
     out.push({ figure: 'power', published: P, units: 'W', within: ok, basis: `a window's mean electrical input is at most the pack's full-charge ${Vf} V times its RMS current, so with the current within ${I} A (M8) at most ${(Vf * I).toFixed(1)} W`, row: { what: `motor ${m.id}: power at its continuous current, at most ${Vf} V x ${I} A = ${(Vf * I).toFixed(1)} W`, published: `${P} W continuous`, ok, ...(ok ? {} : { why: 'the pack at full charge can drive more than the published continuous power at the continuous current' }) } });
@@ -185,8 +197,138 @@ export function motorFigures(d, catalog) {
   }
   out.push({ figure: 'speed', published: null, units: 'rpm', within: null, basis: `none published (Kv ${s.kv_rpm_per_v} rpm/V only)` });
   out.push({ figure: 'torque', published: null, units: 'N m', within: null, basis: 'none published' });
-  out.push(th ? { figure: 'temperature', published: `wire ${th.wire_rating_c} C, magnets ${th.magnet_rating_c} C`, units: 'C', within: null, checked_by: "not checked: the build has no motor thermal model (finding, round 18); the maker asks for 'adequate cooling' and quantifies none", basis: `${th.wire_rating_text} ${th.magnet_rating_text}` } : { figure: 'temperature', published: null, units: 'C', within: null, checked_by: 'not checked: no thermal entry for this motor in the catalogue', basis: 'no temperature figure read' });
+  out.push(motorTemperature(th));
+  const rc = th ? ratingConditions(d, s, th) : null;
+  if (rc) out.push(rc);
   return out;
+}
+
+// ---- round 19: the motor's temperature and its rating's stated conditions (decision 5, "Motor temperature") ----------
+
+/**
+ * The motor's temperature figure. Round 19: Scorpion publishes a limit (its operating manual: 100 C at any measured
+ * point) but nothing that bounds the motor's temperature from its load (no thermal resistance, no loss or temperature
+ * curve; the manual tells the user to measure), and the build has no sourced thermal path: the temperature cannot be
+ * bounded, so the maker's-part interfaces resting on it are not counted (counted: false, never a silent pass).
+ */
+function motorTemperature(th) {
+  if (!th) return { figure: 'temperature', published: null, units: 'C', within: null, counted: false, not_counted_because: 'no thermal entry for this motor in the catalogue: whether its maker publishes a temperature limit was not read', checked_by: 'nothing: not read', basis: 'no temperature figure read' };
+  const lim = th.max_measured_temperature_c;
+  const basis = [th.manual_temperature_text, th.manual_margin_text, th.manual_winding_text, th.manual_magnet_text, th.wire_rating_text, th.magnet_rating_text].filter(Boolean).join(' ');
+  // no limit published (the wire's and magnets' ratings are the materials', not a limit on the motor): disclosed
+  if (!Number.isFinite(lim)) return { figure: 'temperature', published: `wire ${th.wire_rating_c} C, magnets ${th.magnet_rating_c} C`, units: 'C', within: null, checked_by: "not checked: the maker publishes no temperature limit for the motor (its wire's and magnets' ratings only); its continuous current and power are the figures checked", basis };
+  return {
+    figure: 'temperature', published: lim, units: 'C', within: null, counted: false,
+    not_counted_because: `the maker publishes a limit (${lim} C at any measured point) but no figure that bounds the motor's temperature from its load (no thermal resistance, loss or temperature curve, or cooling figure for this motor; its manual tells the user to measure), and the build has no sourced thermal path, so the temperature cannot be bounded`,
+    checked_by: 'nothing: unbounded (round 19)', basis,
+  };
+}
+
+const rowAtOrAbove = (rows, x) => rows.filter(([k]) => k !== null && k >= x - 1e-9).sort((a, b) => a[0] - b[0])[0] ?? rows.find(([k]) => k === null) ?? null;
+const rowAtOrBelow = (rows, x) => rows.filter(([k]) => k !== null && k <= x + 1e-9).sort((a, b) => b[0] - a[0])[0] ?? null;
+
+/**
+ * A continuous rating ({ current_A, power_W }) derated for a condition by its maker's published tables (`tables`: %
+ * power ratio by ambient temperature, cooling airflow and duty), each read at its published row on the conservative side
+ * of the condition (the ambient and the duty at or above it, the airflow at or below it; no interpolation), the three
+ * ratios multiplied (the manual states each alone). The tables are labelled "for reference only": SPEC (round 7) counts
+ * such a figure at half, so `spec_A` / `spec_W` are the derated values at half. -> { rows, ratio, current_A, power_W,
+ * spec_A, spec_W } or null when a table has no row for the condition (an ambient above the table's last column).
+ */
+export function deratedRating(rating, tables, { airflow_m_s, ambient_C, duty_min }) {
+  if (!tables || !Number.isFinite(airflow_m_s) || !Number.isFinite(ambient_C)) return null;
+  const a = rowAtOrAbove(tables.ambient_C.filter(([k]) => k !== null), ambient_C), v = rowAtOrBelow(tables.airflow_m_s, airflow_m_s);
+  const t = Number.isFinite(duty_min) ? rowAtOrAbove(tables.duty_min, duty_min) : tables.duty_min.find(([k]) => k === null);
+  if (!a || !v || !t) return null;
+  const ratio = (a[1] / 100) * (v[1] / 100) * (t[1] / 100);
+  const I = rating.current_A * ratio, P = rating.power_W * ratio;
+  return { rows: { ambient_C: a, airflow_m_s: v, duty_min: t }, ratio: r4(ratio), current_A: r4(I), power_W: r4(P), spec_A: r4(I / 2), spec_W: r4(P / 2) };
+}
+
+/** The pack's run time at the cruise trim's power (min): its full capacity at its nominal voltage; null without a trim. */
+export function cruiseEndurance(d) {
+  const bt = d.battery, V = d.control?.Vcruise;
+  const row = (d.control?.trimFlight ?? []).find((r) => r.V === V);
+  const ok = row && Number.isFinite(row.flight_power_w) && bt?.capacity_Ah && bt?.V_nom;
+  return ok ? (bt.capacity_Ah * bt.V_nom * 60) / row.flight_power_w : null;
+}
+
+/**
+ * The derated readings at a design's conditions: the air at the motor at most the flight speed (the most the bird can
+ * give it, a cooling path from the nose assumed) and none (no cooling path); the ambient the design's atmosphere (the
+ * air in the pod is warmer: not quantified); the duty `duty_min` (the pack's run), or the tables' longest row.
+ */
+function deratedReadings(rating, tables, d, duty_min) {
+  const ambient = d.atmosphere?.temperature_C, V = d.control?.Vcruise;
+  const at = (airflow) => deratedRating(rating, tables, { airflow_m_s: airflow, ambient_C: ambient, duty_min });
+  return { conditions: { duty_min: Number.isFinite(duty_min) ? +duty_min.toFixed(2) : null, airflow_m_s_at_most: V ?? null, ambient_C: ambient ?? null }, derated: { flight_speed_air: Number.isFinite(V) ? at(V) : null, no_cooling_path: at(0) } };
+}
+
+/**
+ * The continuous rating's stated conditions (the maker's manual: 60 s at 100% throttle, forced airflow of at least
+ * 30 m/s, ~30 C ambient) against the design's, with the rating derated by the maker's tables (deratedReadings; at the
+ * build, before the trim, the duty is the tables' longest row). within is decided where a flight gives the sustained
+ * current (flownMotorCondition): the endurance cruise's RMS over the whole flight against the derated current at half
+ * (SPEC round 7) with no cooling path, the design stating none (a sourced, drawn cooling path would earn its airflow's
+ * row); the flight-speed reading is reported beside it.
+ */
+function ratingConditions(d, s, th) {
+  if (!th.derating || !Number.isFinite(th.rating_airflow_m_s)) return null;
+  const rating = { current_A: s.continuous_current_a, power_W: s.continuous_power_w, duty_s: th.rating_duty_s, airflow_m_s: th.rating_airflow_m_s, ambient_C: th.rating_ambient_c };
+  const { conditions, derated } = deratedReadings(rating, th.derating, d, cruiseEndurance(d));
+  return {
+    figure: 'continuous rating conditions', published: s.continuous_current_a, units: 'A', within: null, rating, tables: th.derating,
+    conditions: { rating: { duty_s: rating.duty_s, airflow_m_s: rating.airflow_m_s, ambient_C: rating.ambient_C }, design: conditions }, derated,
+    checked_by: "M7 (missions.mjs flownMotorCondition): the endurance cruise's (M2's) motor RMS over the whole flight against the derated current at half (SPEC round 7: the tables are 'for reference only') with no cooling path (the design states none); the flight-speed reading beside it",
+    basis: `${th.rating_conditions_text} ${th.rating_reduce_text} ${th.derating_label} (${th.derating_rows_note})`,
+  };
+}
+
+/**
+ * Round 19: whether the maker's rating conditions (60 s at 100% throttle with >= 30 m/s forced air, ~30 C) and its
+ * derating tables ("Approximate % Power Ratio for reference only") bind the motor is the operator's ruling, asked on
+ * 2026-11-04 and not yet made. Until it is, the row's verdict is held: within null and not counted, its reading beside
+ * it (would_be_within, at the SPEC reading: the tables at half, no cooling path). 'binds' applies the reading.
+ */
+export const RATING_CONDITIONS_RULING = 'pending';
+
+/** The rating-conditions row at the flown design's conditions and its sustained current. */
+function flownRating(c, { sustainedRms, endurance_min, design, sustainedFrom, ruling = RATING_CONDITIONS_RULING }) {
+  const duty = Number.isFinite(endurance_min) ? endurance_min : design ? cruiseEndurance(design) : null;
+  const { conditions, derated } = design ? deratedReadings(c.rating, c.tables, design, duty) : { conditions: c.conditions?.design, derated: c.derated };
+  const held = derated?.no_cooling_path;
+  const exceeds = Object.fromEntries(Object.entries(derated ?? {}).filter(([, r]) => r).map(([k, r]) => [k, { full: sustainedRms > r.current_A, spec_half: sustainedRms > r.spec_A }]));
+  const reading = held ? { within: sustainedRms <= held.spec_A, published_derated: held.spec_A } : { within: null, counted: false, not_counted_because: "the maker's derating tables have no row for the design's condition" };
+  const verdict = !held || ruling === 'binds' ? reading : { within: null, counted: false, would_be_within: reading.within, published_derated: reading.published_derated, not_counted_because: `held pending the operator's ruling (asked 2026-11-04) on whether the maker's rating conditions and its reference-only derating tables bind: the sustained ${sustainedRms.toFixed(2)} A against ${held.spec_A} A derated at half with no cooling path (${held.current_A} A at full value) would ${reading.within ? 'pass' : 'fail'}` };
+  return { ...c, conditions: { ...c.conditions, design: conditions }, derated, value: sustainedRms, value_basis: `${sustainedFrom}'s motor RMS over the whole flight (the sustained cruise); duty from ${Number.isFinite(endurance_min) ? `its endurance, ${endurance_min.toFixed(2)} min` : "the cruise trim's pack run"}`, exceeds, ...verdict };
+}
+
+/**
+ * A motor maker's-part condition with what the flights measured: the current row against the population's 2 s RMS
+ * (as M8); the rating-conditions row, derated at the flown design's conditions (its atmosphere, cruise speed and the
+ * endurance flight's run), against the endurance cruise's sustained RMS (within at the SPEC reading). -> the
+ * condition, with `not_counted` the reasons a pass resting on it is not counted.
+ */
+export function flownMotorCondition(condition, { rms2sMax, sustainedRms, endurance_min = null, design = null, sustainedFrom = 'M2', ruling = RATING_CONDITIONS_RULING }) {
+  const out = condition.map((c) => {
+    if (c.within === null && c.figure === 'current' && Number.isFinite(c.published) && Number.isFinite(rms2sMax)) return { ...c, value: rms2sMax, within: rms2sMax <= c.published, checked_by: "this population's motor RMS over 2 s windows (as M8)" };
+    if (c.figure === 'continuous rating conditions') return Number.isFinite(sustainedRms) ? flownRating(c, { sustainedRms, endurance_min, design, sustainedFrom, ruling }) : { ...c, counted: false, not_counted_because: 'no endurance flight gave the sustained current' };
+    return c;
+  });
+  return Object.assign(out, { not_counted: out.filter((c) => c.counted === false).map((c) => `${c.figure}: ${c.not_counted_because}`) });
+}
+
+/**
+ * M7's maker's parts (the members checked "maker's part") with their conditions flown (flownMotorCondition): each
+ * with its peak loads, its condition and ok (its member's check, and no figure over); a part resting on a figure no
+ * check can hold is not counted. -> { parts, ok, notCounted: the reasons, each naming its part }.
+ */
+export function flownMakersParts(members, flight) {
+  const parts = members.filter((r) => r.check === "maker's part").map((r) => {
+    const condition = flownMotorCondition(r.condition ?? [], flight);
+    return { name: r.name, status: r.status, part: r.part, of: r.of, covers: r.covers, peaks: r.peaks, condition: [...condition], ok: r.ok && condition.every((c) => c.within !== false), ...(condition.not_counted.length ? { counted: false, not_counted_because: condition.not_counted } : {}) };
+  });
+  return { parts, ok: parts.every((q) => q.ok), notCounted: parts.flatMap((q) => (q.not_counted_because ?? []).map((w) => `${q.name} (unrated, maker's part): ${w}`)) };
 }
 
 /** The ratings-record rows for the motor's figures the build decides without a flight (cells; power at its current). */

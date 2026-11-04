@@ -11,6 +11,7 @@ import { createWind } from '../wind.js';
 import { couplerCheck, torsionCheck, strokeServoHold, mixedMeshCheck } from '../structure.js';
 import { checkJoints } from '../bearings.js';
 import { checkMembers, memberPeaks } from '../members.js';
+import { flownMakersParts } from '../../design/chains.js';
 
 const path = resolve(process.argv[2]);
 const design = JSON.parse(readFileSync(path, 'utf8'));
@@ -183,13 +184,13 @@ const m7NotCounted = (mb?.members ?? []).filter((r) => r.check === 'rc practice'
 // condition (a servo arm: its servo's rule at the supply's row, checked in its member; the motor's bearings and threads:
 // Scorpion's figures, the current from this population's 2 s RMS, as M8 holds it). Valid only while every one holds.
 const motorRmsPop = Math.max(0, ...popRuns.map((r) => r.rms?.motorRmsMax ?? 0));
-const makersParts = (mb?.members ?? []).filter((r) => r.check === "maker's part").map((r) => {
-  const condition = (r.condition ?? []).map((c) => (c.within === null && c.figure === 'current' && Number.isFinite(c.published) ? { ...c, value: motorRmsPop, within: motorRmsPop <= c.published, checked_by: "this population's motor RMS over 2 s windows (as M8)" } : c));
-  return { name: r.name, status: r.status, part: r.part, of: r.of, covers: r.covers, peaks: r.peaks, condition, ok: r.ok && condition.every((c) => c.within !== false) };
-});
-const makersOk = makersParts.every((q) => q.ok);
+// Round 19 (decision 5): the motor's continuous rating is stated for 60 s at 100% throttle with forced cooling air; the
+// sustained figure it is held to, derated, is the endurance cruise's (M2's) RMS over its whole flight. A condition no
+// check can hold (the motor's temperature: unbounded) leaves the pass not counted.
+const m2 = nominal.M2;
+const { parts: makersParts, ok: makersOk, notCounted: makersNotCounted } = flownMakersParts(mb?.members ?? [], { rms2sMax: motorRmsPop, sustainedRms: m2?.rms?.n ? Math.sqrt(m2.rms.motorI2 / m2.rms.n) : NaN, endurance_min: m2?.measured?.endurance_min ?? null, design });
 writeGate({
-  notCountedBecause: m7NotCounted,
+  notCountedBecause: [...m7NotCounted, ...makersNotCounted],
   gate: 'M7', design: name, passed: fosMin >= 1.5 && gearOk && meshesOk && servoOk && bearingsOk && membersOk !== false && makersOk && seeds >= 100 && loadsConverged && m4passRuns.length > 0,
   measured: {
     spar_inner: { id: sIn.id, moment_Nm: worst('rootBend'), stress_MPa: sigIn, allowable_MPa: sIn.allowable_MPa, fos: fosIn },

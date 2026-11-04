@@ -9433,18 +9433,28 @@
  {
   "id": "screw-iso4762-m2x8-8.8",
   "category": "fastener",
-  "manufacturer": "any ISO 4762 (DIN 912) maker (property class 8.8, ISO 898-1)",
+  "manufacturer": "Fabory (article 07000.020.008, DIN 912 / ISO 4762 steel plain, class 12.9); any ISO 4762 (DIN 912) maker of property class 8.8 or stronger (ISO 898-1)",
   "name": "ISO 4762 (DIN 912) M2 x 8 socket head cap screw, class 8.8",
-  "mass_g": 0.375,
+  "mass_g": 0.31,
   "specs": {
-   "mass_basis": "per part, computed: ISO 4762 M2 maximum head 3.80 mm x 2.00 mm (fasteners.eu ISO 4762 table) plus a 2 mm x 8 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c): 0.375 g",
+   "mass_basis": "per part, published: Fabory 07000.020.008 'Weight per piece (g) 0.31' (physics round 19; round 18 had computed 0.375 g from the maximum head and a full-diameter shank)",
    "thread": "M2 coarse (pitch 0.4)",
    "length_mm": 8,
    "head_d_mm": 3.8,
    "head_k_mm": 2,
+   "socket_s_mm": 1.5,
    "thread_length_b_mm": null,
+   "full_thread": true,
    "stress_area_mm2": 2.07,
    "property_class": "8.8",
+   "property_class_supplied": "12.9",
+   "property_class_note": "the listing is class 12.9; the design values stay class 8.8's ISO 898-1 minimums, which class 12.9 exceeds in every row the TR Fastenings ISO 898-1 table gives (test stress Sp 970 against 580 MPa, Rm min 1220 against 800 MPa, 0.2% limit min 1100 against 640 MPa; read 2026-11-04)",
+   "supplier_listing": {
+    "url": "https://www.fabory.com/en/hexagon-socket-head-cap-screw-din-912-steel-plain-12-9-m2x8/p/07000020008",
+    "retrieved": "2026-11-04",
+    "quotes": "Hexagon socket head cap screw DIN 912 Steel Plain 12.9 M2X8; article 07000.020.008; DIN 912, ISO 4762; Steel; 12.9; Plain; P 0.4; Full thread if L <= 20; nominal length 8 mm; dk (max.) 3.8; k (max.) 2; s 1.5; b 16; Weight per piece (g) 0.31; Packed per 100, Full Box only",
+    "not_shown": "price and stock level (the page asks for a login)"
+   },
    "use": "the hatch cover (physics round 18): its four screws through the cover's lands and the 6061 rails, with ISO 4032 M2 nuts (M2 for the rails' edge distance)",
    "design_values": {
     "tension_N": 1200.6,
@@ -9460,10 +9470,11 @@
     "https://www.trfastenings.com/knowledge-base/metric-screws/screws-and-bolts-mechanical-properties",
     "https://TorqBolt.com/bs-3692-bolting-assemblies-fasteners-bolting-stud-bolts-screws-nuts-suppliers-manufacturers"
    ],
-   "thread_length_note": "8 mm is in the ISO 4762 nominal-length table read at fasteners.eu (2026-11-03, physics round 17: lengths 2.5, 3, 4, 5, 6, 8, 10, 12, 16, 20; short lengths fully threaded)"
+   "thread_length_note": "8 mm is in the ISO 4762 nominal-length table read at fasteners.eu (2026-11-03, physics round 17: lengths 2.5, 3, 4, 5, 6, 8, 10, 12, 16, 20; short lengths fully threaded); the Fabory listing (2026-11-04) is the M2 x 8 itself, 'Full thread if L <= 20'",
+   "geometry_source_url": "https://www.fasteners.eu/standards/ISO/4762/"
   },
   "price_usd": null,
-  "source_url": "https://www.fasteners.eu/standards/ISO/4762/",
+  "source_url": "https://www.fabory.com/en/hexagon-socket-head-cap-screw-din-912-steel-plain-12-9-m2x8/p/07000020008",
   "retrieved": "2026-11-04",
   "verified": "retailer-page"
  },
@@ -10054,14 +10065,39 @@
    "continuous_text": "Max Continuous Current: 26 Amps; Max Continuous Power: 370 Watts (no cooling condition or time limit attached on the product page)",
    "chart_cooling_text": "The prop recommendations in this chart are based on the motor receiving adequate cooling throughout its operation. If your motor is being used inside a cowl, you must provide adequate cooling to the motor and make sure that the motor is not getting too hot during operation.",
    "cooling_figure": null,
-   "note": "No airflow figure, maximum case temperature or insulation class is published. 'Adequate cooling' is not quantified. The 180 C and 200 C figures are the wire's and magnets' ratings, not a motor operating limit. Data chart: https://scorpionsystem.com/files/i1,070_data_chart.pdf (source_url_2, read via pdftotext); its rows are prop tests at 11.1 V.",
+   "chart_rating_text": "I Max 26 Amps; P Max (3S) 370 W (data chart header)",
+   "chart_burst_text": "The prop can be used, but full throttle should be kept to short bursts. (80 to 100% power) (data chart colour code)",
+   "max_measured_temperature_c": 100,
+   "manual_temperature_text": "In general operation the measured temperature of the motor should not exceed 100C at any measured point.",
+   "manual_margin_text": "If safety margin is required, the motor temperature should not exceed 60C – 80C during normal use.",
+   "manual_winding_text": "Scorpion motors with Multi strand winding have winding rated to at least 180C.",
+   "manual_magnet_text": "Scorpion Magnets are rated to at least 180C.",
+   "rating_conditions_text": "*Duty Cycle is specified as 60 seconds at 100% throttle for continuous rating, and 5 – 60 seconds at 100% throttle for peak rating, with forced airflow cooling of at least 30m/s with ~30C ambient Air Temperature.",
+   "rating_duty_s": 60,
+   "rating_airflow_m_s": 30,
+   "rating_ambient_c": 30,
+   "rating_reduce_text": "If you have restricted cooling ability, high ambient temperatures, or extended Duty Cycle, the Power / Current Rating should be reduce.",
+   "rating_margin_text": "The rated Power / Current capability is with little to no safety margin. User should accommodate for adequate safety margin depending on their exact application.",
+   "rating_measure_text": "Exact power / current capability will depend on your exact installation and the user should take extreme precaution and measurements to ensure the motor is not over loaded causing over temperature.",
+   "derating_label": "Approximate % Power Ratio for reference only. Exact % Power Ratio depends on your exact application accounting for all parameters*",
+   "derating": {
+    "ambient_C": [[30, 100], [35, 97], [40, 95], [45, 93], [50, 87], [55, 82], [60, 78]],
+    "airflow_m_s": [[30, 100], [25, 95], [20, 93], [15, 87], [10, 80], [5, 70], [0, 50]],
+    "duty_min": [[1, 100], [2, 87], [5, 80], [10, 75], [30, 73], [60, 70], [null, 60]]
+   },
+   "derating_rows_note": "the manual's three tables 'Rated Power Changes According To Ambient Temperature / Airflow Cooling Speed / Duty Cycle', [condition, % power ratio]; the first ambient column is '< 30°C', the first airflow column '> 30m/s', the duty columns '< 1 min', '2 mins', '5 mins', '10 mins', '30 mins', '60 mins', '> 60 mins' (null: '> 60 mins')",
+   "manual_applies_to": "Scorpion motors in general (the manual names no model); the SII-3008-1090KV is wound 'Motor Wire: 6-Strand 0.25mm' (product page), a multi-strand winding",
+   "thermal_resistance": null,
+   "note": "Round 19: Scorpion's operating manual (source_url_3, read via pdftotext 2026-11-04) publishes a temperature limit (100 C at any measured point; 60-80 C with a safety margin), the continuous rating's conditions (60 s at 100% throttle, forced airflow of at least 30 m/s, ~30 C ambient) and derating tables marked 'for reference only'. No thermal resistance, loss or temperature curve, winding-to-case figure or insulation class is published for this motor, so its temperature cannot be bounded from its load; 'adequate cooling' (data chart) is not quantified. The product page's 180 C wire and 200 C magnet figures are the materials' ratings (the manual: windings at least 180 C, magnets at least 180 C). Data chart: https://scorpionsystem.com/files/i1,070_data_chart.pdf (source_url_2, read via pdftotext); its rows are prop tests at 11.1 V and 14.8 V.",
    "eligibility": "reference only: not a part, no mass; kept for its published rule or figures"
   },
   "price_usd": null,
   "source_url": "https://scorpionsystem.com/catalog/aeroplane/motors_1/s-30_v2/SII-3008-1090KV/",
-  "retrieved": "2026-11-03",
+  "retrieved": "2026-11-04",
   "verified": "manufacturer-page",
-  "source_url_2": "https://scorpionsystem.com/files/i1,070_data_chart.pdf"
+  "source_url_2": "https://scorpionsystem.com/files/i1,070_data_chart.pdf",
+  "source_url_3": "https://scorpionsystem.com/files/Scorpion-2024-Manual-L1d.pdf",
+  "retrieved_3": "2026-11-04"
  },
  {
   "id": "thermal-ref-holybro-tekko32-f4-45a",
@@ -10394,5 +10430,65 @@
   "retrieved": "2026-11-04",
   "verified": "datasheet",
   "source_url_2": "https://ntrs.nasa.gov/api/citations/19930091320/downloads/19930091320.pdf"
+ },
+ {
+  "id": "tube-rockwest-pultruded-12x10",
+  "category": "carbon_tube",
+  "manufacturer": "Rock West Composites",
+  "name": "Tube - Pultruded Unidirectional - 0.390 x 0.465 x 78 Inch (T-RND-472)",
+  "mass_g": 49.45,
+  "specs": {
+   "mass_basis": "per_metre",
+   "part_number": "T-RND-472",
+   "od_mm": 11.811,
+   "id_mm": 9.906,
+   "wall_mm": 0.965,
+   "length_mm_listed": 1981.2,
+   "od_in_published": 0.465,
+   "id_in_published": 0.39,
+   "wall_in_published": 0.038,
+   "construction": "pultruded unidirectional (all fibres 0 deg), Toray T700S / Bisphenol-A",
+   "tensile_strength_lengthways_mpa": 2372.0,
+   "tensile_modulus_lengthways_gpa": 133.8,
+   "compressive_strength_mpa": 1682.0,
+   "flexural_strength_mpa": null,
+   "flexural_modulus_gpa": null,
+   "published_psi": {
+    "avg_ex_youngs_modulus": 19400000.0,
+    "x_tensile_yield_strength": 344000.0,
+    "x_compressive_yield_strength": 244000.0
+   },
+   "strength_source": "https://www.rockwestcomposites.com/t-rnd-472.html (Engineering Properties block)",
+   "strength_note": "Calculated, not tested: page says 'All laminate properties and mechanical calculations are based on Classical Lamination Theory' and 'should be used as a reference only', 'Rock West Composites does not guarantee these properties or calculations', and 'We cannot supply test or strength data for this product.' The block (read 2026-11-04) is the T-RND-393 family's: EX 1.94E7, X tensile 344,000, X compressive 244,000, Y compressive 38,600, XY shear 13,996 (13,992 on T-RND-393). Published without per-value units under the page's unit selector; read as psi, as on the T-RND-393 entry (its EX 1.94E7 psi = 133.8 GPa is T700S UD's modulus); MPa/GPa here are converted (computed). Pultruded UD tube: page warns 'these products are not good for torque transfer OR crush resistance'.",
+   "implied_density_kg_m3_computed": 1522,
+   "mass_note": "Computed: page Weight 0.216 for the 78 in piece, read as lb as on the T-RND-393 entry -> 0.216 x 453.592 g / 1.9812 m = 49.45 g/m. Cross-checks: page Linear Density 0.033 (lb/ft) = 49.1 g/m; the published section (0.465 x 0.390 in, 32.49 mm2) at the page's Volumetric Density 0.055 (lb/in3, 1522 kg/m3) = 49.5 g/m.",
+   "price_note": "USD for one 78 in tube: $9.94 shown, reduced from $19.88; no quantity tiers listed; 1785 available now (read 2026-11-04)."
+  },
+  "price_usd": 9.94,
+  "source_url": "https://www.rockwestcomposites.com/t-rnd-472.html",
+  "retrieved": "2026-11-04",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "composite-rockwest-t-rnd-472-transverse",
+  "category": "material_property",
+  "manufacturer": "Rock West Composites",
+  "name": "T-RND-472 pultruded tube, transverse (Y) compressive yield, CLT estimate",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not a part (property record)",
+   "transverse_compressive_yield_psi": 38600,
+   "design_values": {
+    "yield_MPa": 133.1,
+    "basis": "38,600 psi (266 MPa) transverse compressive yield, a classical-lamination-theory estimate on the product page (reference only): counted at half, 133 MPa",
+    "xy_shear_MPa": 48.2,
+    "xy_shear_basis": "XY shear strength 13,996 psi (96.5 MPa), classical-lamination-theory estimate on the product page (reference only): counted at half, 48.2 MPa (rounded down; the tail boom in torsion, as T-RND-393's record)"
+   },
+   "xy_shear_psi": 13996
+  },
+  "price_usd": null,
+  "source_url": "https://www.rockwestcomposites.com/t-rnd-472.html",
+  "retrieved": "2026-11-04",
+  "verified": "manufacturer-page"
  }
 ]

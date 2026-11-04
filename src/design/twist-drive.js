@@ -5,8 +5,14 @@
 //    the real E387 (section.js). A machined 7075 joiner bonds the inner spar to the outer spar; between them, in an
 //    open-topped bay, a 7075 lever is cross-pinned on the inboard end of the titanium torque rod, which runs in a GFI-0405
 //    bushing in the joiner's wall, through the outer spar's bore, and out of its tip end through a second GFI-0405 in a
-//    7075 end cap bonded on the spar. The MD89MW hangs under a strip machined on the joiner, tied with two T18R; its
-//    R-ML25 drives the lever through two KBRM-02 rod ends and a 6061 link (a parallel four-bar, ratio r_servo / r_lever).
+//    7075 end cap bonded on the spar. The twist servo (params.parts.twistServo) hangs under a strip machined on the
+//    joiner, held in its frame by four bonded 7075 pins; its maker's arm (P.horn) drives the lever through two rod ends
+//    (P.rodEnd) and a 6061 link (a four-bar, ratio about r_servo / r_lever).
+//  - Round 19 (sized for the rough-air row, the design's own load case): the arm's outer hole (19 mm, the R-ML25's) and
+//    an 18.5 mm lever. The arm's M2 tapped hole takes only the KBRM-02 (97.9 N long term; the M3 KBRM-03 does not fit
+//    it), so the link force (the twist torque over r_lever) sets r_lever >= 15.4 mm at the rough row's twist torque at
+//    FoS 2.5; the servo's torque (the wing's times about r_servo / r_lever) and its travel (+-30 deg times the same
+//    ratio, against the trim's +-30 deg twist command) set the ratio between 1.0 and the 90% rule's limit.
 //  - On the rod's tip end a 7075 hub (cross-pinned) carries a Rock West 6 x 5 arm out to a 7075 tip plate beside rib 10;
 //    rib 10 turns with them. A straight Rock West 6 x 5 bar runs from a round hole in a plate machined on the joiner (at
 //    the elbow, fixed) to a round hole in the tip plate, e behind the spar axis. Ribs 6 to 9 turn on GFM-0810-03
@@ -26,6 +32,8 @@ import { tappedThreadMember } from './tail-mech.js'; // round 18: the lever's ta
 const mm = (v) => v / 1000;
 const r6 = (v) => +v.toFixed(6);
 const span = (wing) => wing.segments.reduce((a, g) => a + g.length, 0);
+/** A servo's short name from its catalogue entry (its part number, else the first word of its name). */
+export const servoLabel = (part) => part?.specs?.part_number ?? String(part?.name ?? part?.id ?? 'servo').split(/\s+/)[0];
 
 /** Default drive parameters (mm unless stated); params.twistDrive overrides them. */
 export const TWIST_DRIVE = {
@@ -33,13 +41,20 @@ export const TWIST_DRIVE = {
   rodBushing: 'bushing-igus-GFI-0405-04', ribBushing: 'bushing-igus-GFM-0810-03', bar: 'tube-rockwest-pultruded-6x5', arm: 'tube-rockwest-pultruded-6x5',
   rodEnd: 'rodend-igus-KBRM-02', horn: 'horn-hitec-r-ml25', screw: 'screw-iso4762-m2x6-8.8', tie: 'tie-hellermanntyton-t18r', pinWasher: 'washer-din6799-1-5',
   e_mm: 120, clear_mm: 0.5,
-  joiner: { od_mm: 12.4, outer_od_mm: 10.4, wall_od_mm: 14, inner_mm: 15, outer_mm: 20, u_t_mm: 0.8 },
-  lever: { hub_od_mm: 9, hub_mm: 6, arm_t_mm: 2.5, arm_w_mm: 4, r_mm: 12.8, pin_d_mm: 2 },
-  servo: { spline_x_mm: -30, spline_n_mm: 2, hole_mm: 16, travel_deg: 30 },
-  hanger: { t_mm: 1.2, lip_mm: 1.0, width_mm: 6, pin_d_mm: 2, gap_mm: 0 },
+  // round 19: outer_mm 20 -> 24 (its bond at FoS 2.39 < 2.5 at the rough-air row); round 19 (members2, the sealed design's
+  // trims, the rough-air row 14 m/s at 3.291 Hz, the lagging chain's 6.5 % higher elbow moment): the inner sleeve 15 ->
+  // 20 mm (its bond, bondCheck, right 2.15 -> 2.86), the outer 24 -> 30 mm (2.22 -> 2.78), the bay's floor and walls
+  // 0.8 -> 1.0 mm (its beam check, 2.49 -> 3.04)
+  joiner: { od_mm: 12.4, outer_od_mm: 10.4, wall_od_mm: 14, inner_mm: 20, outer_mm: 30, u_t_mm: 1.0 },
+  // round 19: the lever 18.5 mm (was 12.8) and the arm's 19 mm hole (was 16): ratio 1.028 (see the header); the frame
+  // pins 2.5 mm (were 2: the case's torque reaction is the servo's torque, twistLoads kTs)
+  lever: { hub_od_mm: 9, hub_mm: 6, arm_t_mm: 2.5, arm_w_mm: 4, r_mm: 18.5, pin_d_mm: 2 },
+  servo: { spline_x_mm: -30, spline_n_mm: 2, hole_mm: 19, travel_deg: 30 },
+  hanger: { t_mm: 1.2, lip_mm: 1.0, width_mm: 6, pin_d_mm: 2.5, gap_mm: 0 },
   plate: { t_mm: 1.2, depth_mm: 5, hole_clear_mm: 0.4 },
   cap: { sleeve_mm: 6, od_mm: 10 },
-  tip: { hub_od_mm: 9, hub_mm: 6, socket_mm: 8, socket_od_mm: 8, plate_t_mm: 1.0 },
+  // round 19: the tip arm's sockets 10 mm (were 8: their bonds at 2.39 against 2.5 at the rough row with this chain)
+  tip: { hub_od_mm: 9, hub_mm: 6, socket_mm: 10, socket_od_mm: 8, plate_t_mm: 1.0 },
   ring: { t_mm: 1.0, wall_mm: 0.75 },
   link_d_mm: 4,
 };
@@ -277,7 +292,7 @@ export function twistWing(ax, tag, frame) {
   drawServo(ax, tag, frame, G, P, ids, parts);
   drawBarAndTip(ax, tag, frame, G, P, ids);
   drawRibs(ax, tag, frame, G, P, ctx, ids);
-  ax.assumptions.push(`wing ${tag === 'R' ? 'right' : 'left'} (round 17b, params.twistDrive, src/design/twist-drive.js): the spars coaxial ${P.sparN_mm} mm above the E387's chord line, the ribs as chordwise pieces of a built-up rib (caps, webs, full depth round the spar, the bar's slot and the edge rods) inside the real section, the edge rods on its leading and trailing edges; the hand wing's ribs 6-9 on ${P.ribBushing} on the outer spar between bonded rings, slotted on a ${P.bar} bar ${P.e_mm} mm behind the spar axis from a hole in the joiner's plate to the tip plate; rib 10 on the tip plate, moved in from its round-16 station by the plate (${(t * 1000).toFixed(0)} mm rib, ${P.tip.plate_t_mm} mm plate); drawn at zero twist; the MD89MW's spline position on its case is not published (drawn on its top face's centre), its travel is not published (the speed is published over 60 deg, so at least +-30 deg is used)`);
+  ax.assumptions.push(`wing ${tag === 'R' ? 'right' : 'left'} (round 17b, params.twistDrive, src/design/twist-drive.js): the spars coaxial ${P.sparN_mm} mm above the E387's chord line, the ribs as chordwise pieces of a built-up rib (caps, webs, full depth round the spar, the bar's slot and the edge rods) inside the real section, the edge rods on its leading and trailing edges; the hand wing's ribs 6-9 on ${P.ribBushing} on the outer spar between bonded rings, slotted on a ${P.bar} bar ${P.e_mm} mm behind the spar axis from a hole in the joiner's plate to the tip plate; rib 10 on the tip plate, moved in from its round-16 station by the plate (${(t * 1000).toFixed(0)} mm rib, ${P.tip.plate_t_mm} mm plate); drawn at zero twist; the ${servoLabel(byId(catalog, parts.twistServo))}'s spline position on its case is not published (drawn on its top face's centre), its travel is not published (the speed is published over 60 deg, so at least +-30 deg is used)`);
   return { G, ids };
 }
 
@@ -389,9 +404,10 @@ function drawServo(ax, tag, frame, G, P, ids, parts) {
   join(link, eL, TW.stud); join(link, eS, TW.stud); join(`${link}/stud lever`, eL, THREAD); join(`${link}/stud servo`, eS, THREAD);
   // the frame's pins along x through both lips: over the case's top face (below the arm's hub), over its bottom face,
   // and two under the case
+  // (round 19: the top pin's crown held 1.5 mm above the case's lower face whatever its diameter, clear of the arm's hub)
   const xr = [ids.caseX[0] - mm(P.hanger.lip_mm), ids.caseX[1] + mm(P.hanger.lip_mm)], rq = mm(P.hanger.pin_d_mm) / 2;
   const pins = add(`twist frame pins ${tag}`, [
-    mpinX(frame, 'pin top', xr, ids.caseS[0] - rq, ids.caseN[0] + rq - mm(0.5), rq), mpinX(frame, 'pin bottom', xr, ids.caseS[1] + rq, G.S[1], rq),
+    mpinX(frame, 'pin top', xr, ids.caseS[0] - rq, ids.caseN[0] + mm(1.5) - rq, rq), mpinX(frame, 'pin bottom', xr, ids.caseS[1] + rq, G.S[1], rq),
     mpinX(frame, 'pin under 1', xr, ids.caseS[0] + mm(7), ids.caseN[0] - rq, rq), mpinX(frame, 'pin under 2', xr, ids.caseS[1] - mm(7), ids.caseN[0] - rq, rq),
   ].map((q, i) => ({ ...q, item: `twist frame pins ${tag} ${i + 1}` })), { bom: 'twist frame pins' });
   for (const nm of ['hanger lip forward', 'hanger lip aft']) join(pins, `${ids.joiner}/${nm}`, THROUGH);
@@ -620,8 +636,12 @@ function naturalSpline(x, y) {
 /**
  * The drive's load coefficients for one design (per wing): each a factor on a flight-model channel (twist_R / twist_L
  * the twist torque Q referred to the flown tip twist; root_yz, root_x, root_mperp the wing root's), from the drawn chain.
- *  - Q is carried kinematically: the rod's torque Tr = kq Q (kq = dtheta/dtheta_rod), the servo's Tr / k_rod at the
- *    four-bar's smallest ratio, the link's Tr / (r_l sin gamma) at its worst transmission angle over the travel.
+ *  - Q is carried kinematically: the rod's torque Tr = kq Q (kq = dtheta/dtheta_rod), the link's Tr / (r_l sin gamma)
+ *    at its worst transmission angle over the travel. Round 19 (bug: it was Tr / k_rod at the smallest ratio): the
+ *    servo's torque at its spline is Tr k_rod (k_rod = dtheta_rod/dtheta_servo; virtual work, Ts dtheta_s = Tr
+ *    dtheta_rod) at the four-bar's largest ratio over the travel (kTs: the case's torque reaction); the drive's reaction
+ *    about the spar axis through the servo's mount is the rod's torque Tr (kTm: the servo, arm, link and lever as one
+ *    body take Tr from the rod), which the joiner's inner sleeve and the spar's root bond carry with the bar's Re e.
  *  - Q is shared among ribs 6-10 as M_k = a_k Q with a_k proportional to c_k^2 b_k (each rib's chord squared times its
  *    span share, all of one sign: a stated distribution, conservative for the bar's bending and ends) and sum a_k w_k = 1;
  *    the bar carries ribs 6-9's (F_k = M_k / r_min), rib 10's goes to the tip plate; the bar is simply supported at
@@ -636,9 +656,11 @@ export function twistLoads(d, catalog) {
   const P = twistParams(d.params), ctx = twistContext(d, catalog, P), { G, ribs } = ctx, K = twistKinematics(G), wing = d.wing, L = span(wing), el = wing.segments[0].length;
   const xi = (s) => (s - G.sE) / (G.sT - G.sE), kq = xi(L), wf = (s) => Math.max(0, (s - el) / (L - el));
   const th = (P.servo.travel_deg * Math.PI) / 180, samp = Array.from({ length: 61 }, (_, i) => -th + (2 * th * i) / 60);
-  const kRod = Math.min(...samp.map((t) => K.ratio(t))), kRod0 = K.ratio(0);
+  const ratios = samp.map((t) => K.ratio(t)), kRod = Math.min(...ratios), kRodMax = Math.max(...ratios), kRod0 = K.ratio(0);
   const sinG = Math.min(...samp.map((t) => { const al = G.alpha + K.rodAt(t), as = G.alpha + t, H = [G.S[0] + G.rs * Math.cos(as), G.S[1] + G.rs * Math.sin(as)], Lp = [G.rl * Math.cos(al), G.rl * Math.sin(al)], dv = [H[0] - Lp[0], H[1] - Lp[1]], n = Math.hypot(...dv); return Math.abs(Math.cos(al) * dv[1] - Math.sin(al) * dv[0]) / n; }));
-  const kTr = kq, kTs = kq / kRod, kFL = kq / (G.rl * sinG);
+  // round 19: the servo's torque Tr k_rod at the largest ratio (was Tr / k_rod at the smallest: inverted), and the
+  // mount's reaction about the spar axis, the rod's torque (see the header)
+  const kTr = kq, kTs = kq * kRodMax, kTm = kTr, kFL = kq / (G.rl * sinG);
   // ribs 6-10 share Q
   const k6 = G.k5 + 1, hand = ribs.slice(k6), bnd = ribs.map((s, k) => [k === 0 ? s : (s + ribs[k - 1]) / 2, k === ribs.length - 1 ? L : (s + ribs[k + 1]) / 2]);
   const raw = hand.map((s, j) => { const k = k6 + j, c = chordAtW(wing, s).c; return c * c * (bnd[k][1] - Math.max(bnd[k][0], el)); });
@@ -663,7 +685,7 @@ export function twistLoads(d, catalog) {
   // by about 8x (5.3 rad at cruise, against the hardware's travel_rad of 0.675 rad). The flight model carries the
   // flown twist angle directly (LOAD_CHANNELS twist_angle_R/L, bounded by the servo's travel_rad).
   const Rrod = Math.max(...stiff.rods.flatMap((r) => r.R_N_per_rad.map(Math.abs)));
-  return { P, G, K, ctx, kq, kRod, kRod0, sinG, kTr, kTs, kFL, a, Fk, rMin, Re, Rt, Mbar, fRib, kElb, kV, kx, ms, stiff, Rrod, hand };
+  return { P, G, K, ctx, kq, kRod, kRodMax, kRod0, sinG, kTr, kTs, kTm, kFL, a, Fk, rMin, Re, Rt, Mbar, fRib, kElb, kV, kx, ms, stiff, Rrod, hand };
 }
 
 // ---- the M7 members ---------------------------------------------------------------------------------------------------
@@ -696,10 +718,12 @@ export function twistMembers(ax) {
   const Ld = twistLoads(d, catalog), { G } = Ld, M = driveMaterials(catalog, P, mat), sv = d.servos?.twist;
   // round 18: the arm's maker's-part condition (the servo's own rule at its supply's published row: chains.js)
   const armMk = sv ? servoArmMaker(d, catalog, 'twist', P.horn) : null;
-  for (const [t, side] of [['R', 'right'], ['L', 'left']]) for (const m of twistMembersSide(Ld, G, P, M, { glueAl, glueCf, sv: sv && { ...sv, armMk }, catalog }, t, side)) members.push(m);
+  // round 19: the servo's own mass (was 21.5 g, the MD89MW's, written in)
+  const svPart = byId(catalog, d.params.parts.twistServo), svKg = svPart.mass_g / 1000;
+  for (const [t, side] of [['R', 'right'], ['L', 'left']]) for (const m of twistMembersSide(Ld, G, P, M, { glueAl, glueCf, sv: sv && { ...sv, armMk }, svKg, catalog }, t, side)) members.push(m);
 }
 
-function twistMembersSide(Ld, G, P, M, { glueAl, glueCf, sv, catalog }, t, side) {
+function twistMembersSide(Ld, G, P, M, { glueAl, glueCf, sv, svKg, catalog }, t, side) {
   const Q = `twist_${t}`, Qth = `twist_angle_${t}`, yz = `root_yz_${t}`, rx = `root_x_${t}`, ke = G.ke, gi = G.gfi, gm = G.gfm;
   const Tr = [T_(Q, Ld.kTr)], FL = [T_(Q, Ld.kFL)], dRod = mm(gi.d1_mm), rH = mm(P.lever.hub_od_mm) / 2, pinD = P.lever.pin_d_mm;
   const Fpin = [T_(Q, Ld.kTr / dRod)], armLen = Math.hypot(G.armB.s - G.armA.s, G.armB.x - G.armA.x), f10 = Ld.fRib.at(-1);
@@ -736,9 +760,10 @@ function twistMembersSide(Ld, G, P, M, { glueAl, glueCf, sv, catalog }, t, side)
     // own rule at the supply's published row (chains.js servoArmMaker)
     ...(sv ? [{ name: `twist servo arm ${t}`, kind: 'arm', check: "maker's part", maker: sv.armMk, dims: { hole_mm: P.servo.hole_mm }, sections: [sect('F', FL), sect('T', [{ ch: Q, k: sv.linkage_ratio ?? 1 }])], uses: { F: 'F', T: 'T' }, note: `the maker's ${P.horn} on the servo's spline: the link's force at its ${P.servo.hole_mm} mm hole, and the servo's torque at the spline; no rating of its own is published (SPEC ruling "Maker's part")` }] : []),
     { name: `twist servo ${t} frame lips`, kind: 'plate', check: 'plate', material: M.al7, dims: { b_mm: +((G.caseDims[2] + mm(4)) * 1000).toFixed(1), t_mm: P.hanger.lip_mm }, sections: [sect('Mo', [...FL, ...Tcase].map((q) => T_(q.ch, q.k * lipH / 2)))], uses: { Mo: 'Mo' }, note: 'the case\'s chordwise push (the link\'s force and its torque as a couple over its length) on one lip, at half its depth' },
-    { name: `twist frame pins ${t}`, kind: 'pin', check: 'round', material: M.al7, dims: { d_mm: P.hanger.pin_d_mm }, sections: [sect('M', [...Tcase, T_(yz, 0.0215 / 0.11)].map((q) => T_(q.ch, (q.k * (caseL + 2 * mm(P.hanger.lip_mm))) / 4)))], uses: { M: 'M' }, note: 'an under pin across the case\'s length: the case\'s torque reaction as a couple over its length, and its own normal load (its mass share of the wing\'s root force, 21.5 g of about 110 g), simply supported' },
-    bond(`twist frame pin bonds ${t}`, glueAl, P.hanger.pin_d_mm, 2 * P.hanger.lip_mm, null, inert(0.0215, G.sCase), 'Araldite 2011 on aluminium: each pin in its two lips, the case\'s spanwise inertia'),
-    bond(`twist joiner ${t} inner sleeve bond`, glueCf, G.si.ro * 2000, P.joiner.inner_mm, [T_(Q, Ld.kTs + Ld.Re * G.e)], [...Melb.map((q) => T_(q.ch, (4 * q.k) / (G.si.ro * 2))), T_(rx, 1)], 'Araldite 2011 on CFRP (typical, half): the servo\'s reaction and the bar\'s elbow force about the spar as torsion; the elbow moment as the bond\'s axial shear (tau = M / (pi r^2 L), the spar\'s bending stress handed to the sleeve along it), and the hand wing\'s spanwise force'),
+    { name: `twist frame pins ${t}`, kind: 'pin', check: 'round', material: M.al7, dims: { d_mm: P.hanger.pin_d_mm }, sections: [sect('M', [...Tcase, T_(yz, svKg / 0.11)].map((q) => T_(q.ch, (q.k * (caseL + 2 * mm(P.hanger.lip_mm))) / 4)))], uses: { M: 'M' }, note: `an under pin across the case's length: the case's torque reaction (the servo's torque at its spline, at the four-bar's largest ratio) as a couple over its length, and its own normal load (its mass share of the wing's root force, ${(svKg * 1000).toFixed(1)} g of about 110 g), simply supported` },
+    bond(`twist frame pin bonds ${t}`, glueAl, P.hanger.pin_d_mm, 2 * P.hanger.lip_mm, null, inert(svKg, G.sCase), 'Araldite 2011 on aluminium: each pin in its two lips, the case\'s spanwise inertia'),
+    // round 19: the mount's reaction about the spar is the rod's torque (kTm), not the servo's (was kq / k_rod)
+    bond(`twist joiner ${t} inner sleeve bond`, glueCf, G.si.ro * 2000, P.joiner.inner_mm, [T_(Q, Ld.kTm + Ld.Re * G.e)], [...Melb.map((q) => T_(q.ch, (4 * q.k) / (G.si.ro * 2))), T_(rx, 1)], 'Araldite 2011 on CFRP (typical, half): the servo\'s reaction and the bar\'s elbow force about the spar as torsion; the elbow moment as the bond\'s axial shear (tau = M / (pi r^2 L), the spar\'s bending stress handed to the sleeve along it), and the hand wing\'s spanwise force'),
     bond(`twist joiner ${t} outer sleeve bond`, glueCf, G.so.ro * 2000, P.joiner.outer_mm, null, [...Melb.map((q) => T_(q.ch, (4 * q.k) / (G.so.ro * 2))), T_(rx, 1)], 'Araldite 2011 on CFRP (typical, half): the outer spar\'s elbow moment as the bond\'s axial shear, and its spanwise force'),
     { name: `twist joiner ${t} bay`, kind: 'beam', check: 'beam', material: M.al7, dims: U, sections: [sect('M', Melb), sect('F', [T_(rx, 1)])], uses: { M: 'M', F: 'F' }, note: 'the open-topped bay (its floor and two low walls) in the elbow moment, about its weaker axis, and the spanwise force' },
     { name: `twist joiner ${t} outer sleeve`, kind: 'tube', check: 'round', material: M.al7, dims: { d_mm: P.joiner.outer_od_mm, di_mm: G.so.ro * 2000 }, sections: [sect('M', Melb)], uses: { M: 'M' }, note: 'the thinnest sleeve in the elbow moment' },
@@ -761,7 +786,7 @@ function twistMembersSide(Ld, G, P, M, { glueAl, glueCf, sv, catalog }, t, side)
     bond(`twist tip arm ${t} socket bonds`, glueCf, G.arm.od_rate, P.tip.socket_mm, null, Marm.map((q) => T_(q.ch, (4 * q.k) / (G.arm.ro * 2))), 'Araldite 2011 on CFRP (typical, half): the arm\'s root moment as the bond\'s axial shear'),
     { name: `twist tip plate ${t}`, kind: 'plate', check: 'plate', material: M.al7, dims: { b_mm: 9, t_mm: P.tip.plate_t_mm }, sections: [sect('M', Rt.map((q) => T_(q.ch, q.k * (Math.abs(G.armB.x) - G.e + mm(4)))))], uses: { M: 'M' }, note: 'the bar\'s tip force from its hole to the arm\'s socket' },
     flange(`wing rib ${t} 10 on the tip plate`, M.balsa, 13.5, 0, inert(0.002, G.L), 'rib 10 pressed on the tip plate by its spanwise inertia (the plate\'s 9 x 16 mm face as a 13.5 mm disc)'),
-    bond(`twist spar root bond ${t} torsion`, glueCf, G.si.ro * 2000, 20, [T_(Q, Ld.kTs + Ld.Re * G.e)], null, 'Araldite 2011 on CFRP (typical, half): the twist drive\'s reaction (the servo\'s and the bar\'s elbow force about the spar) reaches the rocker through the inner spar\'s root bond in torsion (audit-v24 interface 14)'),
+    bond(`twist spar root bond ${t} torsion`, glueCf, G.si.ro * 2000, 20, [T_(Q, Ld.kTm + Ld.Re * G.e)], null, 'Araldite 2011 on CFRP (typical, half): the twist drive\'s reaction (the servo mount\'s, the rod\'s torque, and the bar\'s elbow force about the spar) reaches the rocker through the inner spar\'s root bond in torsion (audit-v24 interface 14)'),
   ];
   return out;
 }
@@ -971,6 +996,8 @@ export const TWIST_SECTION = {
   protrusions: [
     { re: '^twist servo arm [RL]$', Cd: 1.2, why: 'the R-ML25 (the maker\'s arm, 22 mm from the spline) at the top of the wing between ribs 5 and 6, under the covering as it twists there' },
     { re: '^twist rod end [RL] servo$', Cd: 1.2, why: 'the servo arm\'s rod end, beside it' },
+    // round 19: the link on the arm's outer (19 mm) hole, so its screw's head stands out beside the rod end
+    { re: '^twist servo arm screw [RL]$', Cd: 1.2, why: 'the screw holding the servo arm\'s rod end on the arm\'s 19 mm hole, its head beside the rod end' },
     { re: '^twist joiner [RL]$', Cd: 1.2, why: 'the servo frame\'s aft lip at the bottom of the wing at the largest nose-down twist (the covering between ribs 5 and 6 turns onto it)' },
     { re: '^twist frame pins [RL]$', Cd: 1.2, why: 'the frame\'s under pins, beside the lip' },
     { re: '^(leading|trailing) edge rod [RL]$', Cd: 1.2, why: 'the edge rods are the section\'s edges: the 1.5 mm trailing edge rod against the E387 design\'s 0.0017 c trailing edge, the 2 mm leading edge rod in the tip\'s nose' },
@@ -1023,13 +1050,16 @@ export function twistChains(asm, d, catalog, opts = {}) {
   if (!P) return [];
   const F = twistChainFigures(d, catalog), { G, K } = F, wing = d.wing, L = span(wing), el = wing.segments[0].length, sv = d.servos?.twist ?? {};
   const dem = flownDemands(d, opts), law = lawError(F, G, K, wing), comp = chainCompliance(d, catalog, F);
+  // round 19: the servo's own name and rows (were written in as the MD89MW's), and the arm's fit (refusing)
+  const svPart = byId(catalog, d.params.parts.twistServo), svName = servoLabel(svPart), rowsV = (svPart.specs.performance ?? []).map((r) => r.voltage_v).filter(Number.isFinite).sort((a, b) => a - b);
+  const fit = armFitFindings(P, catalog);
   const tipC = chordAtW(wing, L).c, axisErr = G.sparN * Math.sin(F.travel_rad);
   const ratios = Array.from({ length: 61 }, (_, i) => K.ratio(-F.servo_travel_rad + (2 * F.servo_travel_rad * i) / 60));
   const sides = [['R', 'right'], ['L', 'left']];
   return sides.map(([t]) => {
     const path = ['twist servo', 'twist servo arm', 'twist rod end # servo', 'twist link', 'twist rod end # lever', 'twist elbow lever', 'twist torque rod', 'twist tip hub', 'twist tip arm', 'twist tip plate'].map((n) => (n.includes('#') ? n.replace('#', t) : `${n} ${t}`));
     path.push(`rib ${t} 10`);
-    const findings = chainFindings(dem, sv, F, law, comp);
+    const findings = [...fit, ...chainFindings(dem, sv, F, law, comp, svName)];
     return {
       name: `twist ${t}`, actuator: { part: `twist servo ${t}`, bom: d.params.parts.twistServo, output: 'spline' }, path,
       also: { bar: [`twist tip plate ${t}`, `twist bar ${t}`, ...[6, 7, 8, 9].map((k) => `rib ${t} ${k}`)] },
@@ -1037,7 +1067,7 @@ export function twistChains(asm, d, catalog, opts = {}) {
         axis: { flown: { x_m: wing.spar_x, n_m: 0 }, drawn: { x_m: wing.spar_x, n_m: +G.sparN.toFixed(4) }, err: +axisErr.toFixed(5), tol: +(0.02 * tipC).toFixed(4), units: 'm: err is the section\'s largest displacement from the flown one at the full drawn travel, sparN sin(travel)', basis: `the strip model turns each section about its chord line at spar_x; the drawn pivot (the spar axis, x = spar_x exactly) is sparN above it, which moves a section at most sparN sin(travel) = ${(axisErr * 1000).toFixed(2)} mm (${(100 * axisErr / tipC).toFixed(2)}% of the tip chord): the tolerance is 2% of the tip chord` },
         ratio: { flown: sv.linkage_ratio ?? null, drawn: +F.ratio.toFixed(5), tol: 0.005, units: '-', basis: `the four-bar at its centre (${F.rod_ratio.toFixed(4)}) times the rod-to-tip factor ${F.kq.toFixed(4)}; over the servo's +-${(F.servo_travel_rad * 180 / Math.PI).toFixed(0)} deg it runs ${Math.min(...ratios).toFixed(3)}-${Math.max(...ratios).toFixed(3)} (the flight model holds the centre's: the larger torque at the wing)` },
         travel: { required_rad: dem.travel, delivered_rad: +F.travel_rad.toFixed(4), basis: `the four-bar solved at the servo's +-${(F.servo_travel_rad * 180 / Math.PI).toFixed(0)} deg; required: ${dem.basis}` },
-        torque: { required_Nm: dem.torque, available_Nm: sv.stall_Nm ?? null, row: { V: sv.volts ?? null, stall_Nm: sv.servo_stall_Nm ?? null, speed_rad_s: sv.servo_speed_rad_s ?? null, basis: 'the MD89MW\'s published rows at the regulator\'s lowest output (build.js regulatorServoSupply), between the 4.8 and 6.0 V rows' }, basis: `the servo's stall over the drawn ratio (at the wing); required: ${dem.basis}` },
+        torque: { required_Nm: dem.torque, available_Nm: sv.stall_Nm ?? null, row: { V: sv.volts ?? null, stall_Nm: sv.servo_stall_Nm ?? null, speed_rad_s: sv.servo_speed_rad_s ?? null, basis: `the ${svName}'s published rows (${rowsV.join(', ')} V) at the supply's lowest output ${sv.volts ?? '?'} V (build.js regulatorServoSupply), interpolated between the rows round it (no extrapolation)` }, basis: `the servo's stall over the drawn ratio (at the wing); required: ${dem.basis}` },
         speed: { required_rad_s: dem.rate, available_rad_s: sv.speed_rad_s ?? null, basis: 'the servo\'s no-load speed at its row times the drawn ratio; required: the trims\' dyn x 2 pi f' },
         law: { flown: 'w(s) th: w linear from 0 at the elbow to 1 at the tip', drawn: 'ribs 6-9: atan(xi sin th_r / (1 - xi (1 - cos th_r))) at xi of the bar from the joiner\'s hole to the tip plate\'s; rib 10: th_r', max_err: +law.max_err.toFixed(5), tol: +law.tol.toFixed(5), basis: `at the ribs over the full drawn travel; the tolerance is 2% of the drawn travel (the bar's own compliance is reported apart)` },
         stiffness: { flown: wing.twist_stiffness_Nm_rad ?? null, drawn: +twistStiffness(d, catalog).K_Nm_rad.toFixed(5), tol: 1e-3, rel: true, units: 'N m/rad', basis: 'the edge rods\' bending energy (twistStiffness)' },
@@ -1052,9 +1082,9 @@ export function twistChains(asm, d, catalog, opts = {}) {
 }
 
 /** What the chain cannot deliver against the flown demands, with numbers; and what the flight model does not model. */
-function chainFindings(dem, sv, F, law, comp) {
+function chainFindings(dem, sv, F, law, comp, svName = 'servo') {
   const out = [];
-  if (dem.torque !== null && dem.torque > sv.stall_Nm) out.push(`torque: the flown peak twist torque ${dem.torque.toFixed(3)} N m at the wing exceeds the MD89MW's ${sv.stall_Nm.toFixed(3)} N m (its ${(sv.servo_stall_Nm ?? 0).toFixed(3)} N m stall at ${sv.volts} V through ${F.ratio.toFixed(3)}:1)`);
+  if (dem.torque !== null && dem.torque > sv.stall_Nm) out.push(`torque: the flown peak twist torque ${dem.torque.toFixed(3)} N m at the wing exceeds the ${svName}'s ${sv.stall_Nm.toFixed(3)} N m (its ${(sv.servo_stall_Nm ?? 0).toFixed(3)} N m stall at ${sv.volts} V through ${F.ratio.toFixed(3)}:1)`);
   if (dem.rate !== null && dem.rate > sv.speed_rad_s) out.push(`speed: the flown schedule's peak twist rate ${dem.rate.toFixed(2)} rad/s exceeds the servo's no-load ${sv.speed_rad_s.toFixed(2)} rad/s at the wing (the twist lags; the flight model simulates it)`);
   if (dem.travel !== null && dem.travel > F.travel_rad) out.push(`travel: the controller can command ${dem.travel.toFixed(3)} rad of tip twist; the chain delivers +-${F.travel_rad.toFixed(3)} rad at the servo's +-${(F.servo_travel_rad * 180 / Math.PI).toFixed(0)} deg (the most its published 60 deg speed figure states; no travel is published); the flight model has no travel limit`);
   if (law.max_err > law.tol) out.push(`law: the ribs' twist differs from the flown w th by up to ${law.max_err.toFixed(4)} rad (tolerance ${law.tol.toFixed(4)})`);
@@ -1064,6 +1094,21 @@ function chainFindings(dem, sv, F, law, comp) {
   // round 17b (lead): the torque-speed saturation, the travel stop and the compliance are flown by the flight model
   // (flight.js), and the covering's interpolation is a note: reported, not refusing; the law's error refuses
   return out.map((x) => (/^(torque|speed|travel|compliance|covering):/.test(x) ? { text: x, flown: true } : x));
+}
+
+/**
+ * Round 19: the maker's arm as drawn must be the arm its maker publishes (refusing findings): the drawn hole one of its
+ * published hole radii, and the link's screw the arm's hole thread and the rod end's bore (so the M3 KBRM-03 is refused
+ * on the R-ML25's M2 tapped hole). -> [strings].
+ */
+export function armFitFindings(P, catalog) {
+  const hn = byId(catalog, P.horn).specs, ke = byId(catalog, P.rodEnd).specs, sc = screwGeom(catalog, P.screw), out = [];
+  const holes = hn.hole_radii_mm ?? [];
+  if (!holes.some((r) => Math.abs(r - P.servo.hole_mm) < 1e-6)) out.push(`arm: the link's hole is drawn at ${P.servo.hole_mm} mm from the spline; ${P.horn} publishes holes at ${holes.join(', ') || 'no radius'} mm`);
+  const th = /M\s*(\d+(?:\.\d+)?)/i.exec(String(hn.hole_thread ?? '')), dTh = th ? +th[1] : NaN, dScrew = sc.d * 1000;
+  if (!(Math.abs(dTh - dScrew) < 1e-6)) out.push(`arm: the link's screw is M${dScrew} and ${P.horn}'s hole is ${hn.hole_thread ?? 'not published'}`);
+  if (!(Math.abs((ke.bore_d1_mm ?? NaN) - dScrew) < 1e-6)) out.push(`rod end: ${P.rodEnd}'s ${ke.bore_d1_mm ?? '?'} mm bore on an M${dScrew} screw`);
+  return out;
 }
 
 /** The delivered law's largest error at the ribs over the travel, and the film's between rib 5 and rib 6 at the elbow. */

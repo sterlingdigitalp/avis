@@ -185,7 +185,9 @@ function af_shoulders(ax) {
     const rootX = [{ ch: `root_x_${w}`, k: 1 }];
     members.push({ name: `shoulder rail ${side}`, kind: 'shaft', check: 'round', material: rm, dims: { d_mm: ra.od_mm, di_mm: ra.id_mm }, sections: [...ms.map((q) => sect(q.name, q.radial)), sect('T', Trail), sect('V aft', RA), sect('V fwd', RB)], uses: { M: ms.map((q) => q.name), T: 'T', V: ['V aft', 'V fwd'] }, note: `a ${ra.od_mm}/${ra.id_mm} mm tube on the two plates (x ${(xA * 1000).toFixed(1)} and ${(xF * 1000).toFixed(1)} mm), the shoulder housings at x ${(xa * 1000).toFixed(1)} (overhung) and ${(xf * 1000).toFixed(1)} mm, ${ra.dz_mm} mm outboard and ${ra.dy_mm} mm above the hinge (the bracket arm, ${(dy * 1000).toFixed(1)} mm, gives the torsion)` });
     for (const [pl, R] of [['aft', RA], ['forward', RB]]) {
-      members.push({ name: `plate seat shoulder rail ${side} ${pl}`, kind: 'seat', check: 'lug', material: mat(L.plates.material), dims: { d_mm: ra.od_mm, D_mm: ra.seat_D_mm, t_mm: pl === 'aft' ? tAft + (ra.aft_boss_mm ?? 0) : tFwd }, sections: [sect('F', R)], uses: { F: 'F' } });
+      // round 19 (members3): a boss shaped like the lock flange (aft_boss_shape 'lock flange') is no ring of seat_D round
+      // the seat, so the lug is the plate's own thickness there; only the full seat ring (the default) thickens the lug
+      members.push({ name: `plate seat shoulder rail ${side} ${pl}`, kind: 'seat', check: 'lug', material: mat(L.plates.material), dims: { d_mm: ra.od_mm, D_mm: ra.seat_D_mm, t_mm: pl === 'aft' ? tAft + (seatRingBoss(ra) ? ra.aft_boss_mm ?? 0 : 0) : tFwd }, sections: [sect('F', R)], uses: { F: 'F' } });
       railPlates[pl === 'aft' ? 'aft' : 'fwd'].push(R);
     }
     for (const [nm, Fb] of [['aft', Faft], ['forward', Ffwd]]) {
@@ -201,7 +203,12 @@ function af_shoulders(ax) {
     screwSeat(`shoulder rail ${side}, torsion lock screws in the plate`, perScrewShear(lockG, [], Trail), lockFwd ? tFwd : tAft + (onBoss ? ra.aft_boss_mm ?? 0 : 0));
     counts.screws += ra.lock_screws; counts.nuts += ra.lock_screws;
     const railLen = gap + plateT + (xA - xa) + ra.sleeve_len_mm / 2000 + 0.002;
-    if (ra.aft_boss_mm) item(`shoulder rail ${side} aft seat boss`, mat(L.plates.material), PI4 * ((ra.seat_D_mm / 1000) ** 2 - (ra.od_mm / 1000) ** 2) * (ra.aft_boss_mm / 1000), `ring ${ra.seat_D_mm}/${ra.od_mm} x ${ra.aft_boss_mm} mm on the aft plate`);
+    if (ra.aft_boss_mm) {
+      // round 19 (members3, aft_boss_shape 'lock flange'): a pad under the lock flange (lockPadCircles: the hull of the
+      // rail and its screws, lock_edge_mm round each, the rail's bore through it), machined with the aft plate
+      const bossA = seatRingBoss(ra) ? PI4 * ((ra.seat_D_mm / 1000) ** 2 - (ra.od_mm / 1000) ** 2) : hullOf(lockPadCircles(ra, [0, 0], 1)).area_m2 - PI4 * (ra.od_mm / 1000) ** 2;
+      item(`shoulder rail ${side} aft seat boss`, mat(L.plates.material), bossA * (ra.aft_boss_mm / 1000), seatRingBoss(ra) ? `ring ${ra.seat_D_mm}/${ra.od_mm} x ${ra.aft_boss_mm} mm on the aft plate` : `a pad under the lock flange (${(bossA * 1e6).toFixed(0)} mm2: the hull of the rail and its screws, ${ra.lock_edge_mm} mm round each, less the rail's ${ra.od_mm} mm bore) x ${ra.aft_boss_mm} mm on the aft plate's aft face, machined with the plate`);
+    }
     const flangeOD = lockFlangeOD(ra);
     const flangeA = ra.lock_arc_deg ? hullOf(lockFlangeCircles(ra, [0, 0], 1)).area_m2 - PI4 * (ra.od_mm / 1000) ** 2 : PI4 * (flangeOD ** 2 - ra.od_mm ** 2) * 1e-6;
     item(`shoulder rail ${side}`, rm, PI4 * ((ra.od_mm / 1000) ** 2 - (ra.id_mm / 1000) ** 2) * railLen + flangeA * (ra.lock_t_mm ?? 2) / 1000, `${ra.od_mm}/${ra.id_mm} mm tube x ${(railLen * 1000).toFixed(1)} mm plus a ${ra.lock_t_mm ?? 2} mm lock flange (${(flangeA * 1e6).toFixed(0)} mm2); ${rm.density_g_cm3} g/cm3`);
@@ -705,6 +712,17 @@ function tailTies(ax) {
   counts.tieS += A.tail.ties;
 }
 
+/**
+ * Round 19 (members3): the ring a plate's outline hull takes round each rail seat (mm): the seat ring (seat_D), or on the
+ * aft plate with rail.aft_hull_D_mm a smaller one, the hull's edge between the two rails then that far below the
+ * shoulder pins' collars; the whole seat ring is the rail's lock ear there (lockEars), so the plate still holds it.
+ * Only on the plate the lock screws are on (the ear is that plate's).
+ */
+export function railHullD(A, plateName) {
+  const lockPlate = A.rail.lock_at === 'forward' ? 'fwd' : 'aft';
+  return plateName === 'aft' && lockPlate === 'aft' && Number.isFinite(A.rail.aft_hull_D_mm) ? Math.min(A.rail.aft_hull_D_mm, A.rail.seat_D_mm) : A.rail.seat_D_mm;
+}
+
 /** The circles a plate's outline is the hull of: every shaft seat, the motor's (forward), both rail seats, the panel lands. */
 function plateSeatCircles(ax, plateName) {
   const { catalog, jointByName, A, shafts, railPos, mo } = ax;
@@ -713,7 +731,7 @@ function plateSeatCircles(ax, plateName) {
   const named = { 'crank shaft': 0, 'gear shaft 1': 1, 'gear shaft 2': 2, 'gear shaft 3': 3 };
   for (const [nm, i] of Object.entries(named)) { const jt = jointByName(nm); if (jt && shafts[i]) out.push({ c: shafts[i], r: ringR(jt) }); }
   if (plateName === 'fwd') { const jt = jointByName('motor shaft outboard'); if (jt) out.push({ c: shafts[shafts.length - 1], r: Math.max(ringR(jt), (mo.circle_r_mm + 5) / 1000) }); }
-  for (const side of ['right', 'left']) out.push({ c: railPos[side], r: A.rail.seat_D_mm / 2000 });
+  for (const side of ['right', 'left']) out.push({ c: railPos[side], r: railHullD(A, plateName) / 2000 });
   // round 16 (plates.screw_edge_mm): the plate reaches that far round each of the trays' root screws it carries
   const G = ax.carriers?.geometry, e = (A.plates.screw_edge_mm ?? 0) / 1000;
   if (G && e) {
@@ -753,10 +771,13 @@ function lockEars(ax, pl, hull) {
   const { A, railPos } = ax, lockPlate = A.rail.lock_at === 'forward' ? 'fwd' : 'aft', er = (A.rail.lock_edge_mm ?? 0) / 1000;
   if (!er || !A.rail.lock_arc_deg || pl !== lockPlate) return [];
   const out = [];
-  // one ear per rail: the hull of its seat circle and the edge circles of its lands outside the plate's hull
+  // one ear per rail: the hull of its seat circle and the edge circles of its lands outside the plate's hull; round 19
+  // (members3, rail.aft_hull_D_mm): where the hull takes a smaller ring round the rail than its seat, the ear holds the
+  // whole seat ring even with every land inside the hull
+  const seatOut = railHullD(A, pl) < A.rail.seat_D_mm;
   for (const [side, sg] of [['right', 1], ['left', -1]]) {
     const outsiders = lockFlangeCircles(A.rail, railPos[side], sg).slice(1).filter((q) => !Array.from({ length: 36 }, (_, i) => [q.c[0] + er * Math.cos((i * Math.PI) / 18), q.c[1] + er * Math.sin((i * Math.PI) / 18)]).every((p) => insideConvex(hull, p)));
-    if (!outsiders.length) continue;
+    if (!outsiders.length && !seatOut) continue;
     const e = hullOf([{ c: railPos[side], r: A.rail.seat_D_mm / 2000 }, ...outsiders.map((q) => ({ c: q.c, r: er }))]);
     out.push({ rail: side, lands: outsiders.length, outline_m: e.poly.map(([z, y]) => [+z.toFixed(5), +y.toFixed(5)]), area_m2: e.area_m2 - convexArea(clipConvex(e.poly, hull)) });
   }
@@ -795,12 +816,20 @@ export function panelFlanges(A, planes, tA, tF) {
   const out = [];
   for (const q of A.panels.list) {
     if (!q.flanges) continue;
-    const t = q.t_mm / 1000, rects = q.flanges.map((r) => ({ z: r.z.map((v) => v / 1000), y: r.y.map((v) => v / 1000) }));
+    const t = q.t_mm / 1000, toM = (list) => list.map((r) => ({ z: r.z.map((v) => v / 1000), y: r.y.map((v) => v / 1000) }));
     const a = planes.plateAft + tA / 2, f = planes.plateFwd - tF / 2;
-    out.push({ part: `gearbox ${q.name}`, end: 'aft', x: [a, a + t], t, rects }, { part: `gearbox ${q.name}`, end: 'fwd', x: [f - t, f], t, rects });
+    out.push({ part: `gearbox ${q.name}`, end: 'aft', x: [a, a + t], t, rects: toM(q.flanges) }, { part: `gearbox ${q.name}`, end: 'fwd', x: [f - t, f], t, rects: toM(panelEndFlanges(q, 'fwd')) });
   }
   return out;
 }
+
+/**
+ * Round 19 (members3): a panel's flange rectangles (mm) at one end: q.flanges at the aft plate, q.flanges_fwd at the
+ * forward plate where stated (the two plates' faces are not crowded alike), else the same. -> [{ z, y }].
+ */
+export const panelEndFlanges = (q, end) => (end === 'fwd' && q.flanges_fwd ? q.flanges_fwd : q.flanges ?? []);
+/** Round 19 (members3): a flange list's area (mm2). */
+const flangeArea = (list) => list.reduce((a, r) => a + (r.z[1] - r.z[0]) * (r.y[1] - r.y[0]), 0);
 
 /**
  * Round 16 (boom.screw_edge_mm): a boom clamp's screw flange below its collar, wide and deep enough that each of its
@@ -903,13 +932,15 @@ function af_panels(ax) {
     members.push({ name: `gearbox ${q.name}`, kind: 'panel', check: 'panel', material: pm, dims: { h_mm: h, b_mm: +(gap * 1000).toFixed(2), t_mm: q.t_mm }, sections: [sect('V', V)], uses: { V: 'V' }, note: q.kind === 'side' ? `x-y plane at z ${q.z_mm} mm, y ${q.y0_mm} to ${q.y0_mm + q.h_mm} mm: half the forward plate's net force (every force on it summed as a magnitude) plus its torsion about the crank axis over the sides' ${(W * 1000).toFixed(0)} mm spacing` : `x-z plane at y ${q.y_mm} mm, ${q.w_mm} mm wide: the forward plate's whole net force` });
     // round 16 (q.flanges): each end's flange the stated rectangles on the plate's inner face, the sheet between the inner
     // faces (as the assembly check draws them); the bond over the flange's own area
-    const fa = q.flanges ? q.flanges.reduce((a, r) => a + (r.z[1] - r.z[0]) * (r.y[1] - r.y[0]), 0) : null;
-    members.push({ name: `gearbox ${q.name} flange bond`, kind: 'bond', check: 'lap', material: glueAl, dims: { w_mm: h, L_mm: fa ? +(fa / h).toFixed(3) : pn.flange_mm }, sections: [sect('F', V)], uses: { F: 'F' }, note: fa ? `Araldite 2011 aluminium to aluminium, one end flange of ${fa.toFixed(0)} mm2 on the plate's inner face (each end has one), as a ${h} mm wide lap of the same area` : 'Araldite 2011 aluminium to aluminium, one end flange (each end has one)' });
+    // round 19 (members3): each end its own flange (panelEndFlanges); the bond is judged on the smaller, both carrying V
+    const faA = q.flanges ? flangeArea(panelEndFlanges(q, 'aft')) : null, faF = q.flanges ? flangeArea(panelEndFlanges(q, 'fwd')) : null;
+    const fa = q.flanges ? Math.min(faA, faF) : null;
+    members.push({ name: `gearbox ${q.name} flange bond`, kind: 'bond', check: 'lap', material: glueAl, dims: { w_mm: h, L_mm: fa ? +(fa / h).toFixed(3) : pn.flange_mm }, sections: [sect('F', V)], uses: { F: 'F' }, note: fa ? `Araldite 2011 aluminium to aluminium, one end flange of ${fa.toFixed(0)} mm2 on the plate's inner face (each end has one${faA !== faF ? `: aft ${faA.toFixed(0)}, forward ${faF.toFixed(0)} mm2, the smaller taken` : ''}), as a ${h} mm wide lap of the same area` : 'Araldite 2011 aluminium to aluminium, one end flange (each end has one)' });
     const inner = (planes.plateFwd - tFwd / 2000) - (planes.plateAft + tAft / 2000);
-    panelV += fa ? (h * 1e-3 * inner + 2 * fa * 1e-6) * (q.t_mm / 1000) : h * 1e-3 * (gap + 2 * pn.flange_mm / 1000) * (q.t_mm / 1000);
+    panelV += fa ? (h * 1e-3 * inner + (faA + faF) * 1e-6) * (q.t_mm / 1000) : h * 1e-3 * (gap + 2 * pn.flange_mm / 1000) * (q.t_mm / 1000);
   }
   const anyF = pn.list.some((q) => q.flanges);
-  item(`gearbox panels, ${pn.list.length} off`, pm, panelV, anyF ? `${pn.list.map((q) => `${q.name} ${q.kind === 'side' ? q.h_mm : q.w_mm} x ${q.t_mm} mm, its flanges ${q.flanges.reduce((a, r) => a + (r.z[1] - r.z[0]) * (r.y[1] - r.y[0]), 0).toFixed(0)} mm2 each end`).join('; ')}; each between the plates' inner faces (${(((planes.plateFwd - tFwd / 2000) - (planes.plateAft + tAft / 2000)) * 1000).toFixed(1)} mm); ${pm.density_g_cm3} g/cm3` : `${pn.list.map((q) => `${q.name} ${q.kind === 'side' ? q.h_mm : q.w_mm} x ${q.t_mm} mm`).join(', ')}, each ${(gap * 1000).toFixed(1)} mm plus two ${pn.flange_mm} mm flanges; ${pm.density_g_cm3} g/cm3`, { count: pn.list.length });
+  item(`gearbox panels, ${pn.list.length} off`, pm, panelV, anyF ? `${pn.list.map((q) => `${q.name} ${q.kind === 'side' ? q.h_mm : q.w_mm} x ${q.t_mm} mm, its flanges ${q.flanges_fwd ? `${flangeArea(panelEndFlanges(q, 'aft')).toFixed(0)} mm2 aft, ${flangeArea(panelEndFlanges(q, 'fwd')).toFixed(0)} mm2 forward` : `${flangeArea(q.flanges).toFixed(0)} mm2 each end`}`).join('; ')}; each between the plates' inner faces (${(((planes.plateFwd - tFwd / 2000) - (planes.plateAft + tAft / 2000)) * 1000).toFixed(1)} mm); ${pm.density_g_cm3} g/cm3` : `${pn.list.map((q) => `${q.name} ${q.kind === 'side' ? q.h_mm : q.w_mm} x ${q.t_mm} mm`).join(', ')}, each ${(gap * 1000).toFixed(1)} mm plus two ${pn.flange_mm} mm flanges; ${pm.density_g_cm3} g/cm3`, { count: pn.list.length });
 
 }
 
@@ -1004,6 +1035,18 @@ function clearances(cx, railPos, A) {
   }
   out.panels = panels;
   return out;
+}
+
+/** Round 19 (members3): whether the rail's aft seat boss is the full seat ring (seat_D round the rail), else a pad under the lock flange. */
+export const seatRingBoss = (ra) => ra.aft_boss_shape !== 'lock flange';
+/**
+ * Round 19 (members3, rail.aft_boss_shape 'lock flange'): the circles the pad under a rail's lock flange is the hull of:
+ * the flange's own circle round the rail and each lock screw with lock_edge_mm round it (the plate's ear gives the
+ * screws that edge; the pad must too, for the screws' seat at e/d 2 in plate and pad: airframe.js screwSeat).
+ */
+export function lockPadCircles(ra, c, sg) {
+  const e = (ra.lock_edge_mm ?? 3.5) / 1000;
+  return lockFlangeCircles(ra, c, sg).map((q, i) => (i === 0 ? q : { c: q.c, r: Math.max(q.r, e) }));
 }
 
 /**

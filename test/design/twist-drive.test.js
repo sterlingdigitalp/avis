@@ -79,8 +79,9 @@ test('the section record holds the drawn wing inside the E387 with its declared 
   const ok = sectionRecord(D, catalog, TWIST_SECTION);
   assert.ok(ok.passed, `undeclared: ${ok.undeclared.join(', ')}`);
   for (const p of ok.protrusions) assert.ok(p.declared && Number.isFinite(p.CdA_m2));
-  // the servo raised 10 mm: its case stands out of the upper surface, and nothing declares it
-  const up = withDrive({ servo: { spline_n_mm: 12 } });
+  // the servo raised 12 mm: its case stands out of the upper surface, and nothing declares it (round 19: 12 mm, not
+  // 10, since the round-19 chain's travel, 0.54 rad, turns the covering there less than round 17's 0.675 rad)
+  const up = withDrive({ servo: { spline_n_mm: 14 } });
   const bad = sectionRecord(up, catalog, TWIST_SECTION);
   assert.equal(bad.passed, false);
   assert.ok(bad.undeclared.includes('twist servo R'), bad.undeclared.join(', '));
@@ -131,8 +132,12 @@ test('the members carry their loads on the twist and wing channels, and the chai
   const chans = new Set(members.flatMap((m) => m.sections.flatMap((s) => s.radial.map((q) => q.ch))));
   for (const c of ['twist_R', 'twist_L', 'root_yz_R', 'root_x_L', 'elbow_R', 'elbow_L']) assert.ok(chans.has(c), c);
   const L = twistLoads(D, catalog);
-  // the rod carries the tip's torque, the servo it over the four-bar's smallest ratio, and the ribs' shares sum to Q
-  assert.ok(Math.abs(L.kTs - L.kq / L.kRod) < 1e-12 && L.kRod >= L.kRod0 - 1e-9);
+  // the rod carries the tip's torque; the servo its torque times the four-bar's largest ratio (round 19: virtual work,
+  // Ts dtheta_s = Tr dtheta_rod; by statics at the centre, where both arms are square to the link, Ts / Tr = r_s / r_l,
+  // which the old Tr / k_rod inverted); the mount's reaction about the spar is the rod's; the ribs' shares sum to Q
+  const { G } = twistContext(D, catalog);
+  assert.ok(L.kTs >= L.kq * (G.rs / G.rl) * (1 - 1e-3), `${L.kTs} vs ${L.kq * G.rs / G.rl}`);
+  assert.ok(Math.abs(L.kTs - L.kq * L.kRodMax) < 1e-12 && L.kRodMax >= L.kRod0 - 1e-9 && L.kTm === L.kTr);
   const w = (s) => (s - D.wing.segments[0].length) / D.wing.segments[1].length;
   assert.ok(Math.abs(L.a.reduce((acc, a, j) => acc + a * w(L.hand[j]), 0) - 1) < 1e-9);
   // at v24's flown peaks (twist 0.584 N m, elbow 5.913 N m, M7) and generous root loads every rated member holds FoS 1.5
@@ -146,7 +151,8 @@ test('the chain record: the path is joined pair by pair, its figures are the dra
   const { joins } = drawnLines(D, catalog), pairs = new Set(joins.map(([a, b]) => [a.split('/')[0], b.split('/')[0]].sort().join('|')));
   const F = twistChainFigures(D, catalog), d = structuredClone(D);
   d.servos.twist = { ...d.servos.twist, linkage_ratio: F.ratio, stall_Nm: 0.60604 / F.ratio, speed_rad_s: 7.588 * F.ratio, servo_stall_Nm: 0.60604, volts: 5.76 };
-  const [r] = twistChains(null, d, catalog, { twistTorque_Nm: 0.584, travel_rad: 0.977, twistRate_rad_s: 9, basis: 'test' });
+  // round 19: a demand above the chain's stall at the wing (the published 0.606 N m over the drawn ratio, x 1.2)
+  const [r] = twistChains(null, d, catalog, { twistTorque_Nm: 1.2 * (0.60604 / F.ratio), travel_rad: 0.977, twistRate_rad_s: 9, basis: 'test' });
   assert.equal(r.name, 'twist R');
   for (let i = 0; i + 1 < r.path.length; i++) assert.ok(pairs.has([r.path[i], r.path[i + 1]].sort().join('|')), `${r.path[i]} | ${r.path[i + 1]}`);
   assert.ok(Math.abs(r.figures.ratio.drawn - r.figures.ratio.flown) <= r.figures.ratio.tol);

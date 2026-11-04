@@ -1,9 +1,11 @@
 // Mass properties from the drawn solids (SPEC "Design freeze", "Function completeness", 2026-11-03: each lump's CG lies
 // within 1 mm of the centroid of its drawn parts, its inertia follows them, and a hard-coded position is a failure).
 // A lump's BOM lines (build.js lump.lines) name the solids it stands for (each solid tagged with its line, round 16);
-// a line's mass is spread over its solids by volume, and each solid is the prism the assembly check reads (its section
-// in the body's (z, y) plane over its x range), or for a tube along another axis (solid.tube) that tube itself. The
-// covering film, which has no solid, is spread over the loft's surface.
+// a bought part's line puts its unit mass on each drawn piece (round 19), a structure line is spread over its solids
+// by volume, a piece's mass over its own solids by volume, and each solid is the prism the assembly check reads (its
+// section in the body's (z, y) plane over its x range), or for a tube along another axis (solid.tube) that tube
+// itself. The covering film, which has no solid, is spread over the loft's surface. Round 19: a lump's lines must weigh
+// the lump's own mass (MASS_TOL_G), so a part id on BOM rows of several roles cannot put another row's pieces into it.
 //
 // Inertia is about the lump's own centroid, in body axes, in flight.js's accumulator form
 // [Ixx, Iyy, Izz, -Ixy, -Ixz, -Iyz] (the products stored with flight.js's sign), per kg of the lump: the build
@@ -159,52 +161,95 @@ export function massPropsRecord(asm, d, catalog, q0, { tol = CG_TOL_M } = {}) {
     sols.get(k).push({ ...s, part: p.id });
   }
   const films = { pod: loftSurfaceProps(d.body?.loft), tail: tailSurfaceProps(d.tail) };
-  const rows = d.mass.lumps.map((l) => lumpRow(l, byKey, sols, films, lines, q0, tol));
+  const margin = d.mass.margin_frac ?? 0;
+  const rows = d.mass.lumps.map((l) => lumpRow(l, byKey, sols, films, lines, q0, tol, margin));
   const failed = rows.filter((r) => !r.ok).map((r) => r.lump);
   return {
     rule: 'SPEC Design freeze, Function completeness (2026-11-03): each lump\'s CG within 1 mm of the centroid of its drawn parts, its inertia from them; a hard-coded position is a failure',
-    method: 'src/design/massprops.js: each BOM line\'s mass (margin included) spread over its tagged solids by volume, the solids as the assembly check reads them at the drive pose of phase 0 (a tube along the span as that tube); the covering film over the loft\'s surface',
-    tol_mm: tol * 1000,
+    method: 'src/design/massprops.js: each BOM line\'s mass (margin included) on its tagged solids: a bought part\'s unit mass on each of its drawn pieces (round 19), a structure line by volume, each piece\'s mass over its solids by volume; the solids as the assembly check reads them at the drive pose of phase 0 (a tube along the span as that tube); the covering film over the loft\'s surface; a lump whose lines\' drawn mass is not its own mass (a part id shared by BOM rows of several roles, named without a part filter) fails',
+    tol_mm: tol * 1000, mass_tol_g: MASS_TOL_G,
     rows, failed, passed: failed.length === 0,
   };
 }
 
 /**
  * A lump's line reference: a BOM line's key or tag, or (round 17) 'tag@<part regex>', the line's solids on the parts
- * whose ids match (a line shared by two lumps: the MD89MW drives the tail and the twist), with the line's mass shared
- * by volume. -> { key, re }.
+ * whose ids match (a line shared by two lumps: the MD89MW drives the tail and the twist), with those pieces' own mass
+ * (linePieces). -> { key, re }.
  */
 function lineRef(t, byKey, lines) {
   const at = t.indexOf('@'), tag = at < 0 ? t : t.slice(0, at), re = at < 0 ? null : new RegExp(t.slice(at + 1));
   return { key: byKey.has(tag) ? tag : resolveTag(lines, tag), re };
 }
 
-function lumpRow(l, byKey, sols, films, lines, q0, tol) {
-  const refs = (l.lines ?? []).map((t) => lineRef(t, byKey, lines)), acc = { m: 0, s: [0, 0, 0], I: [0, 0, 0, 0, 0, 0] };
-  const missing = [], used = [];
+/**
+ * The masses a line puts on the solids `ss` (of its solids `all`): [{ m (g), s (the solid) }], or null with no volume.
+ * Round 19: a bought part's line (bomLines kind 'part': identical catalogue pieces) puts its unit mass (line mass over
+ * its count) on each drawn item (solid.item, else its part, as completeness.js counts them), spread over that item's
+ * solids by volume, so a part filter takes exactly its own items' mass however each item is drawn; a line sized from a
+ * material (structure) is spread by volume, its mass being its volume's. Each piece of a bought part weighs its unit
+ * mass wherever it is drawn: before round 19 a filtered share was the line's mass by volume, so two drawings of one
+ * part (the R-ML25 arm cut down on the tail servo) put the wrong mass on each.
+ */
+function linePieces(line, all, ss, q0) {
+  const pr = new Map(ss.map((s) => [s, solidProps(s, q0)]));
+  const V = [...pr.values()].reduce((a, q) => a + q.V, 0);
+  if (!(V > 0)) return null;
+  const itemOf = (s) => s.item ?? s.part, items = new Map();
+  for (const s of all) items.set(itemOf(s), (items.get(itemOf(s)) ?? 0) + (pr.get(s) ?? solidProps(s, q0)).V);
+  if (line.kind === 'part' && items.size === line.count && [...items.values()].every((v) => v > 0)) {
+    const unit = line.mass_g / line.count;
+    return ss.map((s) => ({ s, q: pr.get(s), m: (unit * pr.get(s).V) / items.get(itemOf(s)) }));
+  }
+  // by volume (a structure line, or a part line whose drawn items do not match its count: completeness fails it)
+  const Vall = ss.length === all.length ? V : all.reduce((a, s) => a + (pr.get(s) ?? solidProps(s, q0)).V, 0);
+  return ss.map((s) => ({ s, q: pr.get(s), m: (line.mass_g * pr.get(s).V) / Vall }));
+}
+
+/** The largest difference (g) between a lump's mass and its lines' drawn mass with the margin: rounding only. */
+export const MASS_TOL_G = 0.01;
+
+/** A covering line with no solids: its surface (the pod's loft, the tail's planform), or null. */
+const filmOf = (line, films) => (!line.exempt ? null : /film shell/.test(line.name) ? films.pod : /^tail film/.test(line.name) ? films.tail : null);
+
+/**
+ * A lump's lines (refs) on their solids, added to acc. -> { missing, used, bareShared }: what has no solids, the lines
+ * used, and the part ids on BOM rows of several roles named without a part filter.
+ */
+function addLines(refs, byKey, sols, films, q0, acc) {
+  const missing = [], used = [], bareShared = [];
   for (const { key: k, re } of refs) {
     const line = k ? byKey.get(k) : null;
     if (!line) { missing.push('a line the lump names is not in the BOM'); continue; }
     const all = sols.get(k) ?? [], ss = re ? all.filter((s) => re.test(s.part)) : all;
-    if (!ss.length) {
-      const film = line.exempt ? (/film shell/.test(line.name) ? films.pod : /^tail film/.test(line.name) ? films.tail : null) : null;
-      if (film) { accumulate(acc, line.mass_g, film.c, film.I_per_m2.map((v) => v * line.mass_g)); used.push(`${k} (over its surface)`); continue; }
-      missing.push(`${k}: no solids`);
-      continue;
-    }
-    const pr = ss.map((s) => solidProps(s, q0)), V = pr.reduce((a, q) => a + q.V, 0);
-    if (!(V > 0)) { missing.push(`${k}: no volume`); continue; }
-    // the line's share on these parts (all of it without a part filter)
-    const Vall = re ? all.reduce((a, s) => a + solidProps(s, q0).V, 0) : V, share = line.mass_g * (V / Vall);
-    for (const q of pr) { const m = (share * q.V) / V; accumulate(acc, m, q.c, q.J.map((v) => (v * m) / q.V)); }
+    const film = ss.length ? null : filmOf(line, films);
+    if (film) { accumulate(acc, line.mass_g, film.c, film.I_per_m2.map((v) => v * line.mass_g)); used.push(`${k} (over its surface)`); continue; }
+    const pieces = ss.length ? linePieces(line, all, ss, q0) : null;
+    if (!pieces) { missing.push(`${k}: ${ss.length ? 'no volume' : 'no solids'}`); continue; }
+    for (const { q, m } of pieces) accumulate(acc, m, q.c, q.J.map((v) => (v * m) / q.V));
+    if (!re && new Set(line.roles ?? []).size > 1) bareShared.push(`${k} (BOM rows: ${line.roles.join('; ')})`);
     used.push(re ? `${k} (on ${re.source})` : k);
   }
+  return { missing, used, bareShared };
+}
+
+function lumpRow(l, byKey, sols, films, lines, q0, tol, margin) {
+  const refs = (l.lines ?? []).map((t) => lineRef(t, byKey, lines)), acc = { m: 0, s: [0, 0, 0], I: [0, 0, 0, 0, 0, 0] };
+  const { missing, used, bareShared } = addLines(refs, byKey, sols, films, q0, acc);
   if (!l.lines?.length) missing.push('the lump names no BOM lines');
   const g = acc.m > 0 ? central(acc) : null;
   const err = g ? Math.hypot(...l.pos.map((v, i) => v - g.c[i])) : Infinity;
-  const ok = !missing.length && err <= tol + 1e-12;
+  // Round 19: the lump's drawn mass (its lines' masses on their solids, with the margin the build adds) must be the
+  // lump's own mass. A part id on BOM rows of several roles (the KBRM-02 rod ends and M2 x 6 screws of both the tail
+  // and the twist drive), named by a lump without a part filter, put every row's pieces into that lump's centroid; it
+  // now refuses, naming the line ('id@<part regex>' names only this lump's pieces).
+  const drawnG = acc.m * (1 + margin), massErr = drawnG - l.mass_kg * 1000;
+  const massOk = !g || Math.abs(massErr) <= MASS_TOL_G;
+  const ok = !missing.length && massOk && err <= tol + 1e-12;
   return {
     lump: l.name, mass_g: +(l.mass_kg * 1000).toFixed(2), lines: used, missing,
+    drawn_mass_g: +drawnG.toFixed(3),
+    ...(massOk ? {} : { mass_mismatch: `its lines weigh ${drawnG.toFixed(3)} g on their solids (margin ${margin} included), the lump ${(l.mass_kg * 1000).toFixed(3)} g${bareShared.length ? `: named without a part filter, a part id on BOM rows of several roles puts every row's pieces here: ${bareShared.join(', ')}` : ''}` }),
     pos_mm: l.pos.map((v) => +(v * 1000).toFixed(2)), drawn_mm: g ? g.c.map((v) => +(v * 1000).toFixed(2)) : null,
     err_mm: Number.isFinite(err) ? +(err * 1000).toFixed(3) : null, ok,
     // per kg (g.m in grams: I in g m2 -> per kg divide by g.m)

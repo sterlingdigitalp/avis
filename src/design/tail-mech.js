@@ -17,6 +17,7 @@ import { fastenerGeometry, shapeArea } from './completeness.js';
 import { E387_THICKNESS } from '../../sims/avis-shared/model.js';
 import { servoArmMaker } from './chains.js'; // round 18: the maker's-part condition
 import { MAKERS_PART_RULE } from './interfaces.js'; // round 18
+import { podGeometry, podParams, sectionAt, loftGap, polarOf, insetPoint } from './pod-structure.js'; // round 19: the exit guides
 
 const mm = (v) => v / 1000;
 const add2 = (p, q, k = 1) => [p[0] + k * q[0], p[1] + k * q[1]];
@@ -199,7 +200,11 @@ export function tailMechParts(ax, servoBox) {
     for (const sl of ss.filter((s) => /^shank/.test(s.name))) { join(`${sid2}/${sl.name}`, eS, THROUGH); join(`${sid2}/${sl.name}`, aid, THREAD); }
     // the pushrod between the two rod ends' shank ends, with an end plug bonded in each end, its stud in the rod end
     const A = { x: xs - Lsh, p: [zH, armY[1] + mm(ke.B_mm) / 2] }, B = { x: xq + Lsh, p: add2(add2(o, u, sE), v, nE) };
-    const ts = tubeSpec(byId(catalog, P.pushrod)), pr = pushrodPieces(A, B, mm(ts.od_draw) / 2, mm(ts.id_draw) / 2, mm(P.plug_len));
+    // round 19 (decision 2, the pod's through-flow sealed): its exit guide, when the design states one and has a pod
+    // (on the rod's true axis, ball to ball: the rod ends' shanks are drawn along x, so the drawn tube A-B lies up to
+    // ~1 mm off it at the exit; the clearance check sees the drawn tube in the guide, the travel row the true one)
+    const S0 = { x: xs, p: A.p }, H0 = { x: xq, p: B.p }, eg = exitGuideOf(d, catalog, S0, H0, P);
+    const ts = tubeSpec(byId(catalog, P.pushrod)), pr = pushrodPieces(A, B, mm(ts.od_draw) / 2, mm(ts.id_draw) / 2, mm(P.plug_len), 0.02, ...guideZone(eg, S0, H0));
     // the direction its assembly step brings it in along (unit [x, y, z]): from forward and above, half as much along
     // the surface's normal on the horn's side as along x (nothing along the pivot axis), so the horn's rod end comes
     // along the arm's face and its shank from ahead of the arm, and the servo's comes onto its arm from above
@@ -212,6 +217,7 @@ export function tailMechParts(ax, servoBox) {
       join(plug, rodId, 'bonded in the tube\'s end'); join(plug, eye, 'its stud in the rod end\'s thread'); join(`${plug}/stud`, eye, THREAD);
       join(rodId, eye, 'its end on the rod end\'s shank');
     }
+    if (eg) guideParts(ax, eg, { tag, o, u, v, sE, nE, xs, zs, zH, A }, G, P);
     // ribs on the pivot tube from the root rib (its face on the outer flange) to the tip, the trailing edge rod through them
     const rs = ribs(G.sRoot);
     const te = add(`tail trailing edge rod ${tag}`, rs.slice(0, -1).map((a, k) => {
@@ -223,7 +229,7 @@ export function tailMechParts(ax, servoBox) {
       const id = add(`tail rib ${tag} ${k + 1}`, [{ ...S('rib', [xq - 0.75 * c + 2 * r, xq + 0.25 * c], rect(o, u, v, [s - G.tRib / 2, s + G.tRib / 2], [-h / 2, h / 2])), envelope: true, rib_t: G.tRib }], { bom: 'tail ribs' });
       join(id, pid, 'bonded on the tube'); join(id, pid, RIB_HOLE); join(id, te, RIB_HOLE); join(id, pinId, RIB_HOLE);
     });
-    rows.push({ tag, o, u, v, sE, nE, xs, zs, zH, armY, A, B, pushrod_L: pr.L, ribs: rs });
+    rows.push({ tag, o, u, v, sE, nE, xs, zs, zH, armY, A, B, pushrod_L: pr.L, ribs: rs, ...guideRow(eg) });
   }
   add('tail saddle', saddle, { bom: 'tail saddle' });
   join('tail saddle', 'tail boom', 'bonded on the boom\'s end');
@@ -232,21 +238,155 @@ export function tailMechParts(ax, servoBox) {
   return { G, rows, P };
 }
 
+/** Round 19: the design's exit guide on this rod's true axis (S0 to H0), when it states one and has a pod; else null. */
+const exitGuideOf = (d, catalog, S0, H0, P) => (P.guide && d.params.pod ? exitGuide(d, catalog, S0, H0, P) : null);
+/** The pushrod's fine breaks and their line (pushrodPieces' last two arguments) for an exit guide eg, or none. */
+const guideZone = (eg, S0, H0) => (eg ? [eg.rodBreaks, { A: S0, B: H0 }] : [[], null]);
+/** The mechanism row's guide figures (its x range, true length, lug volume and leak), or nothing. */
+const guideRow = (eg) => (eg ? { guide: { x: eg.x, L: eg.L, lug_mm3: eg.lug.volume_m3 * 1e9, leak_m2: eg.leak_m2 } } : {});
+
+/**
+ * Round 19: an exit guide's parts (tail-mech.js exitGuide): the guide (its pieces on the pushrod's own breaks, concentric
+ * with its true-axis pieces there) and its lug on the former's aft face (the guide passes inside the former's band); the
+ * film is closed round the guide where it crosses the skin (pod-structure.js holders). The guide states its seal: the
+ * window it replaces, its leak, its clearance and the rod's excursion over the commanded travel (the covering record's
+ * exit seal row).
+ */
+function guideParts({ d, add, join }, eg, row, G, P) {
+  const tag = row.tag, exc = pushrodExcursion(row, G, d.tail.deflection_max_rad, eg.stations);
+  const seal = { replaces: `tail pushrod exit ${tag}`, leak_m2: eg.leak_m2, leak_basis: eg.leak_basis, clearance_m: eg.clear_m, excursion_m: exc, travel_basis: `the pushrod's true line over the commanded travel (+-${(d.tail.deflection_max_rad * 180 / Math.PI).toFixed(1)} deg at the surface: the servo arm's and the horn's arcs, the rod's length held) against its drawn-zero line, at the guide's stations`, lug: `tail pushrod guide lug ${tag}`, lug_bond_mm2: P.guide.lug_bond.w_mm * P.guide.lug_bond.L_mm, former: eg.former };
+  const gid = add(`tail pushrod guide ${tag}`, eg.solids, { bom: 'tail pushrod guides', slide: eg.dir, seal });
+  const lid = add(`tail pushrod guide lug ${tag}`, [S('lug', eg.lug.x, eg.lug.shape)], { bom: 'tail pushrod guide lugs' });
+  join(gid, lid, 'bonded in its lug\'s hole');
+  join(lid, eg.former, 'bonded on the former\'s aft face');
+}
+
 /**
  * A straight pushrod from A to B (x and the (z, y) centre at each end) as x-pieces: an end piece `endLen` long at each
  * end (its plug's), the rest at most 20 mm; each a ring round the piece's mid-point that holds the tube's slope over
  * the piece (its outside grown by half the piece's offset; its bore drawn at the tube's own).
  */
-export function pushrodPieces(A, B, ro, ri, endLen, piece = 0.02) {
+export function pushrodPieces(A, B, ro, ri, endLen, piece = 0.02, fine = [], fineLine = null) {
   const dx = B.x - A.x, L = Math.hypot(dx, B.p[0] - A.p[0], B.p[1] - A.p[1]), Lx = Math.abs(dx), e = Math.min(endLen, Lx / 3) / Lx;
-  const n = Math.max(1, Math.ceil((Lx * (1 - 2 * e)) / piece)), ts = [0, ...Array.from({ length: n + 1 }, (_, k) => e + (k / n) * (1 - 2 * e)), 1];
-  const at = (t) => [A.p[0] + t * (B.p[0] - A.p[0]), A.p[1] + t * (B.p[1] - A.p[1])];
+  // round 19: `fine` (x stations, m) are breaks of their own (the exit guide's, so its pieces and the rod's are
+  // concentric); between the outermost of them every piece is one of theirs, elsewhere at most `piece` long
+  const tf = [...new Set(fine.map((x) => +((x - A.x) / dx).toFixed(12)))].filter((t) => t > e + 1e-9 && t < 1 - e - 1e-9).sort((p, q) => p - q);
+  const ts = pieceBreaks(e, tf, Lx, piece);
+  const at0 = lineOf(A, B);
+  // round 19: in the fine zone, on fineLine ({ A, B }: the rod's true axis, where it slides in its exit guide; the rod
+  // ends' shanks are drawn along x, which puts the tube A-B elsewhere up to ~1.8 mm off that axis)
+  const fl = fineLine && tf.length ? fineLine : null, inZone = (t0, t1) => !!fl && t0 >= tf[0] - 1e-12 && t1 <= tf.at(-1) + 1e-12;
+  const atF = fl ? lineOf(fl.A, fl.B) : null, kF = fl ? Math.hypot(fl.B.x - fl.A.x, fl.B.p[0] - fl.A.p[0], fl.B.p[1] - fl.A.p[1]) / Math.abs(fl.B.x - fl.A.x) : 0;
   const solids = ts.slice(0, -1).map((t0, k) => {
-    const t1 = ts[k + 1], c = at((t0 + t1) / 2), half = Math.hypot(...at(t1).map((v, i) => v - at(t0)[i])) / 2;
-    const x0 = A.x + t0 * dx, x1 = A.x + t1 * dx;
-    return { ...S(`piece ${k + 1}`, [Math.min(x0, x1), Math.max(x0, x1)], ring(c, ro + half, ri)), tube: { ro, ri, L: L * (t1 - t0), axis: 'x' } };
+    const t1 = ts[k + 1], x0 = A.x + t0 * dx, x1 = A.x + t1 * dx, z = inZone(t0, t1), at = z ? atF : at0;
+    const c = at((x0 + x1) / 2), half = Math.hypot(...at(x1).map((v, i) => v - at(x0)[i])) / 2;
+    return { ...S(`piece ${k + 1}`, [Math.min(x0, x1), Math.max(x0, x1)], ring(c, ro + half, ri)), tube: { ro, ri, L: z ? kF * Math.abs(x1 - x0) : L * (t1 - t0), axis: 'x' } };
   });
   return { solids, L, ri };
+}
+
+/** The point at x (m) on the straight line through a and b ({ x, p: [z, y] }). */
+const lineOf = (a, b) => (x) => { const u = (x - a.x) / (b.x - a.x); return [a.p[0] + u * (b.p[0] - a.p[0]), a.p[1] + u * (b.p[1] - a.p[1])]; };
+
+/** A pushrod's breaks (fractions of its x run): its two end pieces (e), the fine breaks tf as they are, the rest at most `piece` long. */
+function pieceBreaks(e, tf, Lx, piece) {
+  const fixed = [e, ...tf, 1 - e], ts = [0];
+  for (let k = 0; k + 1 < fixed.length; k++) {
+    const [t0, t1] = [fixed[k], fixed[k + 1]], inFine = tf.length > 0 && t0 >= tf[0] - 1e-12 && t1 <= tf.at(-1) + 1e-12;
+    const n = inFine ? 1 : Math.max(1, Math.ceil((Lx * (t1 - t0)) / piece));
+    for (let j = 0; j < n; j++) ts.push(t0 + (j / n) * (t1 - t0));
+  }
+  return [...ts, 1 - e, 1];
+}
+
+/**
+ * Round 19 (decision 2: seal the pod's through-flow paths): a tail pushrod's exit guide, P.guide on the rod's true axis
+ * from its servo ball S to its horn ball H ({ x, p: [z, y] }, m). A catalogue tube (g.tube) coaxial with the rod, the rod
+ * sliding in its bore, from the lug's forward face (the support former's aft face, g.former) aft until its whole section
+ * is g.out_mm outside the loft, so the film's cut round it closes on the guide; the lug (g.lug plate, one thickness) on
+ * the former's aft face round it, bonded to the former's band and the guide bonded in its hole. Drawn at the maker's
+ * tolerance (g.tol_mm on both diameters: the outside larger, the bore smaller), each piece g.piece_mm (the lug's
+ * thickness first) holding the tube's slope as the pushrod's pieces do. -> { x: [aft, fwd], solids, rodBreaks (the
+ * pushrod's own breaks: the guide's, g.piece_mm on for two pieces forward and g.sweep_mm aft, so the guide's assembly
+ * slide over the rod meets concentric pieces), dir (unit [x, y, z] aft along the rod: the guide comes from aft), L (its
+ * true length), lug: { x, shape, volume_m3 }, leak_m2 (the annulus: the largest bore against the rod's smallest
+ * section), clear_m (the smallest radial clearance: the smallest bore against the rod's largest section), stations,
+ * former (its id) }.
+ */
+export function exitGuide(d, catalog, Sb, Hb, P) {
+  const g = P.guide, PG = podGeometry(d, catalog), f = PG.formers.find((q) => q.name === g.former);
+  if (!f) throw new Error(`tail pushrod guide: no pod former '${g.former}'`);
+  const ts = tubeSpec(byId(catalog, g.tube)), pl = byId(catalog, g.lug), tol = mm(g.tol_mm), loft = PG.loft;
+  const rs = byId(catalog, P.pushrod).specs, rodMin = mm(Math.min(rs.od_mm, rs.od_mm_spec_sheet ?? Infinity)), rodMax = mm(Math.max(rs.od_mm, rs.od_mm_spec_sheet ?? 0));
+  const dx = Hb.x - Sb.x, Lr = Math.hypot(dx, Hb.p[0] - Sb.p[0], Hb.p[1] - Sb.p[1]), kL = Lr / Math.abs(dx);
+  const at = (x) => { const t = (x - Sb.x) / dx; return [Sb.p[0] + t * (Hb.p[0] - Sb.p[0]), Sb.p[1] + t * (Hb.p[1] - Sb.p[1])]; };
+  const slope = Math.hypot(Hb.p[0] - Sb.p[0], Hb.p[1] - Sb.p[1]) / Math.abs(dx);
+  const roT = mm(ts.od_draw) / 2, riT = mm(ts.id_draw) / 2, ro = roT + tol / 2, ri = riT - tol / 2, step = mm(g.piece_mm), tL = mm(pl.specs.thickness_mm_nominal);
+  const ringPts = (c, r, n = 48) => Array.from({ length: n }, (_, k) => [c[0] + r * Math.cos((2 * Math.PI * k) / n), c[1] + r * Math.sin((2 * Math.PI * k) / n)]);
+  const gaps = (x) => { const h = sectionAt(loft, x); return h ? ringPts(at(x), ro).map((p) => loftGap(h, p)) : null; };
+  const xf = f.x[0], g0 = gaps(xf);
+  if (!g0 || Math.min(...g0) < mm(g.out_mm)) throw new Error(`tail pushrod guide: not ${g.out_mm} mm inside the loft at the former ${g.former}`);
+  const br = [xf, xf - tL];
+  for (let gg = gaps(br.at(-1)); gg && Math.max(...gg) > -mm(g.out_mm); gg = gaps(br.at(-1))) {
+    br.push(br.at(-1) - step);
+    if (br.length > 400) throw new Error('tail pushrod guide: the rod never leaves the loft');
+  }
+  const solids = br.slice(0, -1).map((x1, k) => {
+    const x0 = br[k + 1], half = (slope * (x1 - x0)) / 2;
+    return { ...S(`piece ${k + 1}`, [x0, x1], ring(at((x0 + x1) / 2), ro + half, Math.max(ri - half, 0))), tube: { ro: roT, ri: riT, L: kL * (x1 - x0), axis: 'x' } };
+  });
+  const fwd = [1, 2].map((k) => xf + k * step), aft = Array.from({ length: Math.ceil(mm(g.sweep_mm) / step) + 2 }, (_, k) => br.at(-1) - (k + 1) * step);
+  // the lug: the convex hull of a web round the guide's hole and two points on the former's band g.lug_band_deg either
+  // side of the guide (g.lug_depth_mm in from the skin: under the film's chord between the cone's rods), on the smaller
+  // of the loft's sections across it; its hole the guide's drawn outside over the lug, plus the bond's gap
+  const ha = sectionAt(loft, xf - tL + 1e-9), hb = sectionAt(loft, xf - 1e-9), h = ha.hw * ha.hh <= hb.hw * hb.hh ? ha : hb;
+  const c = at(xf - tL / 2), rh = ro + (slope * tL) / 2 + mm(g.bond_gap_mm), ac = polarOf(h, c);
+  const band = [-1, 1].map((s) => insetPoint(h, (ac + s * g.lug_band_deg) * Math.PI / 180, mm(g.lug_depth_mm)));
+  const pts = hull2D([...ringPts(c, rh + mm(g.web_mm), 32), ...band]);
+  const area = Math.abs(pts.reduce((a, p, i) => a + p[0] * pts[(i + 1) % pts.length][1] - pts[(i + 1) % pts.length][0] * p[1], 0)) / 2 - Math.PI * rh * rh;
+  const idMax = 2 * riT + tol, leak = (Math.PI / 4) * (idMax ** 2 - rodMin ** 2);
+  return {
+    x: [br.at(-1), xf], solids, rodBreaks: [...fwd, ...br, ...aft], stations: br, slope, former: f.id,
+    dir: [dx / Lr, (Hb.p[1] - Sb.p[1]) / Lr, (Hb.p[0] - Sb.p[0]) / Lr].map((q) => +q.toFixed(9)), L: kL * (xf - br.at(-1)),
+    lug: { x: [xf - tL, xf], shape: poly(pts, [{ c, r: rh }]), volume_m3: area * tL },
+    leak_m2: leak, clear_m: (2 * riT - tol - rodMax) / 2,
+    leak_basis: `the annulus between the guide's largest bore (${ts.id_draw} + ${g.tol_mm} mm, ${g.tube} at the maker's +-${g.tol_mm} mm) and the pushrod's smallest section (${(rodMin * 1000).toFixed(2)} mm, ${P.pushrod}): pi/4 (D^2 - d^2) = ${(leak * 1e6).toFixed(2)} mm2`,
+  };
+}
+
+/**
+ * Round 19: how far the pushrod's true axis moves from its drawn-zero place, over the commanded travel, at the stations
+ * xs (m) along it: the servo's ball on its arm's arc about the spline (r_arm, in the x-z plane), the horn's ball on the
+ * horn's arc about the pivot axis (in the plane of x and the surface's normal), the horn's angle for each servo angle
+ * from the rod's fixed length (the root nearest the drawn law r_arm sin(servo) = r_horn sin(surface)), both ways to the
+ * commanded deflection dMax. row: the mechanism's row (o, u, v, sE, nE, xs, zs, zH, A); G: tailMechGeometry. -> m.
+ */
+export function pushrodExcursion(row, G, dMax, xs, n = 40) {
+  const sub = (a, b) => a.map((q, i) => q - b[i]), add = (a, b) => a.map((q, i) => q + b[i]), mul = (a, k) => a.map((q) => q * k), dot = (a, b) => a.reduce((s, q, i) => s + q * b[i], 0), nrm = (a) => Math.hypot(...a);
+  const ra = Math.abs(row.zH - row.zs), sg = Math.sign(row.zH - row.zs) || 1, R = Math.abs(row.nE), k = ra / R, yb = row.A.p[1];
+  // (x, z, y)
+  const ballS = (th) => [row.xs - ra * Math.sin(th), row.zs + sg * ra * Math.cos(th), yb];
+  const P0 = [G.xq, row.o[0] + row.u[0] * row.sE, row.o[1] + row.u[1] * row.sE], v3 = [0, row.v[0], row.v[1]];
+  const ballH = (ph) => add(P0, add(mul(v3, row.nE * Math.cos(ph)), [-R * Math.sin(ph), 0, 0]));
+  const D0 = nrm(sub(ballH(0), ballS(0))), u0 = mul(sub(ballH(0), ballS(0)), 1 / D0), p0 = ballS(0);
+  let worst = 0;
+  for (let i = -n; i <= n; i++) {
+    const dl = (i / n) * dMax, th = Math.asin(Math.sin(dl) / k), S0 = ballS(th), f = (ph) => nrm(sub(ballH(ph), S0)) - D0;
+    let best = null;
+    for (let j = 0; j < 400; j++) {
+      let a = dl - 0.4 + (j / 400) * 0.8, b = dl - 0.4 + ((j + 1) / 400) * 0.8;
+      if (f(a) * f(b) > 0) continue;
+      for (let m = 0; m < 60; m++) { const c = (a + b) / 2; if (f(a) * f(c) <= 0) b = c; else a = c; }
+      const rt = (a + b) / 2; if (best == null || Math.abs(rt - dl) < Math.abs(best - dl)) best = rt;
+    }
+    if (best == null) throw new Error('pushrodExcursion: no horn angle holds the rod\'s length');
+    const H = ballH(best), u = mul(sub(H, S0), 1 / nrm(sub(H, S0)));
+    for (const x of xs) {
+      const gp = add(p0, mul(u0, (x - p0[0]) / u0[0])), t = dot(sub(gp, S0), u0) / dot(u, u0);
+      worst = Math.max(worst, nrm(sub(add(S0, mul(u, t)), gp)));
+    }
+  }
+  return worst;
 }
 
 /** The convex hull of points in the plane (monotone chain), counter-clockwise. */
@@ -284,6 +424,13 @@ export function tailMechBom(T, yB, boomR, P0, catalog) {
     { name: 'tail pushrods, 2 off', material: pr, mass_g: 2 * gm(P.pushrod) * Lp, basis: `${gm(P.pushrod)} g/m x ${Lp.toFixed(4)} m x 2 (between the two rod ends' shanks)`, count: 2 },
     { name: 'tail pushrod end plugs, 4 off', material: al6, mass_g: 4 * plugV * rho(al6), basis: `each a ${((rPr - 1e-5) * 2000).toFixed(2)} mm plug x ${P.plug_len} mm bonded in the pushrod's end with an M2 stud x ${ke.l1_mm} mm into the rod end; ${al6.specs.density_g_cm3} g/cm3`, count: 4 },
   ];
+  // round 19 (decision 2): the exit guides and their lugs (P.guide), at the length and volume the design states (the
+  // completeness check holds them to the drawn guide and lug, as it holds the pushrod's)
+  if (P.guide) {
+    const gt = byId(catalog, P.guide.tube), lp = byId(catalog, P.guide.lug), Lg = mm(P.guide.L_mm ?? NaN), Vl = (P.guide.lug_mm3 ?? NaN) * 1e-9;
+    structure.push({ name: 'tail pushrod guides, 2 off', material: gt, mass_g: 2 * gm(P.guide.tube) * Lg, basis: `${gm(P.guide.tube)} g/m x ${Lg.toFixed(4)} m x 2 (each from its lug on the former ${P.guide.former} aft until its whole section is ${P.guide.out_mm} mm outside the loft)`, count: 2 });
+    structure.push({ name: 'tail pushrod guide lugs, 2 off', material: lp, mass_g: 2 * Vl * rho(lp), basis: `2 x ${(Vl * 1e9).toFixed(1)} mm3 of ${lp.id} (the drawn lug less the guide's hole) at ${lp.specs.density_g_cm3} g/cm3`, count: 2 });
+  }
   const parts = [
     { id: P.bushing, count: 4, role: 'tail pivot bushings, two per surface' },
     { id: P.washer, count: 2, role: 'tail pivot pin retaining washers' },
@@ -346,9 +493,29 @@ export function tailMechMembers(ax) {
     members.push({ name: `tail pushrod ${t} end plug bonds`, kind: 'bond', check: 'bond', material: glueCf, dims: { d_mm: tubeSpec(byId(catalog, P.pushrod)).id_draw, L_mm: P.plug_len }, sections: [sect('F', Fp)], uses: { F: 'F' }, note: 'Araldite 2011 on CFRP (typical, half): the pushrod\'s force on each end plug' });
     // round 18 (SPEC ruling "Maker's part"): the maker's arm on its spline, valid while its servo is within its rule
     if (sv) members.push(tailServoArmMember(d, catalog, t, sv, P, Fp));
+    if (P.guide) members.push(...guideMembers(ax, P, t));
     if (tieL) members.push({ name: `tail servo ${t} ties under its arm's reaction`, kind: 'tie', check: 'tie', tie: { id: tieL.id, loop_N: tieL.loop_N }, dims: { n: 2 }, sections: [sect('F', [...Fp, ...inertial(sv?.mass_kg ?? 0.0215, [-0.04, -0.065, 0])])], uses: { F: 'F' }, note: 'the servo\'s two T40R carry the pushrod\'s force at its arm and its own inertia' });
   }
   members.push({ name: 'tail saddle bond on the boom', kind: 'bond', check: 'bond', material: glueCf, dims: { d_mm: boomR * 2000, L_mm: P.saddle.sleeve_len }, sections: [sect('T', [{ ch: 'tail_F_R', k: +arm.toFixed(6) }, { ch: 'tail_F_L', k: +arm.toFixed(6) }]), sect('F', [{ ch: 'tail_F', k: 1 }])], uses: { T: 'T', F: 'F' }, note: 'Araldite 2011 on CFRP (typical, half) on the boom\'s end: both surfaces\' root moments as torsion (their sum, conservative) and the tail\'s force' });
+}
+
+/**
+ * Round 19: an exit guide's two bonds (the guide in its lug's hole, the lug's face on the former's band), each carrying
+ * the guide, its lug and the whole pushrod at their inertia (were the rod all to rest on the guide: conservative; over the
+ * commanded travel it does not touch it, the covering record's exit seal row) and the drag on the guide's whole section
+ * at the pod's drag speed (Cd 1.2, the containment record's bluff-body figure: an upper bound on what stands out).
+ */
+function guideMembers({ d, catalog, glueCf, lump }, P, t) {
+  const sect = (name, radial) => ({ name, radial, axial: [] });
+  const gd = P.guide, gt = tubeSpec(byId(catalog, gd.tube)), lp = byId(catalog, gd.lug).specs, lugT = lp.thickness_mm_nominal;
+  const mG = (gt.g_per_m * (gd.L_mm ?? NaN)) / 1e6, mL = ((gd.lug_mm3 ?? NaN) * 1e-9) * lp.density_g_cm3 * 1000, mR = (tubeSpec(byId(catalog, P.pushrod)).g_per_m * (P.pushrod_L_mm ?? NaN)) / 1e6;
+  const rho = d.atmosphere?.rho_kg_m3 ?? d.atmosphere?.rho ?? 1.0, V = podParams(d).V_drag_m_s, od = gt.od_draw + gd.tol_mm;
+  const D = 0.5 * rho * V ** 2 * 1.2 * (Math.PI / 4) * mm(od) ** 2;
+  const F = [...inertial(mG + mL + mR, lump('tail pushrods').r), { ch: 'sf_origin', k: +(D / 9.80665).toFixed(8) }];
+  return [
+    { name: `tail pushrod guide ${t} bond in its lug`, kind: 'bond', check: 'bond', material: glueCf, dims: { d_mm: +(gt.od_draw - gd.tol_mm).toFixed(3), L_mm: lugT }, sections: [sect('F', F)], uses: { F: 'F' }, note: `Araldite 2011 on CFRP (typical, half): the guide (its smallest outside, ${gd.tube} at -${gd.tol_mm} mm) in its lug's hole over the lug's ${lugT} mm; the guide (${(mG * 1000).toFixed(2)} g), its lug and the whole pushrod (${(mR * 1000).toFixed(1)} g) at their inertia and ${D.toFixed(3)} N of drag on the guide's whole ${od.toFixed(1)} mm section at ${V} m/s` },
+    { name: `tail pushrod guide lug ${t} bond on its former`, kind: 'bond', check: 'lap', material: glueCf, dims: { w_mm: gd.lug_bond.w_mm, L_mm: gd.lug_bond.L_mm }, sections: [sect('F', F)], uses: { F: 'F' }, note: `Araldite 2011 on CFRP (typical, half): the lug's face on the ${gd.former} former's band over ${gd.lug_bond.w_mm} x ${gd.lug_bond.L_mm} mm (the covering record holds the drawn overlap to at least this), the same load` },
+  ];
 }
 
 /**
@@ -479,4 +646,7 @@ export const TAIL_INTERFACE_RULES = [
   { why: new RegExp(`^${RIB_HOLE_TXT}$`), part: /^tail rib /, kind: 'through hole', load: { by: 'the rib on the tube (its bond) or on the trailing edge rod (crushing at half)', rating: (d, a, b) => { const t = side(a, b), w = `${a} ${b}`; return !t ? [] : /trailing edge rod/.test(w) ? [`tail ribs ${t} on the trailing edge rod, each`] : [`tail ribs ${t} on the pivot tube, each`]; }, rule: TBOND }, axial: { by: "the rib's bond on the tube; the rod's in its ribs", rating: (d, a, b) => { const t = side(a, b), w = `${a} ${b}`; return !t ? [] : /trailing edge rod/.test(w) ? [`tail trailing edge rod ${t} in its ribs`] : [`tail ribs ${t} on the pivot tube, each`]; }, rule: TBOND }, note: 'the pivot pin\'s hole rows: the pin runs inside the tube at the root rib; the rib\'s own interface is its bond on the tube' },
   { why: new RegExp(`^${BORE_TXT}$`), part: /^tail /, kind: 'in a bore', load: { by: 'the part in the bore: the spigot bond, the washer, the bushing in its boss or on its pin, the horn hub\'s bond', rating: tailBore, rule: TSEAT }, axial: { by: 'the same', rating: tailBore, rule: TRATED }, note: 'a tube along the span drawn as its capsule: the pair is the real fit it stands for' },
   tr("bonded on the boom's end", 'bonded', { by: 'the saddle bond on the boom (Araldite 2011 on CFRP)', rating: () => ['tail saddle bond on the boom'], rule: TBOND }, { by: 'the same bond', rating: () => ['tail saddle bond on the boom'], rule: TBOND }),
+  // round 19: the pushrods' exit guides (the rod slides in its guide's bore, clear of it over the travel: no joint)
+  tr("bonded in its lug's hole", 'bonded', { by: "the guide's bond in its lug (Araldite 2011 on CFRP)", rating: nm([(t) => `tail pushrod guide ${t} bond in its lug`]), rule: TBOND }, { by: 'the same bond', rating: nm([(t) => `tail pushrod guide ${t} bond in its lug`]), rule: TBOND }),
+  tr("bonded on the former's aft face", 'bonded', { by: "the lug's bond on the former's band (Araldite 2011 on CFRP)", rating: nm([(t) => `tail pushrod guide lug ${t} bond on its former`]), rule: TBOND }, { by: 'the same bond', rating: nm([(t) => `tail pushrod guide lug ${t} bond on its former`]), rule: TBOND }),
 ];

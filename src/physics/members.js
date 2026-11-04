@@ -391,8 +391,11 @@ export function makerPartCheck(member, val) {
   });
   const over = condition.filter((c) => c.within === false);
   const ok = condition.length > 0 && over.length === 0;
-  const why = !condition.length ? "maker's part with no stated condition: not valid" : over.length ? `outside its maker's figures: ${over.map((c) => `${c.figure}${Number.isFinite(c.value) ? ` ${c.value.toFixed(4)} > ${c.published} ${c.units ?? ''}` : ''}`).join('; ')}` : `within its maker's published figures (${condition.filter((c) => c.within === true).length} checked here, ${condition.filter((c) => c.within === null).length} elsewhere or not published)`;
-  return { fos: null, ok, status: "unrated, maker's part", part: mk.part ?? null, of: mk.of ?? null, covers: mk.covers ?? null, peaks, condition, why };
+  // round 19: a figure its maker publishes that no check can hold the part to (the motor's temperature) is not a pass:
+  // the condition says counted: false, and so does this member (M7 lists it in not_counted_because)
+  const nc = condition.filter((c) => c.counted === false).map((c) => `${c.figure}: ${c.not_counted_because ?? 'not counted'}`);
+  const why = !condition.length ? "maker's part with no stated condition: not valid" : over.length ? `outside its maker's figures: ${over.map((c) => `${c.figure}${Number.isFinite(c.value) ? ` ${c.value.toFixed(4)} > ${c.published_derated ?? c.published} ${c.units ?? ''}` : ''}`).join('; ')}` : `within its maker's published figures (${condition.filter((c) => c.within === true).length} checked here, ${condition.filter((c) => c.within === null).length} elsewhere or not published)${nc.length ? `; not counted: ${nc.join('; ')}` : ''}`;
+  return { fos: null, ok, status: "unrated, maker's part", part: mk.part ?? null, of: mk.of ?? null, covers: mk.covers ?? null, peaks, condition, why, ...(nc.length ? { counted: false, not_counted_because: nc } : {}) };
 }
 
 /** Each member check kind: (member, its section peaks, the peak of named sections, its uses) -> result. */
