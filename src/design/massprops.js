@@ -76,7 +76,11 @@ export function solidProps(s, q0) {
     // about its own axis Iu, about any axis across it Ip; its axis in body axes a = (0, y, z) from the capsule's (z, y)
     const Iu = jAx * V, Ip = jPerp * V, [cz, sy] = e;
     const a = [0, sy, cz], I = (i, k) => (i === k ? Ip : 0) + (Iu - Ip) * a[i] * a[k];
-    return { V, c: [xm, (sh.a[1] + sh.b[1]) / 2, (sh.a[0] + sh.b[0]) / 2], J: [I(0, 0), I(1, 1), I(2, 2), -I(0, 1), -I(0, 2), -I(1, 2)] };
+    // Round 18 (diagnosis 1.3, bug): for i != k, I(i, k) is already the accumulator's stored sign (-Ixy/-Ixz/-Iyz: the
+    // standard inertia-tensor off-diagonal element, itself the negative of the raw product integral x_i x_k dm), so
+    // storing -I(i, k) double-negated it. A 45-degree tube in the y-z plane (test/design/round18-bugs.test.js) pinned
+    // it against the independent, closed-form rotated-tube tensor.
+    return { V, c: [xm, (sh.a[1] + sh.b[1]) / 2, (sh.a[0] + sh.b[0]) / 2], J: [I(0, 0), I(1, 1), I(2, 2), I(0, 1), I(0, 2), I(1, 2)] };
   }
   const P = sectionProps(sh), Lx = x1 - x0;
   const A = Number.isFinite(s.area_m2) ? s.area_m2 : P.A, k = A / P.A; // a stated added area (a plate's ear) scales the section

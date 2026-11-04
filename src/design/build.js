@@ -1,6 +1,9 @@
 // From parameters and a catalogue to a complete design: geometry, BOM, sized structure, CG, margin (M6).
 import { rateStages } from './gearing.js';
 import { tailMechBom, tailLinkageRatio, tailRootShift } from './tail-mech.js';
+import { needsBom } from './build-needs.js';
+import { trimPodLoft, POD } from './pod-structure.js';
+import { AIRFRAME_DEFAULTS, mergeDefaults } from './airframe.js';
 import { twistParams, twistBom, twistStiffness, twistChainFigures, twistPoints, chainCompliance } from './twist-drive.js';
 import { byId, ofCategory, servoAt, motorModel, batteryModel, tubeAllowable, tubeSection, tubeSpec, becOf, escCellsCover, servoVoltageRange, servoStallCurrentConservative } from './catalog.js';
 import { batteryOcv } from '../physics/flight.js';
@@ -178,11 +181,14 @@ export function buildDesign(params, catalog) {
   // Round 4: the pod's centre line may sit below the wing hinge so the crank and gear train fit inside it.
   const bodyY = p.bodyY_m ?? 0;
   const shell = (Math.PI * 0.5 * (bodyW + bodyH) * bodyLen * 0.8);
-  addStruct('fuselage film shell', film, (film.specs.areal_density_g_m2 ?? film.mass_g) * shell, `${shell.toFixed(3)} m2`);
+  // round 17: the pod's film, formers and longerons come with the linkage items (airframe.js -> pod-structure.js podBom:
+  // the film over the loft less its windows, the structure from its solids)
+  const podItems = p.pod ? (p._linkageItems ?? []).filter((q) => /^fuselage (film shell|formers|longerons)\b/.test(q.name)) : null;
+  if (!p.pod) addStruct('fuselage film shell', film, (film.specs.areal_density_g_m2 ?? film.mass_g) * shell, `${shell.toFixed(3)} m2`);
   // round 16: the airframe states the formers (airframe.js formerGeometry), so their line comes with the linkage items
   const formerItem = (p._linkageItems ?? []).find((q) => q.name === 'fuselage formers');
-  const formersG = formerItem ? formerItem.mass_g : 5 * bodyW * bodyH * 0.5 * 0.002 * ribDensity * 1000;
-  if (!formerItem) addStruct('fuselage formers', rib, formersG, '5 off, 50% lightened, 2 mm');
+  const formersG = podItems ? 0 : formerItem ? formerItem.mass_g : 5 * bodyW * bodyH * 0.5 * 0.002 * ribDensity * 1000;
+  if (!formerItem && !podItems) addStruct('fuselage formers', rib, formersG, '5 off, 50% lightened, 2 mm');
   // ---- Drive
   const plate = byId(catalog, parts.drivePlate ?? 'plate-ec-2mm');
   const bellArea = 4 * (p.crank_mm ?? 12) * 25e-6 + 2 * 0.03 * 0.03;
@@ -199,7 +205,7 @@ export function buildDesign(params, catalog) {
   const couplerG = linkItems ? linkG(/^coupler links/) : (2 * couplerRod.mass_g * bMm) / 1000;
   // round 16: the keel and the formers come with the linkage items but have lumps of their own (keel and boom; fuselage
   // shell and formers), so they are not also counted in the gearbox's lump
-  const drivePlatesG = linkItems ? linkG(/^(?!coupler links|keel and tail boom$|fuselage formers$)/) : crankPlateG + (p.gearboxPlate_g ?? 8);
+  const drivePlatesG = linkItems ? linkG(/^(?!coupler links|keel and tail boom$|fuselage )/) : crankPlateG + (p.gearboxPlate_g ?? 8);
   // Round 4 derived parts (p.derivedParts), each from catalogue materials with its basis stated:
   //  - the stroke servo's linkage to the two slotted rockers: two 2 mm carbon pushrods and a 2 mm carbon-plate yoke;
   //  - a pitot-static probe for the airspeed board, whose catalogue mass excludes the probe: a titanium outer tube with
@@ -216,7 +222,7 @@ export function buildDesign(params, catalog) {
     const ti = byId(catalog, 'mtube-tigertitanium-ti3al2.5v-6.35x5.54'), cst = byId(catalog, 'tube-cst-pultruded-5x4');
     const probeL = p.pitotLength_mm ?? 100;
     pitotG = (ti.mass_g + cst.mass_g) * probeL / 1000;
-    addStruct('pitot-static probe', ti, pitotG, `${probeL} mm of ${ti.id} (${ti.mass_g} g/m, static annulus) around ${probeL} mm of ${cst.id} (${cst.mass_g} g/m, total pressure); pressure lines in the 15% margin`);
+    addStruct('pitot-static probe', ti, pitotG, `${probeL} mm of ${ti.id} (${ti.mass_g} g/m, static annulus) around ${probeL} mm of ${cst.id} (${cst.mass_g} g/m, total pressure); ${p.layout?.hatch ? 'its pressure lines are their own BOM line (pressure tubing, build-needs.js)' : 'pressure lines in the 15% margin'}`);
   }
   // Twist drive. Legacy (round 2): the servo sits on the hand wing at 65% of its length, no linkage counted. Round 3
   // option: the servo sits at the elbow on the arm wing and turns the hand wing through a torque rod running out to
@@ -285,6 +291,15 @@ export function buildDesign(params, catalog) {
     const nBearings = bearingLayout ? bearingLayout.reduce((a, b) => a + b.count, 0) : p.bearingCount ?? 8;
     add(byId(catalog, parts.bearing), nBearings, 'bearing');
   }
+  // Round 17b (SPEC "What a real build needs", src/design/build-needs.js): the hatch, the pack's stops, the belly tray,
+  // the pressure tubing, the clips (structure sized from their drawn solids on the design's loft) and the connectors,
+  // strap and servo extensions (bought); needs the stated nose (p.noseX_m) to draw the loft here
+  // round 18: the hatch drawn on the design's own loft (the pod's, its nose as stretched)
+  const needs = p.layout?.hatch && p.noseX_m != null && p.linkage?.airframe ? needsBom(p, catalog, (p.pod ? (q) => trimPodLoft(q, { ...POD, ...p.pod }) : (q) => q)(podAndBoomLoft({ noseX_m: p.noseX_m, podLength_m: bodyLen, width_m: bodyW, height_m: bodyH, boomOd_m: keel.specs.od_mm / 1000, tailEndX_m: -lt - 0.75 * chordT, y_m: bodyY, boomY_m: 0 })), mergeDefaults(AIRFRAME_DEFAULTS, p.linkage.airframe)) : null;
+  if (needs) {
+    for (const st of needs.structure) addStruct(st.name, st.material, st.mass_g, st.basis, st.count ? { count: st.count } : {});
+    for (const q of needs.parts) add(byId(catalog, q.id), q.count, q.role);
+  }
   const partsG = bom.reduce((a, b) => a + b.mass_g, 0);
   const structG = structure.reduce((a, b) => a + b.mass_g, 0);
   const marginG = MARGIN * (partsG + structG);
@@ -296,6 +311,7 @@ export function buildDesign(params, catalog) {
   const sparKgPerM = (innerMass * elbow + outerMass * outer) / semi / semi / 1000 * 1; // length-weighted, kg/m
   const massWingOne = (innerMass + outerMass + leMass + teMass + filmG / 2 + (ribCount * ribMassEach) / 2) / 1000;
   const twistS = twistAtElbow ? wing.segments[0].length : wing.segments[0].length + 0.65 * outer;
+  const wingExtG = needs ? byId(catalog, needs.wing.id).mass_g : 0;
   // Distribution for the flight model: spar + edges along the span by length, skin by area. Margin share on top.
   const marginFrac = 1 + MARGIN;
   const rodKg = twistRod ? (twistRod.mass_g * twistRodLen) / 1000 : 0;
@@ -308,8 +324,11 @@ export function buildDesign(params, catalog) {
       // The torque rod as two halves at the quarter points of its run.
       ...(twistRod ? [0.25, 0.75].map((q) => ({ name: 'twist torque rod', s_m: (tw ? tw.G.rodS0 : elbow) + q * twistRodLen, mass_kg: 0.5 * rodKg * marginFrac, d_m: 0 })) : []),
       ...(tw ? twistPoints(tw, catalog).map((q) => ({ ...q, mass_kg: q.mass_kg * marginFrac })) : []),
+      // round 17b: the wing-side servo extension at the middle of its run along the spar (its in-pod end, about a
+      // third of it, counted with the wing: conservative for the wing's inertia)
+      ...(needs ? [{ name: 'twist servo extension, wing side', s_m: 0.5 * twistS, mass_kg: (wingExtG / 1000) * marginFrac, d_m: 0 }] : []),
     ],
-    one_wing_kg: massWingOne * marginFrac + (twistP.mass_g / 1000) * marginFrac + rodKg * marginFrac + (tw ? twistPoints(tw, catalog).reduce((a, q) => a + q.mass_kg, 0) * marginFrac : 0),
+    one_wing_kg: massWingOne * marginFrac + (twistP.mass_g / 1000) * marginFrac + rodKg * marginFrac + (tw ? twistPoints(tw, catalog).reduce((a, q) => a + q.mass_kg, 0) * marginFrac : 0) + (wingExtG / 1000) * marginFrac,
   };
   if (tw) {
     // the twist stiffness from the edge rods' bending energy (twist-drive.js twistStiffness), replacing the unsourced 0.05
@@ -346,7 +365,7 @@ export function buildDesign(params, catalog) {
   lump('flap motor', motorP.mass_g, motorX, 0.0, 0, 0, [motorP.id]);
   const gearRows = bom.filter((b) => b.role === 'gear' || /^(bearing|bushing|rod end)/.test(b.role));
   lump('gears and bearings', gearRows.reduce((a, b) => a + b.mass_g, 0), 0.015, 0.0, 0, 0, [...new Set(gearRows.map((b) => b.id))]);
-  lump('crank, rockers, plates', drivePlatesG, 0.01, 0.01, 0, 0, linkItems ? linkNames(/^(?!coupler links|keel and tail boom$|fuselage formers$)/) : ['crank, rockers and gearbox plates']);
+  lump('crank, rockers, plates', drivePlatesG, 0.01, 0.01, 0, 0, linkItems ? linkNames(/^(?!coupler links|keel and tail boom$|fuselage )/) : ['crank, rockers and gearbox plates']);
   lump('couplers', couplerG, 0.0, 0.0, 0, 0, linkItems ? linkNames(/^coupler links/) : ['couplers, 2 off']);
   lump('ESC', escP.mass_g, 0.07, -0.01, 0, 0, [escP.id]);
   lump('flight controller', fcP.mass_g, 0.0, -0.01, 0, 0, [fcP.id]);
@@ -365,10 +384,13 @@ export function buildDesign(params, catalog) {
   if (sensorG > 0) lump('crank encoder', sensorG, 0.0, -0.05, 0, 0, ['crankEncoder', 'encoderMagnet'].filter((k) => parts[k]).map((k) => parts[k]));
   const supplyG = ['powerModule', 'servoRegulator'].reduce((a, k) => a + (parts[k] ? byId(catalog, parts[k]).mass_g : 0), 0);
   if (supplyG > 0) lump('power module and regulator', supplyG, -0.01, -0.03, 0, 0, ['powerModule', 'servoRegulator'].filter((k) => parts[k]).map((k) => parts[k]));
+  // round 17b: what a real build needs, a lump of its own at its drawn parts (the wing-side extensions are on the wing)
+  if (needs) lump('build needs', needs.lump.lines.reduce((a, k) => a + (structure.find((q) => q.name === k)?.mass_g ?? bom.filter((b) => b.id === k).reduce((x, b) => x + b.mass_g, 0)), 0), 0.18, -0.03, 0, 0, needs.lump.lines);
   if (pitotG) lump('pitot-static probe', pitotG, Math.max(0.45 * bodyLen, 0.14) + 0.04, 0.0, 0, 0, ['pitot-static probe']);
   if (keelItem) lump('keel and boom', keelItem.mass_g, keelItem.lump.pos[0], keelItem.lump.pos[1], keelItem.lump.pos[2], keelItem.lump.gyration_m, ['keel and tail boom']);
   else lump('keel and boom', keel.mass_g * keelLen, -lt / 2 + noseLen * 0.25, 0.0, 0, 0.29 * keelLen, ['keel and tail boom']);
-  lump('fuselage shell and formers', (film.specs.areal_density_g_m2 ?? film.mass_g) * shell + formersG, -0.05, 0.0, 0, 0.3 * bodyLen, ['fuselage film shell', 'fuselage formers']);
+  if (podItems) lump('fuselage shell and formers', podItems.reduce((a, q) => a + q.mass_g, 0), -0.05, 0.0, 0, 0.3 * bodyLen, podItems.map((q) => q.name));
+  else lump('fuselage shell and formers', (film.specs.areal_density_g_m2 ?? film.mass_g) * shell + formersG, -0.05, 0.0, 0, 0.3 * bodyLen, ['fuselage film shell', 'fuselage formers']);
   if (tailMech) lump('tail surfaces', tailFilm + tailRibG + tmS(/^(?!tail pushrod)/).reduce((a, q) => a + q.mass_g, 0) + tmG(tmPart(/bushings|washers/)), -lt, p.tailY_m ?? 0.02, 0, 0, ['tail film, both faces', 'tail ribs, 8 off', ...tmS(/^(?!tail pushrod)/).map((q) => q.name), ...tmPart(/bushings|washers/).map((q) => q.id)]);
   else lump('tail surfaces', tailFilm + tailSparG + tailRibG, -lt, p.tailY_m ?? 0.02, 0, 0, p.tailLines === 'split' ? ['tail film, both faces', 'tail rods, 4 off', 'tail ribs, 8 off'] : ['tail surfaces, film, spar and ribs']);
   // Mean position of the wing mass, for the CG budget
@@ -465,7 +487,10 @@ export function buildDesign(params, catalog) {
   // the tail's trailing edge. The tunnels, page and film build from this loft (src/physics/geometry.js).
   // round 17: the nose where the design states it (p.noseX_m: its nose block, round 17), else from the CG-placed battery
   const noseX = p.noseX_m ?? Math.max(0.45 * bodyLen, xBattery + 0.05, 0.14);
-  const loft = podAndBoomLoft({ noseX_m: noseX, podLength_m: bodyLen, width_m: bodyW, height_m: bodyH, boomOd_m: keel.specs.od_mm / 1000, tailEndX_m: -lt - 0.75 * chordT, y_m: bodyY, boomY_m: 0 });
+  // round 17 (audit item 4): with the pod's structure (p.pod) the loft ends where it does: at the nose's end disc, and at
+  // the cone's end (v24's 10 mm tube on to the tail's trailing edge enclosed nothing)
+  const loft = p.pod ? trimPodLoft(podAndBoomLoft({ noseX_m: noseX, podLength_m: bodyLen, width_m: bodyW, height_m: bodyH, boomOd_m: keel.specs.od_mm / 1000, tailEndX_m: NaN, y_m: bodyY, boomY_m: 0 }), { ...POD, ...p.pod })
+    : podAndBoomLoft({ noseX_m: noseX, podLength_m: bodyLen, width_m: bodyW, height_m: bodyH, boomOd_m: keel.specs.od_mm / 1000, tailEndX_m: -lt - 0.75 * chordT, y_m: bodyY, boomY_m: 0 });
   const body = {
     loft,
     loft_wetted_area_m2: loftWettedArea(loft),

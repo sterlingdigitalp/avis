@@ -91,8 +91,11 @@ export const SERVO_TAU_MECH_S = 0.01;
 // Round 17 (SPEC "Function completeness": the all-moving tail's pivots and the twist chain are linkage): each tail
 // surface's force (tail_F_R, tail_F_L) and hinge moment (tail_M_R, tail_M_L), and each twist servo's torque at the wing
 // (twist_R, twist_L), so the members of those chains carry their own loads. Round 17b: each wing's bending moment at the
-// elbow (elbow_R, elbow_L: the M7 spar_outer moment), which the twist drive's joiner carries.
-export const LOAD_CHANNELS = ['coupler_R', 'coupler_L', 'slot_R', 'slot_L', 'crank_torque', 'root_yz_R', 'root_x_R', 'root_mperp_R', 'root_yz_L', 'root_x_L', 'root_mperp_L', 'sf_origin', 'wdot', 'w2', 'tail_F', 'tail_F_R', 'tail_F_L', 'tail_M_R', 'tail_M_L', 'twist_R', 'twist_L', 'elbow_R', 'elbow_L'];
+// elbow (elbow_R, elbow_L: the M7 spar_outer moment), which the twist drive's joiner carries. Round 18 (diagnosis 2.5(a)):
+// each wing's flown twist angle (twist_angle_R, twist_angle_L, rad: |S[16] - delta|, |S[17] - delta|), appended at the
+// end so no earlier index moves (test/physics/round8.test.js), for the rib-on-rod member, which the twist torque over an
+// aerodynamic stiffness far softer than the hardware had overstated by about 8x.
+export const LOAD_CHANNELS = ['coupler_R', 'coupler_L', 'slot_R', 'slot_L', 'crank_torque', 'root_yz_R', 'root_x_R', 'root_mperp_R', 'root_yz_L', 'root_x_L', 'root_mperp_L', 'sf_origin', 'wdot', 'w2', 'tail_F', 'tail_F_R', 'tail_F_L', 'tail_M_R', 'tail_M_L', 'twist_R', 'twist_L', 'elbow_R', 'elbow_L', 'twist_angle_R', 'twist_angle_L'];
 
 /**
  * Supports of design.structure.joints as channel indices and coefficients: { key, rc, rk, ac, ak, X0, Y0 } per support.
@@ -271,8 +274,26 @@ export function batteryOcv(batt, soc) {
 }
 
 /**
+ * Round 18 (diagnosis 2.1): the drawn chain's series compliance (servos.twist.compliance_rad_per_Nm) winds the wing
+ * off the servo's position by C times the twist torque. Committed as a one-step-lagged algebraic loop
+ * (theta = S - C*T(prev)), that is numerically unstable: C x a 1/dt loop gain diverges above about 0.11 rad/N m at
+ * dt 1/240 s, and at any C > 0 for a small enough dt (the critical C falls in proportion to dt). Fixed as a relaxed
+ * state per wing (backward Euler): delta += dt/(tau+dt) * (C*T - delta), flown theta = S - delta. TAU_CHAIN_S must
+ * sit above the chain's own wind-up time C*B (about 5-8 ms, from the strip's apparent-mass damping) and well below
+ * the stroke period (about 500 ms); results do not depend on it anywhere in 8-40 ms (test/physics/twist-compliance.
+ * test.js). delta' (the deflection's own rate) is left out of dtheta: feeding it in destabilises the loop unless
+ * tau >= 40 ms, and changes nothing where it is already stable.
+ */
+export const TAU_CHAIN_S = 0.02;
+
+/** One backward-Euler step of a first-order relaxation of x toward target, time constant tau (s). */
+export function relax(x, target, dt, tau) {
+  return x + (dt / (tau + dt)) * (target - x);
+}
+
+/**
  * Creates a flight. opts: { dt, wind, cal, perturb, delay (control delay of loops closed on the flight controller,
- * default 0.02 s), delayed commands provided by the controller }.
+ * default 0.02 s), delayed commands provided by the controller, chainTau_s (test only: overrides TAU_CHAIN_S) }.
  * The controller is called at its own rate through opts.controller.update(t, sensorsInput) and returns cmd.
  */
 export function createFlight(design, opts = {}) {
@@ -337,6 +358,10 @@ export function createFlight(design, opts = {}) {
   const lastTwistRate = [0, 0];
   const twistAccel = [0, 0];
   const lastTwistTorque = [0, 0];
+  // Round 18: the drawn chain's series compliance as a relaxed state (see TAU_CHAIN_S above), not a one-step-lagged
+  // algebraic loop.
+  const tauChain = opts.chainTau_s ?? TAU_CHAIN_S;
+  const twDefl = [0, 0];
   const tailTorque = [0, 0];
   const pol = new Float64Array(4);
   const wingQ = [{}, {}];
@@ -412,10 +437,11 @@ export function createFlight(design, opts = {}) {
       accL = (servoRate(stop(twCmdL), S[17], servoT, lastTwistTorque[1]) - rateL) / tauM;
     }
     // round 17b: the drawn chain's series compliance (servos.twist.compliance_rad_per_Nm: the torque rod in torsion and the
-    // bar in bending, twist-drive.js) winds the wing off the servo's position by the last step's twist torque
+    // bar in bending, twist-drive.js) winds the wing off the servo's position by the last step's twist torque, relaxed
+    // through twDefl (round 18, see TAU_CHAIN_S above): delta' is left out of dtheta (also round 18; see above).
     const Ctw = imposeTwist ? 0 : servoT.compliance_rad_per_Nm ?? 0;
-    const jR = { phi: sa.phi, dphi: dphi0, ddphi: ddphi0, theta: S[16] - Ctw * lastTwistTorque[0], dtheta: rateR, ddtheta: accR };
-    const jL = { phi: saL.phi, dphi: saL.dphi * crank, ddphi: saL.ddphi * crank * crank, theta: S[17] - Ctw * lastTwistTorque[1], dtheta: rateL, ddtheta: accL };
+    const jR = { phi: sa.phi, dphi: dphi0, ddphi: ddphi0, theta: S[16] - twDefl[0], dtheta: rateR, ddtheta: accR };
+    const jL = { phi: saL.phi, dphi: saL.dphi * crank, ddphi: saL.ddphi * crank * crank, theta: S[17] - twDefl[1], dtheta: rateL, ddtheta: accL };
     // Wing aero (fills section states)
     bodyAcc.dph = sa.dphi;
     bodyAcc.dphW[0] = sa.dphi;
@@ -805,6 +831,12 @@ export function createFlight(design, opts = {}) {
       // Load on the twist servo: the torque that has to oppose the air and move the wing.
       lastTwistTorque[0] = -QtwR + Jtw * twistAccel[0] + (design.wing.twist_stiffness_Nm_rad ?? 0) * S[16];
       lastTwistTorque[1] = -QtwL + Jtw * twistAccel[1] + (design.wing.twist_stiffness_Nm_rad ?? 0) * S[17];
+      // Round 18 (diagnosis 2.1): relax the chain's deflection toward C x this step's twist torque, replacing the
+      // one-step-lagged algebraic loop this torque used to feed straight back into theta (see TAU_CHAIN_S above).
+      if (advanceDt > 0) {
+        twDefl[0] = relax(twDefl[0], Ctw * lastTwistTorque[0], advanceDt, tauChain);
+        twDefl[1] = relax(twDefl[1], Ctw * lastTwistTorque[1], advanceDt, tauChain);
+      }
       tailTorque[0] = tailMR;
       tailTorque[1] = tailML;
       if (advanceDt > 0 && !fcGov) {
@@ -888,6 +920,10 @@ export function createFlight(design, opts = {}) {
       // round 17b: each wing's bending moment at the elbow (the M7 spar_outer moment), for the twist drive's joiner
       chv[21] = Math.abs(elbowR);
       chv[22] = Math.abs(elbowL);
+      // round 18 (diagnosis 2.5(a)): each wing's flown twist angle, the hardware's own bound (jR/jL.theta), for the
+      // rib-on-rod member
+      chv[23] = Math.abs(jR.theta);
+      chv[24] = Math.abs(jL.theta);
       for (let k = 0; k < sup.length; k++) {
         const s = sup[k];
         let Fr = 0, Fa = 0;
@@ -955,6 +991,7 @@ export function createFlight(design, opts = {}) {
     aBody.fill(0);
     wDot.fill(0);
     thddPrev[0] = 0;
+    twDefl[0] = twDefl[1] = 0; // round 18: the chain's relaxed deflection state (see TAU_CHAIN_S above)
     epsLag = s.epsLag ?? 0.5;
     iInt = s.iInt ?? 0;
     t = s.t ?? 0;

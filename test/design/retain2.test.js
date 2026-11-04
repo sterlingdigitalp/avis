@@ -16,7 +16,7 @@ import { drivePose, gearAngles } from '../../sims/avis-shared/model.js';
 
 const near = (a, b, tol = 1e-9) => assert.ok(Math.abs(a - b) <= tol, `${a} vs ${b}`);
 const catalog = JSON.parse(readFileSync(new URL('../../data/parts/catalog.json', import.meta.url), 'utf8'));
-const v24 = () => JSON.parse(readFileSync(new URL('../../data/designs/larus-gl-2.json', import.meta.url), 'utf8'));
+const v24 = () => JSON.parse(readFileSync(new URL('../fixtures/larus-gl-2-v24.json', import.meta.url) /* round 18: v24 frozen (the live file becomes v25) */, 'utf8'));
 /** v24 with the round-17b retention merged as round17.mjs merges it (and the crank's bore change). */
 function withRetention() {
   const d = v24(), R = RETENTION.linkage;
@@ -170,11 +170,12 @@ test('the retain2 rules: bonded bearings, the crank, the motor\'s own location a
   assert.deepEqual(noLoc.failed.map((r) => r.why), ['journal on its shaft', 'journal on its shaft']);
   // broken: the forward bearing's seat bond missing: its seat row and its shaft row fail
   assert.equal(interfaceLedger({ parts: [], joins }, withM(full.filter((m) => !/forward/.test(m.name))), RETAIN_INTERFACE_RULES).failed.length, 2);
-  // the motor's outboard bearing: its seat held by its bond; on the shaft it names the motor's own location, uncredited
+  // the motor's outboard bearing: its seat held by its bond; on the shaft it names the motor's own location (round 18: the
+  // maker's part, absent from this design, so the row still fails)
   const mo = 'motor shaft outboard journal forward (bearing-skf-619-5-2z)';
   const L = interfaceLedger({ parts: [], joins: [[mo, 'gearbox plate forward', 'pressed in its plate seat'], [mo, 'motor/shaft', 'journal on its shaft']] }, withM(M(['motor shaft outboard bearing forward, outer ring bond'], 'bond')), RETAIN_INTERFACE_RULES);
-  assert.equal(L.failed.length, 1); assert.deepEqual(L.failed[0].axial.rating, ['motor shaft outboard bearing forward, outer ring bond', 'motor shaft']);
-  // the motor bracket's screws in the motor's back face: their thread is unrated (no depth published)
+  assert.equal(L.failed.length, 1); assert.deepEqual(L.failed[0].axial.rating, ['motor shaft outboard bearing forward, outer ring bond', "motor shaft in the motor's own bearings"]);
+  // the motor bracket's screws in the motor's back face: their thread unrated without its maker's-part member (round 18)
   const T = interfaceLedger({ parts: [], joins: [['motor bracket', 'motor', 'screwed into its back-face threads']] }, withM(M(['motor mount screws', 'motor mount screws in the bracket'])), RETAIN_INTERFACE_RULES);
   assert.equal(T.failed.length, 1); assert.match(T.failed[0].why_failed, /axial retention not rated/); assert.match(T.failed[0].note, /m3\*4/);
   // a keyed gear: its key and its bond; the crank's wheel by an RC-practice bond, in scope (a gear)

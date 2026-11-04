@@ -6491,6 +6491,43 @@
   "verified": "manufacturer-page"
  },
  {
+  "id": "bushing-igus-GFM-0506-05",
+  "category": "bushing",
+  "manufacturer": "igus",
+  "name": "iglidur G flange bearing GFM-0506-05",
+  "mass_g": 0.0998,
+  "specs": {
+   "part_number": "GFM-0506-05",
+   "type": "flange",
+   "d1_mm": 5,
+   "d2_mm": 6,
+   "b1_mm": 5,
+   "d3_mm": 10,
+   "b2_mm": 0.5,
+   "mass_basis": "per part, computed: published dimensions (sleeve d1, d2, b1; flange d3, b2) x published iglidur G density 1.46 g/cm3 (no part weight is published); b1 taken as overall length including the flange, as the catalogue's GFM entries do",
+   "mass_note": "computed volume 68.3 mm3 x 1.46 g/cm3 = 0.0998 g",
+   "dimension_labels": "page labels used as-is: d1, d2, d3, b1, b2 (the fetched page text does not define them)",
+   "material": "iglidur G",
+   "density_g_cm3": 1.46,
+   "static_surface_pressure_mpa": 80,
+   "max_surface_speed_rotating_m_s": 1,
+   "max_surface_speed_rotating_short_term_m_s": 2,
+   "max_long_term_temp_c": 130,
+   "material_source_url": "https://www.igus.co.uk/info/iglidur-allround-materials",
+   "material_source_note": "iglidur G material values as already carried by the catalogue's bushing-igus-GFM-* entries (density 1.46 g/cm3, 80 MPa static at +20 C, 1 m/s rotating, 130 C long term); not re-read for this entry.",
+   "static_radial_load_at_max_pressure_n_derived": 2000,
+   "static_radial_load_fos_1_5_n_derived": 1333.3,
+   "static_load_derivation": "Derived, not published per part: F = p_max * d1 * b1 (igus 'Radial bearing: p = F/(d1 * b1)', https://www.igus.eu/plain-bearing/wiki/load), as in the catalogue's GFM entries.",
+   "tolerance_note": "Page: the inner diameter adjusts only after press-fit into the proper housing bore; no numeric shaft, housing or bore tolerance was on the page read.",
+   "fit_note": "For a 5 mm tail pivot shaft (e.g. rod-ec-5mm, 28.7 g/m, or tube-cst-pultruded-5x4, 11.1 g/m nominal 5.0 mm, spec sheet 4.95 mm OD). Same CFRP-shaft caution as GFM-0405-04.",
+   "quotes": "d1 5 mm; d2 6 mm; d3 10 mm; b1 5 mm; b2 0.5 mm; Material: iglidur® G"
+  },
+  "price_usd": null,
+  "source_url": "https://www.igus.eu/iglidur-ibh/flanged-bearings/product-details/iglidur-g-m?artnr=GFM-0506-05",
+  "retrieved": "2026-11-03",
+  "verified": "manufacturer-page"
+ },
+ {
   "id": "bushing-igus-GFM-0608-10",
   "category": "bushing",
   "manufacturer": "igus",
@@ -9394,6 +9431,43 @@
   "verified": "retailer-page"
  },
  {
+  "id": "screw-iso4762-m2x8-8.8",
+  "category": "fastener",
+  "manufacturer": "any ISO 4762 (DIN 912) maker (property class 8.8, ISO 898-1)",
+  "name": "ISO 4762 (DIN 912) M2 x 8 socket head cap screw, class 8.8",
+  "mass_g": 0.375,
+  "specs": {
+   "mass_basis": "per part, computed: ISO 4762 M2 maximum head 3.80 mm x 2.00 mm (fasteners.eu ISO 4762 table) plus a 2 mm x 8 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c): 0.375 g",
+   "thread": "M2 coarse (pitch 0.4)",
+   "length_mm": 8,
+   "head_d_mm": 3.8,
+   "head_k_mm": 2,
+   "thread_length_b_mm": null,
+   "stress_area_mm2": 2.07,
+   "property_class": "8.8",
+   "use": "the hatch cover (physics round 18): its four screws through the cover's lands and the 6061 rails, with ISO 4032 M2 nuts (M2 for the rails' edge distance)",
+   "design_values": {
+    "tension_N": 1200.6,
+    "shear_N": 693.2,
+    "basis": "ISO 898-1 minimum stress under proof load Sp 580 MPa for class 8.8 at d <= 16 mm (TR Fastenings ISO 898-1 table) x the M2 tensile stress area 2.07 mm2 (TorqBolt BS 3692 table) = 1200.6 N, in full (a specified minimum); shear against the proof load / sqrt 3, the rule of the M3 entries"
+   },
+   "quotes": {
+    "proof_stress": "Class 8.8: Test stress Sp 580 MPa for \"<= 16mm\" (TR Fastenings, mechanical properties ISO 898-1 EN 20898-1)",
+    "stress_area": "M2 2.07 (Tensile stress area of bolt mm2; TorqBolt, BS 3692 proof loads for steel nuts)",
+    "head": "M2 (ISO 4762): dk max 3,80; k max 2,00; P 0,4; b 16 (fasteners.eu ISO 4762)"
+   },
+   "extra_source_urls": [
+    "https://www.trfastenings.com/knowledge-base/metric-screws/screws-and-bolts-mechanical-properties",
+    "https://TorqBolt.com/bs-3692-bolting-assemblies-fasteners-bolting-stud-bolts-screws-nuts-suppliers-manufacturers"
+   ],
+   "thread_length_note": "8 mm is in the ISO 4762 nominal-length table read at fasteners.eu (2026-11-03, physics round 17: lengths 2.5, 3, 4, 5, 6, 8, 10, 12, 16, 20; short lengths fully threaded)"
+  },
+  "price_usd": null,
+  "source_url": "https://www.fasteners.eu/standards/ISO/4762/",
+  "retrieved": "2026-11-04",
+  "verified": "retailer-page"
+ },
+ {
   "id": "washer-din6799-4",
   "category": "fastener",
   "manufacturer": "any DIN 6799 maker (spring steel; stainless A1/A4 also listed)",
@@ -9754,5 +9828,571 @@
   "source_url": "https://www.fasteners.eu/standards/DIN/471/",
   "retrieved": "2026-11-03",
   "verified": "retailer-page"
+ },
+ {
+  "id": "connector-amass-tplug-male",
+  "category": "connector",
+  "manufacturer": "AMASS (Changzhou Amass Electronics)",
+  "name": "AMASS T-plug (Deans-compatible) male connector with sheath",
+  "mass_g": 2.0,
+  "specs": {
+   "mass_basis": "per part (one male plug)",
+   "mass_text": "Plug Weight: Female 2g, Male 2g",
+   "role": "mate of the pack's Deans discharge plug (batt-gensace-2200-3s-35c, 'Connector Type: Deans'); also the male half of a T-plug arming jumper",
+   "pins": 2,
+   "rated_current_a": 36,
+   "max_current_a": 60,
+   "current_text": "Current Handling: 50A+ (constant); Max. RC/MC: 36A/60A",
+   "current_rule": "use the RC (rated current) figure, 36 A, as the continuous rating; the 50A+ 'constant' marketing figure is not used",
+   "internal_resistance_mohm": 0.4,
+   "temperature_range_c": [
+    -20,
+    120
+   ],
+   "temperature_text": "Temperature Resistance: -20°C ~ 120°C",
+   "pull_force_text": "Pulling Force/500: 25N",
+   "mating_cycles_text": "Recommend Use Times: 1000 times",
+   "material": "contacts brass, gold plated; housing nylon (PA)",
+   "material_text": "Body Material: Brass and gold plated; Internal Material: Nylon/PA",
+   "compatibility_text": "This is a genuine AMASS connector and backwards compatible with original Deans connectors so you can use them straight away.",
+   "seller_sku": "CON-DEANS-M",
+   "dimensions_text": "not stated on the page (unsourced)",
+   "wire_gauge_text": "not stated on the page",
+   "esc_side_note": "The ESC (esc-holybro-tekko32-f4-45a-am32) ships with no connector: ReadyMadeRC 'What Is Included' lists '(1) 16AWG 100mm Red Power Wire', '(1) 16AWG 100mm Black Power Wire' and the spec row 'Solder/DIY' for the battery connector. This plug is soldered to that lead (or to the PDB lead).",
+   "genuine_deans_note": "A genuine W.S. Deans Ultra Plug male could not be sourced: wsdeans.com returned HTTP 429 on every read on 2026-11-03, and Hobbylinc lists the WSD 1302 male 2-pack as 'Discontinued'. No WSD mass or rating was read."
+  },
+  "price_usd": null,
+  "source_url": "https://www.flyingtech.co.uk/product/amass-t-plug-deans-connector-with-sheath-male-female/",
+  "retrieved": "2026-11-03",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "connector-amass-tplug-female",
+  "category": "connector",
+  "manufacturer": "AMASS (Changzhou Amass Electronics)",
+  "name": "AMASS T-plug (Deans-compatible) female connector with sheath",
+  "mass_g": 2.0,
+  "specs": {
+   "mass_basis": "per part (one female plug)",
+   "mass_text": "Plug Weight: Female 2g, Male 2g",
+   "role": "bird-side socket of a T-plug arming jumper in the battery positive lead (the jumper is a connector-amass-tplug-male with its two pins joined by a short wire loop); reachable from the hatch",
+   "pins": 2,
+   "rated_current_a": 36,
+   "max_current_a": 60,
+   "current_text": "Current Handling: 50A+ (constant); Max. RC/MC: 36A/60A",
+   "current_rule": "use the RC (rated current) figure, 36 A, as the continuous rating",
+   "internal_resistance_mohm": 0.4,
+   "temperature_range_c": [
+    -20,
+    120
+   ],
+   "temperature_text": "Temperature Resistance: -20°C ~ 120°C",
+   "pull_force_text": "Pulling Force/500: 25N",
+   "mating_cycles_text": "Recommend Use Times: 1000 times",
+   "material": "contacts brass, gold plated; housing nylon (PA)",
+   "material_text": "Body Material: Brass and gold plated; Internal Material: Nylon/PA",
+   "compatibility_text": "This is a genuine AMASS connector and backwards compatible with original Deans connectors so you can use them straight away.",
+   "seller_sku": "CON-DEANS-F",
+   "dimensions_text": "not stated on the page (unsourced)",
+   "arming_note": "The jumper loop and the battery leads are wire (exempt). The page gives no voltage rating; 3S is 12.6 V. The page says nothing about arming or hot-plug sparking."
+  },
+  "price_usd": null,
+  "source_url": "https://www.flyingtech.co.uk/product/amass-t-plug-deans-connector-with-sheath-male-female/",
+  "retrieved": "2026-11-03",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "cable-gobilda-servo-ext-150",
+  "category": "cable",
+  "manufacturer": "goBILDA",
+  "name": "Servo Extension (3-Pos TJC8, MH-FC to FH-MC, 150mm Length), 3802-1718-0150",
+  "mass_g": 3.7,
+  "specs": {
+   "mass_basis": "per lead",
+   "part_number": "3802-1718-0150",
+   "length_mm": 150,
+   "weight_text": "Weight | 3.7g (specs table)",
+   "wire_gauge_awg": 22,
+   "wire_material": "Stranded Copper",
+   "jacket_material": "PVC",
+   "connector": "3-position TJC8 (2.54 mm servo style), male housing/female contacts one end, female housing/male contacts the other (title 'MH-FC to FH-MC')",
+   "compatibility_note": "goBILDA's page does not mention JR or Futaba; it names the connector only as TJC8. Pololu 2184/2185 (22 AWG, 'compatible with both JR- and Futaba-style connectors') publish no mass.",
+   "current_rating": "not stated by goBILDA"
+  },
+  "price_usd": null,
+  "source_url": "https://www.gobilda.com/servo-extension-3-pos-tjc8-mh-fc-to-fh-mc-150mm-length/",
+  "retrieved": "2026-11-03",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "cable-gobilda-servo-ext-300",
+  "category": "cable",
+  "manufacturer": "goBILDA",
+  "name": "Servo Extension (3-Pos TJC8, MH-FC to FH-MC, 300mm Length), 3802-1718-0300",
+  "mass_g": 6.0,
+  "specs": {
+   "mass_basis": "per lead",
+   "part_number": "3802-1718-0300",
+   "length_mm": 300,
+   "weight_text": "Weight | 6.0g",
+   "wire_gauge_awg": 22,
+   "wire_material": "Stranded Copper",
+   "jacket_material": "PVC",
+   "connector": "3-position TJC8 (2.54 mm servo style), 'MH-FC to FH-MC'",
+   "current_rating": "not stated by goBILDA"
+  },
+  "price_usd": null,
+  "source_url": "https://www.gobilda.com/servo-extension-3-pos-tjc8-mh-fc-to-fh-mc-300mm-length/",
+  "retrieved": "2026-11-03",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "cable-gobilda-servo-ext-450",
+  "category": "cable",
+  "manufacturer": "goBILDA",
+  "name": "Servo Extension (3-Pos TJC8, MH-FC to FH-MC, 450mm Length), 3802-1718-0450",
+  "mass_g": 8.4,
+  "specs": {
+   "mass_basis": "per lead",
+   "part_number": "3802-1718-0450",
+   "length_mm": 450,
+   "weight_text": "Weight | 8.4g (specs table)",
+   "wire_gauge_awg": 22,
+   "wire_material": "Stranded Copper",
+   "jacket_material": "PVC",
+   "connector": "3-position TJC8 (2.54 mm servo style), 'MH-FC to FH-MC'",
+   "current_rating": "not stated by goBILDA"
+  },
+  "price_usd": null,
+  "source_url": "https://www.gobilda.com/servo-extension-3-pos-tjc8-mh-fc-to-fh-mc-450mm-length/",
+  "retrieved": "2026-11-03",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "cable-gobilda-servo-ext-600",
+  "category": "cable",
+  "manufacturer": "goBILDA",
+  "name": "Servo Extension (3-Pos TJC8, MH-FC to FH-MC, 600mm Length), 3802-1718-0600",
+  "mass_g": 10.0,
+  "specs": {
+   "mass_basis": "per lead",
+   "part_number": "3802-1718-0600",
+   "length_mm": 600,
+   "weight_text": "Weight | 10g (specs table)",
+   "wire_gauge_awg": 22,
+   "wire_material": "Stranded Copper",
+   "jacket_material": "PVC",
+   "connector": "3-position TJC8 (2.54 mm servo style), 'MH-FC to FH-MC'",
+   "current_rating": "not stated by goBILDA"
+  },
+  "price_usd": null,
+  "source_url": "https://www.gobilda.com/servo-extension-3-pos-tjc8-mh-fc-to-fh-mc-600mm-length/",
+  "retrieved": "2026-11-03",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "strap-rctimer-hookloop-15x330",
+  "category": "fastener",
+  "manufacturer": "RcTimer (sold as Turnigy Battery Strap 330mm)",
+  "name": "Hook-and-loop battery strap 15 x 330 mm, polyester",
+  "mass_g": 3,
+  "specs": {
+   "mass_basis": "per part (page 'Weight: 3g')",
+   "width_mm": 15,
+   "length_mm": 330,
+   "material": "100% Polyester / 0% Cotton",
+   "closure": "hook and loop ('you don't even need to use the buckle as you would with a regular Velcro strap')",
+   "sku": "DIY-BATTSTP-330",
+   "releasable": true,
+   "note": "Retailer page (flyingtech.co.uk): 'our current stock of this battery strap is branded RcTimer, not Turnigy.' No load rating published. The maker publishes no page found; stockist used."
+  },
+  "price_usd": null,
+  "source_url": "https://www.flyingtech.co.uk/product/turnigy-battery-strap-330mm",
+  "retrieved": "2026-11-03",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "tube-saint-gobain-versilon-spt50-094x156",
+  "category": "pressure_tubing",
+  "manufacturer": "Saint-Gobain (Versilon)",
+  "name": "Versilon SPT-50 platinum-cured silicone tubing SPT50 - .094 X .156 (2.381 mm ID x 3.969 mm OD)",
+  "mass_g": 9.1,
+  "specs": {
+   "mass_basis": "per_metre, computed: pi/4 x (OD^2 - ID^2) = 7.917 mm2 x specific gravity 1.15 = 9.1 g/m (no mass per length is published)",
+   "part_number": "SPT50 - .094 X .156",
+   "id_in": 0.0938,
+   "od_in": 0.1562,
+   "wall_in": 0.0312,
+   "id_mm": 2.381,
+   "od_mm": 3.969,
+   "wall_mm": 0.794,
+   "size_row_text": "SPT50 - .094 X .156  3/32  5/32  1/32 (columns: Part Number, ID (in), OD (in), Wall Thickness (in))",
+   "material": "platinum-cured silicone",
+   "specific_gravity": 1.15,
+   "properties_text": "Durometer Hardness, Shore A, 15 Sec D2240 50; Tensile Strength, psi (MPa) D412 1150 (8); Ultimate Elongation, % D412 450; Specific Gravity D792 1.15; Tear Resistance lb-f/in (kN/m) D624 150 (26); Color Translucent",
+   "fit_basis": "TE MS4525DO datasheet (source_url_2): '1/8” barbed pressure ports mate securely with 3/32” ID tubing.' Matek's ASPD-4525 page names neither the MS4525DO package on the board nor the tubing size it ships ('Clear silicon tubing 40cm').",
+   "document": "Saint-Gobain FLS-3295-0819-SGLS (2019), maker's sheet hosted by biopharmworld.com"
+  },
+  "price_usd": null,
+  "source_url": "https://biopharmworld.com/assets/Saint-Gobain-Versilon-SPT-50-Silicone-Tubing.pdf",
+  "retrieved": "2026-11-03",
+  "verified": "datasheet",
+  "source_url_2": "https://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc&DocId=Data+Sheet%7FMS4525DO%7FB2%7Fpdf%7FEnglish%7FENG_DS_MS4525DO_B2.pdf%7FCAT-BLPS0002"
+ },
+ {
+  "id": "thermal-ref-scorpion-sii-3008-1090",
+  "category": "thermal_reference",
+  "manufacturer": "Scorpion Power System",
+  "name": "SII-3008-1090KV: what the maker publishes on temperature and cooling",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not applicable (reference entry)",
+   "wire_rating_text": "The stators are epoxy coated to prevent shorts, and are wound with wire that is rated at 180 degrees C (356 F).",
+   "magnet_rating_text": "The magnets used in Scorpion Motors are rated for operation at 200 degrees C (392 F),",
+   "wire_rating_c": 180,
+   "magnet_rating_c": 200,
+   "continuous_text": "Max Continuous Current: 26 Amps; Max Continuous Power: 370 Watts (no cooling condition or time limit attached on the product page)",
+   "chart_cooling_text": "The prop recommendations in this chart are based on the motor receiving adequate cooling throughout its operation. If your motor is being used inside a cowl, you must provide adequate cooling to the motor and make sure that the motor is not getting too hot during operation.",
+   "cooling_figure": null,
+   "note": "No airflow figure, maximum case temperature or insulation class is published. 'Adequate cooling' is not quantified. The 180 C and 200 C figures are the wire's and magnets' ratings, not a motor operating limit. Data chart: https://scorpionsystem.com/files/i1,070_data_chart.pdf (source_url_2, read via pdftotext); its rows are prop tests at 11.1 V.",
+   "eligibility": "reference only: not a part, no mass; kept for its published rule or figures"
+  },
+  "price_usd": null,
+  "source_url": "https://scorpionsystem.com/catalog/aeroplane/motors_1/s-30_v2/SII-3008-1090KV/",
+  "retrieved": "2026-11-03",
+  "verified": "manufacturer-page",
+  "source_url_2": "https://scorpionsystem.com/files/i1,070_data_chart.pdf"
+ },
+ {
+  "id": "thermal-ref-holybro-tekko32-f4-45a",
+  "category": "thermal_reference",
+  "manufacturer": "Holybro (via ReadyMadeRC); AM32 firmware",
+  "name": "Tekko32 F4 45A ESC (AM32): what is published on cooling and thermal limits",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not applicable (reference entry)",
+   "stockist_cooling_text": "it is built for individual arm-mounting setups requiring dedicated motor channels and direct airflow cooling.",
+   "stockist_continuous_text": "Supporting 2S to 6S LiPo input voltages with a continuous rating of 45A",
+   "stockist_specs_text": "Manufacturer SKU: 31104; Continuous Current: 45A; Dimensions: 17.3 mm x 34.3 mm x 4.5 mm; Net Weight: 5.8 grams; BATTERY CONNECTOR: Solder/DIY",
+   "maker_page_status": "holybro.com/products/tekko32-f4-45a-esc returned HTTP 429 on five attempts on 2026-11-03, so unread this session. docs.holybro.com has no Tekko32 page (llms.txt index read).",
+   "firmware_limit_text": "AM32 configurator: name=\"Temperature limit\" :min=\"70\" :max=\"141\" :step=\"1\" :disabled-value=\"141\"",
+   "firmware_behaviour_text": "AM32 v2.21 main.c: 'if (degrees_celsius > eepromBuffer.limits.temperature) {' ... 'duty_cycle_maximum = map(degrees_celsius, eepromBuffer.limits.temperature - 10, eepromBuffer.limits.temperature + 10,' 'throttle_max_at_high_rpm / 2, 1);'; out-of-range setting: 'if (eepromBuffer.limits.temperature < 70 || eepromBuffer.limits.temperature > 140) {' 'eepromBuffer.limits.temperature = 255;'",
+   "firmware_sources": [
+    "https://raw.githubusercontent.com/am32-firmware/am32-configurator/master/pages/configurator.vue",
+    "https://raw.githubusercontent.com/am32-firmware/AM32/v2.21/Src/main.c",
+    "https://raw.githubusercontent.com/am32-firmware/AM32/main/Inc/eeprom.h ('uint8_t temperature; // 43')"
+   ],
+   "cooling_figure": null,
+   "note": "No airflow figure or temperature rating at 45 A is published by the maker or stockist read. The stockist's text assumes 'direct airflow cooling' (arm-mounted in a multirotor's prop wash). The firmware throttles on its own temperature reading once a user-set limit (70-140 C; 141 or out of range = off) is passed. That is a protection, not a cooling rating.",
+   "eligibility": "reference only: not a part, no mass; kept for its published rule or figures"
+  },
+  "price_usd": null,
+  "source_url": "https://www.readymaderc.com/products/details/87186-holybro-tekko32-f4-45a-esc-am32",
+  "retrieved": "2026-11-03",
+  "verified": "retailer-page",
+  "source_url_2": "https://raw.githubusercontent.com/am32-firmware/am32-configurator/master/pages/configurator.vue"
+ },
+ {
+  "id": "covering-ref-oracover-air-light-application",
+  "category": "covering_reference",
+  "manufacturer": "Lanitz-Prena (Oracover)",
+  "name": "ORACOVER AIR / AIR LIGHT: the maker's stated application and film data (2010 English product information)",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not applicable (reference entry)",
+   "air_light_application_text": "ORACOVER® AIR LIGHT / For light blimps up to 2 m length",
+   "air_family_text": "The covering for light constructions. Wherever minimum weight is demanded, wherever weight has to be reduced to its limits, ORACOVER® AIR is the product to be applied. Whether indoor flyers, park flyers, blimps or airships are to be built, ORACOVER® AIR will do the covering job.",
+   "adhesive_text": "In contrast to regular ORACOVER ®, ORACOVER ® AIR has no adhesive layer. The hotmelt adhesive is to be brushed onto the surface.",
+   "other_ranges_text": "ORACOVER® AIR INDOOR For extremely light aircraft; ORACOVER® AIR OUTDOOR For more solid light aircraft, park flyers, etc.; ORACOVER® AIR MEDIUM For blimps and airships up to 4 m length",
+   "light_row_text": "LIGHT  lenghtw./crossw.: min. 150 [N/50mm]  lenghtw./crossw.: 90 [%]  approx. 18 [g/m²]  approx. 12 µm  He 400 / H2 220",
+   "tensile_min_N_per_50mm": 150,
+   "breaking_extension_pct": 90,
+   "areal_density_g_m2_2010": 18,
+   "thickness_um": 12,
+   "general_text": "Adhesive power: min. 7 N / 25 mm - Shrinkage: min. 5 % in both directions (reference temperature 150 °C) - Melting point: 250 °C",
+   "examples_text": "ORACOVER ® AIR INDOOR and OUTDOOR has not only proved itself as covering film for model airplanes, but becomes more and more popular as base material for model sails.",
+   "span_rule": null,
+   "span_rule_note": "No rib spacing, support spacing or largest unsupported span is published in this catalogue. The processing manual (https://www.oracover.de/downloads2/Anleitungen/Oracover.pdf) is behind a Cloudflare challenge (HTTP 403 to WebFetch and to curl) and stays unread. The current Lanitz TDS page (film-oracover-air-light's source) gives no span rule either.",
+   "document": "Lanitz-Prena ORACOVER product information 2010 (English), page 12; maker's catalogue hosted by hyperflight.co.uk (the catalogue's film-oracover-air-light entry already cites it)",
+   "eligibility": "reference only: not a part, no mass; kept for its published rule or figures"
+  },
+  "price_usd": null,
+  "source_url": "https://www.hyperflight.co.uk/extras/Oracover-Product-Information_2010_engl.pdf",
+  "retrieved": "2026-11-03",
+  "verified": "datasheet",
+  "source_url_2": "https://www.lanitz-aviation.com/sites2/7/technical-data-sheets"
+ },
+ {
+  "id": "covering-ref-catenoid-critical-ratio",
+  "category": "covering_reference",
+  "manufacturer": "Wolfram MathWorld (E. W. Weisstein)",
+  "name": "Minimal surface of revolution between two coaxial rings: critical half-separation to radius ratio",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not applicable (reference entry)",
+   "critical_half_separation_over_radius": 0.6627434193,
+   "critical_separation_over_radius": 1.3254868386,
+   "rule_text": "(x_0)/(y_0)=csch u=0.6627434193.... (Eq. 26); Therefore, only Goldschmidt ring solutions exist for x₀/y₀ > 0.6627...",
+   "beyond_text": "The physical interpretation of this fact is that the surface breaks and forms circular disks in each ring to minimize area.",
+   "metastable_text": "for x0/y0 in (0.52770, 0.6627) the catenary \"has larger area than the two disks, so it exists only as a local minimum.\"",
+   "source_kind": "publication (reference encyclopaedia page); 'verified' set to manufacturer-page as the publisher's own page, since the schema has no publication value",
+   "references_cited": [
+    "Arfken, G. Mathematical Methods for Physicists, 3rd ed., Academic Press, pp. 931-937, 1985",
+    "Goldstein, H. Classical Mechanics, 2nd ed., Addison-Wesley, p. 42, 1980",
+    "Isenberg, C. The Science of Soap Films and Soap Bubbles, Dover, pp. 79-80 and Appendix III, 1992"
+   ],
+   "applies_to": "a membrane under uniform isotropic tension and zero pressure difference (soap-film model) spanning two coaxial circular rings; x0 is the half-separation, y0 the ring radius. It is the existence bound the audit used for the pod formers (2h/R < 1.325). It is a mathematical bound, not a covering maker's rule; a shrink film carries some non-isotropic stress and sees a pressure difference in flight, which this model does not include.",
+   "eligibility": "reference only: not a part, no mass; kept for its published rule or figures"
+  },
+  "price_usd": null,
+  "source_url": "https://mathworld.wolfram.com/MinimalSurfaceofRevolution.html",
+  "retrieved": "2026-11-03",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "covering-ref-myers-1992-rib-suction",
+  "category": "covering_reference",
+  "manufacturer": "Model Aviation (AMA), George Myers",
+  "name": "Peak suction on covering between ribs and the covering-to-rib adhesion test (Model Aviation, Dec 1992, pp. 44, 45, 144)",
+  "mass_g": null,
+  "specs": {
+   "mass_basis": "not applicable (reference entry)",
+   "rule_text": [
+    "Wing loading tells you approximately the average suction produced by air moving over the wing.",
+    "Because suction distribution varies in an approximately triangular pattern, the peak value at the high point of the wing is roughly double the average.",
+    "When the airplane maneuvers, multiply that number by the G load the wing supports.",
+    "Allowing for material aging, prop wash, and other effects, use a safety factor (typically about 1.5)"
+   ],
+   "rule": "peak design suction on the covering = 2 x wing loading x n (G) x 1.5",
+   "example_text": "Using 10G for our model raises the maximum suction on the covering to about 40 lb/ft²; ... to reach a peak design suction of roughly 60 lb/ft² ... for a 10-pound model with a 720 in² (5 ft²) wing.",
+   "panel_example_text": "Say your wing ribs are 12 inches long and spaced about 4 inches (1/3 ft) apart. ... The maximum lift sucking the covering off the area between ribs is (60 × 1/3 =) 20 pounds.",
+   "adhesion_test_text": "As a practical test, iron a one-inch-wide strip of the covering material onto the edge of a piece of balsa that matches the strength and thickness of your wing rib. Suspend a one-quart cardboard milk container (filled with water) by string or wire. The covering should remain attached while the container is about 80% full.",
+   "span_rule": null,
+   "span_rule_note": "This gives the load the film puts on each rib bond. It sets no maximum rib spacing.",
+   "source_kind": "magazine article in the AMA's Model Aviation digital library; 'verified' set to manufacturer-page as the publisher's own page, since the schema has no publication value",
+   "eligibility": "reference only: not a part, no mass; kept for its published rule or figures"
+  },
+  "price_usd": null,
+  "source_url": "https://library.modelaviation.com/article/rc-flying-today-rib-stitching-and-gluing",
+  "retrieved": "2026-11-03",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "adhesive-3m-dp490",
+  "category": "adhesive",
+  "manufacturer": "3M",
+  "name": "3M Scotch-Weld Epoxy Adhesive DP490 (black, two-part, 2:1)",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not counted (in the 15% margin with glue); the data sheet gives no density",
+   "overlap_shear_23C_7d_psi": {
+    "aluminum_sandblasted": 3336,
+    "stainless_steel_sandblasted": 3481,
+    "steel_dd11_sandblasted": 3916,
+    "titanium_sandblasted": 2901
+   },
+   "overlap_shear_failure_modes": {
+    "aluminum_sandblasted": "CF (cohesive)",
+    "titanium_sandblasted": "AF (adhesive)"
+   },
+   "overlap_shear_method": "ASTM D1002, ISO 4587; 23 C, 7 d dwell",
+   "overlap_shear_82C_aluminum_psi": 1378,
+   "specimen_text": "Aluminum row (note 1): '25 mm (1\") wide, 12.7 mm (1/2\") overlap samples, 25 mm (1\") x 102 mm (4\") substrates, bondline thickness: 0.13-0.20 mm (5-8 mil)'. Titanium row (note 2): 'Overlap shear (OLS) strengths were measured on 1in wide 1/2in overlap specimens on 1in x 4in x .060in substrates. Jaw separation 0.05 in/min. 10 mil bondline.'",
+   "bond_line_text": "Maximum shear strength is obtained with a 3-5 mil bond line.",
+   "bond_line_max_strength_mm": [
+    0.076,
+    0.127
+   ],
+   "bond_line_basis": "3-5 mil (0.0762-0.127 mm), the data sheet's application step 7; its rows were measured at 5-8 mil (aluminium) and 10 mil (titanium)",
+   "surface_prep_text": "Steel: '2. Sandblast or abrade using clean fine grit abrasives.' The overlap shear rows are on sandblasted aluminium and sandblasted titanium.",
+   "cure_text": "These products will cure in 48 hours @ 75F (24C); heat up to 200F (93C) to speed curing; 'Keep parts from moving during cure. Contact pressure necessary.'",
+   "typical_note": "The following technical information and data should be considered representative or typical only and should not be used for specification purposes.",
+   "substrates": {
+    "titanium": {
+     "maker_states_suitable": true,
+     "shear_MPa": 20.0,
+     "basis": "2901 psi (20.0 MPa) on sandblasted titanium, ASTM D1002 / ISO 4587, 23 C, 7 d, adhesive failure; typical"
+    },
+    "aluminium": {
+     "maker_states_suitable": true,
+     "shear_MPa": 23.0,
+     "basis": "3336 psi (23.0 MPa) on sandblasted aluminum, ASTM D1002 / ISO 4587, 23 C, 7 d, cohesive failure; typical"
+    }
+   },
+   "design_values": {
+    "shear_MPa": 10.0,
+    "basis": "titanium to aluminium: the lower of the two published rows, 2901 psi (20.0 MPa) on sandblasted titanium, typical ('should not be used for specification purposes'): counted at half"
+   },
+   "revision_text": "English-US, Last Revision Date: February, 2025; Supersedes: September, 2024"
+  },
+  "price_usd": null,
+  "source_url": "https://multimedia.3m.com/mws/media/2409614O/3m-scotch-weld-epoxy-adhesive-dp490.pdf",
+  "source_url_2": "https://web.archive.org/web/20251009175517/https://multimedia.3m.com/mws/media/2409614O/3m-scotch-weld-epoxy-adhesive-dp490.pdf",
+  "source_note": "3M's server returned HTTP 403 to WebFetch and curl on 2026-11-03; the same URL's archived copy (source_url_2, captured 2025-10-09, the February 2025 revision) was read with pdftotext",
+  "retrieved": "2026-11-03",
+  "verified": "datasheet"
+ },
+ {
+  "id": "drag-ref-gharib-roshko-1985-axisymmetric-cavity",
+  "category": "drag_reference",
+  "manufacturer": "Jet Propulsion Laboratory, California Institute of Technology (M. Gharib, A. Roshko, V. Sarohia), published through NASA",
+  "name": "Drag of an open annular cavity (gap) in a 4-inch body of revolution with a laminar upstream boundary layer: JPL Publication 85-72 / NASA-CR-176652",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not applicable (reference entry)",
+   "mass_note": "A drag-coefficient reference, not a physical part; mass_g 0 follows the convention of airfoil-e387-nasa-tm4062.",
+   "citation": "Gharib, M., Roshko, A., Sarohia, V., 'Effect of Flow Oscillations on Cavity Drag and a Technique for Their Control', JPL Publication 85-72 (NASA-CR-176652; NAS 1.26:176652), Jet Propulsion Laboratory, California Institute of Technology, 30 September 1985. Journal version: Gharib & Roshko, 'The effect of flow oscillations on cavity drag', Journal of Fluid Mechanics vol. 177, April 1987 (NTRS 19870053564; only the NTRS abstract was read).",
+   "ntrs_id": "19860012048",
+   "accession": "86N21519",
+   "citation_page_url": "https://ntrs.nasa.gov/citations/19860012048",
+   "licence_basis": "NTRS record 19860012048: distribution PUBLIC, copyright determination GOV_PUBLIC_USE_PERMITTED (NASA contractor report).",
+   "model_text": "The rear portion, a hollow cylinder 10.16 cm (4 inches) in diameter and 91.4 cm (36 inches) in length ... The front portion consisted of a half portion 2:1 ellipsoidal cone with a 10.16 cm (4 inch) minor diameter. ... The sting was made from a 1.27 cm (1/2 inch) O.D. thick wall stainless steel tube.",
+   "conditions_text": "The boundary layer upstream of the cavity was considered laminar at Ue = 23 cm/sec and had a shape factor of H = δ*/θ0 = 2.5 where δ* = .1 cm (displacement thickness), θ0 = 0.041 cm and Reθ0 = 95. (water tunnel; Re based on model diameter 24 x 10^3)",
+   "drag_basis_text": "All drag forces were normalized by ½ρUe²A, where ρ is water density and A is the cross-sectional area of the model. (Symbols restored from the scan's OCR.)",
+   "drag_basis": "CD = D / (½ ρ Ue² A_frontal), A_frontal = π d²/4 = 81.07 cm² for d = 10.16 cm; Ue is the edge velocity at the upstream (separation) corner. Converted here to the opening (plan) area A_open = π d b of the gap: CD_open = CD x d / (4 b).",
+   "non_oscillating_text": "The drag coefficient in non-oscillating mode has a typical value of 1.3 x 10^-4 at b/θ0 = 77.",
+   "mode_ii_text": "At the beginning of the oscillating modes (Mode II in this study), the drag coefficient has a value of 0.9 x 10^-3 at b/θ0 = 85. The drag coefficient then increases exponentially and reaches a peak value of 0.02 at b/θ0 = 108.",
+   "wake_mode_text": "by exceeding its value, the drag coefficient of the cavity jumps to a value which is one order of magnitude higher than the typical average drag coefficient during oscillating modes. During the course of the wake mode the drag coefficient increases monotonically and reaches a value of 0.39 at b/θ0 = 250. No more measurements were made beyond this point due to model limitations.",
+   "forcing_text": "The drag of the cavity can be increased by one order of magnitude in the non-oscillating case through external forcing.",
+   "jfm_abstract_text": "Above a critical value of the cavity width-to-depth ratio there is an abrupt and large increase of drag due to the onset of the 'wake mode' of instability.",
+   "cd_frontal_mode_ii_peak": 0.02,
+   "cd_frontal_wake_mode_max": 0.39,
+   "cd_frontal_wake_mode_first_point_fig39": 0.29,
+   "cd_frontal_wake_mode_first_point_note": "graph reading of Fig. 39 (first wake-mode point, b/θ0 about 167); not a tabulated value",
+   "cd_open_converted": {
+    "basis": "computed here, not printed in the report: CD_open = CD_frontal x d/(4b), b = (b/θ0) x 0.041 cm, d = 10.16 cm; assumes θ0 = 0.041 cm (the value stated at Ue = 23 cm/s) holds for the Fig. 39 points",
+    "mode_ii_peak_b_theta_108": 0.0115,
+    "wake_mode_b_theta_167_graph_read": 0.108,
+    "wake_mode_b_theta_250": 0.097
+   },
+   "recommended_cd_open_conservative": 0.108,
+   "recommended_cd_open_note": "conservative ceiling: the highest published cavity drag found for low-speed flow, the wake-mode values converted to opening area (0.097 to 0.108). Corroborating published ranges, all on plan (opening) area: Tillmann NACA TM 1299 Figs. 14 and 17 (turbulent boundary layer, flat plate) peak about 0.068 (circular cavity, h/D about -0.5, D/δ about 20) and 0.040 (slot), deep cavities (h/t below -1) about 0.005 to 0.02; Roshko NACA TN 3488 square cavity wall-pressure CD = 0.033 on breadth.",
+   "applies_to": "Closest published geometry found for the avis pod window: a streamwise gap of length b cut round a body of revolution of about the pod's diameter, deep interior, laminar upstream boundary layer. The avis window (b = 43.2 mm, d about 92-100 mm, b/R about 0.86-0.94, laminar b/θ about 98-127 at x 0.25-0.30 m and 10-14 m/s) sits at the Mode II peak point of this report (b/θ0 108, b/R 0.87: CD_open 0.0115). Mismatches: water at Reθ0 95 against air at Reθ about 275-356; the gap runs round 360 degrees here and about 240 degrees on the pod; the pod interior holds a gearbox and plates (effective depth unknown) rather than an empty annulus round a sting; wing roots move through the pod's gap; the pod cavity is not sealed (it connects to the tail-cone cuts and the pitot exit, so through-flow is possible, which this sealed-cavity data does not cover).",
+   "pdf_pages": "printed pp. 18-19 (reference quantities), 34-35 (drag coefficient), Fig. 39 printed p. 115 (PDF page 137)",
+   "eligibility": "reference only: not a part, no mass; kept for its published rule or figures"
+  },
+  "price_usd": null,
+  "source_url": "https://ntrs.nasa.gov/api/citations/19860012048/downloads/19860012048.pdf",
+  "retrieved": "2026-11-04",
+  "verified": "datasheet",
+  "source_url_2": "https://ntrs.nasa.gov/citations/19870053564"
+ },
+ {
+  "id": "drag-ref-rogallo-naca-713-internal-flow",
+  "category": "drag_reference",
+  "manufacturer": "National Advisory Committee for Aeronautics (F. M. Rogallo)",
+  "name": "Internal-flow systems for aircraft: NACA Report 713 (1941)",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not applicable (reference entry)",
+   "citation": "Rogallo, F. M., 'Internal-flow systems for aircraft', NACA Report No. 713, 1941 (NTRS 19930091791).",
+   "ntrs_id": "19930091791",
+   "citation_page_url": "https://ntrs.nasa.gov/citations/19930091791",
+   "licence_basis": "NACA report, US government work (NTRS public distribution).",
+   "momentum_text": "D=Qρ(V-Vo) (1)",
+   "coefficient_text": "The flow coefficient Q/AV is the ratio of the average velocity through the area A to the velocity of the free stream, where A is the minimum cross-sectional area of the opening ... The drag coefficient (C_Di,o = D_i,o/qA) is based on the same area of opening",
+   "ideal_opening_text": "their drag curves lie completely below the drag curve for an ideal opening in the free stream, where K_i = 1.0. (See fig. 9.)",
+   "small_holes_text": "small holes in the surfaces of aircraft may result in internal flow where none is desired",
+   "through_flow_cda_over_area_max": 2.0,
+   "through_flow_bound_basis": "from eq. (1) with the through-flow Q = A V (Q/AV) and all its momentum lost (K_i = 1, the ideal opening): D = rho Q V, so C_D on the opening's area = 2 (Q/AV) <= 2 for a passive opening (Q/AV <= 1). An upper bound, used where no internal flow rate is known.",
+   "eligibility": "reference only: not a part, no mass; kept for its published rule or figures",
+   "fig10_readings_text": "Fig. 10, 'Inlet characteristics of a circular hole in a flat plate' (sharp edge, 2 and 3 in holes, 40 and 80 mph); graph readings (+/- about 0.02), p/q the internal static pressure relative to the plate's outside static",
+   "fig10_readings": [
+    {
+     "Q_over_AV": 0.1,
+     "p_over_q": -0.09,
+     "C_Di": 0.13
+    },
+    {
+     "Q_over_AV": 0.2,
+     "p_over_q": -0.25,
+     "C_Di": 0.3
+    },
+    {
+     "Q_over_AV": 0.3,
+     "p_over_q": -0.45,
+     "C_Di": 0.49
+    },
+    {
+     "Q_over_AV": 0.4,
+     "p_over_q": -0.68,
+     "C_Di": 0.66
+    },
+    {
+     "Q_over_AV": 0.5,
+     "p_over_q": -0.95,
+     "C_Di": 0.85
+    }
+   ],
+   "fig25_outlet_text": "Fig. 25, outlet of a circular hole in a flat plate: 'The thrust of this opening is almost zero at all flow coefficients because the jet is not directed downstream.'",
+   "applicability_text": "Because inlet characteristics are largely dependent upon the total-pressure gradient ahead of the opening, the data presented in this report are not directly applicable where the external boundary-layer conditions differ from those of the test set-up.",
+   "through_flow_cd_conservative": 0.85,
+   "through_flow_cd_conservative_basis": "Fig. 10's last reading row (Q/AV 0.5, internal p/q -0.95, C_Di 0.85 on the hole's area), taken for the openings an interior pressure would draw in: conservative for the avis pod, whose interior pressure is set by the wing-root window (body-alone measurement there p/q about -0.055, Freeman NACA Report 443 Fig. 9; the window may also feel the wing root's upper-surface suction, which no source here gives, so the far stronger -0.95 is taken). The Q/AV <= 1 bound (2.0) stays recorded above."
+  },
+  "price_usd": null,
+  "source_url": "https://ntrs.nasa.gov/api/citations/19930091791/downloads/19930091791.pdf",
+  "retrieved": "2026-11-04",
+  "verified": "datasheet"
+ },
+ {
+  "id": "drag-ref-freeman-naca-443-akron-hull-cp",
+  "category": "drag_reference",
+  "manufacturer": "NACA Langley Memorial Aeronautical Laboratory (H. B. Freeman)",
+  "name": "Measured surface pressure along a fineness-5.9 body of revolution at 0 degrees pitch (1/40-scale Akron hull): NACA Report 443, Fig. 9",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not applicable (reference entry)",
+   "mass_note": "A pressure-coefficient reference, not a physical part; mass_g 0 follows the convention of airfoil-e387-nasa-tm4062.",
+   "citation": "Freeman, H. B., 'Pressure-Distribution Measurements on the Hull and Fins of a 1/40-Scale Model of the U. S. Airship \"Akron\"', NACA Report No. 443 (NACA-TR-443), Langley Memorial Aeronautical Laboratory; tests completed July 1931; NTRS publication date 1934.",
+   "ntrs_id": "19930091517",
+   "accession": "93R20807",
+   "citation_page_url": "https://ntrs.nasa.gov/citations/19930091517",
+   "licence_basis": "NTRS record 19930091517: distribution PUBLIC, copyright determination GOV_PUBLIC_USE_PERMITTED (work of the US Government).",
+   "model_text": "The length of the hull is 19.62 feet, the maximum diameter 3.33 feet, and the fineness ratio 5.9.",
+   "model_construction_text": "hollow wooden construction having 36 sides over the fore part of the hull fairing into 24 sides near the stern",
+   "conditions_text": "The pressure distribution was measured (1) on the bare hull at nine angles of pitch ... and at air speeds of approximately 70 and 100 miles per hour",
+   "tunnel_gradient_text": "The variation in static pressure along the hull, measured in the absence of the model, is given in the following table: x/L 0 to 1.0, p/q .032, .025, .020, .017, .015, .013, .011, .010, .010, .011, .013",
+   "figure": "Fig. 9, 'Average pressures on bare hull of 1/40-scale model Akron for four angles of pitch', 0 degree pitch curve (report p. 7, PDF page 8)",
+   "cp_basis": "p/q: static pressure on the hull surface (average round the section) relative to free-stream static, over free-stream dynamic pressure",
+   "cp_0deg_graph_read": {
+    "note": "graph readings of Fig. 9 at 0 degrees pitch, about +/-0.01 in p/q (steep nose region about +/-0.05); x/L from the nose",
+    "x_over_L_0.054": 0.024,
+    "x_over_L_0.077": -0.029,
+    "x_over_L_0.114": -0.142,
+    "x_over_L_0.20": -0.122,
+    "x_over_L_0.31": -0.096,
+    "x_over_L_0.38": -0.059,
+    "x_over_L_0.45": -0.053,
+    "x_over_L_0.54": -0.061,
+    "x_over_L_0.71": -0.062,
+    "x_over_L_0.80": -0.024,
+    "x_over_L_0.83": 0.003,
+    "x_over_L_0.87": 0.035,
+    "x_over_L_0.90": 0.059,
+    "x_over_L_0.93": 0.1,
+    "x_over_L_0.97": 0.176
+   },
+   "avis_stations_graph_read": {
+    "window_x_over_L_0.42_to_0.50": -0.055,
+    "tail_exits_x_over_L_0.81_to_0.91": "-0.016 to +0.077",
+    "pitot_exit_x_over_L_0.10": "-0.11 (+/-0.05, steep region)"
+   },
+   "cross_check_potential_flow": {
+    "citation": "Zahm, A. F., 'Flow and Drag Formulas for Simple Quadrics', NACA Report No. 253, 1927 (NTRS 19930091320)",
+    "url": "https://ntrs.nasa.gov/api/citations/19930091320/downloads/19930091320.pdf",
+    "formula_text": "By (16), for points on the surface p/pn = 1 - qt²/qo² = 1 - (1+ka)² sin²θ ... where ka is to be taken from Table II.",
+    "ka_prolate_spheroid_E_6": 0.045,
+    "ka_table_text": "TABLE II Inertia factors ka for quadric surfaces in steady translation along axis a ... Prolate spheroid E = a/b ... 6.00 ... .045",
+    "cp_equator_E_6_computed": -0.092,
+    "cp_at_avis_stations_computed_E_6": "window -0.091 to -0.092; tail exits -0.073 to -0.030; pitot exit -0.043 (computed here from the quoted formula, not printed in the report)"
+   },
+   "applies_to": "The avis pod (length about 0.58 m, maximum section about 100 x 85 mm at 42-50% of length, fineness about 5.8-6.8, conical tail) mapped onto this hull by fraction of length from the nose. Mismatches: Akron Re_L about 1.3e7-1.8e7 (turbulent) against the pod's 4e5-6e5 (laminar, possible tail-cone separation, which would cut the tail pressure recovery); polygonal 36/24-sided hull; Akron's nose and tail shape differ from the pod's; body alone, so the pressure field of the wings at the window (wing-root suction) is not included.",
+   "eligibility": "reference only: not a part, no mass; kept for its published rule or figures"
+  },
+  "price_usd": null,
+  "source_url": "https://ntrs.nasa.gov/api/citations/19930091517/downloads/19930091517.pdf",
+  "retrieved": "2026-11-04",
+  "verified": "datasheet",
+  "source_url_2": "https://ntrs.nasa.gov/api/citations/19930091320/downloads/19930091320.pdf"
  }
 ]

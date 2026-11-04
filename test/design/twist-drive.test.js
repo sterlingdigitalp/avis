@@ -13,7 +13,7 @@ import { adhesiveOf } from '../../src/design/airframe.js';
 import { THROUGH, THREAD, MESH, KEYWAY } from '../../src/design/clearance.js';
 
 const catalog = JSON.parse(readFileSync(new URL('../../data/parts/catalog.json', import.meta.url), 'utf8'));
-const base = JSON.parse(readFileSync(new URL('../../data/designs/larus-gl-2.json', import.meta.url), 'utf8'));
+const base = JSON.parse(readFileSync(new URL('../fixtures/larus-gl-2-v24.json', import.meta.url) /* round 18: v24 frozen (the live file becomes v25) */, 'utf8'));
 /** The official design with the drive stated (and its MD89MW, the spec-sheet sections), as round 17 builds it. */
 const withDrive = (over = {}) => {
   const d = structuredClone(base);
@@ -110,11 +110,14 @@ test('every join of the drawn wing meets a twist rule whose named members exist 
   }
   assert.deepEqual(unmatched, []);
   assert.deepEqual([...missing].filter((n) => !/^spar root (socket|bond) (right|left)$/.test(n)), []);
-  // round 17b (lead): no member is left unrated: the maker's centre screw is held with the maker's arm to the servo's
-  // stall torque (the orchestrator's decision for the R-ML25), disclosed in the arm's rating basis
+  // round 17b (lead): no member is left unrated. Round 18 (SPEC ruling "Maker's part"): the maker's arm, its centre screw
+  // and its tapped holes are a maker's part, held to the servo's own rule at its supply's published row
   const res = checkMembers(members, Object.fromEntries(members.flatMap((m) => m.sections.map((s) => [`${m.name}/${s.name}`, 0.0]))));
   assert.deepEqual(res.members.filter((m) => m.check === 'unrated').map((m) => m.name), []);
-  assert.match(members.find((m) => m.name === 'twist servo arm R').dims.rating_basis, /no rating of its own is published/);
+  const arm = members.find((m) => m.name === 'twist servo arm R');
+  assert.equal(arm.check, "maker's part");
+  assert.equal(arm.maker.condition[0].of, 'T');
+  assert.equal(arm.maker.condition[0].published, +(D.servos.twist.servo_stall_Nm ?? D.servos.twist.stall_Nm).toFixed(5));
 });
 
 test('a reason no twist rule knows is not matched (the ledger fails it)', () => {

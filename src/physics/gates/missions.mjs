@@ -86,10 +86,12 @@ const m4dt = (() => {
 writeGate({ notCountedBecause: [], gate: 'M4', design: name, passed: m4ok >= 98 * (seeds / 100) && robustOk('M4') !== false && seeds >= 100, measured: { seeds_passed: m4ok, seeds_run: seeds, worst_H_m: worstH ? +worstH : null, by_H: byH, robustness_passed: robustOk('M4'), robustness: robustNote('M4'), timestep_check: m4dt }, limit: LIMITS.M4, evidence: rel(ev4) });
 
 // ---- M6 mass: BOM completeness and margin ---------------------------------------------------------------------
+// round 17b (audit-v24.md item 24): a part whose maker states a mass tolerance, disclosed beside M6 (a note only)
+const MASS_TOLERANCE_NOTES = [{ id: 'batt-gensace-2200-3s-35c', text: 'Net Weight(±20g): 143', tolerance_g: 20, source: 'genstattu.com, SKU GEA223S35DGT', read: '2026-11-03', note: 'the pack is flown at 143 g; the maker allows ±20 g, inside the ±5% mass corners' }];
 const bom = design.bom;
 const missing = bom.parts.filter((p) => !p.source_url || !p.id);
 const m6ok = missing.length === 0 && Math.abs(bom.margin_g - 0.15 * (bom.parts_g + bom.structure_g)) < 1e-6 && Math.abs(bom.total_g - design.mass.total_g) < 0.5;
-writeGate({ notCountedBecause: [], gate: 'M6', design: name, passed: m6ok, measured: { total_g: design.mass.total_g, parts_g: bom.parts_g, structure_g: bom.structure_g, margin_g: bom.margin_g, margin_frac: 0.15, parts_without_source: missing.map((p) => p.id), structure_items: bom.structure.length }, limit: { margin_frac: 0.15, every_part_cited: true }, evidence: rel(path) });
+writeGate({ notCountedBecause: [], gate: 'M6', design: name, passed: m6ok, measured: { total_g: design.mass.total_g, parts_g: bom.parts_g, structure_g: bom.structure_g, margin_g: bom.margin_g, margin_frac: 0.15, parts_without_source: missing.map((p) => p.id), structure_items: bom.structure.length, mass_tolerance_notes: MASS_TOLERANCE_NOTES.filter((n) => bom.parts.some((q) => q.id === n.id)) }, limit: { margin_frac: 0.15, every_part_cited: true }, evidence: rel(path) });
 
 // Round 6: the motor bearing nearest the first pinion, with the outboard bearing as the other support: information only
 // (its maker is not named, so the lowest C0 read for its published sizes is shown, not credited).
@@ -177,9 +179,18 @@ const fosMin = Math.min(fosIn, fosOut, fosRodBuckle, fosRodStress, ...(tr ? [tr.
 // Round 17: a pass resting on an RC-practice joint outside the ruling's scope (only a gear, pulley or coupling held to
 // its shaft) is not counted; v24's crank-web LOCTITE 638 bond was the case
 const m7NotCounted = (mb?.members ?? []).filter((r) => r.check === 'rc practice' && r.kind !== 'gear fixing').map((r) => `${r.name}: RC practice outside the ruling's scope (a gear, pulley or coupling on its shaft only)`);
+// Round 18 (SPEC ruling "Maker's part", operator's decision 2026-11-03): each maker's part with its peak load and its
+// condition (a servo arm: its servo's rule at the supply's row, checked in its member; the motor's bearings and threads:
+// Scorpion's figures, the current from this population's 2 s RMS, as M8 holds it). Valid only while every one holds.
+const motorRmsPop = Math.max(0, ...popRuns.map((r) => r.rms?.motorRmsMax ?? 0));
+const makersParts = (mb?.members ?? []).filter((r) => r.check === "maker's part").map((r) => {
+  const condition = (r.condition ?? []).map((c) => (c.within === null && c.figure === 'current' && Number.isFinite(c.published) ? { ...c, value: motorRmsPop, within: motorRmsPop <= c.published, checked_by: "this population's motor RMS over 2 s windows (as M8)" } : c));
+  return { name: r.name, status: r.status, part: r.part, of: r.of, covers: r.covers, peaks: r.peaks, condition, ok: r.ok && condition.every((c) => c.within !== false) };
+});
+const makersOk = makersParts.every((q) => q.ok);
 writeGate({
   notCountedBecause: m7NotCounted,
-  gate: 'M7', design: name, passed: fosMin >= 1.5 && gearOk && meshesOk && servoOk && bearingsOk && membersOk !== false && seeds >= 100 && loadsConverged && m4passRuns.length > 0,
+  gate: 'M7', design: name, passed: fosMin >= 1.5 && gearOk && meshesOk && servoOk && bearingsOk && membersOk !== false && makersOk && seeds >= 100 && loadsConverged && m4passRuns.length > 0,
   measured: {
     spar_inner: { id: sIn.id, moment_Nm: worst('rootBend'), stress_MPa: sigIn, allowable_MPa: sIn.allowable_MPa, fos: fosIn },
     spar_outer: { id: sOut.id, moment_Nm: worst('elbowBend'), stress_MPa: sigOut, allowable_MPa: sOut.allowable_MPa, fos: fosOut },
@@ -190,8 +201,10 @@ writeGate({
     stroke_servo_hold: hold,
     bearings: bj ? { passed: bj.ok, fos_min: bj.fos_min, worst: bj.worst, peak_crank_rate_rad_s: worst('crankRate'), joints: bj.joints, unchecked: design.structure.joints_unchecked ?? [], motor_bearing_information: motorBearingInfo(design, crankT), layout: design.structure.joints_layout ?? null, rule: 'SPEC ruling after round 4: ISO 76 P0 with the maker X0/Y0 and C0/P0 >= 1.5; bushings by projected pressure against the published static surface pressure with FoS 1.5 (flange ring for axial load) and their published surface speed; loads are the worst over the M7 population at each support, combined in the flight model at every step' } : { passed: bearingsOk, note: hasBearings ? 'the design file has no load path (structure.joints): its bearings cannot be checked' : 'no bearings in the BOM' },
     // round 17 (SPEC Function completeness): what is rated only by being held to another part's published figure (the
-    // maker's servo arm, held to the servo's stall torque), and the actuation chains' stated assumptions, disclosed
+    // maker's servo arm; round 18: a maker's part, listed with its peak below), and the chains' stated assumptions, disclosed
     disclosed_unrated: (design.structure.members ?? []).filter((m) => /no (load )?rating[^.]*published|held to the servo/i.test(`${m.dims?.rating_basis ?? ''} ${m.note ?? ''}`)).map((m) => ({ name: m.name, basis: m.dims?.rating_basis ?? m.note })),
+    // round 18: "unrated, maker's part", beside the RC-practice joints (members.rc_practice), each with its peak load
+    makers_parts: makersParts, makers_parts_passed: makersOk, makers_part_rule: 'SPEC ruling "Maker\'s part" (operator\'s decision 2026-11-03): an interface inside a bought part, or between a bought part and its maker\'s own fittings, that its maker publishes no figure for; reported as unrated, maker\'s part, with its peak load; valid only while the bought part stays within every figure its maker publishes (a maker\'s arm under its own servo\'s rule at the published row for its real supply voltage)',
     chain_assumptions: [...new Set((design.structure.clearance?.chains?.chains ?? []).flatMap((c) => c.assumptions ?? []))],
     members: mb ? { passed: mb.ok, fos_min: mb.fos_min, worst: mb.worst, rc_practice: mb.members.filter((r) => r.check === 'rc practice').map((r) => ({ name: r.name, status: r.status, method: r.method, peak_T_Nm: r.peak_T_Nm, published_Nm: r.published_Nm, within_published: r.within_published })), rc_practice_rule: 'SPEC ruling "RC practice for joints no one can rate": shaft-to-hub fixings no maker or standard rates are reported as unrated, RC practice, with their peak torque; any published figure binds at full value', members: mb.members, unchecked: design.structure.members_unchecked ?? [], rule: 'SPEC ruling after round 5: every shaft, pin, plate bearing seat, end fitting and bore adapter against published material strength with FoS 1.5 (src/physics/members.js); loads combined in the flight model at every step, worst over the M7 population' } : { passed: null, note: 'the design file states no loaded members (structure.members)' },
     peak_load_factor_at_cg: worst('loadFactor'), fos_min: fosMin,

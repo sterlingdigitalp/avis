@@ -40,7 +40,15 @@ export const NEEDS = {
     posts_x: [[154.5, 162.5], [178, 186]], post_t: 1.0,
     land_t: 0.8, screws_x: [145, 195], screw_z: 22.3,
     screws: ['screw-iso4762-m3x8-10.9', 'screw-iso4762-m3x12-10.9'], nut: 'nut-iso4032-m3-10',
+    // round 18 (sized to the edge-distance rule, EN 1993-1-8 Table 3.3: at least 1.2 d0 from every edge): the M3's 3.4 mm
+    // hole sat 3.2 mm (0.94 d0) from both edges of the 6.4 mm rails, and the rails cannot widen (outward the lands leave
+    // the skin and meet the pod's longerons at polar 20/160, inward is the pack's way out). The cover's four screws are
+    // M2 (ISO 273 medium hole 2.4 mm: 3.2 mm = 1.33 d0); the belly tray keeps its M3
+    cover_screws: ['screw-iso4762-m2x8-8.8'], cover_nut: 'nut-iso4032-m2-8', cover_hole_mm: 2.4,
     arcs_x: [[134, 134.5], [164.75, 165.25], [199.75, 200.25], [221.5, 222]], arc_band: 3, leg_z: [23.5, 25.5], arc_material: 'metal-al-6061-t6',
+    // round 18: each arc's band runs on past its legs to this far (along the skin) short of the window's polar edges, so
+    // the cover's film reaches the pod's edge longerons all along the window (the pod's 1.5 mm rod and 0.5 mm clear)
+    arc_edge_mm: 3,
     stop_aft: { x: [155, 156], z: 18.0, lip_x: 6, lip_z: 8, t: 1.0 },
     keepers_x: [[217.5, 221.5]], keeper_t: 1.5, keeper_z: [17.3, 18.6],
   },
@@ -95,9 +103,11 @@ export function polarAtZ(loft, x, zv) {
 
 /**
  * The hatch's geometry (m) on a loft and the nose tray N: its fixed rails and posts, the cover's lands, aft stop and
- * keepers (6061), its arcs (6061, on the skin), the screws' places, and the window it frames (x, polar range).
+ * keepers (6061), its arcs (6061, on the skin), the screws' places, and the window it frames (x, polar range). With the
+ * window `win` ({ x_mm, polar_deg }: params.layout.hatch) each arc's band spans the window's polar range less
+ * P.hatch.arc_edge_mm at each edge (never short of its own legs); without it, from leg to leg.
  */
-export function hatchGeometry(loft, P, N) {
+export function hatchGeometry(loft, P, N, win = null) {
   const H = P.hatch, zIn = N.w / 2 + N.t / 2, yRb = mm(H.rail_bottom_y), yRt = yRb + mm(H.rail_t), yLt = yRt + mm(H.land_t);
   const rails = ['R', 'L'].map((t, i) => { const s = i ? -1 : 1; return { tag: t, s, x: H.rail_x.map(mm), z: [zIn, mm(H.rail_z_out)].map((v) => s * v).sort((a, b) => a - b), y: [yRb, yRt] }; });
   const posts = rails.flatMap((r) => H.posts_x.map((xs, k) => ({ tag: `${r.tag} ${k ? 'forward' : 'aft'}`, side: r.tag, x: xs.map(mm), z: [zIn, zIn + mm(H.post_t)].map((v) => r.s * v).sort((a, b) => a - b), y: [N.y - N.t / 2, yRb] })));
@@ -109,10 +119,25 @@ export function hatchGeometry(loft, P, N) {
   const arcs = H.arcs_x.map((xs) => {
     const x = xs.map(mm), xm = Math.min(...x.map((v) => loftHalf(loft, v).hw)) === loftHalf(loft, x[0]).hw ? x[0] : x[1];
     const a0 = polarAtZ(loft, xm, legs[1]), h = loftHalf(loft, xm), ySkin = h.y + h.hh * Math.sin((a0 * Math.PI) / 180);
-    return { x, xm, polar: [a0, 180 - a0], legs: [legs, legs.map((v) => -v).reverse()], leg_y: [yLt, ySkin - mm(H.arc_band) * 0.5] };
+    // (and never down past where its inner edge comes within 0.5 mm of the lands' top, over the rails)
+    const aLand = polarAbove(h, mm(H.arc_band), yLt + 0.0005);
+    const polar = win ? [Math.min(a0, Math.max(aLand, win.polar_deg[0] + edgeDeg(h, win.polar_deg[0], mm(H.arc_edge_mm ?? 3)))), Math.max(180 - a0, Math.min(180 - aLand, win.polar_deg[1] - edgeDeg(h, win.polar_deg[1], mm(H.arc_edge_mm ?? 3))))] : [a0, 180 - a0];
+    return { x, xm, polar, legs: [legs, legs.map((v) => -v).reverse()], leg_y: [yLt, ySkin - mm(H.arc_band) * 0.5] };
   });
   const xs = [mm(H.rail_x[0]), mm(H.arcs_x.at(-1)[1])];
   return { rails, posts, lands, screws, stop, keepers, arcs, band: mm(H.arc_band), zIn, yLt, window_drawn: { x: xs } };
+}
+
+/** The smallest polar angle (deg, 0-90) at which the point b (m) in from the section h's skin stands at height y or above. */
+export function polarAbove(h, b, y) {
+  const s = (y - h.y) / (h.hh - b);
+  return s <= -1 ? 0 : s >= 1 ? 90 : (Math.asin(s) * 180) / Math.PI;
+}
+
+/** The polar angle (deg) a length s (m) along the skin spans at polar angle a (deg) of the section h. */
+export function edgeDeg(h, a, s) {
+  const t = (a * Math.PI) / 180;
+  return ((s / Math.hypot(h.hw * Math.sin(t), h.hh * Math.cos(t))) * 180) / Math.PI;
 }
 
 /** The volume (m3) of a list of solids: each section's area over its x range. */
@@ -198,7 +223,7 @@ const boxOf = (pk, name) => pk.model.layout.parts.find((p) => p.name === name)?.
 export function needsParts(ax, pk) {
   const { d } = ax, P = needsParams(d.params);
   if (!d.params.layout?.hatch || !ax.af?.carriers) return null;
-  const N = ax.af.carriers.nose, loft = d.body.loft, G = hatchGeometry(loft, P, N);
+  const N = ax.af.carriers.nose, loft = d.body.loft, G = hatchGeometry(loft, P, N, d.params.layout.hatch);
   const out = { G, P, q0: ax.q0 };
   hatchParts(ax, G, loft);
   out.forwardStop = forwardStopPart(ax, P, N, boxOf(pk, 'battery'));
@@ -483,7 +508,7 @@ function drawTwistLead(ax, P, t) {
  * p: the design's params; loft: its pod loft; A: its airframe parameters (merged). -> { structure, parts, lump, wing }.
  */
 export function needsBom(p, catalog, loft, A) {
-  const P = needsParams(p), N = noseTrayOf(A), G = hatchGeometry(loft, P, N), al = byId(catalog, P.material), bal = byId(catalog, P.hatch.arc_material);
+  const P = needsParams(p), N = noseTrayOf(A), G = hatchGeometry(loft, P, N, p.layout?.hatch), al = byId(catalog, P.material), bal = byId(catalog, P.hatch.arc_material);
   const rho = (m) => (m.specs.density_g_cm3 ?? m.specs.density_kg_m3 / 1000) * 1e6; // g/m3
   const fr = hatchFrameSolids(G), frameV = volOf([...Object.values(fr.rails).flat(), ...Object.values(fr.posts).flat()]);
   const coverV = volOf(hatchCoverSolids(G)), arcV = volOf(hatchArcSolids(G, loft));
@@ -557,7 +582,7 @@ const scaleT = (terms, f) => terms.map((t) => ({ ch: t.ch, k: +(t.k * f).toFixed
 export function needsMembers(ax) {
   const { d, catalog, members, mat, counts, tieS, glueAl, lump } = ax;
   if (!d.params.layout?.hatch || !ax.carriers?.geometry || !d.body?.loft) return;
-  const P = needsParams(d.params), N = ax.carriers.geometry.nose, G = hatchGeometry(d.body.loft, P, N), al = mat(P.material);
+  const P = needsParams(d.params), N = ax.carriers.geometry.nose, G = hatchGeometry(d.body.loft, P, N, d.params.layout.hatch), al = mat(P.material);
   const bat = lump('battery'), cov = lump('build needs'), pk = bat ? inertial(bat.m, bat.r) : [], cv = cov ? inertial(cov.m * 0.3, cov.r) : [];
   const c = { G, P, N, al, pk, cv, bat };
   hatchMembers(ax, c);
@@ -571,9 +596,14 @@ export function needsMembers(ax) {
 function hatchMembers(ax, { G, P, N, al, pk, cv }) {
   const { d, catalog, members, mat, counts, tieS, glueAl, lump } = ax;
   const H = P.hatch, n = G.screws.length, screw = byId(catalog, H.screws[0]).specs;
-  const bolt = (name, V, F, note) => members.push({ name, kind: 'fasteners', check: 'bolts', fastener: { id: ax.scr.id, tension_N: ax.scr.tension_N, shear_N: ax.scr.shear_N }, dims: { n }, sections: [sect('V', V), sect('F', F)], uses: { V: 'V', F: 'F' }, note });
-  bolt('hatch screws', [...pk, ...cv], [...pk, ...cv], `${n} x ISO 4762 M3 10.9 with ISO 4032 nuts through the cover's lands and the rails: the pack's inertia every way (the cover's aft stop and keepers take it fore-aft and up) and the cover's own, in shear and as tension at full value (the window's suction, about 0.7 N at 15 m/s, is under 1% of it and not added)`);
-  members.push({ name: 'hatch screws in the rails', kind: 'seat', check: 'seat', material: al, dims: { d_mm: 3, t_mm: H.rail_t, e1_over_d0: +((H.rail_z_out - H.screw_z) / 3.4).toFixed(3), e2_over_d0: +((H.rail_z_out - H.screw_z) / 3.4).toFixed(3) }, sections: [sect('F', scaleT([...pk, ...cv], 1 / n))], uses: { F: 'F' }, note: 'each screw bearing on its 6061 rail, its edge distance to the rail\'s outer edge (ISO 273 medium hole 3.4 mm)' });
+  // round 18: the cover's own screws (M2 8.8, coverScrew), rated on their own ISO 898-1 figures
+  const cs0 = coverScrew(catalog, H);
+  const bolt = (name, V, F, note) => members.push({ name, kind: 'fasteners', check: 'bolts', fastener: { id: cs0.id, tension_N: cs0.tension_N, shear_N: cs0.shear_N }, dims: { n }, sections: [sect('V', V), sect('F', F)], uses: { V: 'V', F: 'F' }, note });
+  bolt('hatch screws', [...pk, ...cv], [...pk, ...cv], `${n} x ${cs0.name} with ISO 4032 nuts through the cover's lands and the rails: the pack's inertia every way (the cover's aft stop and keepers take it fore-aft and up) and the cover's own, in shear and as tension at full value (the window's suction, about 0.7 N at 15 m/s, is under 1% of it and not added)`);
+  // round 18: the screw's edge distance to every edge of its rail (its outer and inner edges, and its ends: the load is
+  // the pack's inertia every way, so the smallest one is taken as both e1 and e2)
+  const { eMin, e_over_d0 } = hatchScrewEdge(H, (N.w / 2 + N.t / 2) * 1000, cs0), d0 = cs0.hole_mm;
+  members.push({ name: 'hatch screws in the rails', kind: 'seat', check: 'seat', material: al, dims: { d_mm: cs0.d_mm, t_mm: H.rail_t, e1_over_d0: e_over_d0, e2_over_d0: e_over_d0 }, sections: [sect('F', scaleT([...pk, ...cv], 1 / n))], uses: { F: 'F' }, note: `each screw bearing on its 6061 rail, its smallest edge distance ${eMin.toFixed(2)} mm (of the rail's outer and inner edges and its ends) over the ISO 273 medium hole ${d0} mm` });
   const railArm = Math.max(...G.screws.map((s) => Math.min(...G.posts.filter((p) => p.side === s.side).map((p) => Math.min(Math.abs(s.x - p.x[0]), Math.abs(s.x - p.x[1])))))), bw = H.rail_z_out - (N.w / 2 + N.t / 2) * 1000;
   members.push({ name: 'hatch rails', kind: 'plate', check: 'plate', material: al, dims: { b_mm: +bw.toFixed(2), t_mm: H.rail_t }, sections: [sect('Mo', scaleT([...pk, ...cv], railArm / n))], uses: { Mo: 'Mo' }, note: `each screw's share bending its rail out of plane over ${(railArm * 1000).toFixed(1)} mm to the nearest post` });
   const postH = G.posts[0].y[1] - G.posts[0].y[0], nP = G.posts.length;
@@ -622,14 +652,36 @@ function leadMembers(ax, { P }) {
   tie('receiver antenna tie', 0.0005, [0.17, -0.035, -0.032], 1, 'the antenna (its mass within the receiver\'s 0.5 g, taken as the whole 0.5 g) on the left flange');
 }
 
+/**
+ * Round 18: a hatch screw's smallest edge distance in its rail (mm; the rail from zIn_mm to rail_z_out across, rail_x
+ * along; the screws at screw_z, screws_x), and over the cover screw's hole d0 (cs: coverScrew).
+ */
+export function hatchScrewEdge(H, zIn_mm, cs) {
+  const eMin = Math.min(H.rail_z_out - H.screw_z, H.screw_z - zIn_mm, ...H.screws_x.flatMap((x) => [x - H.rail_x[0], H.rail_x[1] - x]));
+  return { eMin, e_over_d0: +(eMin / cs.hole_mm).toFixed(3) };
+}
+
+/**
+ * Round 18: the hatch cover's screw (P.hatch.cover_screws, else the belly tray's P.hatch.screws): its id, diameter, its
+ * ISO 273 medium clearance hole (P.hatch.cover_hole_mm, 3.4 mm for M3) and its ISO 898-1 ratings from the catalogue.
+ */
+export function coverScrew(catalog, H) {
+  const id = (H.cover_screws ?? H.screws)[0], sp = byId(catalog, id).specs, dv = sp.design_values ?? {};
+  const d_mm = +(/M(\d+(?:\.\d+)?)/.exec(sp.thread ?? id.toUpperCase())?.[1] ?? 3);
+  return { id, name: byId(catalog, id).name, d_mm, hole_mm: H.cover_hole_mm ?? 3.4, tension_N: dv.tension_N, shear_N: dv.shear_N };
+}
+
 /** The hatch's screws and the belly tray's screws as fixing-layout entries (fixings.js format), counted here. */
 function needsBolts(ax, G, P, screwSpec) {
   const H = P.hatch, nutG = byId(ax.catalog, H.nut);
   const bolts = [];
-  const pick = (stack) => pickScrew(ax.catalog, H.screws, stack, +String(nutG.specs.mass_basis ?? '').match(/x ([\d.]+) mm high/)?.[1] / 1000 || 0.0024);
+  const nutH = (id) => +String(byId(ax.catalog, id).specs.mass_basis ?? '').match(/x ([\d.]+) mm high/)?.[1] / 1000 || 0.0024;
+  const pick = (stack) => pickScrew(ax.catalog, H.screws, stack, nutH(H.nut));
+  // round 18: the cover's own screws and nuts (M2: the rails' edge distance)
+  const coverNut = H.cover_nut ?? H.nut, pickCover = (stack) => pickScrew(ax.catalog, H.cover_screws ?? H.screws, stack, nutH(coverNut));
   for (const s of G.screws) {
-    const stack = mm(H.land_t) + mm(H.rail_t), sc = pick(stack);
-    bolts.push({ joint: 'hatch', screw: sc.id, nut: H.nut, axis: 'y', c: [s.x, s.z], face: G.yLt, dir: -1, stack_m: stack, nut_face: G.yLt - stack, through: ['hatch cover', `hatch rail ${s.side}`] });
+    const stack = mm(H.land_t) + mm(H.rail_t), sc = pickCover(stack);
+    bolts.push({ joint: 'hatch', screw: sc.id, nut: coverNut, axis: 'y', c: [s.x, s.z], face: G.yLt, dir: -1, stack_m: stack, nut_face: G.yLt - stack, through: ['hatch cover', `hatch rail ${s.side}`] });
   }
   const B = ax.carriers.geometry.belly;
   if (B) {
@@ -849,7 +901,9 @@ export function buildNeedsRecord(asm, d, catalog) {
   if (!N) return { rule, rows: [{ item: 'build needs drawn', ok: false, why: 'no hatch window (params.layout.hatch) or no carriers' }], failed: ['build needs drawn'], passed: false };
   const rows = [...jointRows(asm, N), ...hatchRows(asm, d, N), ...accessRows(asm, d, N), ...airRows(d, N), ...packRows(d, catalog, N)];
   const failed = rows.filter((r) => !r.ok).map((r) => r.item);
-  return { rule, rows, failed, passed: failed.length === 0 };
+  // round 18: the drag the air path's holes and the leads' exposed span add (their rows' CdA), for the body's drag
+  const cda = rows.filter((r) => Number.isFinite(r.CdA_m2)).reduce((a, r) => a + r.CdA_m2, 0);
+  return { rule, rows, failed, CdA_m2: +cda.toFixed(8), CdA_basis: 'the air path\'s holes at Cd 1.0 on their area (an upper bound) and the twist-servo leads\' exposed span at Cd 1.2 (their rows): not in the containment record\'s frontal area (the holes have no solids; the leads\' span is declared drag false there)', passed: failed.length === 0 };
 }
 
 /** Every electrical joint: the table's, the servo leads', and the packaged cables' reach. */

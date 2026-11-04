@@ -2,7 +2,7 @@
 // the air path or the strap, or one whose pack cannot come out; geometry helpers checked against hand values.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildNeedsRecord, removalRecord, sweepCrossing, routeSolids, pathLength, needsParams, NEEDS, arcPieces, polarAtZ, hatchGeometry, outsideWindow, needsInterfaceRules, NEEDS_SEQUENCE, needsContainment, mergeContainment, ELECTRICAL_JOINTS, bboxOf } from '../../src/design/build-needs.js';
+import { buildNeedsRecord, removalRecord, sweepCrossing, routeSolids, pathLength, needsParams, NEEDS, arcPieces, polarAtZ, hatchGeometry, edgeDeg, outsideWindow, needsInterfaceRules, NEEDS_SEQUENCE, needsContainment, mergeContainment, ELECTRICAL_JOINTS, bboxOf } from '../../src/design/build-needs.js';
 import { S, poly } from '../../src/design/clearance.js';
 import { RULE_HELPERS } from '../../src/design/interfaces.js';
 import { SEQUENCE as SEQUENCE16 } from '../../src/design/round16.mjs';
@@ -141,6 +141,25 @@ test('the hatch geometry keeps the pack\'s lift path clear: rails outboard of th
   const G = hatchGeometry(LOFT, needsParams({}), { y: -0.0431, w: 0.0376, h: 0.005, t: 0.0006, x: [0.1089, 0.228] });
   for (const r of G.rails) assert.ok(Math.min(...r.z.map(Math.abs)) >= 0.0168 + 0.0005);
   assert.ok(G.screws.length === 4 && G.posts.length === 4);
+});
+
+test('with its window, each hatch arc runs on to 3 mm (along the skin) short of the window\'s polar edges, never down onto the lands', () => {
+  const N = { y: -0.0431, w: 0.0376, h: 0.005, t: 0.0006, x: [0.1089, 0.228] }, P = needsParams({});
+  const legs = hatchGeometry(LOFT, P, N), win = hatchGeometry(LOFT, P, N, { x_mm: [133, 234], polar_deg: [20, 160] });
+  // on LOFT's ellipse (hw 60, hh 70 mm) 3 mm along the skin at polar 20 deg spans 3 / hypot(60 sin 20, 70 cos 20) rad
+  const r = Math.PI / 180, d20 = 0.003 / Math.hypot(0.06 * Math.sin(20 * r), 0.07 * Math.cos(20 * r)) / r;
+  // the band's inner edge (3 mm in) 0.5 mm over the lands' top (rail bottom -14 + 1.5 rail + 0.8 land = -11.7 mm)
+  const aLand = Math.asin((-0.0117 + 0.0005 + 0.027) / (0.07 - 0.003)) / r;
+  for (const [k, a] of win.arcs.entries()) {
+    assert.ok(Math.abs(a.polar[0] - Math.min(legs.arcs[k].polar[0], Math.max(20 + d20, aLand))) < 1e-9, `arc ${k + 1}: ${a.polar}`);
+    assert.ok(Math.abs(a.polar[1] - (180 - a.polar[0])) < 1e-9);
+  }
+  assert.ok(Math.abs(legs.arcs[0].polar[0] - Math.acos(25.5 / 60) / r) < 1e-9, 'without the window, from the legs (z 25.5 mm)');
+  assert.ok(win.arcs[0].polar[0] < legs.arcs[0].polar[0] - 40, 'with it, on past the legs toward the window\'s edge');
+  // a high land: the band stops 0.5 mm over it
+  const hi = hatchGeometry(LOFT, needsParams({ needs: { hatch: { rail_bottom_y: 10 } } }), N, { x_mm: [133, 234], polar_deg: [20, 160] });
+  assert.ok(Math.abs(hi.arcs[0].polar[0] - Math.asin((0.0123 + 0.0005 + 0.027) / 0.067) / r) < 1e-9);
+  assert.ok(Math.abs(edgeDeg({ hw: 0.05, hh: 0.05 }, 37, 0.005) - 0.1 / r) < 1e-12, 'on a circle: s / R');
 });
 
 test('outsideWindow: a band piece at the top inside the window is left out, one at the side is kept', () => {

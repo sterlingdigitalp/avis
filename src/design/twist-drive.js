@@ -16,9 +16,12 @@
 //    joiner's plate as it lengthens and is held spanwise at the tip plate.
 //  - Frame: the wing's (s along the spar socket's axis from the shoulder axis, X = body x, n normal to the wing from the
 //    spar axis toward the upper surface), drawn at zero twist; a solid is a prism along x with an (s, n) section.
-import { poly, cap, M, RIB_HOLE, BORE, THREAD, THROUGH } from './clearance.js';
+import { poly, cap, M, RIB_HOLE, BORE, THREAD, THROUGH, xSlabs } from './clearance.js';
 import { byId, tubeSpec, tubeAllowable } from './catalog.js';
 import { e387Surfaces, sectionNAt, ribSlices } from './section.js';
+import { servoArmMaker } from './chains.js'; // round 18: the maker's-part condition
+import { MAKERS_PART_RULE } from './interfaces.js'; // round 18
+import { tappedThreadMember } from './tail-mech.js'; // round 18: the lever's tapped thread, rated as the horn's
 
 const mm = (v) => v / 1000;
 const r6 = (v) => +v.toFixed(6);
@@ -205,6 +208,14 @@ const mtube = (frame, name, x0, n0, sr, ro, ri = 0) => mbox(frame, name, [x0 - r
 const mcap = (frame, name, x0, n0, [s0, s1], ro, ri = 0) => ({ ...M(name, [x0 - ro, x0 + ro], (q) => { const f = frame(q); return cap(at(f, s0 + ro, n0), at(f, s1 - ro, n0), ro); }), tube: { ro, ri, L: s1 - s0, axis: 'span' }, cl: { s: [s0, s1], x: [x0, x0], n: [n0, n0], r: ro } });
 /** A round pin along x at (s, n): a ring over its x range. */
 const mpinX = (frame, name, xr, s, n, r) => M(name, xr, (q) => ({ kind: 'ring', c: at(frame(q), s, n), ro: r, ri: 0 }));
+/**
+ * Round 18.2 (the film's request): a fastener crossing x (a screw head/shank on this axis), its true section: N
+ * slabs across x (xSlabs), each a moving box narrowing in n, holding the full span sr throughout (so the true
+ * length along the screw's own axis is never overshot). One shared tube record per fastener, not per slab.
+ */
+const mSlabsS = (frame, name, x0, n0, sr, ro, ri = 0) => xSlabs(x0, ro, (w) => (q) => boxSN(frame(q), sr, [n0 - w, n0 + w])).map((sl, i) => ({ ...M(`${name} ${i + 1}`, sl.x, sl.shape), tube: { ro, ri, L: Math.abs(sr[1] - sr[0]), axis: 'span' } }));
+/** The same, for a cross pin whose length runs along n: xSlabs narrowing in s instead, holding the full nr throughout. */
+const mSlabsN = (frame, name, x0, s0, nr, ro, ri = 0) => xSlabs(x0, ro, (w) => (q) => boxSN(frame(q), [s0 - w, s0 + w], nr)).map((sl, i) => ({ ...M(`${name} ${i + 1}`, sl.x, sl.shape), tube: { ro, ri, L: Math.abs(nr[1] - nr[0]), axis: 'n' } }));
 const lerp3 = (A, B, t) => ({ s: A.s + t * (B.s - A.s), x: A.x + t * (B.x - A.x), n: A.n + t * (B.n - A.n) });
 
 /**
@@ -341,8 +352,13 @@ function drawServo(ax, tag, frame, G, P, ids, parts) {
   const lever = add(`twist elbow lever ${tag}`, [mtube(frame, 'hub', 0, 0, [G.h0, G.h1], rH, G.rod.ro), mbox(frame, 'arm', la.x, G.armS, la.n, { area_m2: (la.len * mm(Lv.arm_w_mm) * aT) / (la.x[1] - la.x[0]) })], { bom: 'twist levers' });
   join(`${lever}/hub`, ids.rod, BORE); join(lever, ids.rod, TW.pinned); join(lever, ids.elbowBushing, TW.thrust);
   const rp = mm(Lv.pin_d_mm) / 2;
-  const pin = add(`twist elbow pin ${tag}`, [mbox(frame, 'pin', [-rp, rp], [G.pinS - rp, G.pinS + rp], [-rH, rH], { tube: { ro: rp, ri: 0, L: 2 * rH, axis: 'n' } })], { bom: 'twist cross pins' });
-  join(pin, lever, TW.pinIn); join(`${pin}/pin`, `${lever}/hub`, THROUGH); join(pin, ids.rod, THROUGH);
+  // round 18.2 (the film's request): the pin's true section, N slabs across x (mSlabsN) narrowing toward the
+  // circle, not mbox's flat box; every slab (not just one) needs its own THROUGH join with the hub, since that
+  // overrides the part-level TW.pinIn (not itself exempt) for exactly the pair that overlaps
+  const pinSlabs = mSlabsN(frame, 'pin', 0, G.pinS, [-rH, rH], rp);
+  const pin = add(`twist elbow pin ${tag}`, pinSlabs, { bom: 'twist cross pins' });
+  join(pin, lever, TW.pinIn); for (const sl of pinSlabs) join(`${pin}/${sl.name}`, `${lever}/hub`, THROUGH);
+  join(pin, ids.rod, THROUGH);
   // the servo's arm on its spline, the rod ends on the two arms, the link between their shanks
   const sv = byId(catalog, parts.twistServo), cs = G.caseDims;
   const ha = armBox(G.S, mm(hn.hub_od_mm) / 2, mm(hn.hole_radii_mm.at(-1)) + mm(hn.tip_od_mm) / 2, mm(hn.tip_od_mm));
@@ -355,11 +371,19 @@ function drawServo(ax, tag, frame, G, P, ids, parts) {
   const rodEnd = (nm, c, sg) => add(`twist rod end ${tag} ${nm}`, [mbox(frame, 'eye', [c[0] - mm(ke.d2_mm) / 2, c[0] + mm(ke.d2_mm) / 2], G.eyeS, [c[1] - mm(ke.d2_mm) / 2, c[1] + mm(ke.d2_mm) / 2]), ...diagTube(frame, 'shank', pt(c, sg * mm(ke.d2_mm) / 2), pt(c, sg * h1), mm(ke.d5_mm) / 2, 0, 0.02)], { bom: P.rodEnd });
   const eL = rodEnd('lever', G.Lp, 1), eS = rodEnd('servo', G.Hp, -1);
   const sg = screwGeom(catalog, P.screw);
-  const screw = (nm, c, sHead, sgn) => add(`twist ${nm} screw ${tag}`, [mtube(frame, 'head', c[0], c[1], sgn > 0 ? [sHead, sHead + sg.k] : [sHead - sg.k, sHead], sg.hd / 2), mtube(frame, 'shank', c[0], c[1], sgn > 0 ? [sHead - sg.L, sHead] : [sHead, sHead + sg.L], sg.d / 2)], { bom: P.screw });
-  const sL = screw('lever', G.Lp, G.eyeS[0], -1), sS = screw('servo arm', G.Hp, G.eyeS[0], -1);
-  for (const [e, sc, arm] of [[eL, sL, lever], [eS, sS, horn]]) {
-    join(e, arm, TW.ball); join(sc, e, TW.throughBall); join(`${sc}/shank`, e, THROUGH); join(`${sc}/shank`, arm, THREAD); join(sc, arm, TW.tapped);
-  }
+  // round 18.2 (the film's request): the screw's true section, N slabs across x (mSlabsS) narrowing toward the
+  // circle, not mtube's flat box. Every shank slab (not just one) needs its own THROUGH/THREAD join with the ball
+  // and the tapped arm, since those override the part-level TW.throughBall/TW.tapped (not themselves exempt) for
+  // exactly the pairs that overlap.
+  const screw = (nm, c, sHead, sgn, e, arm) => {
+    const headSlabs = mSlabsS(frame, 'head', c[0], c[1], sgn > 0 ? [sHead, sHead + sg.k] : [sHead - sg.k, sHead], sg.hd / 2);
+    const shankSlabs = mSlabsS(frame, 'shank', c[0], c[1], sgn > 0 ? [sHead - sg.L, sHead] : [sHead, sHead + sg.L], sg.d / 2);
+    const sc = add(`twist ${nm} screw ${tag}`, [...headSlabs, ...shankSlabs], { bom: P.screw });
+    join(e, arm, TW.ball); join(sc, e, TW.throughBall); join(sc, arm, TW.tapped);
+    for (const sl of shankSlabs) { join(`${sc}/${sl.name}`, e, THROUGH); join(`${sc}/${sl.name}`, arm, THREAD); }
+    return sc;
+  };
+  const sL = screw('lever', G.Lp, G.eyeS[0], -1, eL, lever), sS = screw('servo arm', G.Hp, G.eyeS[0], -1, eS, horn);
   const A = pt(G.Lp, h1), B = pt(G.Hp, -h1), stud = mm(Math.min(ke.l1_mm, ke.min_thread_depth_mm ?? ke.l1_mm));
   const g6 = mm(1.0), link = add(`twist link ${tag}`, [...diagTube(frame, 'body', pt(G.Lp, h1 + g6), pt(G.Hp, -h1 - g6), mm(P.link_d_mm) / 2, 0, 0.02), ...diagTube(frame, 'stud lever', pt(G.Lp, h1 - stud), pt(G.Lp, h1 + g6), mm(1), 0, 0.02), ...diagTube(frame, 'stud servo', pt(G.Hp, -h1 - g6), pt(G.Hp, -(h1 - stud)), mm(1), 0, 0.02)], { bom: 'twist links' });
   join(link, eL, TW.stud); join(link, eS, TW.stud); join(`${link}/stud lever`, eL, THREAD); join(`${link}/stud servo`, eS, THREAD);
@@ -401,8 +425,12 @@ function drawBarAndTip(ax, tag, frame, G, P, ids) {
   const hub = add(`twist tip hub ${tag}`, [mtube(frame, 'hub', 0, 0, [G.sH0, G.sH1], rH, G.rod.ro), mbox(frame, 'web', [A.x - mm(2), -rH + mm(0.5)], [G.sH0, A.s + mm(1)], [-mm(3.5), mm(3.5)]), ...diagTube(frame, 'socket', A, lerp3(A, B, so), sk, G.arm.ro, 0.02)], { bom: 'twist tip hubs' });
   join(`${hub}/hub`, ids.rod, BORE); join(hub, ids.rod, TW.pinned); join(hub, tb, TW.thrust);
   const rp = mm(P.lever.pin_d_mm) / 2, pS = (G.sH0 + G.sH1) / 2;
-  const pin = add(`twist tip pin ${tag}`, [mbox(frame, 'pin', [-rp, rp], [pS - rp, pS + rp], [-rH, rH], { tube: { ro: rp, ri: 0, L: 2 * rH, axis: 'n' } })], { bom: 'twist cross pins' });
-  join(pin, hub, TW.pinIn); join(`${pin}/pin`, `${hub}/hub`, THROUGH); join(pin, ids.rod, THROUGH);
+  // round 18.2 (the film's request): the pin's true section, N slabs across x (mSlabsN) narrowing toward the
+  // circle, not mbox's flat box; every slab needs its own THROUGH join with the hub (see the elbow pin's note)
+  const tipPinSlabs = mSlabsN(frame, 'pin', 0, pS, [-rH, rH], rp);
+  const pin = add(`twist tip pin ${tag}`, tipPinSlabs, { bom: 'twist cross pins' });
+  join(pin, hub, TW.pinIn); for (const sl of tipPinSlabs) join(`${pin}/${sl.name}`, `${hub}/hub`, THROUGH);
+  join(pin, ids.rod, THROUGH);
   const arm = add(`twist tip arm ${tag}`, diagTube(frame, 'tube', A, B, G.arm.ro, G.arm.ri, 0.01), { bom: 'twist tip arms' });
   const pSock = diagTube(frame, 'socket', lerp3(A, B, 1 - so), B, sk, G.arm.ro, 0.02);
   const plate = add(`twist tip plate ${tag}`, [mbox(frame, 'plate', [-G.e - mm(4.5), B.x + mm(4.5)], [G.sTp0, G.sTp1], [-mm(4.5), mm(4.5)]), ...pSock], { bom: 'twist tip plates' });
@@ -477,12 +505,32 @@ const STOCK = [['twist bars', 'bar'], ['twist tip arms', 'arm']];
 export function drawnLines(pd, catalog) {
   const parts = [], joins = [], frame = () => ({ o: [0, 0], u: [1, 0], v: [0, 1] });
   const ax = { d: pd, catalog, add: (id, solids, extra = {}) => { parts.push({ id, solids: solids.map((s) => ({ ...s, bom: s.bom ?? extra.bom })) }); return id; }, join: (a, b, w) => joins.push([a, b, w]), assumptions: [] };
-  const out = twistWing(ax, 'R', frame), by = {};
+  const out = twistWing(ax, 'R', frame), by = {}, tubeGroups = new Map();
+  // round 18.2: a fastener's true section may be N slabs sharing one tube record (xSlabs); its volume and length
+  // belong to the fastener once, not to every slab, so group them by item and base name (the slab suffix
+  // stripped) and add that one volume at their average position, instead of summing the tube's full volume once
+  // per slab (which would multiply it by N)
   for (const p of parts) for (const s of p.solids) {
     const b = by[s.bom] ?? (by[s.bom] = { solids: 0, items: new Set(), V_m3: 0, L_m: 0, m1: [0, 0, 0] });
-    const sh = s.at ? s.at(null) : s.shape, c = shapeCentre(sh), v = volumeOf(s, sh);
-    b.solids++; b.items.add(s.item ?? p.id); b.V_m3 += v; b.L_m += s.tube?.L ?? 0;
-    b.m1 = b.m1.map((q, i) => q + v * [(s.x[0] + s.x[1]) / 2, c[0], c[1]][i]);
+    b.solids++; b.items.add(s.item ?? p.id);
+    const sh = s.at ? s.at(null) : s.shape, c = shapeCentre(sh), pos = [(s.x[0] + s.x[1]) / 2, c[0], c[1]];
+    // diagTube's own numbered pieces (axis 'diag') are genuinely different segments of one long member, each its
+    // own volume and length, and must still be summed individually, not grouped as one fastener's slabs
+    if (s.tube && s.tube.axis !== 'diag') {
+      const key = `${s.bom}|${s.item ?? p.id}|${s.name.replace(/\s\d+$/, '')}`;
+      const g = tubeGroups.get(key) ?? { bom: s.bom, tube: s.tube, sum: [0, 0, 0], n: 0 };
+      g.sum = g.sum.map((q, i) => q + pos[i]); g.n++;
+      tubeGroups.set(key, g);
+    } else {
+      const v = volumeOf(s, sh);
+      b.V_m3 += v; b.L_m += s.tube?.L ?? 0;
+      b.m1 = b.m1.map((q, i) => q + v * pos[i]);
+    }
+  }
+  for (const g of tubeGroups.values()) {
+    const b = by[g.bom], v = Math.PI * (g.tube.ro ** 2 - (g.tube.ri ?? 0) ** 2) * g.tube.L, pos = g.sum.map((q) => q / g.n);
+    b.V_m3 += v; b.L_m += g.tube.L;
+    b.m1 = b.m1.map((q, i) => q + v * pos[i]);
   }
   for (const b of Object.values(by)) { b.c = b.m1.map((q) => q / b.V_m3); b.items = b.items.size; }
   return { by, G: out.G, parts, joins };
@@ -609,7 +657,12 @@ export function twistLoads(d, catalog) {
   const wm = d.mass?.wing, ms = wm ? (wm.spar_kg_per_m * L * L) / 2 + q.reduce((acc, p) => acc + wm.skin_kg_per_m2 * chordAtW(wing, p.s).c * ds * p.s, 0) + (wm.point ?? []).reduce((acc, p) => acc + p.mass_kg * p.s_m, 0) : 1;
   const kx = (m_kg, s) => (m_kg * s) / ms;
   const stiff = twistStiffness(d, catalog);
-  const kAero = d.control?.diffLimit?.twist_torque_per_rad ?? stiff.K_Nm_rad, Rrod = Math.max(...stiff.rods.flatMap((r) => r.R_N_per_rad.map(Math.abs))) / kAero;
+  // Round 18 (diagnosis 2.5(a), bug): the edge rods' reaction at a rib per rad of the wing's ACTUAL twist angle
+  // (R_N_per_rad, from the spline bending energy), not per N m of twist torque divided by an aerodynamic stiffness
+  // (0.0531-0.069 N m/rad): that stiffness is far softer than the hardware, so torque/stiffness overstated the twist
+  // by about 8x (5.3 rad at cruise, against the hardware's travel_rad of 0.675 rad). The flight model carries the
+  // flown twist angle directly (LOAD_CHANNELS twist_angle_R/L, bounded by the servo's travel_rad).
+  const Rrod = Math.max(...stiff.rods.flatMap((r) => r.R_N_per_rad.map(Math.abs)));
   return { P, G, K, ctx, kq, kRod, kRod0, sinG, kTr, kTs, kFL, a, Fk, rMin, Re, Rt, Mbar, fRib, kElb, kV, kx, ms, stiff, Rrod, hand };
 }
 
@@ -641,11 +694,13 @@ export function twistMembers(ax) {
   const { d, catalog, members, mat, glueAl, glueCf } = ax, P = twistParams(d.params);
   if (!P) return;
   const Ld = twistLoads(d, catalog), { G } = Ld, M = driveMaterials(catalog, P, mat), sv = d.servos?.twist;
-  for (const [t, side] of [['R', 'right'], ['L', 'left']]) for (const m of twistMembersSide(Ld, G, P, M, { glueAl, glueCf, sv, catalog }, t, side)) members.push(m);
+  // round 18: the arm's maker's-part condition (the servo's own rule at its supply's published row: chains.js)
+  const armMk = sv ? servoArmMaker(d, catalog, 'twist', P.horn) : null;
+  for (const [t, side] of [['R', 'right'], ['L', 'left']]) for (const m of twistMembersSide(Ld, G, P, M, { glueAl, glueCf, sv: sv && { ...sv, armMk }, catalog }, t, side)) members.push(m);
 }
 
 function twistMembersSide(Ld, G, P, M, { glueAl, glueCf, sv, catalog }, t, side) {
-  const Q = `twist_${t}`, yz = `root_yz_${t}`, rx = `root_x_${t}`, ke = G.ke, gi = G.gfi, gm = G.gfm;
+  const Q = `twist_${t}`, Qth = `twist_angle_${t}`, yz = `root_yz_${t}`, rx = `root_x_${t}`, ke = G.ke, gi = G.gfi, gm = G.gfm;
   const Tr = [T_(Q, Ld.kTr)], FL = [T_(Q, Ld.kFL)], dRod = mm(gi.d1_mm), rH = mm(P.lever.hub_od_mm) / 2, pinD = P.lever.pin_d_mm;
   const Fpin = [T_(Q, Ld.kTr / dRod)], armLen = Math.hypot(G.armB.s - G.armA.s, G.armB.x - G.armA.x), f10 = Ld.fRib.at(-1);
   const Farm = [T_(Q, Ld.kTr / Math.abs(G.armB.x)), T_(yz, f10)], Marm = Farm.map((q) => T_(q.ch, q.k * armLen));
@@ -669,11 +724,17 @@ function twistMembersSide(Ld, G, P, M, { glueAl, glueCf, sv, catalog }, t, side)
     ...pinMembers(`twist tip pin ${t}`, M, glueAl, pinD, mm(P.tip.hub_od_mm) / 2, G, Fpin, inert(0.0002, G.sH0)),
     { name: `twist link ${t} rod ends`, kind: 'rod end', check: 'rated', dims: { rating_N: ke.max_static_tensile_long_term_n, rating_basis: `${P.rodEnd}: maximum static tensile load, long term (igus)` }, sections: [sect('F', FL)], uses: { F: 'F' }, note: 'the link\'s force through each rod end (along its shank)' },
     { name: `twist link ${t} screws`, kind: 'fasteners', check: 'bolts', fastener: fastenerOfCat(catalog, P.screw), dims: { n: 1 }, sections: [sect('V', FL)], uses: { V: 'V' }, note: 'each rod end\'s M2 screw in shear' },
+    // round 18 (agent C's finding): the lever's rod end screw goes into a thread tapped in our 7075 lever, rated as the
+    // tail horn's is (the servo arm's thread is the maker's part)
+    tappedThreadMember(`twist elbow lever ${t} screw thread in the arm`, M.al7, { screw_len_mm: byId(catalog, P.screw).specs.length_mm, ball_B_mm: ke.B_mm, arm_t_mm: P.lever.arm_t_mm }, FL, 'the 7075 lever\'s arm', "the link's"),
     { name: `twist link ${t}`, kind: 'strut', check: 'strut', material: M.al6, dims: { L_mm: +(Ld.K.link * 1000 - 2 * ke.h1_mm).toFixed(2), d_mm: P.link_d_mm, di_mm: 0 }, sections: [sect('F', FL)], uses: { F: 'F' }, note: 'the 6061 link between the rod ends\' shanks' },
     { name: `twist link ${t} studs`, kind: 'stud', check: 'beam', material: M.al6, dims: { A_mm2: 2.07, Zi_mm3: 1e9, Zo_mm3: 1e9 }, sections: [sect('F', FL)], uses: { F: 'F' }, note: 'the link\'s M2 studs in tension over the M2 stress area 2.07 mm2 (6061 at its yield)' },
-    // round 17b (lead): the maker's centre screw is held with the maker's arm to the servo's stall torque (orchestrator's
-    // decision for the R-ML25; disclosed in the arm member, the interface row and M7's disclosed_unrated), as at the tail
-    ...(sv ? [{ name: `twist servo arm ${t}`, kind: 'arm', check: 'rated', dims: { rating_N: (sv.servo_stall_Nm ?? sv.stall_Nm) / G.rs, rating_basis: `the maker's own arm (${P.horn}, supplied with the MD89MW): no rating of its own is published, so it is held to the servo's published stall torque at the supply's row at its ${P.servo.hole_mm} mm hole` }, sections: [sect('F', FL)], uses: { F: 'F' }, note: 'the link\'s force at the arm\'s hole' }] : []),
+    // round 18 (SPEC ruling "Maker's part", operator's decision 2026-11-03): the maker's arm, its centre screw and its
+    // tapped holes on its own servo's spline are a maker's part, no longer a member held to the stall at FoS 1.5 (40% of
+    // stall under the envelope's member allowance). It reports its force at the hole (F, the link's) and its torque at the
+    // spline (T, the servo's: the wing's twist torque x the linkage ratio), and is valid only while the servo is within its
+    // own rule at the supply's published row (chains.js servoArmMaker)
+    ...(sv ? [{ name: `twist servo arm ${t}`, kind: 'arm', check: "maker's part", maker: sv.armMk, dims: { hole_mm: P.servo.hole_mm }, sections: [sect('F', FL), sect('T', [{ ch: Q, k: sv.linkage_ratio ?? 1 }])], uses: { F: 'F', T: 'T' }, note: `the maker's ${P.horn} on the servo's spline: the link's force at its ${P.servo.hole_mm} mm hole, and the servo's torque at the spline; no rating of its own is published (SPEC ruling "Maker's part")` }] : []),
     { name: `twist servo ${t} frame lips`, kind: 'plate', check: 'plate', material: M.al7, dims: { b_mm: +((G.caseDims[2] + mm(4)) * 1000).toFixed(1), t_mm: P.hanger.lip_mm }, sections: [sect('Mo', [...FL, ...Tcase].map((q) => T_(q.ch, q.k * lipH / 2)))], uses: { Mo: 'Mo' }, note: 'the case\'s chordwise push (the link\'s force and its torque as a couple over its length) on one lip, at half its depth' },
     { name: `twist frame pins ${t}`, kind: 'pin', check: 'round', material: M.al7, dims: { d_mm: P.hanger.pin_d_mm }, sections: [sect('M', [...Tcase, T_(yz, 0.0215 / 0.11)].map((q) => T_(q.ch, (q.k * (caseL + 2 * mm(P.hanger.lip_mm))) / 4)))], uses: { M: 'M' }, note: 'an under pin across the case\'s length: the case\'s torque reaction as a couple over its length, and its own normal load (its mass share of the wing\'s root force, 21.5 g of about 110 g), simply supported' },
     bond(`twist frame pin bonds ${t}`, glueAl, P.hanger.pin_d_mm, 2 * P.hanger.lip_mm, null, inert(0.0215, G.sCase), 'Araldite 2011 on aluminium: each pin in its two lips, the case\'s spanwise inertia'),
@@ -693,7 +754,7 @@ function twistMembersSide(Ld, G, P, M, { glueAl, glueCf, sv, catalog }, t, side)
     bond(`twist rib rings ${t}`, glueCf, G.so.ro * 2000, P.ring.t_mm, null, inert(mRib, G.s9), 'Araldite 2011 on CFRP (typical, half): a ring holding its rib spanwise (the 8 mm spar, the smaller bond)'),
     flange(`wing ribs ${t} on their rings`, M.balsa, G.si.ro * 2000 + 2 * P.ring.wall_mm, G.si.ro * 2000, inert(mRib, G.s9), 'a rib\'s face on its ring (balsa crushing at half over the ring\'s annulus)'),
     seatF(`wing ribs ${t} on the inner spar`, M.balsa, G.si.ro * 2000, G.tR * 1000, [T_(yz, ribIn)], 'ribs 1-5: the air load (the largest c s^2 share) on the spar through the rib\'s hole'),
-    seatF(`wing ribs ${t} on the edge rods`, M.balsa, 1.5, G.tR * 1000, [T_(Q, fRod), T_(yz, fk / 2)], 'an edge rod\'s largest reaction at a rib from the twist (the rods\' spline reactions per rad, the twist at most the twist torque over the aerodynamic twist stiffness: a stated bound) and half the rib\'s air load, on the 1.5 mm rod\'s hole'),
+    seatF(`wing ribs ${t} on the edge rods`, M.balsa, 1.5, G.tR * 1000, [T_(Qth, fRod), T_(yz, fk / 2)], 'round 18 (diagnosis 2.5(a)): an edge rod\'s largest reaction at a rib (its spline reaction per rad, R_N_per_rad) at the flown wing twist (the hardware\'s own bound, LOAD_CHANNELS twist_angle), not torque over the far softer aerodynamic twist stiffness (about 8x too much) and half the rib\'s air load, on the 1.5 mm rod\'s hole'),
     bond(`twist rod rings ${t}`, glueCf, 1.5, P.ring.t_mm, null, inert(0.0045, G.L / 2), 'Araldite 2011 on CFRP (typical, half): an edge rod\'s spanwise inertia on its rings at rib 2 (the 2 mm rod\'s 4.5 g/m, the 1.5 mm rod\'s smaller bond)'),
     bond(`twist spar cap ${t} bond`, glueCf, G.so.ro * 2000, P.cap.sleeve_mm, null, Farm, 'Araldite 2011 on CFRP (typical, half): the tip bushing\'s radial load on the spar\'s end'),
     { name: `twist tip arm ${t}`, kind: 'tube', check: 'cfrp tube', material: M.bar, dims: { d_mm: G.arm.od_rate, di_mm: G.arm.id_rate }, sections: [sect('M', Marm), sect('V', Farm)], uses: { M: 'M', V: 'V' }, note: `the twist torque and rib 10's air load at the tip plate, the arm cantilevered ${(armLen * 1000).toFixed(0)} mm from the hub` },
@@ -737,6 +798,7 @@ const RULE = {
   rated: "the part maker's published load rating at FoS 1.5 (members.js 'rated')",
   bolt: 'ISO 898-1 proof load (SPEC Rulings after physics round 7)',
   beam: 'the member\'s own section at the material\'s published yield, FoS 1.5',
+  thread: "pin-in-shear on the thread's stripping area at the material's shear yield, FoS 1.5 (as the tail horn's)",
   none: 'SPEC Design freeze, Function completeness: what holds it axially needs a named, rated member',
 };
 const sideOf = (a, b) => { const m = /(?:^| )([RL])(?= |$|\/)/.exec(a) ?? /(?:^| )([RL])(?= |$|\/)/.exec(b); return m ? m[1] : null; };
@@ -780,11 +842,17 @@ export const TWIST_INTERFACE_RULES = [
   row(exactRe(TW.pinned), null, 'pinned', (t) => [`twist elbow pin ${t}`, `twist elbow pin ${t} in the rod wall`, `twist elbow pin ${t} in the hub`, `twist tip pin ${t}`, `twist tip pin ${t} in the rod wall`, `twist tip pin ${t} in the hub`], (t) => [`twist elbow pin ${t} bond`, `twist tip pin ${t} bond`, ...rodStops(t)], 'the cross pins', 'the pins\' bonds and the thrust faces', RULE.pin, RULE.bond),
   row(exactRe(TW.pinIn), null, 'bonded pin', (t) => [`twist elbow pin ${t}`, `twist elbow pin ${t} in the hub`, `twist tip pin ${t}`, `twist tip pin ${t} in the hub`], (t) => [`twist elbow pin ${t} bond`, `twist tip pin ${t} bond`], 'the pin in its hub', 'its bond', RULE.pin, RULE.bond),
   row(exactRe(TW.thrust), null, 'thrust face', (t) => rodStops(t), (t) => rodStops(t), 'the hub\'s face on the bushing', 'the same faces', RULE.bush, RULE.bush),
-  row(exactRe(TW.ball), null, 'rod end', (t) => [`twist link ${t} rod ends`, `twist link ${t} screws`, `twist elbow lever ${t} arm`, `twist servo arm ${t}`], (t) => [`twist link ${t} screws`], 'the rod end on its screw', 'the screw', RULE.rated, RULE.bolt),
+  // round 18 (SPEC ruling "Maker's part"): on the servo's arm, the arm's hole and its tapped thread are the maker's part;
+  // the KBRM rod end and its M2 screw (a bought part on our linkage) keep their own rules. The lever's rows are ours.
+  row(exactRe(TW.ball), /^twist servo arm [RL]$/, 'rod end', (t) => [`twist link ${t} rod ends`, `twist link ${t} screws`, `twist servo arm ${t}`], (t) => [`twist link ${t} screws`], 'the rod end on its screw; the arm\'s hole the maker\'s part', 'the screw', `${RULE.rated}; the arm: ${MAKERS_PART_RULE}`, RULE.bolt),
+  row(exactRe(TW.ball), null, 'rod end', (t) => [`twist link ${t} rod ends`, `twist link ${t} screws`, `twist elbow lever ${t} arm`], (t) => [`twist link ${t} screws`], 'the rod end on its screw', 'the screw', RULE.rated, RULE.bolt),
   row(exactRe(TW.throughBall), null, 'fastened', (t) => [`twist link ${t} screws`], (t) => [`twist link ${t} screws`], 'the screw', 'the screw', RULE.bolt, RULE.bolt),
-  row(exactRe(TW.tapped), null, 'fastened', (t) => [`twist link ${t} screws`], (t) => [`twist link ${t} screws`], 'the screw', 'the screw', RULE.bolt, RULE.bolt),
+  row(exactRe(TW.tapped), /^twist servo arm [RL]$/, 'fastened', (t) => [`twist link ${t} screws`], (t) => [`twist link ${t} screws`, `twist servo arm ${t}`], 'the screw', 'the screw, in the maker\'s tapped thread in its arm', RULE.bolt, `${RULE.bolt}; the arm's thread: ${MAKERS_PART_RULE}`),
+  // round 18: on our lever the thread is ours (7075), rated as the tail horn's: pin-in-shear on its stripping area
+  row(exactRe(TW.tapped), null, 'fastened', (t) => [`twist link ${t} screws`, `twist elbow lever ${t} screw thread in the arm`], (t) => [`twist link ${t} screws`, `twist elbow lever ${t} screw thread in the arm`], 'the screw in shear, in the lever\'s tapped thread', 'the screw, in the thread tapped in the 7075 lever', RULE.bolt, `${RULE.bolt}; the lever's thread: ${RULE.thread}`),
   row(exactRe(TW.stud), null, 'threaded', (t) => [`twist link ${t} studs`, `twist link ${t} rod ends`, `twist link ${t}`], (t) => [`twist link ${t} studs`], 'the link\'s studs and rod ends', 'the studs', RULE.beam, RULE.beam),
-  row(exactRe(TW.spline), null, 'spline', (t) => [`twist servo arm ${t}`], (t) => [`twist servo arm ${t}`], 'the maker\'s arm held to the servo\'s stall torque', 'the maker\'s centre screw, supplied with the servo, held with the maker\'s arm to the servo\'s stall torque (no rating published: disclosed)', RULE.rated, RULE.rated),
+  // round 18: the maker's arm and its centre screw on its own servo's spline: the maker's part (SPEC ruling)
+  row(exactRe(TW.spline), null, 'spline', (t) => [`twist servo arm ${t}`], (t) => [`twist servo arm ${t}`], 'the maker\'s arm on its own servo\'s spline (maker\'s part)', 'the maker\'s centre screw, supplied with the servo (maker\'s part)', MAKERS_PART_RULE, MAKERS_PART_RULE),
   row(exactRe(TW.frame), null, 'framed', (t) => [`twist servo ${t} frame lips`, `twist frame pins ${t}`], (t) => [`twist frame pins ${t}`, `twist frame pin bonds ${t}`], 'the frame\'s lips and pins', 'the pins in their bonded holes', RULE.beam, RULE.bond),
   row(exactRe(TW.framePin), null, 'bonded pin', (t) => [`twist frame pins ${t}`], (t) => [`twist frame pin bonds ${t}`], 'the pins', 'their bonds', RULE.beam, RULE.bond),
   row(exactRe(TW.pinFace), null, 'resting', (t) => [`twist frame pins ${t}`], (t) => [`twist frame pin bonds ${t}`], 'the pins', 'their bonds', RULE.beam, RULE.bond),
@@ -973,7 +1041,9 @@ export function twistChains(asm, d, catalog, opts = {}) {
         speed: { required_rad_s: dem.rate, available_rad_s: sv.speed_rad_s ?? null, basis: 'the servo\'s no-load speed at its row times the drawn ratio; required: the trims\' dyn x 2 pi f' },
         law: { flown: 'w(s) th: w linear from 0 at the elbow to 1 at the tip', drawn: 'ribs 6-9: atan(xi sin th_r / (1 - xi (1 - cos th_r))) at xi of the bar from the joiner\'s hole to the tip plate\'s; rib 10: th_r', max_err: +law.max_err.toFixed(5), tol: +law.tol.toFixed(5), basis: `at the ribs over the full drawn travel; the tolerance is 2% of the drawn travel (the bar's own compliance is reported apart)` },
         stiffness: { flown: wing.twist_stiffness_Nm_rad ?? null, drawn: +twistStiffness(d, catalog).K_Nm_rad.toFixed(5), tol: 1e-3, rel: true, units: 'N m/rad', basis: 'the edge rods\' bending energy (twistStiffness)' },
-        compliance_rad_per_Nm: +comp.rad_per_Nm.toFixed(5),
+        // round 18: the chain's series compliance as a drawn-against-flown figure like its siblings (was a bare number,
+        // reported as info): what flight.js flies (servos.twist.compliance_rad_per_Nm) must be the drawn chain's.
+        compliance_rad_per_Nm: { flown: sv.compliance_rad_per_Nm ?? null, drawn: +comp.rad_per_Nm.toFixed(6), tol: 1e-3, rel: true, units: 'rad/N m', basis: `the titanium rod in torsion (${comp.rod.toFixed(4)}) plus the bar in bending (${comp.bar.toFixed(4)}) (chainCompliance); flown as a relaxed deflection state, flight.js TAU_CHAIN_S` },
       },
       findings,
       flown_limits: ['travel', 'torque', 'speed'],

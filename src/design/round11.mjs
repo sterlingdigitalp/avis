@@ -63,7 +63,8 @@ export function round11Params(base, cand, set, catalog) {
 export function round11Assumptions(base, d) {
   return [...new Set([...round10Assumptions(base, d).filter((x) => !/^Round 11/.test(x)),
     'Round 11: the section model\'s negative stall is kept inside the measured UIUC sweep with its own transition width (E387 stalls at -6.3 deg at Re 1e5 and 2e5, where the tables show the drag doubling; the round-10 fit had put it at -53 to -253 deg).',
-    'Round 11: a bushing is judged on the length its housing supports (structure.joints[].supports[].housing_mm): the plate thickness in an unbossed plate seat, the part\'s own length in a boss, shoulder housing or coupler eye.'])];
+    'Round 11: a bushing is judged on the length its housing supports (structure.joints[].supports[].housing_mm): the plate thickness in an unbossed plate seat, the part\'s own length in a boss, shoulder housing or coupler eye.',
+    ...((d.servos?.twist?.compliance_rad_per_Nm ?? 0) > 0 ? ['Round 18: the twist chain\'s series compliance is flown as a state relaxed toward C x twist torque with time constant TAU_CHAIN_S = 0.02 s (flight.js), not a one-step-lagged algebraic loop (unstable above about C 0.11 rad/N m at dt 1/240 s, and at any C for a small enough dt). The result does not depend on this time constant over 8-40 ms, nor on dt over 1/240-1/1920 s (test/physics/twist-compliance.test.js).'] : [])])];
 }
 
 /** The design's packing record from the film's checker (as round 10 writes it). */
@@ -117,8 +118,19 @@ export function outsideDrag(d) {
   const pod = d.body.CdA_front_pod_m2 ?? d.body.CdA_front_m2;
   // round 17b (SPEC Function completeness, "the real section"): what stands out of the wing's E387 surface (the twist
   // drive's section record: the parts declared outside it, at their Cd) counts in the drag too, added at the body
-  const sec = d.structure.clearance?.section, wingOut = sec?.CdA_m2 ?? 0;
-  d.body = { ...d.body, CdA_front_pod_m2: pod, CdA_front_outside_m2: f.CdA_m2, ...(sec ? { CdA_front_wing_protrusions_m2: +wingOut.toFixed(7), wing_protrusions_basis: 'the section record (twist-drive.js sectionRecord): each declared protrusion\'s frontal area outside the E387 at its Cd, both wings; added to the body\'s frontal CdA (conservative: Cd 1.2 on the projected height outside the section)' } : {}), CdA_front_m2: pod + f.CdA_m2 + wingOut, outside_frontal: { area_mm2: f.area_mm2, Cd: f.Cd, basis: f.basis } };
+  // round 18 (diagnosis 1.3/4.1, bug): sectionRecord (twist-drive.js) draws and checks the right wing only
+  // (twistWing(ax, 'R', frame)), so its CdA_m2 is one wing's; both wings protrude, so it is counted twice.
+  const sec = d.structure.clearance?.section, wingOut = 2 * (sec?.CdA_m2 ?? 0);
+  // round 18 (SPEC "What a real build needs": the air path "with its drag counted"): the build-needs record's CdA (the
+  // cooling inlet and outlet at Cd 1.0 on their area, an upper bound, and the twist-servo leads' exposed span through the
+  // wing-root slots at Cd 1.2) is not in the containment record's frontal area (the holes have no solids; the leads'
+  // span is declared drag false there), so it is added here.
+  const needs = d.structure.clearance?.buildneeds?.CdA_m2 ?? 0;
+  // round 18 (pod open problem 4): the covering's open windows (the wing-root slots, the pushrod exits, the pitot exit)
+  // as cavities plus the through-flow the pod's interior allows between them (pod-structure.js openDrag: sourced
+  // figures, an upper bound), also outside the containment record's frontal area.
+  const cuts = d.structure.clearance?.covering?.open?.CdA_m2 ?? 0;
+  d.body = { ...d.body, CdA_front_pod_m2: pod, CdA_front_outside_m2: f.CdA_m2, ...(sec ? { CdA_front_wing_protrusions_m2: +wingOut.toFixed(7), wing_protrusions_basis: 'the section record (twist-drive.js sectionRecord): each declared protrusion\'s frontal area outside the E387 at its Cd, both wings; added to the body\'s frontal CdA (conservative: Cd 1.2 on the projected height outside the section)' } : {}), ...(needs ? { CdA_front_needs_m2: +needs.toFixed(8), needs_basis: d.structure.clearance.buildneeds.CdA_basis ?? 'the build-needs record' } : {}), ...(cuts ? { CdA_front_cuts_m2: +cuts.toFixed(8), cuts_basis: d.structure.clearance.covering.open.basis } : {}), CdA_front_m2: pod + f.CdA_m2 + wingOut + needs + cuts, outside_frontal: { area_mm2: f.area_mm2, Cd: f.Cd, basis: f.basis } };
   return d;
 }
 

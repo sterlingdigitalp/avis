@@ -280,7 +280,12 @@ function stockSize(line, items, catalog, q0) {
 function volumeSize(line, items, catalog, q0) {
   const m = byId(catalog, line.id), rho = (m.specs?.density_g_cm3 ?? (m.specs?.density_kg_m3 ?? NaN) / 1000) * 1e6 / 1000; // kg/m3
   const vBom = line.mass_g / 1000 / rho;
-  const v = items.reduce((a, it) => a + it.solids.reduce((b, x) => b + solidVolume(x, q0), 0), 0);
+  // round 18.2: a fastener's true section may be N slabs sharing one tube record (xSlabs, axis 'y'/'span'/'n');
+  // its volume counts once per item (by base name, the slab suffix stripped), not once per slab (which would
+  // multiply it by N). diagTube's own numbered pieces (axis 'diag') are genuinely different segments of one long
+  // member, each its own volume, and must still be summed, not deduplicated.
+  const itemVolume = (it) => { const seen = new Set(); let total = 0; for (const x of it.solids) { if (x.tube && x.tube.axis !== 'diag') { const key = x.name.replace(/\s\d+$/, ''); if (seen.has(key)) continue; seen.add(key); } total += solidVolume(x, q0); } return total; };
+  const v = items.reduce((a, it) => a + itemVolume(it), 0);
   const ratio = v / vBom;
   // a lightened part drawn by its envelope (a rib): the BOM's material must fit inside the solids
   const env = items.every((it) => it.solids.every((x) => x.envelope));

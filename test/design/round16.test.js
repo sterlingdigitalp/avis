@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { bomLines, resolveTag, completenessRecord, fastenerGeometry, shapeArea, solidVolume, EXEMPT, VOLUME_TOL } from '../../src/design/completeness.js';
 import { slideGap, resolveSteps, sequenceRecord, STEP_MAX_M } from '../../src/design/sequence.js';
 import { pickScrew } from '../../src/design/fixings.js';
-import { ring, cap, poly, segSegDist, screwX, screwY, capsulePoly, circlePoly, gap2, addPart, EXEMPT_JOINTS, KEYWAY, THROUGH, MESH, GROOVE } from '../../src/design/clearance.js';
+import { ring, cap, poly, segSegDist, screwX, screwY, capsulePoly, circlePoly, gap2, addPart, EXEMPT_JOINTS, KEYWAY, THROUGH, MESH, GROOVE, xSlabs } from '../../src/design/clearance.js';
 import { frameRect, chordAt } from '../../src/design/wing-solids.js';
 import { officialRefusal, SEQUENCE, ROUND16 } from '../../src/design/round16.mjs';
 import { insideConvex, clipConvex } from '../../src/design/airframe.js';
@@ -163,9 +163,17 @@ test('round 16 sections: a screw along x and along y, a capsule with a bore, a c
   near(Math.max(...s.nut[0].shape.pts.map((p) => Math.hypot(...p))), 0.0055 / Math.sqrt(3)); near(s.nut[0].shape.holes[0].r, 0.0015);
   near(screwX([0, 0], 0.01, -1, m3, 0.004, { s: 0.0055, m: 0.0024, bore: 0.0025 }).nut[0].shape.holes[0].r, 0.00125);
   const y = screwY([0.1, 0.02], -0.05, -1, m3, -0.054, { s: 0.0055, m: 0.0024 });
-  assert.deepEqual(y.screw[1].x.map((v) => +v.toFixed(6)), [0.0985, 0.1015]);
-  near(y.screw[1].tube.L, 0.008); near(y.screw[0].tube.L, 0.003); near(y.nut[0].tube.L, 0.0024);
-  const pts = y.screw[1].shape.pts.map((p) => p[1]); near(Math.min(...pts), -0.058); near(Math.max(...pts), -0.05);
+  // round 18.2 (the film's request): the shank its true section, N slabs across x (xSlabs), not a square prism
+  const shankSlabs = y.screw.filter((s) => /^shank/.test(s.name)), headSlabs = y.screw.filter((s) => /^head/.test(s.name));
+  assert.equal(shankSlabs.length, 8); assert.equal(headSlabs.length, 8);
+  near(shankSlabs[0].tube.L, 0.008); near(headSlabs[0].tube.L, 0.003); near(y.nut[0].tube.L, 0.0024);
+  for (const sl of shankSlabs) assert.equal(sl.shape.kind, 'poly'); // a true-section slab, not a capsule or one flat box
+  const yOf = (slabs) => { const ys = slabs.flatMap((s) => s.shape.pts.map((p) => p[1])); return [Math.min(...ys), Math.max(...ys)]; };
+  const [sMin, sMax] = yOf(shankSlabs); near(sMin, -0.058); near(sMax, -0.05); // the full catalogue length, exactly
+  // the group circumscribes the true circle: no slab's half-width exceeds the radius, and the centre slab's equals it
+  const zHalf = (sl) => (Math.max(...sl.shape.pts.map((p) => p[0])) - Math.min(...sl.shape.pts.map((p) => p[0]))) / 2;
+  for (const sl of shankSlabs) assert.ok(zHalf(sl) <= m3.d / 2 + 1e-9);
+  near(Math.max(...shankSlabs.map(zHalf)), m3.d / 2);
   // the capsule's polygon contains its round ends and has the bore as its hole
   const c = capsulePoly([0, 0], [0.012, 0], 0.007, [{ c: [0, 0], r: 0.005 }]);
   for (let k = 0; k < 64; k++) { const a = (k / 64) * 2 * Math.PI; for (const e of [[0, 0], [0.012, 0]]) assert.ok(insideConvex(c.pts, [e[0] + 0.007 * Math.cos(a), e[1] + 0.007 * Math.sin(a)])); }
@@ -174,6 +182,31 @@ test('round 16 sections: a screw along x and along y, a capsule with a bore, a c
   near(Math.max(...r.pts.map((p) => p[0])), 0.0225, 1e-12); near(Math.max(...r.pts.map((p) => p[1])), 0.0225, 1e-12);
   const f = frameRect([0, 0], [0, 1], [-1, 0], [0.1, 0.102], [-0.01, 0.02]);
   assert.deepEqual(f.pts.map((p) => p.map((v) => +v.toFixed(6))), [[0.01, 0.1], [0.01, 0.102], [-0.02, 0.102], [-0.02, 0.1]]);
+});
+
+/**
+ * Round 18.2 (the film's request): xSlabs, the true section of a fastener lying across x. Its N slabs lie inside
+ * the circumscribed square the old box drew (never wider than the radius), cover the true circle at every x (each
+ * slab's half-width is at least the circle's true half-width anywhere within it, since the circle narrows toward
+ * the edges and the slab uses its nearest-to-centre, widest point), and their x-z outline differs from the square
+ * it replaces (most slabs are strictly narrower than the radius; only the centre reaches it). This would fail on
+ * the old square drawing, which had no xSlabs at all -- every slab here would be the same, full-radius width.
+ */
+test('xSlabs: the true section across x -- inside the old square, covering the true circle, and not the square', () => {
+  const xc = 0.05, r = 0.0015, n = 8;
+  const slabs = xSlabs(xc, r, (w) => w, n);
+  assert.equal(slabs.length, n);
+  // the slabs' own x bounds, independent of the function's internal arithmetic: n even steps over [xc - r, xc + r]
+  for (let k = 0; k < n; k++) { near(slabs[k].x[0], xc - r + (k / n) * (2 * r)); near(slabs[k].x[1], xc - r + ((k + 1) / n) * (2 * r)); }
+  for (const s of slabs) {
+    assert.ok(s.shape <= r + 1e-12); // inside the circumscribed square
+    const dNear = Math.max(0, Math.min(Math.abs(s.x[0] - xc), Math.abs(s.x[1] - xc)));
+    const dFar = Math.max(Math.abs(s.x[0] - xc), Math.abs(s.x[1] - xc));
+    near(s.shape, Math.sqrt(Math.max(0, r * r - dNear * dNear))); // its own width: the circle's true width nearest xc
+    assert.ok(s.shape >= Math.sqrt(Math.max(0, r * r - dFar * dFar)) - 1e-12); // covers the (narrower) true width at its far edge too
+  }
+  assert.ok(slabs.some((s) => s.shape < r - 1e-9)); // not the square: most slabs are narrower than the full radius
+  assert.ok(slabs.some((s) => Math.abs(s.shape - r) < 1e-9)); // the centre slab reaches the true circle's widest point
 });
 
 test('convex clip and inside test: a square clipped to a half plane, a point on and off it', () => {
@@ -602,33 +635,43 @@ test('v24-like fixings: each screw\'s head on its face, its shank through what i
   const n = new Map();
   for (const b of fx) {
     const k = (n.get(b.joint) ?? 0) + 1; n.set(b.joint, k);
-    const sc = part(`${b.joint} screw ${k}`), head = sc.solids.find((s) => s.name === 'head'), shank = sc.solids.find((s) => s.name === 'shank');
+    const sc = part(`${b.joint} screw ${k}`);
     // M3: head 5.5 mm across and 3 mm high, shank 3 mm, as long as the screw (8 or 12 mm); along x or vertical (y)
-    // (a vertical screw is drawn as its square prism along x with its tube along y: screwY)
     const L = b.screw === 'screw-iso4762-m3x12-10.9' ? 0.012 : 0.008;
     if (b.axis === 'x') {
+      const head = sc.solids.find((s) => s.name === 'head'), shank = sc.solids.find((s) => s.name === 'shank');
       near(head.shape.ro, 0.00275, 1e-12); near(shank.shape.ro, 0.0015, 1e-12);
       near(b.dir > 0 ? head.x[1] : head.x[0], b.face, 1e-12); near(head.x[1] - head.x[0], 0.003, 1e-12);
       near(b.dir > 0 ? shank.x[0] : shank.x[1], b.face, 1e-12); near(shank.x[1] - shank.x[0], L, 1e-12);
       assert.deepEqual(head.shape.c, b.c);
+      for (const p of b.through) { assert.equal(joinOf(`${sc.id}/shank`, p), THROUGH); assert.match(joinOf(sc.id, p), /fastened/); }
+      const nut = part(`${b.joint} nut ${k}`);
+      if (b.tapped) { assert.equal(nut, undefined); assert.equal(joinOf(`${sc.id}/shank`, b.tapped), THREAD); continue; }
+      assert.equal(joinOf(`${sc.id}/shank`, nut.id), THREAD);
+      assert.equal(joinOf(nut.id, b.through.at(-1)), 'on its face');
+      // the nut: 5.5 mm across flats (round 17b: its hexagon, corners at 5.5 / sqrt 3), 2.4 mm high, from the far
+      // face out, bored to the catalogue's 2.5 mm minor diameter
+      const ns = nut.solids[0];
+      near(Math.max(...ns.shape.pts.map((p) => Math.hypot(p[0] - b.c[0], p[1] - b.c[1]))), 0.0055 / Math.sqrt(3), 1e-12); near(ns.shape.holes[0].r, 0.00125, 1e-12);
+      near(b.dir > 0 ? ns.x[0] : ns.x[1], b.nut_face, 1e-12); near(ns.x[1] - ns.x[0], 0.0024, 1e-12);
     } else {
-      assert.equal(head.tube.axis, 'y');
-      near(head.tube.ro, 0.00275, 1e-12); near(head.tube.L, 0.003, 1e-12); near(shank.tube.ro, 0.0015, 1e-12); near(shank.tube.L, L, 1e-12);
-      near(head.x[0], b.c[0] - 0.00275, 1e-12); near(head.x[1], b.c[0] + 0.00275, 1e-12);
-      const ys = (q) => q.shape.pts.map((v) => v[1]), [h0, h1] = [Math.min(...ys(head)), Math.max(...ys(head))], [s0, s1] = [Math.min(...ys(shank)), Math.max(...ys(shank))];
+      // round 18.2 (the film's request): the shank its true section, N slabs across x (xSlabs, screwY), not a
+      // square prism; the head stays the box (an open problem: see fasteners2.patch notes)
+      const head = sc.solids.filter((s) => /^head/.test(s.name)), shank = sc.solids.filter((s) => /^shank/.test(s.name));
+      assert.equal(shank.length, 8); assert.equal(head.length, 8);
+      near(head[0].tube.axis === 'y' ? head[0].tube.ro : NaN, 0.00275, 1e-12); near(head[0].tube.L, 0.003, 1e-12); near(shank[0].tube.ro, 0.0015, 1e-12); near(shank[0].tube.L, L, 1e-12);
+      const hx = [Math.min(...head.map((s) => s.x[0])), Math.max(...head.map((s) => s.x[1]))];
+      near(hx[0], b.c[0] - 0.00275, 1e-12); near(hx[1], b.c[0] + 0.00275, 1e-12);
+      for (const sl of shank) assert.equal(sl.shape.kind, 'poly');
+      const ys = (slabs) => { const v = slabs.flatMap((q) => q.shape.pts.map((p) => p[1])); return [Math.min(...v), Math.max(...v)]; };
+      const [h0, h1] = ys(head), [s0, s1] = ys(shank);
       near(b.dir > 0 ? h1 : h0, b.face, 1e-12); near(b.dir > 0 ? s0 : s1, b.face, 1e-12); near(s1 - s0, L, 1e-12);
+      for (const p of b.through) { for (const sl of shank) assert.equal(joinOf(`${sc.id}/${sl.name}`, p), THROUGH); assert.match(joinOf(sc.id, p), /fastened/); }
+      const nut = part(`${b.joint} nut ${k}`);
+      if (b.tapped) { assert.equal(nut, undefined); for (const sl of shank) assert.equal(joinOf(`${sc.id}/${sl.name}`, b.tapped), THREAD); continue; }
+      for (const sl of shank) assert.equal(joinOf(`${sc.id}/${sl.name}`, nut.id), THREAD);
+      assert.equal(joinOf(nut.id, b.through.at(-1)), 'on its face');
     }
-    for (const p of b.through) { assert.equal(joinOf(`${sc.id}/shank`, p), THROUGH); assert.match(joinOf(sc.id, p), /fastened/); }
-    const nut = part(`${b.joint} nut ${k}`);
-    if (b.tapped) { assert.equal(nut, undefined); assert.equal(joinOf(`${sc.id}/shank`, b.tapped), THREAD); continue; }
-    assert.equal(joinOf(`${sc.id}/shank`, nut.id), THREAD);
-    assert.equal(joinOf(nut.id, b.through.at(-1)), 'on its face');
-    if (b.axis !== 'x') continue;
-    // the nut: 5.5 mm across flats (round 17b: its hexagon, corners at 5.5 / sqrt 3), 2.4 mm high, from the far face out,
-    // bored to the catalogue's 2.5 mm minor diameter
-    const ns = nut.solids[0];
-    near(Math.max(...ns.shape.pts.map((p) => Math.hypot(p[0] - b.c[0], p[1] - b.c[1]))), 0.0055 / Math.sqrt(3), 1e-12); near(ns.shape.holes[0].r, 0.00125, 1e-12);
-    near(b.dir > 0 ? ns.x[0] : ns.x[1], b.nut_face, 1e-12); near(ns.x[1] - ns.x[0], 0.0024, 1e-12);
   }
   assert.equal(n.size, 9);
 });

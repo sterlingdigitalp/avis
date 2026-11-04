@@ -348,7 +348,7 @@ export function strokeEnvelope(design, bird, rows, { nAmp = 5, fCap = null } = {
 
 /**
  * Component ratings a measured set of free-flight peaks respects (round 3 envelope). Each ratio <= 1 passes.
- * peaks: { crankTorque, rootBend, elbowBend, couplerForce, twistTorque, motorRms, battMean, crankFreqRatio }.
+ * peaks: { crankTorque, rootBend, elbowBend, couplerForce, twistTorque, tailTorque, motorRms, battMean, crankFreqRatio }.
  * allowance: fraction of each rating the calm-air envelope may use, so rough-air load increments stay inside the
  * rating (gear, spar, coupler, servo); 1 when not given.
  */
@@ -363,6 +363,9 @@ export function flightRatios(design, pk, allowance = {}) {
     outer_spar: (pk.elbowBend * sOut.c) / sOut.I / 1e6 / ((sOut.allowable_MPa / 1.5) * al('spar')),
     coupler: Math.max(1.5 / cp.fos_buckling, 1.5 / cp.fos_stress) / al('coupler'),
     twist_servo_torque: pk.twistTorque / (design.servos.twist.stall_Nm * al('servo')),
+    // Round 18 (SPEC "Maker's part"): the tail servos under their own rule too, at the same servo allowance, so the
+    // maker's arm on each (checked under that servo's rule) has the servo's own check beside it in the envelope.
+    tail_servo_torque: Number.isFinite(pk.tailTorque) && design.servos?.tail?.stall_Nm ? pk.tailTorque / (design.servos.tail.stall_Nm * al('servo')) : 0,
     motor_current: pk.motorRms / (design.motor.I_cont ?? Infinity),
     battery_esc_current: pk.battMean / Math.min(design.esc.I_cont ?? Infinity, design.battery.I_cont ?? Infinity),
     // The motor cannot hold the stroke: the governor's duty saturates (its voltage limit at 20% charge). A crank
@@ -444,7 +447,7 @@ export async function strokeFlightTest(design, { V, freq, amp, ramp = 2, settle 
   const memberRatio = membersRatio(design, sim.peaks.supports);
   return {
     crankTorque: sim.peaks.crankTorque, rootBend: sim.peaks.rootBend, elbowBend: sim.peaks.elbowBend, couplerForce: sim.peaks.couplerForce,
-    twistTorque: sim.peaks.twistTorque, loadFactor: sim.peaks.loadFactor, motorRms: Math.sqrt(I2 / n), battMean: Ib / n,
+    twistTorque: sim.peaks.twistTorque, tailTorque: sim.peaks.tailTorque, loadFactor: sim.peaks.loadFactor, motorRms: Math.sqrt(I2 / n), battMean: Ib / n,
     crankFreqRatio: crankSum / n / (TWO_PI * freq), airspeed: Vsum / n, dutySat: sat / n, bearingRatio, memberRatio,
   };
 }

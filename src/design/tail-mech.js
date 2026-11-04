@@ -11,10 +11,12 @@
 //    horn hold the pin axially between the two flanges. The pin is machined from catalogue 7075-T6 (a groove in the
 //    pultruded tube would cut its fibres); the washer goes on radially, after the surface is in its bushings.
 //  - Drawn at zero deflection; the chain record (chains.js) checks the travel.
-import { S, cap, poly, ring, RIB_HOLE, BORE, THREAD, THROUGH, screwY } from './clearance.js';
+import { S, cap, poly, ring, RIB_HOLE, BORE, THREAD, THROUGH, screwY, xSlabs } from './clearance.js';
 import { byId, tubeSpec, tubeAllowable } from './catalog.js';
 import { fastenerGeometry, shapeArea } from './completeness.js';
 import { E387_THICKNESS } from '../../sims/avis-shared/model.js';
+import { servoArmMaker } from './chains.js'; // round 18: the maker's-part condition
+import { MAKERS_PART_RULE } from './interfaces.js'; // round 18
 
 const mm = (v) => v / 1000;
 const add2 = (p, q, k = 1) => [p[0] + k * q[0], p[1] + k * q[1]];
@@ -25,13 +27,19 @@ const boxZY = (z0, z1, y0, y1) => poly([[z0, y0], [z1, y0], [z1, y1], [z0, y1]])
 export const TAIL_MECH = {
   // the pivot tube in torsion needs a published shear strength: Rock West's T-RND-236 (6 x 5 mm) publishes its XY shear
   // and GXY (CLT, reference only), CST's pultrusions publish none
-  pivot: 'tube-rockwest-pultruded-6x5', pin: 'metal-al-7075-t6', washer: 'washer-din6799-4', bushing: 'bushing-igus-GFM-0608-06', rodEnd: 'rodend-igus-KBRM-02', arm: 'horn-hitec-r-ml25',
+  // round 18 (sized to the FoS rule, the CG's lever: each gram off here is 0.95 g m forward): the pin 5 mm in two
+  // GFM-0506-05 (was 6 mm in GFM-0608-06; the DIN 6799 size 4 is the washer for 5 mm shafts), the saddle's sleeve 13 mm
+  // (twice the boss's half-width, so the webs land on it) with a 1.0 mm wall, its bosses kept at 11 mm (at 10 mm the horn
+  // screw's 20 mm path from inboard meets the other side's inner flange), the horn's hub 7 x 6 mm (was 8 x 4: the longer hub
+  // keeps the horn screw's path clear of the other side's flange) and its arm 3 x 5 mm (was 3 x 8: the screw's 2 mm
+  // engagement, with the arm 1 mm past the screw's end as the hole rule wants), the pushrod's end plugs 5 mm
+  pivot: 'tube-rockwest-pultruded-6x5', pin: 'metal-al-7075-t6', washer: 'washer-din6799-4', bushing: 'bushing-igus-GFM-0506-05', rodEnd: 'rodend-igus-KBRM-02', arm: 'horn-hitec-r-ml25',
   screw: 'screw-iso4762-m2x6-8.8', material: 'metal-al-6061-t6', pushrod: 'tube-cst-pultruded-5x4',
-  saddle: { sleeve_len: 16, wall: 1.5, boss_wall: 1.0, web_t: 1.0, boss_len: 11, clear: 0.5 },
+  saddle: { sleeve_len: 13, wall: 1.0, boss_wall: 1.0, web_t: 1.0, boss_len: 11, clear: 0.5 },
   // the horn's arm stands above the pivot (+v, side 1): the pushrod's rod end then comes onto it from above, as at the
   // servo's arm, without passing the horn's hub or the bushing's flange
-  horn: { hub_od: 8, hub_len: 4, arm_t: 3, arm_depth: 8, radius: 13, side: 1 },
-  arm_hole_mm: 16, spline_from_aft_mm: 14.5, plug_len: 8, rib_t: 2, pin_in_tube: 10, pin_bore: 4,
+  horn: { hub_od: 7, hub_len: 6, arm_t: 3, arm_depth: 5, radius: 13, side: 1 },
+  arm_hole_mm: 16, spline_from_aft_mm: 14.5, plug_len: 5, rib_t: 2, pin_in_tube: 10, pin_bore: 4,
 };
 
 /**
@@ -58,7 +66,12 @@ export function tailMechGeometry(T, boom, P, catalog) {
   const clearAt = (r, g) => { let s = 0; while (dist(s) < rb + r + g) s += 1e-5; return s; };
   // the pin's inboard end (n past its groove), the washer, the inner flange, the boss, the outer flange, the horn's hub,
   // the tube on the pin, the root rib: each the first place clear of the boom
-  const W = byId(catalog, P.washer).specs, rW = mm(W.outer_diameter_d3_mm) / 2, sW = mm(W.thickness_s_mm), nW = mm(W.min_groove_to_shaft_end_n_mm), rPin = mm(pv.od_draw) / 2;
+  // round 18: the pin runs in the bushings' bore (d1), not at the pivot tube's outside; its spigot (in the tube's bore)
+  // no larger, so the pin is one plain turned diameter with a step down to the spigot, and the washer is the size for it
+  const W = byId(catalog, P.washer).specs, rW = mm(W.outer_diameter_d3_mm) / 2, sW = mm(W.thickness_s_mm), nW = mm(W.min_groove_to_shaft_end_n_mm), rPin = mm(bu.d1_mm) / 2;
+  const rSp = mm(pv.id_draw) / 2 - run / 10, wr = W.shaft_diameter_d1_range_mm;
+  if (rSp > rPin + 1e-9) throw new Error(`tail pivot pin: ${P.bushing}'s ${bu.d1_mm} mm bore is smaller than the ${(rSp * 2000).toFixed(2)} mm spigot in the ${P.pivot}'s bore (the pin would need a shoulder the assembly does not draw)`);
+  if (wr && !(bu.d1_mm >= wr[0] && bu.d1_mm <= wr[1])) throw new Error(`tail pivot pin: ${P.washer} is for ${wr[0]}-${wr[1]} mm shafts, not the ${bu.d1_mm} mm pin`);
   const sW0 = Math.max(clearAt(rW, run), clearAt(rPin, run) + nW), sP0 = sW0 - nW, sF1 = sW0 + sW;
   const sB0 = Math.max(sF1 + bF, clearAt(d3 / 2, run) + bF), sB1 = sB0 + mm(S1.boss_len), sF2 = sB1 + bF;
   const sH0 = sF2, sH1 = sH0 + mm(H.hub_len), sT0 = sH1, sP1 = sT0 + mm(P.pin_in_tube);
@@ -129,6 +142,12 @@ export function tailMechParts(ax, servoBox) {
     const oo = v ? add2(o, v, n0) : o, sh = s1 - s0 > 4 * ro ? cap(add2(oo, u, s0 + ro), add2(oo, u, s1 - ro), ro) : rect(oo, u, v ?? [-u[1], u[0]], [s0, s1], [-ro, ro]);
     return { ...S(name, [xq - ro, xq + ro], sh), tube: { ro, ri, L: s1 - s0, axis: 'span' } };
   };
+  /**
+   * Round 18.2 (the film's request): a screw head/shank's true section, N slabs across x (xSlabs) narrowing in n,
+   * holding the full span [s0, s1] throughout (so the true length is never overshot). One shared tube record per
+   * fastener, not per slab.
+   */
+  const slabs = (name, o, u, s0, s1, ro, n0 = 0, v = null) => { const oo = v ? add2(o, v, n0) : o; return xSlabs(xq, ro, (w) => rect(oo, u, v ?? [-u[1], u[0]], [s0, s1], [-w, w])).map((sl, i) => ({ ...S(`${name} ${i + 1}`, sl.x, sl.shape), tube: { ro, ri: 0, L: Math.abs(s1 - s0), axis: 'span' } })); };
   const saddle = saddleSolids(T, yB, boomR, G, P);
   const rows = [];
   for (const [tag, sg] of [['R', 1], ['L', -1]]) {
@@ -142,7 +161,7 @@ export function tailMechParts(ax, servoBox) {
     join(wid, pinId, 'in its groove on the pin'); join(`${wid}/washer`, `${pinId}/pin`, BORE); join(wid, `tail bushing ${tag} inner`, 'against the flange (the pin\'s axial stop)');
     for (const [nm, s0, s1, dir] of [['inner', G.sB0 - G.bF, G.sB0 - G.bF + G.bL, 1], ['outer', G.sB1 + G.bF - G.bL, G.sB1 + G.bF, -1]]) {
       const fl = dir > 0 ? [s0, s0 + G.bF] : [s1 - G.bF, s1], body = dir > 0 ? [s0 + G.bF, s1] : [s0, s1 - G.bF];
-      const bid = add(`tail bushing ${tag} ${nm}`, [tube('body', o, u, body[0], body[1], G.d2 / 2, G.rT), tube('flange', o, u, fl[0], fl[1], G.d3 / 2, G.rT)], { bom: P.bushing });
+      const bid = add(`tail bushing ${tag} ${nm}`, [tube('body', o, u, body[0], body[1], G.d2 / 2, G.rPin), tube('flange', o, u, fl[0], fl[1], G.d3 / 2, G.rPin)], { bom: P.bushing });
       join(bid, 'tail saddle', 'pressed in the housing'); join(bid, pinId, 'journal on its shaft');
       // the bores are not drawn (a tube along the span is drawn filled): the body in the boss's bore, the pin in both
       join(`${bid}/body`, `tail saddle/boss ${tag}`, BORE); join(`${bid}/body`, `${pinId}/pin`, BORE); join(`${bid}/flange`, `${pinId}/pin`, BORE);
@@ -156,10 +175,14 @@ export function tailMechParts(ax, servoBox) {
     // along u; its shank forward along +x
     const sE = sHm - G.hornT / 2 - mm(ke.B_mm) / 2, nE = hs * G.hornR, D2 = mm(ke.d2_mm), Lsh = mm(ke.h1_mm);
     const eH = add(`tail rod end ${tag} horn`, [S('eye', [xq - D2 / 2, xq + D2 / 2], rect(o, u, v, [sE - mm(ke.B_mm) / 2, sE + mm(ke.B_mm) / 2], [nE - D2 / 2, nE + D2 / 2])), S('shank', [xq + D2 / 2, xq + Lsh], ring(add2(add2(o, u, sE), v, nE), mm(ke.d5_mm) / 2))], { bom: P.rodEnd });
-    // its screw along u: the head inboard of the ball, the shank through the ball into the arm's tapped hole
-    const sid = add(`tail horn screw ${tag}`, [tube('head', o, u, sE - mm(ke.B_mm) / 2 - sg0.head_k, sE - mm(ke.B_mm) / 2, sg0.head_d / 2, 0, nE, v), tube('shank', o, u, sE - mm(ke.B_mm) / 2, sE - mm(ke.B_mm) / 2 + sg0.L, sg0.d / 2, 0, nE, v)], { bom: P.screw });
-    join(eH, hid, 'its ball on the horn\'s arm, on its screw'); join(sid, eH, 'through the ball'); join(`${sid}/shank`, hid, THREAD); join(sid, hid, 'screwed into the arm\'s tapped hole');
-    join(`${sid}/shank`, eH, THROUGH);
+    // its screw along u: the head inboard of the ball, the shank through the ball into the arm's tapped hole.
+    // Round 18.2 (the film's request): the screw's true section, N slabs across x, not tube's flat box. Every
+    // shank slab (not just one) needs its own THROUGH/THREAD join, since those override the part-level
+    // descriptive joins (not themselves exempt) for exactly the pairs that overlap.
+    const hornShankSlabs = slabs('shank', o, u, sE - mm(ke.B_mm) / 2, sE - mm(ke.B_mm) / 2 + sg0.L, sg0.d / 2, nE, v);
+    const sid = add(`tail horn screw ${tag}`, [...slabs('head', o, u, sE - mm(ke.B_mm) / 2 - sg0.head_k, sE - mm(ke.B_mm) / 2, sg0.head_d / 2, nE, v), ...hornShankSlabs], { bom: P.screw });
+    join(eH, hid, 'its ball on the horn\'s arm, on its screw'); join(sid, eH, 'through the ball'); join(sid, hid, 'screwed into the arm\'s tapped hole');
+    for (const sl of hornShankSlabs) { join(`${sid}/${sl.name}`, hid, THREAD); join(`${sid}/${sl.name}`, eH, THROUGH); }
     // the servo's arm on its spline (assumed on the case's top face, on its centre line, spline_from_aft_mm from its
     // aft end: the maker publishes no spline position), pointing outboard; the servo's rod end on its hole
     const b = servoBox(tag);
@@ -170,7 +193,10 @@ export function tailMechParts(ax, servoBox) {
     const eS = add(`tail rod end ${tag} servo`, [S('eye', [xs - D2 / 2, xs + D2 / 2], boxZY(zH - D2 / 2, zH + D2 / 2, armY[1], armY[1] + mm(ke.B_mm))), S('shank', [xs - Lsh, xs - D2 / 2], ring([zH, armY[1] + mm(ke.B_mm) / 2], mm(ke.d5_mm) / 2))], { bom: P.rodEnd });
     const { screw: ss } = screwY([xs, zH], armY[1] + mm(ke.B_mm), -1, sg0);
     const sid2 = add(`tail servo arm screw ${tag}`, ss, { bom: P.screw });
-    join(eS, aid, 'its ball on the servo\'s arm, on its screw'); join(sid2, eS, 'through the ball'); join(`${sid2}/shank`, eS, THROUGH); join(`${sid2}/shank`, aid, THREAD); join(sid2, aid, 'screwed into the arm\'s tapped hole');
+    // round 18.2: screwY's shank is now N true-section slabs; every one needs its own THROUGH/THREAD join (see
+    // the horn screw's note above)
+    join(eS, aid, 'its ball on the servo\'s arm, on its screw'); join(sid2, eS, 'through the ball'); join(sid2, aid, 'screwed into the arm\'s tapped hole');
+    for (const sl of ss.filter((s) => /^shank/.test(s.name))) { join(`${sid2}/${sl.name}`, eS, THROUGH); join(`${sid2}/${sl.name}`, aid, THREAD); }
     // the pushrod between the two rod ends' shank ends, with an end plug bonded in each end, its stud in the rod end
     const A = { x: xs - Lsh, p: [zH, armY[1] + mm(ke.B_mm) / 2] }, B = { x: xq + Lsh, p: add2(add2(o, u, sE), v, nE) };
     const ts = tubeSpec(byId(catalog, P.pushrod)), pr = pushrodPieces(A, B, mm(ts.od_draw) / 2, mm(ts.id_draw) / 2, mm(P.plug_len));
@@ -295,15 +321,14 @@ export function tailMechMembers(ax) {
       members.push({ name: `tail bushing ${t} ${nm}`, kind: 'seat', check: 'seat', material: igus, dims: { d_mm: ig.d1_mm, t_mm: ig.b1_mm - ig.b2_mm, crush: true }, sections: [sect('F', [{ ch: `tail_F_${t}`, k: +k.toFixed(6) }])], uses: { F: 'F' }, note: `the root moment as a couple over the bushings ${(Lb * 1000).toFixed(1)} mm apart plus the force: ${k.toFixed(2)} x the surface's force on the ${nm} bushing; its static surface pressure (SPEC round 4: a bushing by the maker's static pressure, FoS 1.5)` });
       members.push({ name: `tail saddle boss ${t} round the ${nm} bushing`, kind: 'seat', check: 'seat', material: al6, dims: { d_mm: ig.d2_mm, t_mm: ig.b1_mm - ig.b2_mm, crush: true }, sections: [sect('F', [{ ch: `tail_F_${t}`, k: +k.toFixed(6) }])], uses: { F: 'F' }, note: 'the bushing\'s load on its bore in the saddle\'s boss (6061 at its design yield)' });
     }
-    members.push({ name: `tail saddle webs ${t}`, kind: 'plate', check: 'plate', material: al6, dims: { b_mm: +(2 * G.rBoss * 1000).toFixed(2), t_mm: 2 * P.saddle.wall }, sections: [sect('M', [{ ch: `tail_F_${t}`, k: +(sBar - G.sB0).toFixed(6) }])], uses: { M: 'M' }, note: 'the root moment at the boss\'s inboard end in the plane of its two webs (each the saddle\'s wall thick, as deep as the boss)' });
+    members.push({ name: `tail saddle webs ${t}`, kind: 'plate', check: 'plate', material: al6, dims: { b_mm: +(2 * G.rBoss * 1000).toFixed(2), t_mm: 2 * (P.saddle.web_t ?? P.saddle.wall) }, sections: [sect('M', [{ ch: `tail_F_${t}`, k: +(sBar - G.sB0).toFixed(6) }])], uses: { M: 'M' }, note: 'the root moment at the boss\'s inboard end in the plane of its two webs (each web_t thick as drawn, round 18; as deep as the boss)' });
     members.push({ name: `tail pivot tube ${t} at its root`, kind: 'tube', check: 'cfrp tube', material: pv.composite, dims: { d_mm: pv.od_rate, di_mm: pv.id_rate }, sections: [sect('M', [{ ch: `tail_F_${t}`, k: +armT.toFixed(6) }]), sect('T', Mh), sect('V', F)], uses: { M: 'M', T: 'T', V: 'V' }, note: `the surface's force at its area centroid about the tube's root on the pin (${(armT * 1000).toFixed(0)} mm), its hinge moment` });
     members.push({ name: `tail pivot pin ${t} spigot`, kind: 'pin', check: 'round', material: al7, dims: { d_mm: +((G.ri - G.run / 10) * 2000).toFixed(3), di_mm: 0 }, sections: [sect('M', [{ ch: `tail_F_${t}`, k: +armT.toFixed(6) }]), sect('T', Mh)], uses: { M: 'M', T: 'T' }, note: 'the spigot in the tube\'s bore at the tube\'s root: the root moment there and the hinge moment' });
     members.push({ name: `tail pivot pin ${t} spigot bond`, kind: 'bond', check: 'bond', material: glueCf, dims: { d_mm: +(G.ri * 2000).toFixed(3), L_mm: P.pin_in_tube }, sections: [sect('T', Mh), sect('F', inSurf)], uses: { T: 'T', F: 'F' }, note: 'Araldite 2011 on CFRP (typical, half): the hinge moment and the surface\'s inertia along its span' });
     members.push({ name: `tail horn ${t} hub bond`, kind: 'bond', check: 'bond', material: glueAl, dims: { d_mm: +(G.rPin * 2000).toFixed(3), L_mm: P.horn.hub_len }, sections: [sect('T', Mh)], uses: { T: 'T' }, note: 'Araldite 2011 on aluminium: the hinge moment' });
     members.push({ name: `tail horn ${t} arm`, kind: 'plate', check: 'plate', material: al6, dims: { b_mm: P.horn.arm_depth, t_mm: P.horn.arm_t }, sections: [sect('M', [{ ch: `tail_M_${t}`, k: +((Rh - G.hubR) / Rh).toFixed(6) }])], uses: { M: 'M' }, note: 'the pushrod\'s force at the screw, bending the arm in its plane at the hub' });
     members.push({ name: `tail bushing ${t} flanges, axial thrust`, kind: 'seat', check: 'flange', material: { id: P.bushing, static_surface_pressure_mpa: ig.static_surface_pressure_mpa }, dims: { D_mm: ig.d3_mm, d_mm: ig.d2_mm }, sections: [sect('F', inSurf)], uses: { F: 'F' }, note: `the pin's axial stops (the washer inboard, the horn's hub outboard) thrust the surface's spanwise inertia into a ${P.bushing} flange's ring, at its published static surface pressure; both flanges alike` });
-    { const d2 = 1.74, Le = Math.min(byId(catalog, P.screw).specs.length_mm - ke.B_mm, P.horn.arm_t), A = (Math.PI * d2 * Le) / 2;
-      members.push({ name: `tail horn ${t} screw thread in the arm`, kind: 'pin', check: 'pin-shear', material: al6, dims: { d_mm: +Math.sqrt((4 * A) / Math.PI).toFixed(4), planes: 1, Le_mm: +Le.toFixed(2), area_mm2: +A.toFixed(3) }, sections: [sect('F', Fp)], uses: { F: 'F' }, note: `the M2 internal thread in the 6061 horn arm over ${Le.toFixed(1)} mm engaged (the screw's length less the rod end's ball): shear area pi d2 Le / 2 = ${A.toFixed(2)} mm2 (d2 the pitch diameter ${d2} mm), as a pin of that area, under the pushrod's whole force (conservative: its part along the screw is smaller)` }); }
+    members.push(tappedThreadMember(`tail horn ${t} screw thread in the arm`, al6, { screw_len_mm: byId(catalog, P.screw).specs.length_mm, ball_B_mm: ke.B_mm, arm_t_mm: P.horn.arm_t }, Fp, 'the 6061 horn arm', "the pushrod's"));
     // round 17b: the ribs (balsa) on the pivot tube and the trailing edge rod: the surface's force and hinge moment shared
     // over its ribs (each taken at a third, the four ribs bounding three bays), the bond on the tube limited by the
     // balsa's published shear (Wood Handbook Table 5-5a, at half) below the adhesive's on CFRP; the rib on the
@@ -319,10 +344,34 @@ export function tailMechMembers(ax) {
     members.push({ name: `tail pushrod ${t} rod ends`, kind: 'rod end', check: 'rated', dims: { rating_N: ke.max_static_tensile_long_term_n, rating_basis: `${P.rodEnd}: maximum static tensile load, long term (igus)` }, sections: [sect('F', Fp)], uses: { F: 'F' }, note: 'the pushrod\'s force through each rod end' });
     members.push({ name: `tail pushrod ${t} screws`, kind: 'fasteners', check: 'bolts', fastener: fastenerOfCat(catalog, P.screw), dims: { n: 1 }, sections: [sect('V', Fp)], uses: { V: 'V' }, note: 'each rod end\'s M2 screw in shear' });
     members.push({ name: `tail pushrod ${t} end plug bonds`, kind: 'bond', check: 'bond', material: glueCf, dims: { d_mm: tubeSpec(byId(catalog, P.pushrod)).id_draw, L_mm: P.plug_len }, sections: [sect('F', Fp)], uses: { F: 'F' }, note: 'Araldite 2011 on CFRP (typical, half): the pushrod\'s force on each end plug' });
-    if (sv) members.push({ name: `tail servo arm ${t}`, kind: 'arm', check: 'rated', dims: { rating_N: +(sv.servo_stall_Nm ?? sv.stall_Nm * (sv.linkage_ratio ?? 1)) / rArm, rating_basis: `the maker's own arm for this servo (${P.arm}, supplied with the MD89MW): no load rating of its own is published, so it is held to the servo's published stall torque at its ${P.arm_hole_mm} mm hole` }, sections: [sect('F', Fp)], uses: { F: 'F' }, note: 'the pushrod\'s force at the arm\'s hole' });
+    // round 18 (SPEC ruling "Maker's part"): the maker's arm on its spline, valid while its servo is within its rule
+    if (sv) members.push(tailServoArmMember(d, catalog, t, sv, P, Fp));
     if (tieL) members.push({ name: `tail servo ${t} ties under its arm's reaction`, kind: 'tie', check: 'tie', tie: { id: tieL.id, loop_N: tieL.loop_N }, dims: { n: 2 }, sections: [sect('F', [...Fp, ...inertial(sv?.mass_kg ?? 0.0215, [-0.04, -0.065, 0])])], uses: { F: 'F' }, note: 'the servo\'s two T40R carry the pushrod\'s force at its arm and its own inertia' });
   }
   members.push({ name: 'tail saddle bond on the boom', kind: 'bond', check: 'bond', material: glueCf, dims: { d_mm: boomR * 2000, L_mm: P.saddle.sleeve_len }, sections: [sect('T', [{ ch: 'tail_F_R', k: +arm.toFixed(6) }, { ch: 'tail_F_L', k: +arm.toFixed(6) }]), sect('F', [{ ch: 'tail_F', k: 1 }])], uses: { T: 'T', F: 'F' }, note: 'Araldite 2011 on CFRP (typical, half) on the boom\'s end: both surfaces\' root moments as torsion (their sum, conservative) and the tail\'s force' });
+}
+
+/**
+ * Round 18 (SPEC ruling "Maker's part", operator's decision 2026-11-03): the maker's arm, its centre screw and its tapped
+ * holes on its own servo's spline are a maker's part, no longer a member held to the stall at FoS 1.5. Its force at the
+ * hole (F, the pushrod's) and its torque at the spline (T, the servo's: the hinge moment x the linkage ratio) are
+ * reported; it is valid only while the servo is within its own rule at the supply's published row (chains.js).
+ */
+function tailServoArmMember(d, catalog, t, sv, P, Fp) {
+  const sect = (name, radial) => ({ name, radial, axial: [] });
+  return { name: `tail servo arm ${t}`, kind: 'arm', check: "maker's part", maker: servoArmMaker(d, catalog, 'tail', P.arm), dims: { hole_mm: P.arm_hole_mm }, sections: [sect('F', Fp), sect('T', [{ ch: `tail_M_${t}`, k: sv.linkage_ratio ?? 1 }])], uses: { F: 'F', T: 'T' }, note: `the maker's ${P.arm} on the servo's spline: the pushrod's force at its ${P.arm_hole_mm} mm hole, and the servo's torque at the spline; no rating of its own is published (SPEC ruling "Maker's part")` };
+}
+
+/**
+ * A rod end's M2 screw in the tapped hole of an arm we machine (the tail's horn, round 17; the twist drive's lever, round
+ * 18): the internal thread engaged over Le = min(the screw's length less the rod end's ball, the arm's thickness), in
+ * shear on its stripping area pi d2 Le / 2 (d2 the M2 pitch diameter, 2 - 0.6495 x 0.4 = 1.74 mm) as a pin of that area
+ * at the arm's material's shear yield, under the link's whole force F (conservative: its part along the screw is
+ * smaller). where: the arm, as the note names it; whose: whose force F is.
+ */
+export function tappedThreadMember(name, material, { screw_len_mm, ball_B_mm, arm_t_mm }, F, where, whose) {
+  const d2 = 1.74, Le = Math.min(screw_len_mm - ball_B_mm, arm_t_mm), A = (Math.PI * d2 * Le) / 2;
+  return { name, kind: 'pin', check: 'pin-shear', material, dims: { d_mm: +Math.sqrt((4 * A) / Math.PI).toFixed(4), planes: 1, Le_mm: +Le.toFixed(2), area_mm2: +A.toFixed(3) }, sections: [{ name: 'F', radial: F, axial: [] }], uses: { F: 'F' }, note: `the M2 internal thread in ${where} over ${Le.toFixed(1)} mm engaged (the screw's length less the rod end's ball): shear area pi d2 Le / 2 = ${A.toFixed(2)} mm2 (d2 the pitch diameter ${d2} mm), as a pin of that area, under ${whose} whole force (conservative: its part along the screw is smaller)` };
 }
 
 const inertial = (m, r) => { const R = Math.hypot(...r); return [{ ch: 'sf_origin', k: m }, { ch: 'wdot', k: m * R }, { ch: 'w2', k: m * R }]; };
@@ -376,7 +425,7 @@ export function tailChains(asm, d, catalog) {
         travel_clearance: { required: 0.0005, delivered: gap, units: 'm', basis: 'the horn\'s rod end turning about the pivot over the commanded travel: its smallest gap to the saddle\'s boss (the one neighbour in its span), against the 0.5 mm assembly clearance' },
         loads: { members: want.filter((w) => members.includes(w)), missing: want.filter((w) => !members.includes(w)), basis: 'the M7 members carrying the chain\'s loads (tail_F, tail_M channels), from the flown peaks' },
       },
-      assumptions: [`the servo's travel ${(thS / DEG).toFixed(0)} deg each way (not published; Hitec gives the speed per 60 deg)`, `the servo's output spline on its case's top face centre line, ${P.spline_from_aft_mm} mm from its aft end (not published)`, `the maker's arm (${P.arm}) has no published load rating: held to the servo's stall torque`],
+      assumptions: [`the servo's travel ${(thS / DEG).toFixed(0)} deg each way (not published; Hitec gives the speed per 60 deg)`, `the servo's output spline on its case's top face centre line, ${P.spline_from_aft_mm} mm from its aft end (not published)`, `the maker's arm (${P.arm}) has no published load rating: a maker's part (round 18, SPEC ruling), valid while the servo is within its own rule at its supply's published row`],
     };
   });
 }
@@ -384,7 +433,8 @@ export function tailChains(asm, d, catalog) {
 /**
  * The tail's interface-ledger rows (interfaces.js format, passed ahead of INTERFACE_RULES): every join tailMechParts
  * makes, with the M7 members that rate its load and what holds it axially (tailMechMembers). The servo arm is the
- * maker's (no published rating): it and its tapped hole are held to the servo's stall torque at the hole, disclosed.
+ * maker's (no published rating): it and its tapped hole are a maker's part (round 18, SPEC ruling), held to the servo's
+ * own rule at its supply's published row.
  */
 const side = (a, b) => /(?:^| )([RL])(?: |$|\/)/.exec(`${a} ${b}`)?.[1] ?? null;
 const nm = (re) => (d, a, b) => { const t = side(a, b); return t ? re.map((f) => f(t, a, b)) : []; };
@@ -419,8 +469,9 @@ export const TAIL_INTERFACE_RULES = [
   tr("the tube's end on its hub", 'resting', { by: "the tube's end bearing on the hub; the tube is carried by the spigot bond", rating: nm([(t) => `tail pivot pin ${t} spigot bond`]), rule: TBOND }, { by: 'the spigot bond', rating: nm([(t) => `tail pivot pin ${t} spigot bond`]), rule: TBOND }),
   tr(/^its ball on the (horn's arm|servo's arm), on its screw$/, 'pinned', { by: 'the rod end on its screw', rating: nm([(t) => `tail pushrod ${t} rod ends`, (t) => `tail pushrod ${t} screws`]), rule: TRATED }, { by: 'the screw', rating: nm([(t) => `tail pushrod ${t} screws`]), rule: "ISO 898-1 proof load (SPEC round 7)" }),
   tr('through the ball', 'fastened', { by: 'the screw in shear', rating: nm([(t) => `tail pushrod ${t} screws`]), rule: "ISO 898-1 proof load (SPEC round 7)" }, { by: 'the screw', rating: nm([(t) => `tail pushrod ${t} screws`]), rule: "ISO 898-1 proof load (SPEC round 7)" }),
-  tr("screwed into the arm's tapped hole", 'threaded', { by: 'the screw in shear', rating: nm([(t) => `tail pushrod ${t} screws`]), rule: "ISO 898-1 proof load (SPEC round 7)" }, { by: "the thread in the arm: the horn's in 6061, the servo's arm the maker's (held to the servo's stall torque at its hole)", rating: (d, a, b) => { const t = side(a, b); return !t ? [] : /servo arm/.test(`${a} ${b}`) ? [`tail servo arm ${t}`] : [`tail horn ${t} screw thread in the arm`]; }, rule: 'pin-in-shear on the thread\'s stripping area at the material\'s shear yield (the horn); the maker\'s arm held to the servo\'s published stall torque (disclosed: no rating published)' }),
-  tr("on the servo's output spline (the maker's arm and its centre screw)", 'keyed', { by: "the maker's arm on the servo's spline", rating: nm([(t) => `tail servo arm ${t}`]), rule: "the maker's arm held to the servo's published stall torque (disclosed: no rating published)" }, { by: "the maker's centre screw (supplied with the servo)", rating: nm([(t) => `tail servo arm ${t}`]), rule: "the maker's arm and screw held to the servo's published stall torque; the axial force on the arm is the pushrod's slope times its force (disclosed: no rating published)" }, 'the R-ML25 arm and its centre screw are the maker\'s, with no published rating: held to the servo\'s stall torque (orchestrator\'s decision, round 17)'),
+  // round 18 (SPEC ruling "Maker's part"): the servo arm's tapped thread is the maker's part; the horn's is ours (6061)
+  tr("screwed into the arm's tapped hole", 'threaded', { by: 'the screw in shear', rating: nm([(t) => `tail pushrod ${t} screws`]), rule: "ISO 898-1 proof load (SPEC round 7)" }, { by: "the thread in the arm: the horn's in 6061, the servo's arm the maker's (maker's part)", rating: (d, a, b) => { const t = side(a, b); return !t ? [] : /servo arm/.test(`${a} ${b}`) ? [`tail servo arm ${t}`] : [`tail horn ${t} screw thread in the arm`]; }, rule: `pin-in-shear on the thread's stripping area at the material's shear yield (the horn); the servo's arm: ${MAKERS_PART_RULE}` }),
+  tr("on the servo's output spline (the maker's arm and its centre screw)", 'keyed', { by: "the maker's arm on the servo's spline", rating: nm([(t) => `tail servo arm ${t}`]), rule: MAKERS_PART_RULE }, { by: "the maker's centre screw (supplied with the servo)", rating: nm([(t) => `tail servo arm ${t}`]), rule: MAKERS_PART_RULE }, 'round 18: the R-ML25 arm and its centre screw are the maker\'s, with no published rating: a maker\'s part, valid while the servo is within its own rule at its supply\'s row (SPEC ruling, operator\'s decision 2026-11-03)'),
   tr("bonded in the tube's end", 'bonded', { by: 'the end plug bond (Araldite 2011 on CFRP)', rating: nm([(t) => `tail pushrod ${t} end plug bonds`]), rule: TBOND }, { by: 'the same bond', rating: nm([(t) => `tail pushrod ${t} end plug bonds`]), rule: TBOND }),
   tr("its stud in the rod end's thread", 'threaded', { by: "the rod end's rating on its thread", rating: nm([(t) => `tail pushrod ${t} rod ends`]), rule: TRATED }, { by: "the rod end's thread", rating: nm([(t) => `tail pushrod ${t} rod ends`]), rule: TRATED }),
   tr("its end on the rod end's shank", 'resting', { by: "the pushrod's force through the plug's stud into the rod end", rating: nm([(t) => `tail pushrod ${t} end plug bonds`, (t) => `tail pushrod ${t} rod ends`]), rule: TRATED }, { by: 'the plug bond and the stud', rating: nm([(t) => `tail pushrod ${t} end plug bonds`]), rule: TBOND }),

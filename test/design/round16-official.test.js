@@ -12,7 +12,7 @@ import { fullAssembly } from '../../src/design/clearance.js';
 import { drivePose } from '../../sims/avis-shared/model.js';
 
 const catalog = JSON.parse(readFileSync(new URL('../../data/parts/catalog.json', import.meta.url), 'utf8'));
-const official = () => JSON.parse(readFileSync(new URL('../../data/designs/larus-gl-2.json', import.meta.url), 'utf8'));
+const official = () => JSON.parse(readFileSync(new URL('../fixtures/larus-gl-2-v24.json', import.meta.url) /* round 18: v24 frozen (the live file becomes v25) */, 'utf8'));
 const pose0 = (lay, d) => drivePose({ law: lay.law, fourBar: lay.fb }, 0, d.drive.ampNominal);
 
 test('v24: every physical BOM line has its solids, counts and sizes; dropping a line\'s solids or adding a phantom line is refused', () => {

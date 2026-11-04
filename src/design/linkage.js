@@ -15,6 +15,7 @@ import { shaftMomentSections } from '../physics/members.js';
 import { linkageAt, journalBodyLength, journalDims, journalEdges } from '../../sims/avis-shared/model.js';
 import { airframeMembers, inertialTerms, fastenerOf } from './airframe.js';
 import { fastenerGeometry } from './completeness.js';
+import { ACTUATOR_BOND } from './interfaces.js'; // round 18: the encoder actuator's bond member
 
 const PI4 = Math.PI / 4;
 const rodV = (d, L) => PI4 * d * d * L; // m^3
@@ -302,6 +303,71 @@ function crankRetentionMembers(cx, m, wheel, held_kg) {
     members.push({ name: 'crank shaft bushing flanges, axial thrust', kind: 'seat', check: 'flange', material: { id: jp.id, static_surface_pressure_mpa: jp.specs.static_surface_pressure_mpa }, dims: { D_mm: jd0.flangeD * 1000, d_mm: jd0.D * 1000 }, sections: [sect('F', F)], uses: { F: 'F' }, note: `the circlip's (aft) or the web's (forward) thrust into a ${jp.id} flange's ring on its plate, at its published static surface pressure; both flanges alike` });
   }
   if (Ret.bond) members.push(gearBond(cx, `${wheel.id} on the crank, axial bond`, wheel, true, m, [planes.stage[lay.n - 1], O2[1], O2[0]]));
+  // round 18: the encoder's actuator bonded on its land (actuatorBond)
+  const ab = planes.encoder ? actuatorBond(L) : null;
+  if (ab) members.push(actuatorBondMember(cx, ab, m, O2));
+}
+
+/**
+ * Round 18 (round brief item 4): the crank encoder's actuator (RLS BA100: anodised aluminium, a 10 mm H7 bore) on a rated
+ * fixing. RLS holds it by three DIN 913 set screws, which no ruling covers (RC practice: a gear, pulley or coupling only;
+ * maker's part: never a joint between our part and a bought part). It is bonded instead with 3M DP490, whose data sheet
+ * publishes overlap shear on both substrates (sandblasted titanium 2901 psi, sandblasted aluminium 3336 psi; the lower
+ * counted at half) and its best bond line (3-5 mil). An H7 bore on RLS's g6 shaft leaves 2.5-14.5 um, far thinner, so
+ * the crank's stub is turned to a land under the actuator (land_d_mm, tolerance land_tol_mm) whose radial gap to the H7
+ * bore lies in that bond line at both extremes; the set screws centre the actuator while the bond cures (RLS allows the
+ * sensor 0.5 mm radial displacement, BRD01). Its position and ride height are unchanged. L.retention.actuatorBond: null
+ * leaves the set screws alone (the ledger refuses them).
+ */
+export const ACTUATOR_BOND_DEFAULT = { adhesive: 'adhesive-3m-dp490', land_d_mm: 9.8, land_tol_mm: [-0.02, 0], bore_tol_mm: [0, 0.015], bore_tol_basis: "ISO 286-2: H7 over 6 up to 10 mm is +0 / +15 um (RLS BRD01: 'ID tolerances are H7')", set_screws: 3, set_screw_hole_mm: 3 };
+export function actuatorBond(L) {
+  if (!L?.retention || L.retention.actuatorBond === null) return null;
+  return { ...ACTUATOR_BOND_DEFAULT, ...(L.retention.actuatorBond ?? {}) };
+}
+/** The adhesive's row for a material: titanium or aluminium by the material's id or its stated material, else null. */
+const substrateOf = (text) => (/\bti\b|ti-\d|titanium/i.test(text) ? 'titanium' : /\bal\b|al-\d|alumin/i.test(text) ? 'aluminium' : null);
+
+/**
+ * The actuator's bond (gapBondCheck): its torque is the actuator's inertia times the crank's angular acceleration, which
+ * the flight model's crank equation bounds: Jcrank |thDD| <= |motor torque at the crank| + |crank torque| + friction
+ * (flight.js: Jcrank = rotor J G^2 + J_crank). The motor's part is held at its largest possible value, the pack at full
+ * charge across the winding alone (V / Rm, through G / Kv over the gear efficiency), as a stated constant (m.fixed); the
+ * crank torque's part rides on its channel. The actuator's own J is bounded by its whole mass at its outside radius.
+ * Axially: its inertia (sf_origin, wdot, w2). RLS publishes no magnet pull; none is counted (stated).
+ */
+/** The bond's allowable: the adhesive's lower published row of the shaft's and the bore's substrates, at half. */
+function bondAllowable(adh, shaftMat) {
+  const sub = adh.specs.substrates ?? {}, sS = substrateOf(shaftMat.id), sB = substrateOf('anodised aluminium (RLS BRD01: "Actuator material: Anodised aluminium")');
+  const fS = sub[sS]?.shear_MPa, fB = sub[sB]?.shear_MPa; // a row the maker does not publish: NaN, so the bond is unrated
+  return { id: `${adh.id} (${sS} shaft, ${sB} bore)`, shear_MPa: Math.min(fS, fB) / 2, basis: `${adh.id}: the lower of its published rows on the two substrates (${sS} ${fS} MPa, ${sB} ${fB} MPa; typical), counted at half` };
+}
+/** The radial gap [least, most] (mm) of the bore (bore_tol_mm) on the land (land_tol_mm). */
+const bondGap = (ab, bore) => [(bore + ab.bore_tol_mm[0] - ab.land_d_mm - ab.land_tol_mm[1]) / 2, (bore + ab.bore_tol_mm[1] - ab.land_d_mm - ab.land_tol_mm[0]) / 2].map((g) => +g.toFixed(5));
+/**
+ * A part of inertia Ja turning with the crank: its torque per crank N m (Ja / Jcrank) and its constant part (Ja / Jcrank
+ * times the motor's largest torque at the crank, the pack at full charge across the winding alone, plus friction).
+ */
+function crankAccelTorque(d, Ja) {
+  const mo = d.motor, G = d.drive.gearRatio, eta = d.drive.gearEfficiency ?? 0.85;
+  const Jc = mo.J_kg_m2 * G * G + (d.drive.J_crank_kg_m2 ?? 0), Vf = d.battery.cells * (4.2 + (d.battery.cell_shift_V ?? 0));
+  const tauC = (G * (Vf / mo.R)) / mo.kv_rad_per_v_s / eta + (d.drive.crankFriction_Nm ?? 0);
+  return { k: +(Ja / Jc).toExponential(6), T: +((Ja * tauC) / Jc).toExponential(6), basis: `the motor's largest torque at the crank: ${Vf.toFixed(2)} V / ${mo.R} ohm (the pack at full charge across the winding alone) x G ${G.toFixed(3)} / Kv ${mo.kv_rad_per_v_s.toFixed(3)} / ${eta} = ${tauC.toFixed(2)} N m, on the crank's ${Jc.toExponential(4)} kg m2 (the flight model's, its rotor J estimated), times ${Ja.toExponential(3)} kg m2` };
+}
+function actuatorBondMember(cx, ab, shaftMat, O2) {
+  const { d, catalog, planes } = cx, e = planes.encoder;
+  const actP = byId(catalog, d.params.parts?.encoderMagnet ?? 'sensor-rls-orbis-actuator-10mm'), act = actP.specs, adh = byId(catalog, ab.adhesive);
+  const Le = (Math.min(e.actuator[1], planes.crankEnd ?? e.actuator[1]) - e.actuator[0]) * 1000;
+  const Leff = Le - (ab.set_screws * (ab.set_screw_hole_mm / 2) ** 2) / ab.land_d_mm; // the set screws' holes off the bonded area
+  const mA = actP.mass_g / 1000, ac = crankAccelTorque(d, mA * (act.od_mm / 2000) ** 2);
+  return {
+    name: ACTUATOR_BOND, kind: 'bond', check: 'gap bond',
+    material: bondAllowable(adh, shaftMat),
+    dims: { d_mm: ab.land_d_mm, L_mm: +Leff.toFixed(3), land_d_mm: ab.land_d_mm, bore_d_mm: act.inner_diameter_mm, gap_mm: bondGap(ab, act.inner_diameter_mm), gap_limits_mm: adh.specs.bond_line_max_strength_mm, gap_basis: `${act.inner_diameter_mm} mm bore (${ab.bore_tol_basis}) on the ${ab.land_d_mm} mm land (${ab.land_tol_mm.join('/')} mm); ${adh.specs.bond_line_basis}` },
+    sections: [sect('T', [{ ch: 'crank_torque', k: ac.k }]), sect('F', inertialTerms(mA, [(e.actuator[0] + e.actuator[1]) / 2, O2[1], O2[0]]))], uses: { T: 'T', F: 'F' },
+    fixed: { T: ac.T },
+    fixed_basis: `${ac.basis}: the actuator's own J, ${actP.mass_g} g at ${act.od_mm / 2} mm`,
+    note: `the ${actP.id} bonded with ${adh.id} over ${Leff.toFixed(2)} mm of the ${ab.land_d_mm} mm land (its ${Le.toFixed(1)} mm bore less its ${ab.set_screws} set-screw holes); the crank's angular acceleration on the actuator's inertia as torque, its inertia axially; RLS publishes no magnet pull (none counted); the set screws centre it, not credited; the bore and the land sandblasted as the data sheet's specimens were (the bore's anodising off under the bond: an assembly step RLS does not address)`,
+  };
 }
 
 /**
@@ -323,7 +389,10 @@ function crankSplit(cx, { c, m, od, id, tw, bw, dp, pinL, lenS, wheel, seatL, he
   const holeR = screw ? (W.axial.countersunk ? screw.specs.head_d_mm / 2000 : dS / 2) + (W.axial.clearance_mm ?? 0.2) / 1000 : 0;
   const webV = (hull - boreA) * (tw - lip) + (hull - Math.PI * holeR * holeR) * lip;
   const solidEnd = screw && W.axial.solid_mm ? W.axial.solid_mm / 1000 : 0;
-  item('crank shaft', m, ringV(od, id, lenS - solidEnd) + PI4 * od * od * (tw - lip + solidEnd) + (c.seat_od_mm ? ringV(c.seat_od_mm / 1000, od, seatL) : 0), `${c.shaft_od_mm}${id ? `/${c.shaft_id_mm}` : ''} mm shaft x ${(lenS * 1000).toFixed(1)} mm, a solid ${c.shaft_od_mm} mm stub x ${((tw - lip) * 1000).toFixed(1)} mm under the web (keyseated${screw ? `, its end tapped for the web's axial screw, solid ${(solidEnd * 1000).toFixed(1)} mm on beyond the web for its thread` : ''})${c.seat_od_mm ? `, ${c.seat_od_mm} mm wheel seat x ${(seatL * 1000).toFixed(0)} mm (the ${wheel.id}, ${boreText(catalog, wheel.id)}, keyed)` : ''}; ${m.density_g_cm3} g/cm3`);
+  // round 18: the actuator's bond land turned on the forward stub (actuatorBond), off the shaft's volume
+  const ab = planes.encoder ? actuatorBond(L) : null, landL = ab ? Math.max(0, Math.min(planes.encoder.actuator[1], planes.crankEnd ?? planes.encoder.actuator[1]) - planes.encoder.actuator[0]) : 0;
+  const landV = ab ? ringV(od, ab.land_d_mm / 1000, landL) : 0;
+  item('crank shaft', m, ringV(od, id, lenS - solidEnd) - landV + PI4 * od * od * (tw - lip + solidEnd) + (c.seat_od_mm ? ringV(c.seat_od_mm / 1000, od, seatL) : 0), `${c.shaft_od_mm}${id ? `/${c.shaft_id_mm}` : ''} mm shaft x ${(lenS * 1000).toFixed(1)} mm, a solid ${c.shaft_od_mm} mm stub x ${((tw - lip) * 1000).toFixed(1)} mm under the web (keyseated${screw ? `, its end tapped for the web's axial screw, solid ${(solidEnd * 1000).toFixed(1)} mm on beyond the web for its thread` : ''})${c.seat_od_mm ? `, ${c.seat_od_mm} mm wheel seat x ${(seatL * 1000).toFixed(0)} mm (the ${wheel.id}, ${boreText(catalog, wheel.id)}, keyed)` : ''}${ab ? `, turned to a ${ab.land_d_mm} mm land x ${(landL * 1000).toFixed(1)} mm under the encoder's actuator (its bond)` : ''}; ${m.density_g_cm3} g/cm3`);
   item('crank web and pin', m, webV + rodV(dp, pinL), `web ${c.web_b_mm} mm wide at the throw, a ${(rh * 2000).toFixed(0)} mm hub round its ${c.shaft_od_mm} mm bore (keyed on the shaft's stub), ${c.web_t_mm} mm thick${lip ? ` with a ${(lip * 1000).toFixed(1)} mm end lip over the stub (the axial screw's ${(holeR * 2000).toFixed(1)} mm hole)` : ''}, ${(dp * 1000).toFixed(0)} mm pin x ${(pinL * 1000).toFixed(1)} mm in one piece; ${m.density_g_cm3} g/cm3`);
   members.push(keyMember('key, crank web', catalog, K, m, c.shaft_od_mm, T, items));
   const km = materialOf(catalog, K.material);

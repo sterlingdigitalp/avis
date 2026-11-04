@@ -145,9 +145,78 @@ export function ratingsRecord(d, catalog) {
     const m = /(\d)\s*[-~]\s*(\d)\s*S/i.exec(esc.cells_text), ok = m ? cells >= +m[1] && cells <= +m[2] : false;
     rows.push({ what: `ESC ${esc.id} on a ${cells}S pack`, published: esc.cells_text, ok, ...(ok ? {} : { why: 'the pack\'s cell count is outside the ESC\'s published range' }) });
   }
+  // round 18 (SPEC ruling "Maker's part"): the motor's own bearings and threads are valid only within every figure its
+  // maker publishes; the two the build can decide without a flight (cells, and the power its continuous current allows)
+  rows.push(...motorRows(d, catalog));
   const failed = rows.filter((r) => !r.ok).map((r) => r.what);
   return {
     rule: 'SPEC Design freeze, Function completeness, "Ratings within their published range" (2026-11-03): no part runs outside its maker\'s published range, and nothing is extrapolated beyond a published row',
     rows, failed, passed: rows.length > 0 && failed.length === 0,
+  };
+}
+
+// ---- round 18: the maker's-part ruling's conditions (SPEC "Maker's part", operator's decision 2026-11-03) -------------
+
+/** The pack at full charge (4.20 V a cell, or its charge limit), as build.js batteryServoSupply takes it. */
+const packFullV = (bt) => +(bt.cells * (Number.isFinite(bt.charge_limit_V_per_cell) ? bt.charge_limit_V_per_cell : 4.2 + (bt.cell_shift_V ?? 0))).toFixed(3);
+
+/**
+ * Every figure the motor's maker publishes, and where the build holds the motor to it: { figure, published, units,
+ * within (true/false decided here; null: checked by a flight gate, `checked_by`, or nothing published), basis, row (a
+ * ratings-record row, for the figures decided without a flight) }. Read from the motor's catalogue entry and, where the
+ * catalogue has it, its thermal reference entry ('thermal-ref-' + the motor id without 'motor-').
+ */
+export function motorFigures(d, catalog) {
+  const m = d.motor, bt = d.battery;
+  const part = m?.id ? catalog.find((p) => p.id === m.id) : null;
+  if (!part || !bt) return [];
+  const s = part.specs, th = catalog.find((p) => p.id === `thermal-ref-${m.id.replace(/^motor-/, '')}`)?.specs ?? null;
+  const out = [];
+  const I = s.continuous_current_a, P = s.continuous_power_w, Vf = packFullV(bt);
+  if (Number.isFinite(I)) out.push({ figure: 'current', published: I, units: 'A', within: null, checked_by: "M8: the motor's RMS current over 2 s windows within its continuous rating (missions.mjs); the flight envelope's motor_current ratio", basis: s.continuous_rating_note ?? `continuous ${I} A` });
+  if (Number.isFinite(P) && Number.isFinite(I)) {
+    const ok = Vf * I <= P + 1e-9;
+    out.push({ figure: 'power', published: P, units: 'W', within: ok, basis: `a window's mean electrical input is at most the pack's full-charge ${Vf} V times its RMS current, so with the current within ${I} A (M8) at most ${(Vf * I).toFixed(1)} W`, row: { what: `motor ${m.id}: power at its continuous current, at most ${Vf} V x ${I} A = ${(Vf * I).toFixed(1)} W`, published: `${P} W continuous`, ok, ...(ok ? {} : { why: 'the pack at full charge can drive more than the published continuous power at the continuous current' }) } });
+  }
+  const mc = /(\d+)\s*s\b/i.exec(s.cells_text ?? '');
+  if (mc) {
+    const ok = bt.cells <= +mc[1];
+    out.push({ figure: 'voltage (cells)', published: +mc[1], units: 'cells', within: ok, basis: `${s.cells_text}; the pack is ${bt.cells}S`, row: { what: `motor ${m.id} on a ${bt.cells}S pack`, published: s.cells_text, ok, ...(ok ? {} : { why: "the pack's cell count is above the motor's published maximum" }) } });
+  }
+  out.push({ figure: 'speed', published: null, units: 'rpm', within: null, basis: `none published (Kv ${s.kv_rpm_per_v} rpm/V only)` });
+  out.push({ figure: 'torque', published: null, units: 'N m', within: null, basis: 'none published' });
+  out.push(th ? { figure: 'temperature', published: `wire ${th.wire_rating_c} C, magnets ${th.magnet_rating_c} C`, units: 'C', within: null, checked_by: "not checked: the build has no motor thermal model (finding, round 18); the maker asks for 'adequate cooling' and quantifies none", basis: `${th.wire_rating_text} ${th.magnet_rating_text}` } : { figure: 'temperature', published: null, units: 'C', within: null, checked_by: 'not checked: no thermal entry for this motor in the catalogue', basis: 'no temperature figure read' });
+  return out;
+}
+
+/** The ratings-record rows for the motor's figures the build decides without a flight (cells; power at its current). */
+const motorRows = (d, catalog) => motorFigures(d, catalog).filter((q) => q.row).map((q) => q.row);
+
+/**
+ * The condition a motor's own interface (its bearings carrying its shaft and pinion, its mounting threads) is held to: the
+ * motor within every figure its maker publishes (motorFigures). `report`: the member's sections reported as its peak load.
+ */
+export function motorMaker(d, catalog, covers, report) {
+  return { part: d.motor.id, of: d.motor.id, covers, report, condition: motorFigures(d, catalog).map(({ row, ...c }) => c) };
+}
+
+/**
+ * The condition a servo's own arm (the maker's arm on its own servo's spline, with its centre screw and its tapped
+ * holes) is held to: that servo's own rule at the published row for the real supply voltage. Section T of the arm's
+ * member is the servo's torque at its spline (the surface's torque times the linkage ratio, the quantity M7 holds within
+ * the stall at the surface), held within the stall at the supply's lowest voltage; and that supply inside the servo's
+ * published rows and range (this record's rows for the servo).
+ */
+export function servoArmMaker(d, catalog, role, armId) {
+  const sv = d.servos?.[role];
+  const part = byId(catalog, sv.id), stall = sv.servo_stall_Nm ?? sv.stall_Nm;
+  const rowsV = (part.specs.performance ?? []).map((r) => r.voltage_v).filter(Number.isFinite);
+  const rr = ratingsRecord(d, catalog).rows.filter((r) => r.what.startsWith(`${role} servo ${sv.id}:`));
+  return {
+    part: armId, of: sv.id, covers: `the maker's arm ${armId}, its centre screw and its tapped holes, on its own servo's (${sv.id}) spline`, report: ['F', 'T'],
+    condition: [
+      { figure: `${role} servo torque at its spline`, of: 'T', published: +stall.toFixed(5), units: 'N m', basis: `${sv.id}: ${stall.toFixed(4)} N m stall at ${sv.volts} V, the supply's lowest voltage, between its published rows (${rowsV.join(', ')} V; no extrapolation): the servo's own rule, as M7 holds it (the flight envelope at its servo allowance)` },
+      { figure: `${role} servo supply within its published rows and range`, within: rr.length > 0 && rr.every((r) => r.ok), basis: rr.map((r) => `${r.what}: ${r.published}${r.ok ? '' : ` (${r.why})`}`).join('; ') || 'no ratings rows for this servo' },
+    ],
   };
 }

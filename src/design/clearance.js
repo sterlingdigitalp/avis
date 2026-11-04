@@ -20,7 +20,7 @@ import { drivePose, gearAngles, linkageAt, journalDims, journalBodyLength, journ
 import { byId } from './catalog.js';
 import { AIRFRAME_DEFAULTS, mergeDefaults, lockFlangeOD, hullOf, lockFlangeCircles, panelFlanges, formerPieces, formerGeometry, clampFlange } from './airframe.js';
 import { driveLayout as driveLayoutOf } from './joints.js';
-import { rockerHub, pinWasher, crankPinEnd, hornStack, hornSide, shaftEndRetainer } from './linkage.js';
+import { rockerHub, pinWasher, crankPinEnd, hornStack, hornSide, shaftEndRetainer, actuatorBond } from './linkage.js';
 import { fastenerGeometry, completenessRecord } from './completeness.js';
 import { sequenceRecord } from './sequence.js';
 import { wingParts, tailParts } from './wing-solids.js';
@@ -29,7 +29,9 @@ import { tailMechParts, tailChains, TAIL_INTERFACE_RULES } from './tail-mech.js'
 import { chainRecord, flapChains, ratingsRecord } from './chains.js';
 import { twistSupportRows, sectionRecord, twistChains, TWIST_INTERFACE_RULES } from './twist-drive.js';
 import { MESH, KEYWAY, THROUGH, THREAD, RIB_HOLE, BORE, GROOVE, EXEMPT_JOINTS } from './join-reasons.js';
-import { interfaceLedger, RETAIN_INTERFACE_RULES } from './interfaces.js';
+import { interfaceLedger, RETAIN_INTERFACE_RULES, ACTUATOR_BOND, ACTUATOR_BONDED } from './interfaces.js';
+import { needsParts, harnessTies, buildNeedsRecord, NEEDS_INTERFACE_RULES } from './build-needs.js';
+import { podParts, coveringRecord, POD_INTERFACE_RULES } from './pod-structure.js';
 
 const TWO_PI = 2 * Math.PI;
 export const CLEARANCE_M = 0.0005;
@@ -157,6 +159,24 @@ export const ring = (c, ro, ri = 0) => ({ kind: 'ring', c, ro, ri });
 export const cap = (a, b, r) => ({ kind: 'cap', a, b, r });
 export const poly = (pts, holes = []) => ({ kind: 'poly', pts, holes });
 const boxYZ = (z0, z1, y0, y1) => { const p = poly([[z0, y0], [z1, y0], [z1, y1], [z0, y1]]); p.withHoles = (h) => ({ ...p, holes: h }); return p; };
+
+/**
+ * Round 18.2 (the film's request): a fastener lying across x (its own axis along y, z, span or n) has its true
+ * round section in the plane that contains x -- here, a circle of radius r about xc -- which this model (a prism
+ * along x, one section per solid) cannot draw as one solid. N slabs along x approximate it, each the shape at the
+ * circle's true half-width at the slab's edge nearest xc (so the group circumscribes the circle: never a smaller
+ * section than the true one, so the clash check never misses what the true cylinder would find), narrowing toward
+ * the real section instead of staying one flat box. shapeAt(w) -> the slab's (z, y) shape at half-width w <= r.
+ * n (6-8 is enough: see each caller's stated error) -> [{x: [xi, xi1], shape}, ...] over [xc - r, xc + r].
+ */
+export function xSlabs(xc, r, shapeAt, n = 8) {
+  const x0 = xc - r, x1 = xc + r;
+  return Array.from({ length: n }, (_, k) => {
+    const xi = x0 + (k / n) * (x1 - x0), xi1 = x0 + ((k + 1) / n) * (x1 - x0);
+    const dNear = Math.max(0, Math.min(Math.abs(xi - xc), Math.abs(xi1 - xc)));
+    return { x: [xi, xi1], shape: shapeAt(Math.sqrt(Math.max(0, r * r - dNear * dNear))) };
+  });
+}
 const mirror = (p) => [-p[0], p[1]];
 const dir = (a) => [Math.cos(a), Math.sin(a)];
 const add2 = (p, q, k = 1) => [p[0] + k * q[0], p[1] + k * q[1]];
@@ -273,7 +293,9 @@ export function assembly(d, catalog, L, lay, airframe) {
   if (ax.af?.carriers) carrierParts(ax);
   if (ax.af?.support?.pitot) pitotParts(ax);
   if (ax.af?.fixings) fixingParts(ax);
-  if (ax.af?.formers) formerParts(ax);
+  // round 17: the pod's formers, longerons and end discs (pod-structure.js) in place of round 16's balsa rings
+  if (ax.af && d.params.pod) podParts(ax);
+  else if (ax.af?.formers) formerParts(ax);
   tailParts(ax);
   return { parts: ax.parts, joins: ax.joins, assumptions: ax.assumptions };
 }
@@ -331,11 +353,12 @@ function crankParts(ax) {
     // the groove at the ring's published diameter, 'shaft forward' beyond.
     const cc = crankCirclip(ax), ri = mm(C.shaft_id_mm ?? 0) / 2, x1 = P.crankEnd ?? P.plateFwd + plateT / 2 + 0.001;
     const x0 = web[1] + (ag && W.axial.solid_mm ? mm(W.axial.solid_mm) : 0);
+    const land = actuatorLand(L, P, x0, x1); // round 18: the encoder actuator's bond land (linkage.js actuatorBond)
     add('crank', [
       S('stub', bore, ring(fb.O2, rs)), // solid under the web (its keyseat cut to the key)
       // round 17: solid for the axial screw's thread beyond the web (W.axial.solid_mm), then bored
       ...(ag && W.axial.solid_mm ? [S('shaft solid end', [web[1], web[1] + mm(W.axial.solid_mm)], ring(fb.O2, rs))] : []),
-      ...(cc ? [S('shaft', [x0, cc.face], ring(fb.O2, rs, ri)), S('shaft forward groove', [cc.face, cc.face + cc.m], ring(fb.O2, cc.ri, ri)), S('shaft forward', [cc.face + cc.m, x1], ring(fb.O2, rs, ri))] : [S('shaft', [x0, x1], ring(fb.O2, rs, ri))]),
+      ...(cc ? [S('shaft', [x0, cc.face], ring(fb.O2, rs, ri)), S('shaft forward groove', [cc.face, cc.face + cc.m], ring(fb.O2, cc.ri, ri)), ...crankForwardSolids('shaft forward', [cc.face + cc.m, x1], land, fb.O2, rs, ri)] : crankForwardSolids('shaft', [x0, x1], land, fb.O2, rs, ri)),
       ...(C.seat_od_mm ? [S('wheel seat', [P.stage[n - 1] - wheelN.face / 2, P.stage[n - 1] + wheelN.face / 2], ring(fb.O2, mm(C.seat_od_mm) / 2, rs))] : []),
     ], { bom: 'crank shaft' });
     if (cc) {
@@ -383,6 +406,20 @@ function crankPin(ax, xw) {
 }
 
 
+/** Round 18: the actuator's bond land on the crank, [x0, x1] (m) and its radius, or null (no encoder or no bond). */
+function actuatorLand(L, P, x0, x1) {
+  const ab = P.encoder ? actuatorBond(L) : null;
+  if (!ab) return null;
+  const x = [Math.max(P.encoder.actuator[0], x0), Math.min(P.encoder.actuator[1], x1)];
+  return x[1] > x[0] ? { x, r: mm(ab.land_d_mm) / 2 } : null;
+}
+/** Round 18: the crank's last piece over [xa, x1], split at the land when one lies inside it (then 'shaft land', 'shaft end'). */
+function crankForwardSolids(name, [xa, x1], land, c, rs, ri) {
+  if (!land || !(xa < land.x[0])) return [S(name, [xa, x1], ring(c, rs, ri))];
+  const end = land.x[1] < x1 ? [S('shaft end', [land.x[1], x1], ring(c, rs, ri))] : [];
+  return [S(name, [xa, land.x[0]], ring(c, rs, ri)), S('shaft land', land.x, ring(c, land.r, ri)), ...end];
+}
+
 /** Round 14: the crank encoder where the planes put it (model.js clearancePlanes, encoder 'front'): readhead and actuator rings. */
 function encoderParts(ax) {
   const { d, catalog, P, fb, af, add, join, assumptions } = ax;
@@ -394,7 +431,9 @@ function encoderParts(ax) {
   const rhHoles = fx0 ? [{ c: fb.O2, r: e.id.readhead / 2 }, ...fx0.holes_m.map((c) => ({ c, r: (fx0.hole_d_mm ?? 4) / 2000 }))] : null;
   const rh = add('crank encoder readhead', [S('ring', e.readhead, rhHoles ? circlePoly(fb.O2, e.od.readhead / 2, rhHoles) : ring(fb.O2, e.od.readhead / 2, e.id.readhead / 2))], { bom: d.params.parts?.crankEncoder ?? 'sensor-rls-orbis-br10' });
   const ac = add('crank encoder actuator', [S('ring', e.actuator, ring(fb.O2, e.od.actuator / 2, e.id.actuator / 2))], { bom: d.params.parts?.encoderMagnet ?? 'sensor-rls-orbis-actuator-10mm' });
-  for (const sol of shaftSolidsOver(ax, 0, e.actuator)) join(ac, `crank/${sol}`, 'on the crank shaft by its three set screws (maker\'s fixing)');
+  // round 18: bonded on its land when the design bonds it (linkage.js actuatorBond), else on RLS's set screws alone
+  const bonded = !!actuatorBond(d.params.linkage);
+  for (const sol of shaftSolidsOver(ax, 0, e.actuator)) join(ac, `crank/${sol}`, bonded ? ACTUATOR_BONDED : 'on the crank shaft by its three set screws (maker\'s fixing)');
   const front = e.readhead[0] > P.plateFwd;
   const fx = af?.support?.readhead;
   if (fx) readheadFixing({ add, join, assumptions, catalog }, rh, e, fx, af.carriers.riser);
@@ -976,12 +1015,13 @@ export function bandSlabs(tag, x, b, tt, [z0, z1], [yb, yt], floors = [yb, yb]) 
 export const tieXs = (x0, x1, n) => Array.from({ length: n }, (_, k) => x0 + ((k + 0.5) / n) * (x1 - x0));
 
 /** The carrier a mount names, as structure.airframe.parts.carriers draws it. */
-const carrierOf = (af, name) => ({ 'forward tray': af?.carriers?.forward, 'nose tray': af?.carriers?.nose, 'aft tray': af?.carriers?.aft })[name];
+const carrierOf = (af, name) => ({ 'forward tray': af?.carriers?.forward, 'nose tray': af?.carriers?.nose, 'aft tray': af?.carriers?.aft, 'belly tray': af?.carriers?.belly })[name];
 
 /** A mounted part's ties (round 15): through slots in its carrier either side of it, round its box and the carrier's sheet. */
 function partTies(add, join, id, box, c, tr) {
   const [b, tt] = tr.band_mm.map((v) => v / 1000), face = c.y + c.t / 2;
-  const sol = tieXs(box.x0, box.x1, tr.n).flatMap((x, k) => tagged(bandSlabs(`tie ${k + 1}`, x, b, tt, [box.z0, box.z1], [face - c.t, box.y1], [face, face]), tr.tie, `${id} tie ${k + 1}`));
+  // round 17b: a strap stated at its own x (tr.x_mm, clear of the ties beside it), else spread evenly
+  const sol = (tr.x_mm ? tr.x_mm.map((v) => v / 1000) : tieXs(box.x0, box.x1, tr.n)).flatMap((x, k) => tagged(bandSlabs(`tie ${k + 1}`, x, b, tt, [box.z0, box.z1], [face - c.t, box.y1], [face, face]), tr.tie, `${id} tie ${k + 1}`));
   const tid = add(`${id} ties`, sol);
   join(tid, id, 'round the part');
   join(tid, tr.carrier, 'through its slots');
@@ -1049,16 +1089,20 @@ function fixingParts({ af, catalog, add, join, assumptions }) {
     const g = fastenerGeometry(byId(catalog, b.screw).specs ?? {}, b.screw), ng = b.nut ? fastenerGeometry(byId(catalog, b.nut).specs ?? {}, b.nut) : null;
     const sol = b.axis === 'x' ? screwX(b.c, b.face, b.dir, g, b.nut_face, ng) : screwY(b.c, b.face, b.dir, g, b.nut_face, ng);
     const sid = add(`${b.joint} screw ${k}`, sol.screw, { bom: b.screw });
-    for (const p of b.through) { join(sid, p, 'fastened (its head or its nut on the face)'); join(`${sid}/shank`, p, THROUGH); }
-    if (b.tapped) { join(`${sid}/shank`, b.tapped, THREAD); join(sid, b.tapped, 'screwed into its threads'); }
+    // round 18.2: an x-axis shank is one solid named 'shank'; a y-axis shank is now N true-section slabs named
+    // 'shank 1'..'shank N' (xSlabs, screwY); either way every slab needs its own THROUGH/THREAD join, since those
+    // override the part-level descriptive join (not itself exempt) for exactly the pairs that overlap
+    const shankSlabs = sol.screw.filter((s) => /^shank/.test(s.name));
+    for (const p of b.through) { join(sid, p, 'fastened (its head or its nut on the face)'); for (const sl of shankSlabs) join(`${sid}/${sl.name}`, p, THROUGH); }
+    if (b.tapped) { for (const sl of shankSlabs) join(`${sid}/${sl.name}`, b.tapped, THREAD); join(sid, b.tapped, 'screwed into its threads'); }
     if (sol.nut.length) {
       const nid = add(`${b.joint} nut ${k}`, sol.nut, { bom: b.nut });
       join(nid, sid, 'threaded on the screw');
-      join(`${sid}/shank`, nid, THREAD);
+      for (const sl of shankSlabs) join(`${sid}/${sl.name}`, nid, THREAD);
       join(nid, b.through.at(-1), 'on its face');
     }
   }
-  assumptions.push('fixings (round 16, structure.airframe.parts.fixings): every M3 screw at its stated place with its head on its face and its shank through the parts it clamps (the holes are cut to it and not drawn: exempt as THROUGH), each nut on the last part\'s face, drawn by its corner circle; a screw along y as the boxes round its circles; the motor bracket\'s screws into the motor\'s back-face threads (not drawn: THREAD)');
+  assumptions.push('fixings (round 16, structure.airframe.parts.fixings): every M3 screw at its stated place with its head on its face and its shank through the parts it clamps (the holes are cut to it and not drawn: exempt as THROUGH), each nut on the last part\'s face, drawn by its corner circle; a screw along y its true section, N slabs across x (round 18.2); the motor bracket\'s screws into the motor\'s back-face threads (not drawn: THREAD)');
 }
 
 /**
@@ -1102,49 +1146,73 @@ function holds(sh, p, edge) {
  */
 export function holeRecord(asm, q0 = null) {
   const byPart = new Map(asm.parts.map((p) => [p.id, p]));
-  const rows = [], failures = [];
+  const rows = [], failures = [], seen = new Set();
   for (const [a, b, w] of asm.joins) {
-    if (!(w === THROUGH || w === THREAD) || !/\/shank$/.test(a)) continue;
-    const sp = byPart.get(a.slice(0, -'/shank'.length)), sh0 = sp?.solids.find((s) => s.name === 'shank'), part = byPart.get(b.split('/')[0]);
+    if (!(w === THROUGH || w === THREAD)) continue;
+    // round 18.2: a shank is one solid (an x-axis screw's exact ring, join "part/shank") or a group of
+    // true-section slabs (xSlabs, a y/span-axis screw's: one join per slab, "part/shank 1".."part/shank N",
+    // every one checked but the (screw, part) pair counted once
+    const m = /^(.*)\/shank(?:\s\d+)?$/.exec(a);
+    if (!m) continue;
+    const key = `${m[1]}|${b}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const screw = `${m[1]}/shank`, sp = byPart.get(m[1]), part = byPart.get(b.split('/')[0]);
     // round 17b: a screw on a moving part (the twist drive's) at the reference pose
-    const sh = sh0 && !sh0.shape && sh0.at && q0 ? { ...sh0, shape: sh0.at(q0) } : sh0;
-    if (!sh || !part) { failures.push({ screw: a, part: b, why: 'no such part' }); continue; }
+    const group = (sp?.solids ?? []).filter((s) => /^shank(\s\d+)?$/.test(s.name)).map((s0) => (!s0.shape && s0.at && q0 ? { ...s0, shape: s0.at(q0) } : s0));
+    if (!group.length || !part) { failures.push({ screw, part: b, why: 'no such part' }); continue; }
     if (part.solids.every((s) => s.name === 'nut')) continue; // its nut, threaded on (its bore is the shank)
     // round 17: a moving part's solids at the reference pose (the crank web's axial screw lies on the crank axis)
-    const ok = part.solids.some((s) => { const shp = s.shape ?? (q0 && s.at ? s.at(q0) : null); return shp && shankIn(sh, { ...s, shape: shp }); });
-    rows.push({ screw: a, part: b, in_material: ok });
-    if (!ok) failures.push({ screw: a, part: b });
+    const ok = part.solids.some((s) => { const shp = s.shape ?? (q0 && s.at ? s.at(q0) : null); return shp && group.every((sh) => shankIn(sh, { ...s, shape: shp })); });
+    rows.push({ screw, part: b, in_material: ok });
+    if (!ok) failures.push({ screw, part: b });
   }
   return { rule: 'round 16: each screw\'s hole lies in the material of every part it clamps or threads into (its shank inside a solid of the part, holes aside); src/design/clearance.js holeRecord', holes: rows.length, failures, passed: failures.length === 0 };
 }
 
-/** Whether a shank lies in a fixed solid's material where their ranges overlap. */
+/** Whether a shank (or one of its true-section slabs) lies in a fixed solid's material where their ranges overlap. */
 function shankIn(sh, s) {
   if (sh.tube?.axis === 'span') {
-    // round 17: a screw across x (the tail linkage's, along a surface's span): its axis (the capsule's or the box's
-    // centre line) passes through the solid, the shank's radius inside it, at an x the solid spans
+    // round 17: a screw across x (round 18.2: a long, unsliced round tube, a cap, or one of N true-section slabs,
+    // a poly box -- edge-midpoint to edge-midpoint still gives its centre line either way): its axis passes
+    // through the solid, the true radius (sh.tube.ro, not the slab's own, narrower width) inside it, at an x the
+    // solid spans
     const sp = sh.shape, ends = sp.kind === 'cap' ? [sp.a, sp.b] : [lerp(sp.pts[0], sp.pts[3], 0.5), lerp(sp.pts[1], sp.pts[2], 0.5)];
     const xm = (sh.x[0] + sh.x[1]) / 2;
     if (!(xm >= s.x[0] - 1e-12 && xm <= s.x[1] + 1e-12)) return false;
     return Array.from({ length: 11 }, (_, k) => lerp(ends[0], ends[1], k / 10)).some((p) => holds(s.shape, p, sh.tube.ro));
   }
-  if (sh.tube?.axis === 'y') {
-    // a vertical screw (c = [x, z]): its square across x and z inside the solid at a height both share
-    const pts = sh.shape.pts, x = (sh.x[0] + sh.x[1]) / 2, r = (sh.x[1] - sh.x[0]) / 2, z = (Math.min(...pts.map((p) => p[0])) + Math.max(...pts.map((p) => p[0]))) / 2;
-    const yr = [Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1]))], sy = s.shape.kind === 'cap' ? [Math.min(s.shape.a[1], s.shape.b[1]) - s.shape.r, Math.max(s.shape.a[1], s.shape.b[1]) + s.shape.r] : s.shape.kind === 'poly' ? [Math.min(...s.shape.pts.map((p) => p[1])), Math.max(...s.shape.pts.map((p) => p[1]))] : [s.shape.c[1] - s.shape.ro, s.shape.c[1] + s.shape.ro];
+  if (sh.shape.kind === 'poly') {
+    // a vertical screw (c = [x, z]), round 18.2: one of N true-section slabs: its true radius (sh.tube.ro, not
+    // the slab's own, narrower width) across x and z inside the solid at a height both share
+    const pts = sh.shape.pts, r = sh.tube.ro, z = (Math.min(...pts.map((p) => p[0])) + Math.max(...pts.map((p) => p[0]))) / 2;
+    const yr = [Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1]))];
+    const sy = s.shape.kind === 'cap' ? [Math.min(s.shape.a[1], s.shape.b[1]) - s.shape.r, Math.max(s.shape.a[1], s.shape.b[1]) + s.shape.r] : s.shape.kind === 'poly' ? [Math.min(...s.shape.pts.map((p) => p[1])), Math.max(...s.shape.pts.map((p) => p[1]))] : [s.shape.c[1] - s.shape.ro, s.shape.c[1] + s.shape.ro];
     const y = (Math.max(yr[0], sy[0]) + Math.min(yr[1], sy[1])) / 2;
-    return x - r >= s.x[0] - 1e-12 && x + r <= s.x[1] + 1e-12 && yr[0] <= sy[1] && yr[1] >= sy[0] && holds(s.shape, [z - r, y], 0) && holds(s.shape, [z + r, y], 0);
+    return sh.x[0] >= s.x[0] - 1e-9 && sh.x[1] <= s.x[1] + 1e-9 && yr[0] <= sy[1] && yr[1] >= sy[0] && holds(s.shape, [z - r, y], 0) && holds(s.shape, [z + r, y], 0);
   }
+  // an x-axis screw's exact ring, unsliced: still a single solid, never grouped
   if (!(sh.x[0] < s.x[1] && sh.x[1] > s.x[0])) return false;
   return holds(s.shape, sh.shape.c, sh.shape.ro);
 }
 
-/** A screw along y (round 16), as screwX, its circles drawn as the boxes round them (c: [x, z]). */
+/**
+ * A screw along y (round 16; round 18.2, the film's request: its true section, not a square prism -- a fastener
+ * lying across x has its real round section in the plane that contains x (here, x-z), which this model (a prism
+ * along x) cannot draw as one solid. xSlabs slices the head and the shank each into N prisms along x, every one
+ * the exact rectangle at that slice's true half-width, holding the exact nominal y length throughout (no capsule,
+ * no overshoot past either end: the true length and the true width are independent here, unlike a round-in-y
+ * shape would force). n=8: about 11% more cross-section than the true circle (6: ~14%), always a superset of it,
+ * so the clash and hole checks stay conservative. As screwX, its nut the box round its corner circle (c: [x, z]).
+ */
 export function screwY(c, yFace, dir, g, yNut = null, ng = null) {
   const iv = (a, b) => [Math.min(a, b), Math.max(a, b)];
   const box = (r, ys) => [[c[0] - r, c[0] + r], boxYZ(c[1] - r, c[1] + r, ...ys)];
   const sol = (name, r, ys, ri = 0) => { const [x, sh] = box(r, ys); return { ...S(name, x, sh), tube: { ro: r, ri, L: ys[1] - ys[0], axis: 'y' } }; };
-  const screw = [sol('head', g.head_d / 2, iv(yFace, yFace - dir * g.head_k)), sol('shank', g.d / 2, iv(yFace, yFace + dir * g.L))];
+  // the head and the shank, each N true-section slabs (xSlabs): one shared tube record per fastener (not per
+  // slab), so completeness.js's size checks (which read it, never the drawn polygon) still match the BOM line
+  const slabs = (name, r, ys) => xSlabs(c[0], r, (w) => boxYZ(c[1] - w, c[1] + w, ...ys)).map((s, i) => ({ ...S(`${name} ${i + 1}`, s.x, s.shape), tube: { ro: r, ri: 0, L: ys[1] - ys[0], axis: 'y' } }));
+  const screw = [...slabs('head', g.head_d / 2, iv(yFace, yFace - dir * g.head_k)), ...slabs('shank', g.d / 2, iv(yFace, yFace + dir * g.L))];
   const nut = yNut != null && ng ? [sol('nut', ng.s / Math.sqrt(3), iv(yNut, yNut + dir * ng.m), g.d / 2)] : [];
   return { screw, nut };
 }
@@ -1309,7 +1377,7 @@ function traySupport(p, af, ok) {
   const b = p.box, gap = b.y0 - (c.y + c.t / 2), inner = c.w / 2 - c.t / 2;
   const cx = [Math.max(b.x0, c.x[0]), Math.min(b.x1, c.x[1])], cz = [Math.max(b.z0, -inner), Math.min(b.z1, inner)];
   const tr = af.support?.ties?.find((t) => t.part === p.name);
-  const tx = tr ? tieXs(b.x0, b.x1, tr.n) : [];
+  const tx = tr ? (tr.x_mm ? tr.x_mm.map((v) => v / 1000) : tieXs(b.x0, b.x1, tr.n)) : [];
   const cg = b.cx >= cx[0] && b.cx <= cx[1] && b.cz >= cz[0] && b.cz <= cz[1];
   const tiesOn = tx.every((x) => x >= c.x[0] && x <= c.x[1]);
   return { part: p.name, carrier: p.mount.carrier, face: 'base, top face', fixing: tr ? `${tr.n} x ${tr.tie} (${tr.loop_mm} mm loop)` : null, gap_mm: r4(gap), contact_x_mm: cx.map(r4), contact_z_mm: cz.map(r4), cg_over_contact: cg, ties_x_mm: tx.map(r4), passed: ok(gap) && cx[1] > cx[0] && cz[1] > cz[0] && cg && !!tr && tiesOn };
@@ -1317,8 +1385,13 @@ function traySupport(p, af, ok) {
 
 /** The crank encoder: the actuator in its bore on the crank stub, the readhead on the riser through its spacers. */
 function encoderSupport(e, d, af, ok) {
-  const ag = e.id.actuator / 2 - mm(d.params.linkage.crank.shaft_od_mm) / 2, fx = af?.support?.readhead;
-  const rows = [{ part: 'crank encoder actuator', carrier: 'crank', face: 'shaft stub (its bore)', fixing: '3 x M3 DIN 913 set screws (the maker\'s, included)', gap_mm: r4(ag), passed: ok(ag) }];
+  // round 18: bonded on its land, the gap is the bond line: within the adhesive maker's (the bond member's figures)
+  const bm = (d.structure?.members ?? []).find((m) => m.name === ACTUATOR_BOND && m.check === 'gap bond'), bd = bm?.dims;
+  const ag = e.id.actuator / 2 - mm(bd ? bd.land_d_mm : d.params.linkage.crank.shaft_od_mm) / 2, fx = af?.support?.readhead;
+  const inLine = (g) => !!bd && g * 1000 >= bd.gap_limits_mm[0] - 1e-9 && g * 1000 <= bd.gap_limits_mm[1] + 1e-9;
+  const rows = [bd
+    ? { part: 'crank encoder actuator', carrier: 'crank', face: `the shaft's ${bd.land_d_mm} mm land (its bore, through the bond line)`, fixing: `${bm.material.id} bond (its 3 x M3 DIN 913 set screws centre it, not credited)`, gap_mm: r4(ag), gap_toleranced_mm: bd.gap_mm, bond_line_mm: bd.gap_limits_mm, passed: inLine(ag) && bd.gap_mm.every((g) => inLine(g / 1000)) }
+    : { part: 'crank encoder actuator', carrier: 'crank', face: 'shaft stub (its bore)', fixing: '3 x M3 DIN 913 set screws (the maker\'s, included)', gap_mm: r4(ag), passed: ok(ag) }];
   if (!fx) return [...rows, unsupported('crank encoder readhead')];
   const R = af.carriers.riser, land = mm(fx.spacer_od_mm) / 2, gap = R.x[0] - (e.readhead[1] + mm(fx.spacer_mm));
   const onWeb = fx.holes_m.every(([z, y]) => Math.abs(z) + land <= R.w / 2 && y - land >= R.y[0] && y + land <= R.y[1]);
@@ -1351,9 +1424,17 @@ export function containmentOf(d, catalog, opts = {}) {
  * from its servos on the aft tray (tail-mech.js), when the design states it (params.tailMech).
  */
 export function afterPacked(asm, d, catalog, airframe, pk) {
-  if (!d.params.tailMech || !airframe?.parts || !pk?.model) return;
+  if (!airframe?.parts || !pk?.model) return;
   const ax = { d, catalog, af: airframe.parts, add: (id, solids, extra) => addPart(asm.parts, id, solids, extra), join: (a, b, w) => asm.joins.push([a, b, w]), assumptions: asm.assumptions };
-  asm.tailMech = tailMechParts(ax, (tag) => pk.model.layout.parts.find((p) => p.name === `servo_tail_${tag}`).box);
+  if (d.params.tailMech) asm.tailMech = tailMechParts(ax, (tag) => pk.model.layout.parts.find((p) => p.name === `servo_tail_${tag}`).box);
+  // round 17b (build-needs.js): the hatch, connectors, leads, tubing and antenna, which need the packed parts' boxes
+  if (d.params.layout?.hatch) {
+    const lay = driveLayoutOf(d, catalog), amps = [...new Set([d.drive.ampMin, d.drive.ampNominal, d.drive.ampMax].filter(Number.isFinite))];
+    const poses = amps.flatMap((amp) => Array.from({ length: 36 }, (_, i) => drivePose({ law: lay.law, fourBar: lay.fb }, (i / 36) * TWO_PI, amp)));
+    const nx = { ...ax, asm, q0: drivePose({ law: lay.law, fourBar: lay.fb }, 0, d.drive.ampNominal), poses };
+    asm.needs = needsParts(nx, pk);
+    if (asm.needs) asm.needs.harnessTies = harnessTies(nx, asm.needs.leads, asm.needs.P);
+  }
 }
 
 /**
@@ -1530,7 +1611,11 @@ export function designRecords(asm, d, catalog, lay, airframe, pk, q0, { required
   // round 17: the actuation chains (each module's), the ratings, and the interface ledger with each module's rule rows
   if (Ly.chains && pack) out.chains = chainRecord(asm, d, chainSources().flatMap((f) => f(asm, d, catalog)));
   if (Ly.ratings) out.ratings = ratingsRecord(d, catalog);
-  if (Ly.interfaces && pack) out.interfaces = interfaceLedger(asm, d, moduleRules());
+  if (Ly.interfaces && pack) out.interfaces = interfaceLedger(asm, d, [...(Ly.hatch ? NEEDS_INTERFACE_RULES : []), ...(d.params.pod ? POD_INTERFACE_RULES : []), ...moduleRules()]);
+  // round 17b (SPEC "What a real build needs"): connectors, the hatch and its fixing, access, the air path
+  if (Ly.hatch && pack) out.buildneeds = buildNeedsRecord(asm, d, catalog);
+  // round 17 (SPEC "The covering spans only what is supported"): the pod's film spans and its cuts, the wing's and tail's rib panels
+  if (Ly.covering && pack && d.params.pod) out.covering = coveringRecord(asm, d, catalog, { required, lay });
   return out;
 }
 

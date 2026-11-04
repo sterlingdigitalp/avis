@@ -26,6 +26,10 @@ import { packedSpecs, partsIndex, loftHalf } from '../../sims/avis-shared/model.
 import { fixingLayout, fixingCounts } from './fixings.js';
 import { tailMechMembers } from './tail-mech.js';
 import { twistMembers } from './twist-drive.js';
+import { motorMaker } from './chains.js'; // round 18: the maker's-part condition
+import { MOTOR_BEARINGS, MOTOR_THREADS } from './interfaces.js'; // round 18
+import { needsMembers, needsParams, bellyGeometry } from './build-needs.js';
+import { podBom, podMembers } from './pod-structure.js';
 
 const PI4 = Math.PI / 4;
 const AL7 = 'metal-al-7075-t6', AL6 = 'metal-al-6061-t6';
@@ -151,6 +155,7 @@ export function airframeMembers(cx) {
   af_motor(ax);
   af_encoder(ax);
   af_ties(ax);
+  needsMembers(ax);
   af_plateSections(ax);
   af_panels(ax);
   af_bomItems(ax);
@@ -371,6 +376,9 @@ const LUMP_OF = { battery: 'battery', esc: 'ESC', fc: 'flight controller', gps: 
 function af_carriers(ax) {
   const { d, catalog, planes, plateT, members, mat, item, A, tieS, tieL, lump, counts, tFwd, tAft, screwSeat, bolts, flangePlate, perScrewShear } = ax;
   const G = carrierGeometry(A, planes, tFwd / 1000, tAft / 1000, ax.crank), mf = 1 + (d.mass.margin_frac ?? 0.15);
+  // round 17b (build-needs.js): a belly tray under the nose tray, on the riser's web, when a mount names it
+  const mounts = d.params.layout?.mounts ?? {}, onBelly = (k) => mounts[k]?.carrier === 'belly tray';
+  if (Object.keys(mounts).some(onBelly)) G.belly = bellyGeometry(needsParams(d.params), G.nose, A);
   const at = (nm) => lump(nm);
   const pt = (m, r) => ({ m, r });
   // the carriers' own masses (kg, with the margin) at their centroids
@@ -383,7 +391,12 @@ function af_carriers(ax) {
   const noseItems = [...['battery', 'ESC', 'receiver and airspeed', 'pitot-static probe'].map(at).filter(Boolean), oN.load];
   const riserItems = [...noseItems, oR.load, ...(enc ? [enc] : [])];
   const fwdItems = [...riserItems, oF.load];
-  const aftItems = [...['tail servos', 'flight controller', 'GPS', 'power module and regulator', 'stroke servo'].map(at).filter((q) => q && q.m > 0), oA.load];
+  const bellyOf = { 'flight controller': 'fc', 'power module and regulator': 'regulator' };
+  const aftItems = [...['tail servos', 'flight controller', 'GPS', 'power module and regulator', 'stroke servo'].filter((nm) => !onBelly(bellyOf[nm])).map(at).filter((q) => q && q.m > 0), oA.load];
+  const B = G.belly, oB = B ? own(B, (B.x[1] - B.x[0]) * (B.w + 2 * B.h) * B.t, mid(B.x), B.y) : null;
+  const bellyItems = B ? [...Object.keys(bellyOf).filter((nm) => onBelly(bellyOf[nm])).map(at).filter((q) => q && q.m > 0), oB.load] : [];
+  riserItems.push(...bellyItems);
+  fwdItems.push(...bellyItems);
   const V = (items) => addTerms(...items.map((q) => inertialTerms(q.m, q.r)));
   const Mabout = (items, P) => addTerms(...items.map((q) => scaleTerms(inertialTerms(q.m, q.r), hyp(q.r[0] - P[0], q.r[1] - P[1], q.r[2]))));
   const rootChecks = (tag, T, c, P, items, seatT, plateName) => {
@@ -407,6 +420,7 @@ function af_carriers(ax) {
     members.push({ name: 'nose tray riser at the hole', kind: 'beam', check: 'beam', material: mat(R.material), dims: { A_mm2: +csHole.A_mm2.toFixed(3), Zi_mm3: +csHole.Zi_mm3.toFixed(3), Zo_mm3: +csHole.Zo_mm3.toFixed(3), section: `channel ${A.noseTray.riser.w_mm} mm less the ${holeMm.toFixed(1)} mm actuator opening x ${A.noseTray.riser.flange_mm} x ${A.noseTray.riser.t_mm} mm` }, sections: [sect('M', rr.M), sect('Mo', rr.M)], uses: { M: 'M', Mo: 'Mo' }, note: `the actuator opening (slotted to the tab's bend) takes ${holeMm.toFixed(1)} mm out of the web's width at its height; the root's own moment is used unreduced` });
   }
   rootChecks('nose tray', A.noseTray, N, [R.x[1], N.y, 0], noseItems, A.noseTray.riser.t_mm, 'the riser\'s tab');
+  if (B) rootChecks('belly tray', { w_mm: B.w * 1000, flange_h_mm: B.h * 1000, t_mm: B.t * 1000, screws: B.screws_z.length, screw_pitch_mm: Math.abs(B.screws_z[0] - B.screws_z[1]) * 1000, screw_lever_mm: +((B.y - B.screw_y) * 1000).toFixed(2), item_height_mm: 10, material: B.material }, B, [B.x[0], B.y, 0], bellyItems, A.noseTray.riser.t_mm, 'the riser\'s web');
   const ar = rootChecks('aft tray', A.aftTray, AT, [AT.x[1], AT.y, 0], aftItems, tAft, 'the aft plate');
   flangePlate('aft plate under the aft tray flange', A.aftTray.w_mm, ar.M, A.aftTray.doubler_mm);
   item('forward tray', mat(F.material), channelVolume(F, F.x[1] - F.x[0], F.tab), `channel ${A.tray.w_mm} x ${A.tray.flange_h_mm} x ${A.tray.t_mm} mm x ${((F.x[1] - F.x[0]) * 1000).toFixed(1)} mm (plate face to the riser) with a ${A.tray.flange_mm} mm root tab; ${mat(F.material).density_g_cm3} g/cm3`);
@@ -416,13 +430,20 @@ function af_carriers(ax) {
   // every mounted part's ties: the tie model from the loop round the part and its carrier's sheet
   const pIdx = partsIndex(d, catalog), specs = packedSpecs(d, pIdx).list;
   const ties = [tieS, tieL].map((q) => ({ ...q, geo: tieGeometry(byId(catalog, q.id).specs) }));
-  const sheet = { 'forward tray': F.t, 'nose tray': N.t, 'aft tray': AT.t };
+  const sheet = { 'forward tray': F.t, 'nose tray': N.t, 'aft tray': AT.t, ...(B ? { 'belly tray': B.t } : {}) };
   const tieRows = [];
   for (const s of specs) {
     const mt = d.params.layout?.mounts?.[s.name];
     if (!mt) continue;
     const tb = sheet[mt.carrier];
     if (tb == null) throw new Error(`mount ${s.name}: unknown carrier ${mt.carrier}`);
+    // round 17b: a releasable strap (build-needs.js) in place of the one-shot ties: no published rating, so no tie
+    // member (the pack's cage holds it); drawn round the part and its carrier like a tie
+    if (mt.strap) {
+      const st = needsParams(d.params).strap, sp = byId(catalog, mt.strap).specs;
+      tieRows.push({ part: s.name, carrier: mt.carrier, n: 1, tie: mt.strap, loop_mm: sp.length_mm, bundle_max_mm: null, band_mm: [sp.width_mm, st.t_assumed], x_mm: [st.x_mm], strap: true });
+      continue;
+    }
     const tie = tieFor(ties, s.size[2], s.size[1], tb);
     if (!tie) throw new Error(`mount ${s.name}: no catalogue tie takes a ${(2 * (s.size[2] + s.size[1] + tb) * 1000).toFixed(1)} mm loop`);
     const n = mt.ties ?? 1, bomPart = d.bom.parts.find((p) => p.role === s.role), lp = at(LUMP_OF[s.name]);
@@ -556,6 +577,11 @@ function af_motor(ax) {
     const { Vm, Mm, pinOff, L, F: Frail } = motorBracketLoad(ax); // the first mesh force's offset is from the bracket face
     bolts('motor mount screws', mg, Vm, Tm, Mm, motorIn, `${B.angles_deg.length} M3 through the bracket into the motor's back-face threads (${B.circle_d_mm} mm across, the maker's drawing): the motor's inertia and the first mesh force (${s0.pinion.id}) in shear, the motor torque as torsion, the inertia at half the motor's length and the mesh force at its ${(pinOff * 1000).toFixed(1)} mm offset as prying`);
     screwSeat('motor mount screws in the bracket', perScrewShear(mg, Vm, Tm), t);
+    // round 18 (SPEC ruling "Maker's part"): the motor's own M3 threads in its back face (the screws above stay rated):
+    // each thread's pull (the largest screw tension, F / n + M / (n_far lever)) and shear reported, valid only while the
+    // motor stays within every figure Scorpion publishes (chains.js motorMaker)
+    const pull = addTerms(scaleTerms(motorIn, 1 / mg.n), scaleTerms(Mm, 1000 / (mg.n_far * mg.lever_mm)));
+    members.push({ name: MOTOR_THREADS, kind: 'thread', check: "maker's part", dims: { n: mg.n }, maker: motorMaker(ax.d, ax.catalog, `the motor's ${B.angles_deg.length} M3 threads in its back face ('m3*4' on the maker's drawing, depth unpublished)`, ['F', 'V']), sections: [sect('F', pull), sect('V', perScrewShear(mg, Vm, Tm))], uses: { F: 'F', V: 'V' }, note: "the motor's internal thread under each screw: its largest pull and shear (the motor's maker publishes no thread depth or strength)" });
     const arm = Math.max(...g.sleeves.map((q) => Math.hypot(q.c[0] - c[0], q.c[1] - c[1])));
     members.push({ name: 'motor bracket arm', kind: 'plate', check: 'plate', material: bm, dims: { b_mm: 2 * B.sleeve_wall_mm + A.rail.od_mm, t_mm: t }, sections: [sect('F', Frail), sect('M', scaleTerms(Frail, arm))], uses: { F: 'F', M: 'M' }, note: `the bracket from the motor to its farther rail (${(arm * 1000).toFixed(1)} mm), the sleeve's width: the larger lever-rule share of the motor's force, its torque and prying moment as a couple over the rails' ${(L * 1000).toFixed(0)} mm spacing, bent out of the plane` });
     members.push({ name: 'motor bracket sleeve bond', kind: 'bond', check: 'lap', material: glueAl, dims: { w_mm: +(Math.PI * A.rail.od_mm).toFixed(3), L_mm: t }, sections: [sect('F', Frail)], uses: { F: 'F' }, note: `Araldite 2011 aluminium to aluminium, a sleeve round the ${A.rail.od_mm} mm rail over the bracket's ${t} mm, carrying a rail's share` });
@@ -571,6 +597,12 @@ function af_motor(ax) {
     flangePlate('forward plate under the motor', 2 * mo.circle_r_mm + 12, addTerms(scaleTerms(motorIn, mo.overhang_mm / 1000), scaleTerms(F0, pinOff)), mo.doubler_mm);
     counts.screws += mo.screws;
   }
+  // round 18 (SPEC ruling "Maker's part"): the motor's own bearings carrying its shaft and pinion (joints.js 'motor shaft',
+  // not credited before): the nearer bearing's radial load (the first mesh force's share, joints.js's lever) and the
+  // shaft's axial location (the whole motor lump's inertia, a bound on its rotor's), valid only within Scorpion's figures
+  const mu = (ax.d.structure?.joints_unchecked ?? []).find((q) => q.name === 'motor shaft');
+  const kB = mu ? mu.motor_bearing_force_per_crank_Nm ?? mu.force_per_crank_Nm : null;
+  if (Number.isFinite(kB)) members.push({ name: MOTOR_BEARINGS, kind: 'bearing', check: "maker's part", dims: { n: 2 }, maker: motorMaker(ax.d, ax.catalog, "the motor's own bearings carrying its shaft and pinion (Scorpion publishes their sizes, 11 x 5 x 5 and 16 x 5 x 5 mm, and no rating)", ['Fr', 'Fa']), sections: [sect('Fr', [{ ch: 'crank_torque', k: kB }]), sect('Fa', motorIn)], uses: { F: 'Fr' }, note: `radial: ${mu.motor_bearing_force_per_crank_Nm ? 'the motor bearing nearest the pinion, F a / s with the outboard bearing' : 'the first mesh force'} (${kB} N per crank N m); axial: the motor's inertia, all of it (its rotor's share is unpublished)` });
 
   Object.assign(ax, { mo, mot, F0, Tm, motorIn });
 }
@@ -636,6 +668,13 @@ function probeTies(ax, rho) {
 
 function podTies(ax, rho) {
   const { d, members, A, tieS, lump, counts } = ax;
+  // round 17 (audit item 4): the pod's formers, longerons, end discs and film (pod-structure.js): its lines and members
+  if (d.params.pod && ax.carriers) {
+    const pb = podBom(d, ax.catalog);
+    ax.cx.items.push(...pb.structure);
+    podMembers(ax);
+    return;
+  }
   if (A.pod.formers_at_mm && ax.carriers) {
     // round 16: the formers where they stand (formerGeometry), their line from their solids' volume
     const fs = formerGeometry(d.body.loft, A.pod, ax.carriers.geometry, ax.loftHalfAt);
@@ -650,7 +689,7 @@ function podTies(ax, rho) {
   const pod = lump('fuselage shell and formers');
   const drag = 0.5 * rho * A.pod.V_drag_m_s ** 2 * (d.body?.CdA_front_m2 ?? 0.003);
   const nPod = A.pod.formers * A.pod.ties_each;
-  members.push({ name: 'pod formers ties', kind: 'tie', check: 'tie', tie: { id: tieS.id, loop_N: tieS.loop_N }, dims: { n: nPod, extra_N: +drag.toFixed(4) }, sections: [sect('F', inertialTerms(pod.m, pod.r))], uses: { F: 'F' }, note: `${nPod} x ${tieS.id} (balsa formers to the boom and trays: no published bond strength on balsa); the pod's inertia plus its drag at ${A.pod.V_drag_m_s} m/s (${drag.toFixed(2)} N)` });
+  members.push({ name: 'pod formers ties', kind: 'tie', check: 'tie', tie: { id: tieS.id, loop_N: tieS.loop_N }, dims: { n: nPod, extra_N: +drag.toFixed(4) }, sections: [sect('F', inertialTerms(pod.m, pod.r))], uses: { F: 'F' }, note: `${nPod} x ${tieS.id} (balsa formers tied by their tabs to the trays' flanges: no published bond strength on balsa); the pod's inertia plus its drag at ${A.pod.V_drag_m_s} m/s (${drag.toFixed(2)} N)` });
   counts.tieS += nPod;
 }
 
@@ -880,11 +919,15 @@ function af_bomItems(ax) {
   const sp = byId(catalog, A.fastener);
   if (A.screws) {
     // round 16: every counted screw and nut at a stated place (fixings.js), the BOM by screw length from that layout
-    const layout = fixingLayout(ax), fc = fixingCounts(layout);
+    const layout = [...fixingLayout(ax), ...(ax.needsBolts ?? [])], fc = fixingCounts(layout);
     const nS = [...fc.screws.values()].reduce((a, b) => a + b, 0), nN = [...fc.nuts.values()].reduce((a, b) => a + b, 0);
     if (nS !== counts.screws || nN !== counts.nuts) throw new Error(`fixing layout: ${nS} screws and ${nN} nuts placed, the bolt checks count ${counts.screws} and ${counts.nuts}`);
-    for (const [id, n] of fc.screws) { const f = byId(catalog, id); ax.cx.items.push({ name: `${id === A.fastener ? 'M3 screws' : f.name.replace(/^ISO 4762 /, 'ISO 4762 ')}, ${n} off`, material_id: id, material: f.name, mass_g: n * f.mass_g, basis: `${n} x ${f.mass_g} g (${f.specs.mass_basis})`, source_url: f.source_url, count: n }); }
-    for (const [id, n] of fc.nuts) { const f = byId(catalog, id); ax.cx.items.push({ name: `M3 nuts, ${n} off`, material_id: id, material: f.name, mass_g: n * f.mass_g, basis: `${n} x ${f.mass_g} g (${f.specs.mass_basis})`, source_url: f.source_url, count: n }); }
+    // round 18: one BOM line per part (the hatch cover's M2 nuts are the encoder readhead's: their counts in one line, so
+    // the line's tag finds all their solids), each named by its own part
+    const m2 = counts.m2 ? [A.encoder.screw, A.encoder.nut] : [], plus = (id) => (m2.includes(id) ? counts.m2 : 0);
+    for (const [id, n0] of fc.screws) { const f = byId(catalog, id), n = n0 + plus(id); ax.cx.items.push({ name: `${id === A.fastener ? 'M3 screws' : f.name.replace(/^ISO 4762 /, 'ISO 4762 ')}, ${n} off`, material_id: id, material: f.name, mass_g: n * f.mass_g, basis: `${n} x ${f.mass_g} g (${f.specs.mass_basis})`, source_url: f.source_url, count: n }); }
+    for (const [id, n0] of fc.nuts) { const f = byId(catalog, id), n = n0 + plus(id); ax.cx.items.push({ name: `${id === nut.id ? 'M3 nuts' : f.name}, ${n} off`, material_id: id, material: f.name, mass_g: n * f.mass_g, basis: `${n} x ${f.mass_g} g (${f.specs.mass_basis})`, source_url: f.source_url, count: n }); }
+    ax.mergedM2 = m2.filter((id) => fc.screws.has(id) || fc.nuts.has(id));
     ax.fixings = layout.map(({ g, ng, ...b }) => b);
   } else {
     ax.cx.items.push({ name: `M3 screws, ${counts.screws} off`, material_id: sp.id, material: sp.name, mass_g: counts.screws * sp.mass_g, basis: `${counts.screws} x ${sp.mass_g} g (${sp.specs.mass_basis})`, source_url: sp.source_url });
@@ -892,7 +935,7 @@ function af_bomItems(ax) {
   }
   if (counts.m2) {
     // round 15: the crank encoder readhead's own fixing (3 x M2 DIN 912 with nuts)
-    for (const id of [A.encoder.screw, A.encoder.nut]) { const f = byId(catalog, id); ax.cx.items.push({ name: `${f.name}, ${counts.m2} off`, material_id: f.id, material: f.name, mass_g: counts.m2 * f.mass_g, basis: `${counts.m2} x ${f.mass_g} g (${f.specs.mass_basis})`, source_url: f.source_url }); }
+    for (const id of [A.encoder.screw, A.encoder.nut].filter((q) => !(ax.mergedM2 ?? []).includes(q))) { const f = byId(catalog, id); ax.cx.items.push({ name: `${f.name}, ${counts.m2} off`, material_id: f.id, material: f.name, mass_g: counts.m2 * f.mass_g, basis: `${counts.m2} x ${f.mass_g} g (${f.specs.mass_basis})`, source_url: f.source_url }); }
   }
   for (const [t, n] of [[tieS, counts.tieS], [tieL, counts.tieL]]) if (n) ax.cx.items.push({ name: `cable ties ${t.id}, ${n} off`, material_id: t.id, material: t.name, mass_g: n * t.mass_g, basis: `${n} x ${t.mass_g} g (maker's weight per unit)`, source_url: t.source_url });
 

@@ -357,6 +357,44 @@ export function ringCompressionCheck({ D_mm, d_mm }, material, F) {
   return { stress_MPa: s, allowable_MPa: y, fos, ok: fos >= FOS };
 }
 
+/**
+ * Round 18 (encoder actuator): a cylindrical bond whose adhesive maker publishes its figure at a stated bond line. The
+ * bond's radial gap (dims.gap_mm: [least, most], from the drawn bore and shaft at their tolerances) must lie within the
+ * maker's bond line (dims.gap_limits_mm: [min, max], from the data sheet); outside it the published figure does not
+ * apply and the bond is unrated (fos null, fails). Inside it, bondCheck at the adhesive's allowable (half its typical).
+ */
+export function gapBondCheck(dims, adhesive, loads) {
+  const [g0, g1] = dims.gap_mm ?? [NaN, NaN], [lo, hi] = dims.gap_limits_mm ?? [NaN, NaN];
+  const inGap = [g0, g1, lo, hi].every(Number.isFinite) && g0 >= lo - 1e-12 && g1 <= hi + 1e-12;
+  if (!inGap) return { fos: null, ok: false, gap_mm: [g0, g1], gap_limits_mm: [lo, hi], why: `radial gap ${g0}-${g1} mm outside the adhesive maker's bond line ${lo}-${hi} mm: its published figure does not apply` };
+  if (!Number.isFinite(adhesive?.shear_MPa)) return { fos: null, ok: false, gap_mm: [g0, g1], gap_limits_mm: [lo, hi], why: 'the adhesive maker publishes no figure on this substrate pair' };
+  return { ...bondCheck(dims, adhesive, loads), gap_mm: [g0, g1], gap_limits_mm: [lo, hi] };
+}
+
+/**
+ * Round 18 (SPEC ruling "Maker's part", operator's decision 2026-11-03): an interface inside a bought part, or between a
+ * bought part and its maker's own fittings, for which that maker publishes no figure (a motor's own bearings, its
+ * mounting threads, the maker's arm on its own servo's spline). It has no factor of safety (fos null), so it never binds
+ * as a structural member and never sets the members' minimum; it is valid only while the bought part stays within every
+ * figure its maker publishes. member.maker = { part, of, covers, report: [section names reported as its peak load],
+ * condition: [{ figure, published, units, basis } with either `of` (a section of this member whose peak must stay within
+ * `published`) or `within` (true / false where the build decides it; null where another gate checks it: `checked_by`)] }.
+ * Reported as "unrated, maker's part" with its peak loads; it fails when any condition is over, or when none is stated.
+ */
+export function makerPartCheck(member, val) {
+  const mk = member.maker ?? {};
+  const peaks = Object.fromEntries((mk.report ?? []).map((s) => [s, val(s)]));
+  const condition = (mk.condition ?? []).map((c) => {
+    if (!c.of) return { ...c, within: c.within ?? null };
+    const value = val(c.of);
+    return { ...c, value, within: Number.isFinite(c.published) && value <= c.published };
+  });
+  const over = condition.filter((c) => c.within === false);
+  const ok = condition.length > 0 && over.length === 0;
+  const why = !condition.length ? "maker's part with no stated condition: not valid" : over.length ? `outside its maker's figures: ${over.map((c) => `${c.figure}${Number.isFinite(c.value) ? ` ${c.value.toFixed(4)} > ${c.published} ${c.units ?? ''}` : ''}`).join('; ')}` : `within its maker's published figures (${condition.filter((c) => c.within === true).length} checked here, ${condition.filter((c) => c.within === null).length} elsewhere or not published)`;
+  return { fos: null, ok, status: "unrated, maker's part", part: mk.part ?? null, of: mk.of ?? null, covers: mk.covers ?? null, peaks, condition, why };
+}
+
 /** Each member check kind: (member, its section peaks, the peak of named sections, its uses) -> result. */
 const MEMBER_CHECKS = {
   round: (m, l) => roundMemberCheck(m.dims, m.material, l),
@@ -382,6 +420,10 @@ const MEMBER_CHECKS = {
   flange: (m, l) => flangeThrustCheck(m.dims, m.material, l.F),
   // round 17b: a spacer tube in axial compression
   'ring compression': (m, l) => ringCompressionCheck(m.dims, m.material, l.F),
+  // round 18: a bond rated only inside its maker's bond line (the encoder actuator on the crank)
+  'gap bond': (m, l) => gapBondCheck(m.dims, m.material, { T: l.T, F: l.F }),
+  // round 18 (SPEC ruling "Maker's part"): no factor; valid only within its bought part's published figures
+  "maker's part": (m, l, val) => makerPartCheck(m, val),
 };
 
 /**
@@ -410,7 +452,10 @@ export function checkMembers(members, peaks) {
   for (const m of members ?? []) {
     const val = (names) => Math.max(0, ...[].concat(names ?? []).map((n) => peaks[`${m.name}/${n}`] ?? 0));
     const u = m.uses ?? {};
-    const load = { M: val(u.M), T: val(u.T), V: val(u.V), F: val(u.F) };
+    // round 18: a stated constant load (m.fixed: { M, T, V, F }, a bound no flight channel carries, e.g. the motor's
+    // largest torque on the crank's inertia) is added to the sections' peaks
+    const fx = (k) => (Number.isFinite(m.fixed?.[k]) ? m.fixed[k] : 0);
+    const load = { M: val(u.M) + fx('M'), T: val(u.T) + fx('T'), V: val(u.V) + fx('V'), F: val(u.F) + fx('F') };
     const f = MEMBER_CHECKS[m.check];
     const r = f ? f(m, load, val, u) : { fos: null, ok: false, why: `no check for ${m.check}` };
     rows.push({ name: m.name, kind: m.kind, check: m.check, material: m.material?.id ?? m.fastener?.id ?? m.tie?.id ?? null, dims: m.dims, load, ...r, ...(m.note ? { note: m.note } : {}) });

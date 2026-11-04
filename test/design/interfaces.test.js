@@ -11,7 +11,7 @@ import { fullAssembly } from '../../src/design/clearance.js';
 import { interfaceLedger, seatWidths, INTERFACE_RULES } from '../../src/design/interfaces.js';
 
 const catalog = JSON.parse(readFileSync(new URL('../../data/parts/catalog.json', import.meta.url), 'utf8'));
-const v24 = () => JSON.parse(readFileSync(new URL('../../data/designs/larus-gl-2.json', import.meta.url), 'utf8'));
+const v24 = () => JSON.parse(readFileSync(new URL('../fixtures/larus-gl-2-v24.json', import.meta.url) /* round 18: v24 frozen (the live file becomes v25) */, 'utf8'));
 
 /** A minimal, otherwise-empty design: no members, no bearing joints, no mounts -- every lookup legitimately
  * comes back empty unless a test adds to it. */

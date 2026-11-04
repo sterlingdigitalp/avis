@@ -47,10 +47,51 @@ const findMember = (d, name) => (d.structure.members ?? []).find((m) => m.name =
 const findJoint = (d, name) => (d.structure.joints ?? []).find((j) => j.name === name) ?? null;
 const findUnchecked = (d, name) => (d.structure.joints_unchecked ?? []).find((j) => j.name === name) ?? null;
 
+// ---- round 18: the maker's-part ruling (SPEC "Maker's part", operator's decision 2026-11-03) -------------------------
+
+export const MAKERS_PART_RULE = "SPEC ruling \"Maker's part\" (operator's decision 2026-11-03): an interface inside a bought part, or between a bought part and its maker's own fittings, that its maker publishes no figure for; unrated, valid only while the bought part stays within every figure its maker publishes (a maker's arm under its own servo's rule at the published row for the real supply voltage), reported in M7 as \"unrated, maker's part\" with its peak load; never a part we design or machine, nor a joint between our part and a bought part (those keep every rule)";
+
+const servoArmOk = (role) => (d, m) => m.maker?.of === d.servos?.[role]?.id && (d.bom?.parts ?? []).some((p) => p.id === m.maker?.part && p.role === `${role} servo arms (the maker's)`);
+const motorOk = (d, m) => !!d.motor?.id && m.maker?.part === d.motor.id && m.maker?.of === d.motor.id;
+/**
+ * The only interfaces the ruling admits, each by the member that stands for it and the bought part it belongs to
+ * (`part(d, member)`: the member's maker.part is that bought part, in the BOM). Nothing else may be a maker's part: a
+ * member we design or machine (a horn, a crank web, a bracket), or one between our part and a bought part (a rod end on
+ * our lever), marked "maker's part" is refused by the ledger.
+ */
+export const MAKERS_PARTS = [
+  { name: /^twist servo arm [RL]$/, part: servoArmOk('twist'), what: "the maker's arm on its own twist servo's spline, with its centre screw and its tapped holes" },
+  { name: /^tail servo arm [RL]$/, part: servoArmOk('tail'), what: "the maker's arm on its own tail servo's spline, with its centre screw and its tapped holes" },
+  { name: /^motor shaft in the motor's own bearings$/, part: motorOk, what: "the motor's own bearings carrying its shaft and pinion" },
+  { name: /^motor mount screws, thread in the motor's back face$/, part: motorOk, what: "the motor's M3 mounting threads in its back face (the bolts themselves stay rated)" },
+];
+
+/**
+ * Whether the ledger admits a named member as the maker's part on the joint a | b: null when the member is not marked
+ * "maker's part"; else { ok, why, what }. Admitted only when (1) the ruling lists it (MAKERS_PARTS), (2) its maker.part
+ * is that list's bought part, (3) the joint touches a drawn solid of that bought part (ctx.bomsOf), and (4) its condition
+ * holds: no condition the build decides is false, and, given the flight's member rows (ctx.memberRows), its own check
+ * passed (the servo within its rule, the motor within its figures).
+ */
+export function makerAdmission(d, a, b, name, ctx = {}) {
+  const m = findMember(d, name);
+  if (!m || m.check !== "maker's part") return null;
+  const e = MAKERS_PARTS.find((q) => q.name.test(name));
+  if (!e) return { ok: false, why: `${name}: marked maker's part, but the ruling admits only ${MAKERS_PARTS.map((q) => q.what).join('; ')}` };
+  if (!e.part(d, m)) return { ok: false, why: `${name}: its maker's part (${m.maker?.part ?? 'none named'}) is not the bought part the ruling names: ${e.what}` };
+  if (ctx.bomsOf && ![a, b].some((x) => ctx.bomsOf(x).includes(m.maker.part))) return { ok: false, why: `${name}: the joint ${a} | ${b} is not on the maker's part ${m.maker.part} (a joint between our part and a bought part keeps every rule)` };
+  const over = (m.maker.condition ?? []).filter((c) => c.within === false).map((c) => c.figure);
+  const row = (ctx.memberRows ?? []).find((r) => r.name === name);
+  if (!(m.maker.condition ?? []).length) return { ok: false, why: `${name}: no condition stated` };
+  if (over.length || (row && !row.ok)) return { ok: false, why: `${name}: its condition fails (${over.length ? over.join(', ') : row.why})` };
+  return { ok: true, what: e.what, part: m.maker.part, ...(row ? { peaks: row.peaks, condition: row.condition } : {}) };
+}
+
 /**
  * Whether a named member/joint exists and is rated.
  * - A member in d.structure.members is rated unless its own `check` is 'unrated' (SPEC: "the named member's
- *   check is 'unrated'" fails the row).
+ *   check is 'unrated'" fails the row). Round 18: a "maker's part" member is unrated; the ledger admits it only through
+ *   makerAdmission.
  * - A bearing/bushing joint in d.structure.joints is rated by construction: round 4's ruling ("Bearings are
  *   linkage... a bearing or bushing without a published static rating is ineligible for a loaded joint") means
  *   only an eligible, published-rating bearing is listed there at all.
@@ -60,7 +101,7 @@ const findUnchecked = (d, name) => (d.structure.joints_unchecked ?? []).find((j)
  */
 function nameStatus(d, name) {
   const m = findMember(d, name);
-  if (m) return { exists: true, rated: m.check !== 'unrated', where: 'member', check: m.check };
+  if (m) return { exists: true, rated: m.check !== 'unrated' && m.check !== "maker's part", where: 'member', check: m.check };
   const j = findJoint(d, name);
   if (j) return { exists: true, rated: true, where: 'joint', check: null };
   const ju = findUnchecked(d, name);
@@ -68,10 +109,11 @@ function nameStatus(d, name) {
   return { exists: false, rated: false, where: null, check: null };
 }
 
-function evalSide(d, a, b, spec) {
+function evalSide(d, a, b, spec, ctx = {}) {
   const rating = (typeof spec.rating === 'function' ? spec.rating(d, a, b) : []) ?? [];
-  const resolved = rating.map((n) => ({ name: n, ...nameStatus(d, n) }));
-  const rated = rating.length > 0 && resolved.every((r) => r.exists && r.rated);
+  // round 18: a "maker's part" name counts only when makerAdmission admits it on this joint
+  const resolved = rating.map((n) => { const s = nameStatus(d, n), mk = s.check === "maker's part" ? makerAdmission(d, a, b, n, ctx) : null; return { name: n, ...s, ...(mk ? { maker: mk } : {}) }; });
+  const rated = rating.length > 0 && resolved.every((r) => r.exists && (r.rated || r.maker?.ok === true));
   return { by: spec.by, rating, rated, rule: spec.rule, resolved };
 }
 
@@ -335,6 +377,12 @@ const FLANGE_RULE = "the bushing maker's published static surface pressure over 
 const NO_DIRECTION_RULE = "SPEC Design freeze, Function completeness: a part is held axially only when a rated member stops it each way; one way here rests on a press fit or nothing (no rated member)";
 const RETAINING_BOND_RULE = "the retaining compound maker's published compressive shear (ISO 10123) on that substrate, typical, counted at half, FoS 1.5 (members.js bondCheck); none on titanium or thermoplastics";
 const ISO76_AXIAL_RULE = "ISO 76 static: P0 = X0 Fr + Y0 Fa (Y0 0.5, single-row deep groove), the bearing's C0 at FoS 1.5 under its held axial inertia (members.js check 'rated')";
+// round 18: the maker's-part members for the motor (airframe.js af_motor) and the encoder actuator's bond (linkage.js)
+export const MOTOR_BEARINGS = "motor shaft in the motor's own bearings";
+export const MOTOR_THREADS = "motor mount screws, thread in the motor's back face";
+export const ACTUATOR_BOND = 'crank encoder actuator bond';
+export const ACTUATOR_BONDED = "bonded on the crank shaft's land; its three set screws centre it";
+const ACTUATOR_BOND_RULE = "the adhesive maker's published overlap shear on each substrate (the lower of the shaft's and the bore's), typical, counted at half, FoS 1.5, inside the maker's stated bond line (members.js gapBondCheck); the set screws are not credited";
 
 const gearShaftNo = (s) => { const m = /^gear shaft (\d+)\b/.exec(s); return m ? +m[1] : null; };
 const memberIfAny = (d, n) => (findMember(d, n) ? [n] : []);
@@ -405,11 +453,15 @@ export const RETAIN_INTERFACE_RULES = [
   ...['journal on its shaft', 'pressed in its plate seat'].map((why) => ({ why: exact(why), part: /^crank shaft journal /, kind: why === 'journal on its shaft' ? 'shaft in bearing' : 'press fit', load: bearingLoadSpec, axial: { by: 'the crank shaft between the web on the aft flange (through its axial screw and end lip) and the circlip at the forward flange; each bushing\'s flange on its plate\'s outer face', rating: (d) => (CRANK_AXIAL.every((n) => findMember(d, n)) ? CRANK_AXIAL : []), rule: `${RETAINER_RULE}; ${FLANGE_RULE}; ${BOLT_RULE}; ${SEAT_RULE}; else ${NO_DIRECTION_RULE}` }, note: '' })),
   // the motor's outboard 619/5: bonded in its seat; its inner ring slides on the motor shaft, which the motor locates
   { why: exact('pressed in its plate seat'), part: /^motor shaft outboard journal /, kind: 'bonded fit', load: bearingLoadSpec, axial: { by: "its outer ring bonded in the 6061 seat (LOCTITE 638), both ways", rating: (d, a) => { const j = journalOf(a); return j ? bearingSeat(d, j.jn, j.end) : []; }, rule: RETAINING_BOND_RULE }, note: '' },
-  { why: exact('journal on its shaft'), part: /^motor shaft outboard journal /, kind: 'shaft in bearing', load: bearingLoadSpec, axial: { by: "a floating support: the bearing held in its seat by its outer ring's bond; its inner ring slides on the motor shaft, which only the motor's own bearings locate (joints_unchecked 'motor shaft': not credited)", rating: (d, a) => { const j = journalOf(a); const seat = j ? bearingSeat(d, j.jn, j.end) : []; return seat.length ? [...seat, 'motor shaft'] : []; }, rule: `${RETAINING_BOND_RULE}; the motor maker's own bearing figures (none published)` }, note: "Scorpion publishes its SII-3008's bearing sizes (11 x 5 x 5 and 16 x 5 x 5 mm) but no maker, designation, position or rating (its manual: 'standard bearings'), so the motor shaft's axial location is not credited (finding, round 17b)" },
-  // the motor bracket's M3 screws in the motor's back face: the threads' depth is unpublished
-  { why: exact('screwed into its back-face threads'), part: null, kind: 'fastened', load: FASTENED_LOAD, axial: { by: "the screws' thread engagement in the motor's base", rating: (d) => memberIfAny(d, "motor mount screws, thread in the motor's back face"), rule: SEAT_RULE }, note: "finding (audit item 22): Scorpion's SII-3008 drawing gives 'm3*4' on a 25 mm square and no depth; its manual says the screws must not 'protrude excessively through the motor base and contact the motor winding', so the holes run through a base of unpublished thickness: the engagement, and so the thread, is unrated" },
-  // the crank encoder's actuator on its three DIN 913 set screws
-  { why: exact("on the crank shaft by its three set screws (maker's fixing)"), part: null, kind: 'fastened', ...noMemberBoth("its three M3 DIN 913 set screws (RLS's fixing)"), note: "honestly unrated (round 17b): RLS's BRD01 states the fixing ('3x M3, DIN 913 (included)', H7 bore on a g6 shaft) and no holding figure; ISO 898-5 gives set screws no shear strength; round 8's RC-practice ruling covers a gear, pulley or coupling only, not a sensor. It carries only its own inertia (5.7 g)" },
+  // round 18 (SPEC ruling "Maker's part"): the motor's own bearings locating its shaft are the maker's part
+  { why: exact('journal on its shaft'), part: /^motor shaft outboard journal /, kind: 'shaft in bearing', load: bearingLoadSpec, axial: { by: "a floating support: the bearing held in its seat by its outer ring's bond; its inner ring slides on the motor shaft, which only the motor's own bearings locate (the maker's part)", rating: (d, a) => { const j = journalOf(a); const seat = j ? bearingSeat(d, j.jn, j.end) : []; return seat.length ? [...seat, MOTOR_BEARINGS] : []; }, rule: `${RETAINING_BOND_RULE}; the motor's own bearings: ${MAKERS_PART_RULE}` }, note: "Scorpion publishes its SII-3008's bearing sizes (11 x 5 x 5 and 16 x 5 x 5 mm) but no maker, designation, position or rating (its manual: 'standard bearings'): round 18, a maker's part, valid only while the motor stays within every figure Scorpion publishes" },
+  // the motor bracket's M3 screws in the motor's back face: the bolts rated (ISO 898-1), the motor's thread the maker's part
+  { why: exact('screwed into its back-face threads'), part: null, kind: 'fastened', load: FASTENED_LOAD, axial: { by: "the screws' thread engagement in the motor's base (the maker's part)", rating: (d) => memberIfAny(d, MOTOR_THREADS), rule: MAKERS_PART_RULE }, note: "Scorpion's SII-3008 drawing gives 'm3*4' on a 25 mm square and no depth (audit item 22): round 18, the motor's internal thread is a maker's part, valid only while the motor stays within every figure Scorpion publishes; the screws themselves (ours) stay rated" },
+  // the crank encoder's actuator on its three DIN 913 set screws alone: no ruling covers it (round 18: refused)
+  { why: exact("on the crank shaft by its three set screws (maker's fixing)"), part: null, kind: 'fastened', ...noMemberBoth("its three M3 DIN 913 set screws (RLS's fixing)"), note: "unrated: RLS's BRD01 states the fixing ('3x M3, DIN 913 (included)', H7 bore on a g6 shaft) and no holding figure; ISO 898-5 gives set screws no shear strength; RC practice covers a gear, pulley or coupling only, and the maker's-part ruling never a joint between our part and a bought part. Round 18: bond it (ACTUATOR_BOND)" },
+  // round 18: the actuator bonded on a land of the crank shaft, rated on the adhesive maker's published figure for both
+  // substrates (the set screws only centre it while the bond cures)
+  { why: exact(ACTUATOR_BONDED), part: null, kind: 'bonded', load: constSpec([ACTUATOR_BOND], ACTUATOR_BOND_RULE, 'the bond in the bore'), axial: constSpec([ACTUATOR_BOND], ACTUATOR_BOND_RULE, 'the same bond'), note: "the actuator's three DIN 913 set screws centre it on the land while the adhesive cures; they are not credited" },
   // the coupler eyes' bushings
   { why: exact('pressed in the eye'), part: /^coupler [RL] (crank|horn) bushing$/, kind: 'press fit', load: bearingLoadSpec, axial: { by: "its flange in the eye's counterbore one way, its pin's washer (or the face it runs against) the other", rating: (d, a) => eyeBushingRetention(d, a), rule: `${FLANGE_RULE}; ${RETAINER_RULE}` }, note: '' },
   { why: exact('journal on its pin'), part: /^coupler [RL] (crank|horn) bushing$/, kind: 'shaft in bearing', load: bearingLoadSpec, axial: { by: "the pin's washer one way, the web or the horn boss the other, on the bushing's flange", rating: (d, a) => eyeBushingRetention(d, a), rule: `${FLANGE_RULE}; ${RETAINER_RULE}` }, note: '' },
@@ -441,12 +493,24 @@ function matchRule(a, b, why, rules = INTERFACE_RULES) {
   return null;
 }
 
-function buildRow(d, a, b, why, rule) {
+/**
+ * Round 18: the maker's parts a row's two sides rest on: { row: { maker_part: [admitted, with peaks where the flight's
+ * member rows were given] } or {}, refused: the reason text when any named maker's part was refused, else null }.
+ */
+function makerSummary(load, axial) {
+  const mk = [...load.resolved, ...(axial ? axial.resolved : [])].filter((r) => r.maker);
+  const admitted = new Map(mk.filter((r) => r.maker.ok).map((r) => [r.name, { name: r.name, part: r.maker.part, what: r.maker.what, rule: MAKERS_PART_RULE, peaks: r.maker.peaks ?? null, condition: r.maker.condition ?? null }]));
+  const refused = [...new Set(mk.filter((r) => !r.maker.ok).map((r) => r.maker.why))];
+  return { row: admitted.size ? { maker_part: [...admitted.values()] } : {}, refused: refused.length ? `maker's part refused (SPEC ruling "Maker's part"): ${refused.join('; ')}` : null };
+}
+
+function buildRow(d, a, b, why, rule, ctx) {
   if (!rule) {
     return { a, b, why, kind: null, load: null, axial: null, rc_practice: false, ok: false, why_failed: "no INTERFACE_RULES row matches this join's reason" };
   }
-  const load = evalSide(d, a, b, rule.load);
-  const axial = rule.axial ? evalSide(d, a, b, rule.axial) : null;
+  const load = evalSide(d, a, b, rule.load, ctx);
+  const axial = rule.axial ? evalSide(d, a, b, rule.axial, ctx) : null;
+  const mk = makerSummary(load, axial); // round 18
   // round 17b: a row that names an RC-practice member (a gear held axially by a bond on titanium) stays in that ruling's
   // scope too: the joint must be a gear, pulley or coupling on its shaft, whatever the row asks for
   const namesRc = [load, axial].some((side) => side?.resolved.some((r) => r.check === 'rc practice'));
@@ -456,13 +520,14 @@ function buildRow(d, a, b, why, rule) {
   let ok = load.rated && scopeOk && rcCheckOk(load) && (!axial || (axial.rated && rcCheckOk(axial)));
   let why_failed = null;
   if (!ok) {
-    if (!load.rated) why_failed = `load not rated (${rule.load.by}): ${load.rating.length ? load.rating.join(', ') + ' missing or unrated' : 'no rated member named'}`;
+    if (mk.refused) why_failed = mk.refused;
+    else if (!load.rated) why_failed = `load not rated (${rule.load.by}): ${load.rating.length ? load.rating.join(', ') + ' missing or unrated' : 'no rated member named'}`;
     else if (!scopeOk) why_failed = "RC-practice ruling (SPEC round 8) covers only a gear, pulley or coupling shaft-hub fixing; this joint is not one";
     else if (rule.rc_practice && !rcCheckOk(load)) why_failed = `${rule.load.by}: a named member exists but its check is not 'rc practice'`;
     else if (axial && !axial.rated) why_failed = `axial retention not rated (${rule.axial.by}): ${axial.rating.length ? axial.rating.join(', ') + ' missing or unrated' : 'no rated member named'}`;
     else if (axial && rule.rc_practice && !rcCheckOk(axial)) why_failed = `${rule.axial.by}: a named member exists but its check is not 'rc practice'`;
   }
-  return { a, b, why, kind: rule.kind, load, axial, rc_practice: !!rule.rc_practice || namesRc, ok, why_failed, note: rule.note ?? '' };
+  return { a, b, why, kind: rule.kind, load, axial, rc_practice: !!rule.rc_practice || namesRc, ...mk.row, ok, why_failed, note: rule.note ?? '' };
 }
 
 /**
@@ -471,20 +536,27 @@ function buildRow(d, a, b, why, rule) {
  * banner). Each row is rated against `d.structure.members` / `d.structure.joints` / `joints_unchecked` only; no
  * member name is ever invented. `seatWidths(asm)` is folded into `passed`.
  */
-export function interfaceLedger(asm, d, extraRules = []) {
+export function interfaceLedger(asm, d, extraRules = [], { memberRows = null } = {}) {
   const rows = [], rules = [...extraRules, ...INTERFACE_RULES];
+  // round 18: the BOM tags a join's part (or its named solid, 'part/solid') is drawn from, for the maker's-part ruling;
+  // memberRows (optional): checkMembers rows from a flight, so a maker's part is judged on its condition with its peaks
+  const byId = new Map((asm.parts ?? []).map((p) => [p.id, p]));
+  const bomsOf = (x) => { const [pid, sol] = x.split('/'), p = byId.get(pid); if (!p) return []; const s = sol ? p.solids?.find((q) => q.name === sol) : null; return s?.bom ? [s.bom] : p.bom ?? []; };
+  const ctx = { bomsOf, memberRows };
   for (const [a, b, why] of asm.joins) {
     if (PURE_EXEMPT.has(why)) continue;
-    rows.push(buildRow(d, a, b, why, matchRule(a, b, why, rules)));
+    rows.push(buildRow(d, a, b, why, matchRule(a, b, why, rules), ctx));
   }
   const failed = rows.filter((r) => !r.ok);
   const rc_practice = rows.filter((r) => r.rc_practice);
+  const makers_parts = rows.filter((r) => r.maker_part);
   const seats = seatWidths(asm);
   return {
-    rule: "SPEC Design freeze, Function completeness (2026-11-03): every pivot, pin, shaft, bearing, sliding or rotating fit, and bonded, tied, keyed or fastened joint carries what carries its load, what holds it axially, and the rule that rates each; a joint with no rule fails unless round 8's RC-practice ruling covers it. src/design/interfaces.js.",
+    rule: "SPEC Design freeze, Function completeness (2026-11-03): every pivot, pin, shaft, bearing, sliding or rotating fit, and bonded, tied, keyed or fastened joint carries what carries its load, what holds it axially, and the rule that rates each; a joint with no rule fails unless round 8's RC-practice ruling covers it, or (round 18) the maker's-part ruling admits it (MAKERS_PARTS only). src/design/interfaces.js.",
     rows,
     failed,
     rc_practice,
+    makers_parts,
     seats,
     passed: failed.length === 0 && seats.length === 0,
   };
