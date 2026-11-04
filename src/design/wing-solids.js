@@ -12,6 +12,7 @@
 import { poly, cap, S, M, tagged, bandSlabs, RIB_HOLE, BORE } from './clearance.js';
 import { byId, tubeSpec } from './catalog.js';
 import { E387_THICKNESS } from '../../sims/avis-shared/model.js';
+import { twistParams, twistWing } from './twist-drive.js';
 
 const mm = (v) => v / 1000;
 const add2 = (p, q, k = 1) => [p[0] + k * q[0], p[1] + k * q[1]];
@@ -73,6 +74,8 @@ export function wingParts(ax, tag, frame) {
   const { d, catalog, add, join, assumptions } = ax;
   const W = d.params.wingStructure;
   if (!W) return;
+  // round 17b: the twist drive's wing (the real E387, ribs as chordwise pieces, the drive itself): src/design/twist-drive.js
+  if (twistParams(d.params)) return twistWing(ax, tag, frame);
   const P = d.params.parts, side = tag === 'R' ? 'right' : 'left', wing = d.wing, L = wing.segments.reduce((a, g) => a + g.length, 0), elbow = wing.segments[0].length;
   // round 17: drawn on the envelope of a tube's published sections (catalog.js tubeSpec)
   const tube = (id) => { const t = tubeSpec(byId(catalog, id), !!d.params.tubeSpecSheet); return { ro: mm(t.od_draw) / 2, ri: mm(t.id_draw) / 2 }; };

@@ -11,8 +11,9 @@ import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeDesignAtomic } from './io.js';
 import { validateDesign } from './schema.js';
-import { buildRound16, round16Set, officialRefusal as refusal16, mergeDeep, SEQUENCE as SEQUENCE16 } from './round16.mjs';
-import { RETENTION, RETENTION_SEQUENCE } from './round17-retention.mjs';
+import { buildRound16, round16Set, officialRefusal as refusal16, mergeDeep, SEQUENCE as SEQUENCE16, CONTAINMENT as CONTAINMENT16 } from './round16.mjs';
+import { RETENTION, RETENTION_SEQUENCE, retentionContainment } from './round17-retention.mjs';
+import { TWIST_SEQUENCE, TWIST_CONTAINMENT, TWIST_SECTION } from './twist-drive.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEG = Math.PI / 180;
@@ -42,9 +43,17 @@ export const ROUND17 = {
   parts: { twistServo: 'servo-hitec-md89mw', servoRegulator: 'regulator-pololu-d36v50f6' },
   // the all-moving V-tail (audit items 2, 11): pivots, saddle, horns and pushrods (src/design/tail-mech.js TAIL_MECH);
   // the pushrod's length as drawn (the completeness check holds the BOM to the drawn rod)
-  tailMech: { pushrod_L_mm: 900 },
+  tailMech: { pushrod_L_mm: 893.36 },
   // the boom to the saddle's aft end (the sleeve 8 mm aft of the tail's quarter chord)
   boom: { to_tail_spar_mm: 8 },
+  // the access hatch's window in the pod's covering (audit item 6): over the pack, on the top (polar angle as the
+  // containment record measures it: 0 deg at +z, 90 at the top). The pod's structure (pod-structure.js) leaves this
+  // window open; the hatch (build-needs.js) frames and covers it, and its fixing holds it
+  hatch: { x_mm: [150, 238], polar_deg: [40, 140] },
+  // the wing twist drive (audit items 1, 3, 10, 12; src/design/twist-drive.js TWIST_DRIVE): the spars coaxial 5.5 mm above
+  // the E387's chord line, the joiner, the servo in its frame and its four-bar to the torque rod's lever, the bar and the
+  // tip; the parts that stand out of the section declared with their drag (TWIST_SECTION)
+  twistDrive: { section: TWIST_SECTION },
 };
 
 const X = (s) => [s, 0, 0], Y = (s) => [0, s, 0], Z = (s) => [0, 0, s];
@@ -54,8 +63,47 @@ const step = (name, members, dir, dist_m = 0.08, why = undefined) => ({ name, me
  * any round-16 step replaced where `replace` names it).
  */
 export const SEQUENCE_INSERTS = [
+  // round 17b: each horn pin with its new groove and tip (round17-retention.mjs: the pin runs on past its eye for the washer)
+  ...['R', 'L'].map((t) => ({ replace: `horn pin ${t}`, steps: [step(`horn pin ${t}`, [`^rocker ${t}/horn pin( groove| tip)?$`], X(-1), 0.04)] })),
   { after: 'crank web with its key', steps: [step('crank web axial screw', ['^crank web axial screw$'], X(-1), 0.03, 'along the crank axis from aft into the stub\'s tapped end, its countersunk head into the web\'s lip')] },
 ];
+/**
+ * The all-moving tail's steps (tail-mech.js), in place of round 16's tied tail: the saddle with its four bushings on
+ * the boom's end; each surface (its pivot tube, ribs, trailing edge rod, covering and the horn on its pivot pin, bonded
+ * first) along its pivot axis from outboard; the pin's washer radially into its groove; after the tail servos, each
+ * servo's arm, the pushrod with its plugs and rod ends along its own axis, and the two rod-end screws.
+ */
+const DIH = 35 * DEG, side = (t) => (t === 'R' ? 1 : -1);
+export const TAIL_SEQUENCE = [
+  { replace: 'tail tie 1', steps: [step('tail saddle with its bushings', ['^tail saddle$', '^tail bushing [RL] (inner|outer)$'], X(-1), 0.05, 'the four bushings pressed in the saddle\'s bosses first; the saddle slid on the boom\'s end from aft and bonded')] },
+  { replace: 'tail tie 2', steps: [] },
+  ...['R', 'L'].map((t) => ({ replace: `tail surface ${t}`, steps: [
+    step(`tail surface ${t}`, [`^tail (pivot tube|pivot pin|horn|trailing edge rod) ${t}$`, `^tail rib ${t} `], [0, Math.sin(DIH), side(t) * Math.cos(DIH)], 0.1, 'its pivot tube, ribs, trailing edge rod and covering, with the horn bonded on its pivot pin and the pin\'s spigot bonded in the tube, one piece; the pin along its own axis from outboard through the outer bushing, the boss and the inner bushing'),
+    step(`tail pin washer ${t}`, [`^tail pin washer ${t}$`], [0, Math.cos(DIH), -side(t) * Math.sin(DIH)], 0.03, 'radially into the groove at the pin\'s inboard end, against the inner bushing\'s flange'),
+  ] })),
+  { after: 'gps ties', steps: ['R', 'L'].flatMap((t) => [
+    step(`tail servo arm ${t}`, [`^tail servo arm ${t}$`], Y(1), 0.03, 'onto the servo\'s output spline from above, with its centre screw'),
+    step(`tail pushrod ${t} with its rod ends`, [`^tail pushrod ${t}$`, `^tail pushrod plug ${t} `, `^tail rod end ${t} `], { slide_of: `tail pushrod ${t}`, sign: 1 }, 0.02, 'the pushrod with its bonded end plugs and its two rod ends threaded on, one piece, fed in through its exit in the tail cone along its length; the last 20 mm checked: aft and down onto the two arms (the horn\'s rod end along the horn arm\'s face, the servo\'s onto its arm from above)'),
+    step(`tail horn screw ${t}`, [`^tail horn screw ${t}$`], [0, -Math.sin(DIH), -side(t) * Math.cos(DIH)], 0.02, 'along the pivot axis from inboard through the rod end\'s ball into the horn\'s tapped hole'),
+    step(`tail servo arm screw ${t}`, [`^tail servo arm screw ${t}$`], Y(1), 0.02, 'from above through the rod end\'s ball into the arm\'s hole'),
+  ]) },
+];
+
+/**
+ * Round 17's containment declarations: round 16's, with the all-moving tail's hardware outside on the boom's end (its
+ * drag counted: the saddle, pins, bushings, washers, horns, rod ends and screws stand bare at the tail's root), the
+ * pivot tubes with the tail's own structure (their drag the tail's, in the flight model), and the pushrods' exits.
+ */
+export const CONTAINMENT17 = {
+  ...CONTAINMENT16,
+  openings: [...CONTAINMENT16.openings, { name: 'tail pushrod exits', solids: ['tail pushrod R', 'tail pushrod L', 'tail pushrod plug R horn', 'tail pushrod plug L horn'], why: 'each pushrod leaves the pod through its own exit in the tail cone\'s skin and runs bare to its horn: the length outside the loft counts in the drag' }],
+  outside: [
+    ...CONTAINMENT16.outside.filter((o) => o.name !== 'the tail'),
+    { name: 'the tail', re: '^tail (spar rod|trailing edge rod|rib|tie|pivot tube) ', drag: false, why: 'the V-tail\'s structure on its pivots; its drag is the tail\'s own, in the flight model' },
+    { name: 'the tail\'s pivots and horns', re: '^tail (saddle$|pivot pin |bushing |pin washer |horn |horn screw |rod end [RL] horn$)', why: 'the all-moving tail\'s saddle, pivot pins, bushings, washers, horns and horn rod ends with their screws stand bare at the tail\'s root, past the pod: their frontal area counts in the drag' },
+  ],
+};
+
 export function sequence17(base = SEQUENCE16, inserts = SEQUENCE_INSERTS) {
   const steps = [];
   for (const st of base.steps) {
@@ -70,10 +118,11 @@ export function sequence17(base = SEQUENCE16, inserts = SEQUENCE_INSERTS) {
 export function round17Base(catalog = null) {
   const s = round16Set({}, catalog);
   const mounts = { ...s.layout.mounts, battery: { ...s.layout.mounts.battery, ...ROUND17.mounts.battery } };
-  const crank = mergeDeep(s.linkage.crank, ROUND17.crank);
+  // round 17b (retain2): the crank shaft's bore 4 mm (RETENTION.linkage.crank), so it holds FoS 1.5 with the eye gap's overhang
+  const crank = mergeDeep(mergeDeep(s.linkage.crank, ROUND17.crank), RETENTION.linkage.crank ?? {});
   const airframe = mergeDeep(s.linkage.airframe, { boom: ROUND17.boom, tail: { ties: 0 } });
   // the outer spar on CST's spec-sheet section (audit item 17: rated on 7.8 x 6.8 mm, weighed at 18.1 g/m)
-  return { ...s, tubeSpecSheet: true, massFromSolids: ROUND17.massFromSolids, noseX_m: ROUND17.noseX_m, tailMech: ROUND17.tailMech, parts: { ...(s.parts ?? {}), ...ROUND17.parts }, layout: { ...s.layout, mounts, sequence: sequence17(SEQUENCE16, [...SEQUENCE_INSERTS, ...RETENTION_SEQUENCE]), massprops: 'SPEC Function completeness (2026-11-03); src/design/round17.mjs' }, linkage: { ...s.linkage, crank, airframe, retention: RETENTION.linkage.retention } };
+  return { ...s, tubeSpecSheet: true, massFromSolids: ROUND17.massFromSolids, noseX_m: ROUND17.noseX_m, tailMech: ROUND17.tailMech, twistDrive: ROUND17.twistDrive, parts: { ...(s.parts ?? {}), ...ROUND17.parts }, layout: { ...s.layout, mounts, sequence: sequence17(SEQUENCE16, [...SEQUENCE_INSERTS, ...RETENTION_SEQUENCE, ...TAIL_SEQUENCE, ...TWIST_SEQUENCE]), ...RETENTION.layout, containment: retentionContainment({ ...CONTAINMENT17, outside: [...CONTAINMENT17.outside, ...TWIST_CONTAINMENT.outside] }), massprops: 'SPEC Function completeness (2026-11-03); src/design/round17.mjs', hatch: ROUND17.hatch, chains: 'SPEC Function completeness: every actuated motion has hardware (src/design/chains.js)', ratings: 'SPEC Function completeness: ratings within their published range (src/design/chains.js)', interfaces: 'SPEC Function completeness: every interface has a load path, axial retention and a rule (src/design/interfaces.js)' }, linkage: { ...s.linkage, crank, airframe, retention: RETENTION.linkage.retention, plates: { ...s.linkage.plates, ...RETENTION.linkage.plates }, rocker: { ...s.linkage.rocker, ...RETENTION.linkage.rocker } } };
 }
 
 /** Round 17's --set: round17Base, then `set` over it (layout and linkage merged by block, lumpPos merged). */
@@ -97,8 +146,16 @@ export async function buildRound17({ base, set = {}, opt = {}, catalog, fit = tr
 /** The design's round-17 assumption line, with the new records' verdicts. */
 export function round17Note(c) {
   const v = (x, fail) => (!x ? 'not run' : x.passed ? 'passed' : `FAILED (${fail(x)})`);
-  return `Round 17: mass properties from the drawn solids ${v(c?.massprops, (x) => x.failed.join(', '))}.`;
+  return `Round 17: mass properties from the drawn solids ${v(c?.massprops, (x) => x.failed.join(', '))}; ${ROUND17_RECORDS.map(([k, what, f]) => `${what} ${v(c?.[k], f)}`).join('; ')}.`;
 }
+
+/** The round-17 records --official requires: [key in the clearance record, what it is, its failure's summary]. */
+export const ROUND17_RECORDS = [
+  ['chains', 'actuation chains', (x) => x.failed.slice(0, 6).join('; ')],
+  ['ratings', 'ratings', (x) => x.failed.slice(0, 6).join('; ')],
+  ['section', 'real-section', (x) => `undeclared ${JSON.stringify(x.undeclared ?? '').slice(0, 300)}`],
+  ['interfaces', 'interface ledger', (x) => `${x.failed.length} interfaces unrated${x.seats.length ? `, ${x.seats.length} seats narrower than their parts` : ''}`],
+];
 
 /** Why --official refuses a design, or null: round 16's reasons, and any round-17 record missing or failed. */
 export function officialRefusal(c) {
@@ -107,6 +164,11 @@ export function officialRefusal(c) {
   if (r16) why.push(r16);
   if (!c) return why.join('; ');
   if (!c.massprops) why.push('no mass-properties record'); else if (!c.massprops.passed) why.push(`lumps not at their drawn parts: ${c.massprops.failed.join(', ')}`);
+  // round 17's function-completeness records: each must be present and pass
+  for (const [k, what, fail] of ROUND17_RECORDS) {
+    if (!c[k]) why.push(`no ${what} record`);
+    else if (!c[k].passed) why.push(`${what}: ${fail(c[k])}`);
+  }
   return why.length ? [...new Set(why)].join('; ') : null;
 }
 

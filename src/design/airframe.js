@@ -25,6 +25,7 @@ import { shaftMomentSections, channelSection } from '../physics/members.js';
 import { packedSpecs, partsIndex, loftHalf } from '../../sims/avis-shared/model.js';
 import { fixingLayout, fixingCounts } from './fixings.js';
 import { tailMechMembers } from './tail-mech.js';
+import { twistMembers } from './twist-drive.js';
 
 const PI4 = Math.PI / 4;
 const AL7 = 'metal-al-7075-t6', AL6 = 'metal-al-6061-t6';
@@ -619,6 +620,8 @@ function af_ties(ax) {
   probeTies(ax, rho);
   // round 17: the all-moving tail turns on pivots in a saddle (tail-mech.js), rated by its own members, not tied
   if (ax.d.params.tailMech) tailMechMembers(ax); else tailTies(ax);
+  // round 17b: the wing twist drive's members (src/design/twist-drive.js), when the design states it
+  if (ax.d.params.twistDrive) twistMembers(ax);
 }
 
 const airDensity = (d) => d.atmosphere?.rho_kg_m3 ?? d.atmosphere?.rho ?? 1.0;

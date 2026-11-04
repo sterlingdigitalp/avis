@@ -345,6 +345,18 @@ export function ratedCheck({ rating_N, rating_basis = null }, F) {
   return { force_N: F, rating_N, rating_basis, fos, ok: Number.isFinite(rating_N) && fos >= FOS };
 }
 
+/**
+ * Round 17b: a ring (a spacer tube) in axial compression, F over its annulus (D_mm, d_mm) against the material's design
+ * yield, FoS 1.5. A material with no design yield is not rated (fos null, fails).
+ */
+export function ringCompressionCheck({ D_mm, d_mm }, material, F) {
+  const area = (Math.PI / 4) * (D_mm ** 2 - d_mm ** 2), y = material?.yield_MPa;
+  const s = area > 0 ? F / area : Infinity;
+  if (!Number.isFinite(y) || !(area > 0)) return { stress_MPa: s, allowable_MPa: null, fos: null, ok: false, why: !(area > 0) ? 'no annulus' : 'no design yield' };
+  const fos = s > 0 ? y / s : Infinity;
+  return { stress_MPa: s, allowable_MPa: y, fos, ok: fos >= FOS };
+}
+
 /** Each member check kind: (member, its section peaks, the peak of named sections, its uses) -> result. */
 const MEMBER_CHECKS = {
   round: (m, l) => roundMemberCheck(m.dims, m.material, l),
@@ -366,8 +378,10 @@ const MEMBER_CHECKS = {
   // round 17: a part with a published load rating (N) read like a rated value (a rod end's static tensile load, a
   // retaining washer's axial load, a servo's torque at its arm), FoS 1.5 against the peak
   rated: (m, l) => ratedCheck(m.dims, l.F),
-  'rc practice': (m, l) => rcPracticeCheck(m, l.T),
+  'rc practice': (m, l) => rcPracticeCheck(m, l.T, m.uses?.F ? l.F : null),
   flange: (m, l) => flangeThrustCheck(m.dims, m.material, l.F),
+  // round 17b: a spacer tube in axial compression
+  'ring compression': (m, l) => ringCompressionCheck(m.dims, m.material, l.F),
 };
 
 /**
@@ -378,11 +392,13 @@ const MEMBER_CHECKS = {
  * computed (fos null), so it never sets the members' minimum.
  * member: { rc: { method, published_Nm (or null), published_basis } }.
  */
-export function rcPracticeCheck(member, T) {
+export function rcPracticeCheck(member, T, F = null) {
   const rc = member.rc ?? {};
   const lim = Number.isFinite(rc.published_Nm) ? rc.published_Nm : null;
   const within = lim === null ? null : T <= lim;
-  return { fos: null, ok: within !== false, status: 'unrated, RC practice', method: rc.method ?? null, peak_T_Nm: T, published_Nm: lim, published_basis: rc.published_basis ?? null, published_ratio: lim === null ? null : (T > 0 ? lim / T : Infinity), within_published: within, why: lim === null ? `${rc.method ?? 'fixing'}: no published figure; allowed as RC practice (SPEC ruling)` : `${rc.method ?? 'fixing'}: peak ${T.toFixed(3)} N m against the published ${lim} N m at full value` };
+  // round 17b: a fixing that holds a gear axially (its torque on a rated key) reports its peak axial force too
+  const axial = Number.isFinite(F) ? { peak_F_N: F } : {};
+  return { fos: null, ok: within !== false, status: 'unrated, RC practice', method: rc.method ?? null, peak_T_Nm: T, ...axial, published_Nm: lim, published_basis: rc.published_basis ?? null, published_ratio: lim === null ? null : (T > 0 ? lim / T : Infinity), within_published: within, why: lim === null ? `${rc.method ?? 'fixing'}: no published figure; allowed as RC practice (SPEC ruling)${Number.isFinite(F) ? `; peak axial force ${F.toFixed(2)} N` : ''}` : `${rc.method ?? 'fixing'}: peak ${T.toFixed(3)} N m against the published ${lim} N m at full value` };
 }
 
 /**

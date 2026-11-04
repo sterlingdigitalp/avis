@@ -39,7 +39,7 @@
 // pattern" alternative the brief allows, for determinism (every row's names are either resolved or empty, never
 // ambiguous glob matches).
 
-import { MESH, KEYWAY, THROUGH, THREAD, RIB_HOLE, BORE } from './clearance.js';
+import { MESH, KEYWAY, THROUGH, THREAD, RIB_HOLE, BORE, GROOVE } from './join-reasons.js';
 
 // ---- name lookups against the design file -------------------------------------------------------------------
 
@@ -328,10 +328,112 @@ export const INTERFACE_RULES = [
   { why: exact("under the tray's root tab"), part: null, kind: 'resting', ...noMemberBoth(), note: 'the forward tray flange doubler is not an M7 member in this design.' },
 ];
 
+// ---- round 17b: the drive's and frame's retention, seats and fixings (module agent "retain") ----------------------
+
+const RETAINER_RULE = "the retaining ring's tabulated axial load (DIN 6799 / DIN 471 table: the lowest of its load columns), FoS 1.5 (members.js check 'rated'); the groove's FN is the table's, for steel shafts";
+const FLANGE_RULE = "the bushing maker's published static surface pressure over the ring it bears on, FoS 1.5 (members.js flangeThrustCheck)";
+const NO_DIRECTION_RULE = "SPEC Design freeze, Function completeness: a part is held axially only when a rated member stops it each way; one way here rests on a press fit or nothing (no rated member)";
+const RETAINING_BOND_RULE = "the retaining compound maker's published compressive shear (ISO 10123) on that substrate, typical, counted at half, FoS 1.5 (members.js bondCheck); none on titanium or thermoplastics";
+const ISO76_AXIAL_RULE = "ISO 76 static: P0 = X0 Fr + Y0 Fa (Y0 0.5, single-row deep groove), the bearing's C0 at FoS 1.5 under its held axial inertia (members.js check 'rated')";
+
+const gearShaftNo = (s) => { const m = /^gear shaft (\d+)\b/.exec(s); return m ? +m[1] : null; };
+const memberIfAny = (d, n) => (findMember(d, n) ? [n] : []);
+const memberStarting = (d, pre) => (d.structure.members ?? []).find((m) => m.name.startsWith(pre))?.name ?? null;
+/** The ring a gear shaft takes at one end (its washer or circlip member), or null. */
+const endRing = (d, j, end) => memberStarting(d, `gear shaft ${j} washer ${end}`) ?? memberStarting(d, `gear shaft ${j} circlip ${end}`);
+/**
+ * Round 17b (retain2): the rated members that hold bushing shaft j each way: a ring at each end outside its bushing's
+ * flange, the flanges against their plates' outer faces (the shaft between the two plates; its gears bonded on it, the
+ * bushings held inward by their flanges and outward by the shaft's ring at the flange). [] when an end has no ring.
+ */
+function shaftRetention(d, j) {
+  const aft = endRing(d, j, 'aft'), fwd = endRing(d, j, 'forward'), flange = memberStarting(d, `gear shaft ${j} bushing flange`);
+  return aft && fwd && flange ? [aft, fwd, flange] : [];
+}
+const shaftSpec = (pick) => ({ by: "the shaft's end rings against its bushing flanges, both ways (the shaft between the two plates)", rating: (d, a, b) => { const j = gearShaftNo(pick(a, b)); return j ? shaftRetention(d, j) : []; }, rule: `${RETAINER_RULE}; ${FLANGE_RULE}; else ${NO_DIRECTION_RULE}` });
+/**
+ * Round 17b (retain2): a bonded bearing (retention.bearingBonds): in its seat, its outer ring's bond; on its shaft, a
+ * locating bearing (inner ring bonded) by its two bonds and its ISO 76 axial capacity, a floating one by its own outer
+ * ring's bond and the locating bearing's members that hold the shaft. [] when any is missing.
+ */
+function bearingSeat(d, jn, end) { return memberIfAny(d, `${jn} bearing ${end}, outer ring bond`); }
+function bearingOnShaft(d, jn, end) {
+  // its own inner ring's bond if it has one (it locates the shaft too), else the first bearing on that shaft that does
+  const loc = (d.structure.members ?? []).map((m) => /^(.+) bearing (aft|forward), inner ring bond$/.exec(m.name)).filter((m) => m && m[1] === jn).sort((p, q) => (q[2] === end) - (p[2] === end))[0];
+  if (!loc) return [];
+  const e = loc[2], names = [`${jn} bearing ${e}, inner ring bond`, `${jn} bearing ${e}, outer ring bond`, `${jn} bearing ${e}, axial (ISO 76)`, ...(e === end ? [] : [`${jn} bearing ${end}, outer ring bond`])];
+  return names.every((n) => findMember(d, n)) ? names : [];
+}
+const journalOf = (a) => { const m = /^(.+?) journal (aft|forward) \(/.exec(a); return m ? { jn: m[1], end: m[2] } : null; };
+/** A gear's axial bond member on its shaft (linkage.js gearBond): "<gear id> on gear shaft j, axial bond", or on the crank. */
+const gearBondName = (gi) => `${gi.gearId} on ${gi.shaftPart === 'crank' ? 'the crank' : gi.shaftPart}, axial bond`;
+/** A pin washer's own members: the washer, the pin at its groove, the bushing end it bears on (those that exist). */
+const washerNames = (d, w) => [w, ...memberIfAny(d, `${w.replace(/^horn pin washer (right|left)$/, 'horn pin $1').replace(/^crank pin washer$/, 'crank pin')} at its washer's groove`), ...memberIfAny(d, `${w} on the bushing's end`)];
+const eyeSide = (s) => { const m = /^coupler ([RL])\b/.exec(s); return m ? (m[1] === 'R' ? 'right' : 'left') : null; };
+const eyeEnd = (s) => (/ crank bushing$/.test(s) ? 'crank' : / horn bushing$/.test(s) ? 'horn' : null);
+/** An eye bushing's axial stops: its flange (in the eye's counterbore one way) and its pin's washer the other. */
+function eyeBushingRetention(d, a) {
+  const side = eyeSide(a), end = eyeEnd(a);
+  if (!side || !end) return [];
+  return [`coupler eye ${side} bushing flanges, axial thrust`, end === 'crank' ? 'crank pin washer' : `horn pin washer ${side}`];
+}
+/** The ring member at a shaft's flange or inner ring: its own name, and the flange it bears on (gear shafts, the crank). */
+const ringOwner = (a) => { const m = /^(gear shaft \d|crank shaft) (?:washer|circlip) /.exec(a); return m ? m[1] : null; };
+const CRANK_AXIAL = ['crank shaft circlip forward', 'crank shaft bushing flanges, axial thrust', 'crank web axial screw', 'crank web end lip under the screw head'];
+
+/**
+ * Round 17b (modules "retain" and "retain2"): rule rows for the drive's and frame's joins, passed ahead of
+ * INTERFACE_RULES (interfaceLedger(asm, d, RETAIN_INTERFACE_RULES)). Every row names the members that rate it; where one
+ * way of a part's axial location rests on a press fit or nothing, or on a part whose maker publishes nothing, the row
+ * names that and fails, with the reason.
+ */
+export const RETAIN_INTERFACE_RULES = [
+  // retaining rings in their grooves, and what they bear on
+  { why: exact(GROOVE), part: /washer|circlip/, kind: 'retaining ring', load: { by: 'the ring, its groove and what it bears on', rating: (d, a) => (/washer/.test(a) ? washerNames(d, a) : [a]), rule: RETAINER_RULE }, axial: { by: 'the same ring in its groove', rating: (d, a) => [a], rule: RETAINER_RULE }, note: 'a DIN 6799 / DIN 471 ring snapped into its groove, cut to the ring\'s own published groove diameter' },
+  { why: exact('against its flange'), part: /^(gear shaft \d|crank shaft) (washer|circlip) /, kind: 'thrust face', load: { by: 'the ring and the bushing flange it bears on', rating: (d, a) => { const f = memberStarting(d, `${ringOwner(a)} bushing flange`); return f ? [a, f] : []; }, rule: `${RETAINER_RULE}; ${FLANGE_RULE}` }, axial: { by: 'the ring in its groove', rating: (d, a) => [a], rule: RETAINER_RULE }, note: '' },
+  { why: /^against the inner ring's (aft|forward) face$/, part: /circlip/, kind: 'thrust face', load: { by: 'the circlip (its ring rating against the inner ring)', rating: (d, a) => [a], rule: RETAINER_RULE }, axial: { by: 'the circlip in its groove', rating: (d, a) => [a], rule: RETAINER_RULE }, note: "the 628/8's own axial load is not in M7's bearing check (all bearing Fa are zero there)" },
+  ...["against the eye's free face", "against its bushing's end"].map((why) => ({ why: exact(why), part: /pin washer/, kind: 'thrust face', load: { by: 'the washer and the bushing end it bears on', rating: (d, a) => washerNames(d, a), rule: `${RETAINER_RULE}; ${FLANGE_RULE}` }, axial: { by: 'the washer in its groove', rating: (d, a) => [a], rule: RETAINER_RULE }, note: '' })),
+  // keyed gears: the key for torque, LOCTITE 638 axially (on the titanium crank: RC practice, a gear on its shaft by a bond)
+  { why: /^gear on its shaft \(bore on the shaft or seat\)$/, part: /^stage \d (?:wheel|pinion) gear-khk-(?!ds1-)/, kind: 'keyed', load: { by: 'the key carrying torque between the gear and its shaft', rating: (d, a, b) => { const gi = gearShaftInfo(a, b); return gi ? gearKeyNames(gi) : []; }, rule: KEY_RULE }, axial: { by: 'the gear bonded on its shaft or seat (LOCTITE 638)', rating: (d, a, b) => { const gi = gearShaftInfo(a, b); return gi ? memberIfAny(d, gearBondName(gi)) : []; }, rule: `${RETAINING_BOND_RULE}; on titanium, ${RC_RULE}` }, note: 'round 17b: the round-17 spacer tubes are gone (their ends met the wheel seats, not the wheels\' bores, and turned against the plate bosses)' },
+  // the bushing shafts' journals: held between the plates by the shaft's end rings at the flanges
+  { why: exact('journal on its shaft'), part: /^gear shaft \d journal (aft|forward) \(bushing/, kind: 'shaft in bearing', load: bearingLoadSpec, axial: shaftSpec((a) => a), note: '' },
+  { why: exact('pressed in its plate seat'), part: /^gear shaft \d journal (aft|forward) \(bushing/, kind: 'press fit', load: bearingLoadSpec, axial: shaftSpec((a) => a), note: 'the flange on the plate\'s outer face holds it inward; outward, its shaft\'s ring at the flange, through the shaft and the other end\'s ring' },
+  // the bonded ball bearings (gear shaft 3's 628/8s; the motor's outboard 619/5 below)
+  { why: exact('pressed in its plate seat'), part: /^gear shaft \d journal (aft|forward) \(bearing/, kind: 'bonded fit', load: bearingLoadSpec, axial: { by: "its outer ring bonded in the 6061 seat (LOCTITE 638), both ways", rating: (d, a) => { const j = journalOf(a); return j ? bearingSeat(d, j.jn, j.end) : []; }, rule: RETAINING_BOND_RULE }, note: '' },
+  { why: exact('journal on its shaft'), part: /^gear shaft \d journal (aft|forward) \(bearing/, kind: 'shaft in bearing', load: bearingLoadSpec, axial: { by: 'a locating bearing (its inner ring bonded on the shaft, its outer ring in its seat) holds the shaft: this one if its inner ring is bonded, else a bearing that is (this one then held in its seat by its own outer ring\'s bond)', rating: (d, a) => { const j = journalOf(a); return j ? bearingOnShaft(d, j.jn, j.end) : []; }, rule: `${RETAINING_BOND_RULE}; ${ISO76_AXIAL_RULE}` }, note: "SKF's 628/8 abutments (da min 9.4, da max 10.0, Da max 14.6 mm, as Coolen Bearings reproduces SKF's table): no ring or spacer bears on these bearings any more" },
+  // the crank shaft: the web on the aft flange forward, the circlip at the forward flange aft
+  ...['journal on its shaft', 'pressed in its plate seat'].map((why) => ({ why: exact(why), part: /^crank shaft journal /, kind: why === 'journal on its shaft' ? 'shaft in bearing' : 'press fit', load: bearingLoadSpec, axial: { by: 'the crank shaft between the web on the aft flange (through its axial screw and end lip) and the circlip at the forward flange; each bushing\'s flange on its plate\'s outer face', rating: (d) => (CRANK_AXIAL.every((n) => findMember(d, n)) ? CRANK_AXIAL : []), rule: `${RETAINER_RULE}; ${FLANGE_RULE}; ${BOLT_RULE}; ${SEAT_RULE}; else ${NO_DIRECTION_RULE}` }, note: '' })),
+  // the motor's outboard 619/5: bonded in its seat; its inner ring slides on the motor shaft, which the motor locates
+  { why: exact('pressed in its plate seat'), part: /^motor shaft outboard journal /, kind: 'bonded fit', load: bearingLoadSpec, axial: { by: "its outer ring bonded in the 6061 seat (LOCTITE 638), both ways", rating: (d, a) => { const j = journalOf(a); return j ? bearingSeat(d, j.jn, j.end) : []; }, rule: RETAINING_BOND_RULE }, note: '' },
+  { why: exact('journal on its shaft'), part: /^motor shaft outboard journal /, kind: 'shaft in bearing', load: bearingLoadSpec, axial: { by: "a floating support: the bearing held in its seat by its outer ring's bond; its inner ring slides on the motor shaft, which only the motor's own bearings locate (joints_unchecked 'motor shaft': not credited)", rating: (d, a) => { const j = journalOf(a); const seat = j ? bearingSeat(d, j.jn, j.end) : []; return seat.length ? [...seat, 'motor shaft'] : []; }, rule: `${RETAINING_BOND_RULE}; the motor maker's own bearing figures (none published)` }, note: "Scorpion publishes its SII-3008's bearing sizes (11 x 5 x 5 and 16 x 5 x 5 mm) but no maker, designation, position or rating (its manual: 'standard bearings'), so the motor shaft's axial location is not credited (finding, round 17b)" },
+  // the motor bracket's M3 screws in the motor's back face: the threads' depth is unpublished
+  { why: exact('screwed into its back-face threads'), part: null, kind: 'fastened', load: FASTENED_LOAD, axial: { by: "the screws' thread engagement in the motor's base", rating: (d) => memberIfAny(d, "motor mount screws, thread in the motor's back face"), rule: SEAT_RULE }, note: "finding (audit item 22): Scorpion's SII-3008 drawing gives 'm3*4' on a 25 mm square and no depth; its manual says the screws must not 'protrude excessively through the motor base and contact the motor winding', so the holes run through a base of unpublished thickness: the engagement, and so the thread, is unrated" },
+  // the crank encoder's actuator on its three DIN 913 set screws
+  { why: exact("on the crank shaft by its three set screws (maker's fixing)"), part: null, kind: 'fastened', ...noMemberBoth("its three M3 DIN 913 set screws (RLS's fixing)"), note: "honestly unrated (round 17b): RLS's BRD01 states the fixing ('3x M3, DIN 913 (included)', H7 bore on a g6 shaft) and no holding figure; ISO 898-5 gives set screws no shear strength; round 8's RC-practice ruling covers a gear, pulley or coupling only, not a sensor. It carries only its own inertia (5.7 g)" },
+  // the coupler eyes' bushings
+  { why: exact('pressed in the eye'), part: /^coupler [RL] (crank|horn) bushing$/, kind: 'press fit', load: bearingLoadSpec, axial: { by: "its flange in the eye's counterbore one way, its pin's washer (or the face it runs against) the other", rating: (d, a) => eyeBushingRetention(d, a), rule: `${FLANGE_RULE}; ${RETAINER_RULE}` }, note: '' },
+  { why: exact('journal on its pin'), part: /^coupler [RL] (crank|horn) bushing$/, kind: 'shaft in bearing', load: bearingLoadSpec, axial: { by: "the pin's washer one way, the web or the horn boss the other, on the bushing's flange", rating: (d, a) => eyeBushingRetention(d, a), rule: `${FLANGE_RULE}; ${RETAINER_RULE}` }, note: '' },
+  // the shoulder pivots: each bushing's flange in its housing's counterbore, the hub's aft face and the pin's collar on
+  // the flanges (the bearing joint rates the flanges' axial load, root_x)
+  ...['pressed in the housing', 'journal on the shoulder pin'].map((why) => ({ why: exact(why), part: /^shoulder bushing [RL] (aft|forward)$/, kind: why === 'pressed in the housing' ? 'press fit' : 'shaft in bearing', load: bearingLoadSpec, axial: { by: "the flange in the housing's counterbore outward; the hub's face or the pin's collar on the flange inward (the shoulder pivot joint rates the flange's axial load)", rating: (d, a) => { const m = /^shoulder bushing ([RL]) (aft|forward)$/.exec(a); const side = m[1] === 'R' ? 'right' : 'left'; return [`shoulder pivot ${side}`, `shoulder housing ${side} ${m[2]}`]; }, rule: `${BEARING_RULE}; ${SEAT_RULE}` }, note: 'audit-v24 interface #1: captured, 0.5 mm running clearance' })),
+  // the crank web on its stub: the key, and the axial screw into the stub's tapped end
+  { why: exact("keyed on the shaft's aft stub; held axially by its screw (crank web axial screw)"), part: null, kind: 'keyed', load: constSpec(['key, crank web', 'key, crank web, web side', 'crank web hub wall at the keyway'], KEY_RULE, 'the key and the hub wall behind the keyway'), axial: constSpec(['crank web axial screw', 'crank web axial screw thread in the stub', 'crank web end lip under the screw head'], `${BOLT_RULE}; ${SEAT_RULE}`, 'the axial screw, its thread in the stub and the lip under its head'), note: '' },
+  { why: exact("fastened (its countersunk head in the lip's countersink)"), part: /^crank web axial screw$/, kind: 'fastened', load: constSpec(['crank web axial screw', 'crank web end lip under the screw head'], BOLT_RULE, 'the screw in tension, its head on the lip'), axial: constSpec(['crank web axial screw', 'crank web end lip under the screw head'], `${BOLT_RULE}; ${SEAT_RULE}`, 'the same'), note: '' },
+  { why: exact("screwed into the stub's tapped end"), part: /^crank web axial screw$/, kind: 'fastened', load: constSpec(['crank web axial screw', 'crank web axial screw thread in the stub'], BOLT_RULE, 'the screw and its thread in the stub'), axial: constSpec(['crank web axial screw', 'crank web axial screw thread in the stub'], `${BOLT_RULE}; ${SEAT_RULE}`, 'the same'), note: '' },
+  // the forward tray's flange doubler: clamped in the tray's screwed joint
+  ...["on the plate's outer face, under the tray's screws", "under the tray's root tab"].map((why) => ({ why: exact(why), part: /flange doubler/, kind: 'clamped', load: constSpec(['forward tray screws', 'forward tray screws in the forward plate'], `${BOLT_RULE}; ${SEAT_RULE}`, "the tray's screws, which clamp it"), axial: constSpec(['forward tray screws', 'forward tray screws in the forward plate'], `${BOLT_RULE}; ${SEAT_RULE}`, 'the same screws'), note: 'clamped between the tray\'s root tab and the plate by the tray\'s screws; its own thickness not credited' })),
+];
+
 const PURE_EXEMPT = new Set([MESH, KEYWAY, THROUGH, THREAD]);
 
-function matchRule(a, b, why) {
-  for (const r of INTERFACE_RULES) {
+/**
+ * Round 17b: the rule texts and helpers a module's own rule rows use (a module exports its rows; the lead passes them
+ * to interfaceLedger(asm, d, extraRules), ahead of INTERFACE_RULES, so a module's more specific row matches first).
+ */
+export const RULE_HELPERS = { exact, findMember, noMemberBoth, constSpec, tieSpec, bearingLoadSpec, noAxialSpec, FASTENED_LOAD, FASTENED_AXIAL, BEARING_RULE, KEY_RULE, BOLT_RULE, SEAT_RULE, BOND_RULE, TIE_RULE, BEAM_RULE, RC_RULE, NO_MEMBER_RULE, NO_AXIAL_MEMBER_RULE };
+
+function matchRule(a, b, why, rules = INTERFACE_RULES) {
+  for (const r of rules) {
     if (!r.why.test(why)) continue;
     if (r.part && !(r.part.test(a) || r.part.test(b))) continue;
     return r;
@@ -345,19 +447,22 @@ function buildRow(d, a, b, why, rule) {
   }
   const load = evalSide(d, a, b, rule.load);
   const axial = rule.axial ? evalSide(d, a, b, rule.axial) : null;
-  const scopeOk = !rule.rc_practice || isGearPulleyCoupling(a, b);
+  // round 17b: a row that names an RC-practice member (a gear held axially by a bond on titanium) stays in that ruling's
+  // scope too: the joint must be a gear, pulley or coupling on its shaft, whatever the row asks for
+  const namesRc = [load, axial].some((side) => side?.resolved.some((r) => r.check === 'rc practice'));
+  const scopeOk = (!rule.rc_practice && !namesRc) || isGearPulleyCoupling(a, b);
   const rcCheckOk = (side) => !rule.rc_practice || (side.rating.length > 0 && side.resolved.every((r) => r.check === 'rc practice'));
 
   let ok = load.rated && scopeOk && rcCheckOk(load) && (!axial || (axial.rated && rcCheckOk(axial)));
   let why_failed = null;
   if (!ok) {
     if (!load.rated) why_failed = `load not rated (${rule.load.by}): ${load.rating.length ? load.rating.join(', ') + ' missing or unrated' : 'no rated member named'}`;
-    else if (rule.rc_practice && !scopeOk) why_failed = "RC-practice ruling (SPEC round 8) covers only a gear, pulley or coupling shaft-hub fixing; this joint is not one";
+    else if (!scopeOk) why_failed = "RC-practice ruling (SPEC round 8) covers only a gear, pulley or coupling shaft-hub fixing; this joint is not one";
     else if (rule.rc_practice && !rcCheckOk(load)) why_failed = `${rule.load.by}: a named member exists but its check is not 'rc practice'`;
     else if (axial && !axial.rated) why_failed = `axial retention not rated (${rule.axial.by}): ${axial.rating.length ? axial.rating.join(', ') + ' missing or unrated' : 'no rated member named'}`;
     else if (axial && rule.rc_practice && !rcCheckOk(axial)) why_failed = `${rule.axial.by}: a named member exists but its check is not 'rc practice'`;
   }
-  return { a, b, why, kind: rule.kind, load, axial, rc_practice: !!rule.rc_practice, ok, why_failed, note: rule.note ?? '' };
+  return { a, b, why, kind: rule.kind, load, axial, rc_practice: !!rule.rc_practice || namesRc, ok, why_failed, note: rule.note ?? '' };
 }
 
 /**
@@ -366,11 +471,11 @@ function buildRow(d, a, b, why, rule) {
  * banner). Each row is rated against `d.structure.members` / `d.structure.joints` / `joints_unchecked` only; no
  * member name is ever invented. `seatWidths(asm)` is folded into `passed`.
  */
-export function interfaceLedger(asm, d) {
-  const rows = [];
+export function interfaceLedger(asm, d, extraRules = []) {
+  const rows = [], rules = [...extraRules, ...INTERFACE_RULES];
   for (const [a, b, why] of asm.joins) {
     if (PURE_EXEMPT.has(why)) continue;
-    rows.push(buildRow(d, a, b, why, matchRule(a, b, why)));
+    rows.push(buildRow(d, a, b, why, matchRule(a, b, why, rules)));
   }
   const failed = rows.filter((r) => !r.ok);
   const rc_practice = rows.filter((r) => r.rc_practice);

@@ -90,8 +90,9 @@ export const SERVO_TAU_MECH_S = 0.01;
 // magnitude of the tail surfaces' aerodynamic force (N).
 // Round 17 (SPEC "Function completeness": the all-moving tail's pivots and the twist chain are linkage): each tail
 // surface's force (tail_F_R, tail_F_L) and hinge moment (tail_M_R, tail_M_L), and each twist servo's torque at the wing
-// (twist_R, twist_L), so the members of those chains carry their own loads.
-export const LOAD_CHANNELS = ['coupler_R', 'coupler_L', 'slot_R', 'slot_L', 'crank_torque', 'root_yz_R', 'root_x_R', 'root_mperp_R', 'root_yz_L', 'root_x_L', 'root_mperp_L', 'sf_origin', 'wdot', 'w2', 'tail_F', 'tail_F_R', 'tail_F_L', 'tail_M_R', 'tail_M_L', 'twist_R', 'twist_L'];
+// (twist_R, twist_L), so the members of those chains carry their own loads. Round 17b: each wing's bending moment at the
+// elbow (elbow_R, elbow_L: the M7 spar_outer moment), which the twist drive's joiner carries.
+export const LOAD_CHANNELS = ['coupler_R', 'coupler_L', 'slot_R', 'slot_L', 'crank_torque', 'root_yz_R', 'root_x_R', 'root_mperp_R', 'root_yz_L', 'root_x_L', 'root_mperp_L', 'sf_origin', 'wdot', 'w2', 'tail_F', 'tail_F_R', 'tail_F_L', 'tail_M_R', 'tail_M_L', 'twist_R', 'twist_L', 'elbow_R', 'elbow_L'];
 
 /**
  * Supports of design.structure.joints as channel indices and coefficients: { key, rc, rk, ac, ak, X0, Y0 } per support.
@@ -192,6 +193,8 @@ export function buildBird(design, { cal = null, perturb = {}, n = 8, inviscid = 
     const m = p.mass_kg * kMass;
     ld[bi] = (lm[bi] * ld[bi] + m * (p.d_m ?? 0)) / (lm[bi] + m);
     lm[bi] += m;
+    // round 17b: a point that turns with the hand wing (the twist drive's bar, tip arm and plate) adds its pitch inertia
+    if (p.twists) lj[bi] += m * (p.d_m ?? 0) ** 2;
   }
   let Jtw = 0;
   for (let i = 0; i < st.n; i++) Jtw += st.weight[i] * st.weight[i] * lj[i];
@@ -402,11 +405,17 @@ export function createFlight(design, opts = {}) {
       const tauM = servoT.tau_mech_s ?? SERVO_TAU_MECH_S;
       rateR = S[21];
       rateL = S[22];
-      accR = (servoRate(twCmdR, S[16], servoT, lastTwistTorque[0]) - rateR) / tauM;
-      accL = (servoRate(twCmdL, S[17], servoT, lastTwistTorque[1]) - rateL) / tauM;
+      // round 17b (SPEC Function completeness): the drawn chain's travel (servos.twist.travel_rad, twist-drive.js) is the
+      // servo's end stop: the servo drives toward the command but no further than its travel. The command is unchanged.
+      const trv = servoT.travel_rad ?? Infinity, stop = (c) => Math.max(-trv, Math.min(trv, c));
+      accR = (servoRate(stop(twCmdR), S[16], servoT, lastTwistTorque[0]) - rateR) / tauM;
+      accL = (servoRate(stop(twCmdL), S[17], servoT, lastTwistTorque[1]) - rateL) / tauM;
     }
-    const jR = { phi: sa.phi, dphi: dphi0, ddphi: ddphi0, theta: S[16], dtheta: rateR, ddtheta: accR };
-    const jL = { phi: saL.phi, dphi: saL.dphi * crank, ddphi: saL.ddphi * crank * crank, theta: S[17], dtheta: rateL, ddtheta: accL };
+    // round 17b: the drawn chain's series compliance (servos.twist.compliance_rad_per_Nm: the torque rod in torsion and the
+    // bar in bending, twist-drive.js) winds the wing off the servo's position by the last step's twist torque
+    const Ctw = imposeTwist ? 0 : servoT.compliance_rad_per_Nm ?? 0;
+    const jR = { phi: sa.phi, dphi: dphi0, ddphi: ddphi0, theta: S[16] - Ctw * lastTwistTorque[0], dtheta: rateR, ddtheta: accR };
+    const jL = { phi: saL.phi, dphi: saL.dphi * crank, ddphi: saL.ddphi * crank * crank, theta: S[17] - Ctw * lastTwistTorque[1], dtheta: rateL, ddtheta: accL };
     // Wing aero (fills section states)
     bodyAcc.dph = sa.dphi;
     bodyAcc.dphW[0] = sa.dphi;
@@ -876,6 +885,9 @@ export function createFlight(design, opts = {}) {
       chv[18] = tailML;
       chv[19] = Math.abs(lastTwistTorque[0]);
       chv[20] = Math.abs(lastTwistTorque[1]);
+      // round 17b: each wing's bending moment at the elbow (the M7 spar_outer moment), for the twist drive's joiner
+      chv[21] = Math.abs(elbowR);
+      chv[22] = Math.abs(elbowL);
       for (let k = 0; k < sup.length; k++) {
         const s = sup[k];
         let Fr = 0, Fa = 0;

@@ -124,7 +124,10 @@ function journalSize(s, it, sols, q0) {
   const m = String(s.dimensions_mm_d_D_B ?? '').split('x').map(Number);
   const dims = Number.isFinite(s.d1_mm) ? { d: s.d1_mm, D: s.d2_mm, B: s.b1_mm, F: s.d3_mm } : { d: m[0], D: m[1], B: m[2], F: null };
   const b = tubeNamed(sols, /^body$/, q0), f = tubeNamed(sols, /^flange$/, q0);
-  const len = Math.max(...sols.map((x) => x.x[1])) - Math.min(...sols.map((x) => x.x[0])); // body and flange overlap in x
+  // body and flange overlap in x; round 17: a journal drawn along a span (the tail's pivot bushings) is its pieces'
+  // own lengths along it, end to end
+  const span = sols.every((x) => x.tube?.axis === 'span');
+  const len = span ? sols.reduce((a, x) => a + x.tube.L, 0) : Math.max(...sols.map((x) => x.x[1])) - Math.min(...sols.map((x) => x.x[0]));
   return [chk(`${it}: bore`, b && 2 * b.ri, dims.d / 1000), chk(`${it}: outside diameter`, b && 2 * b.ro, dims.D / 1000), chk(`${it}: length`, len, dims.B / 1000), ...(dims.F ? [chk(`${it}: flange diameter`, f && 2 * f.ro, dims.F / 1000)] : [])];
 }
 
@@ -177,20 +180,25 @@ function envelope(sols, q0) {
   return { len: Math.max(...xs) - Math.min(...xs), dz: Math.max(...z) - Math.min(...z), dy: Math.max(...y) - Math.min(...y), od, id: bores.length ? 2 * Math.max(...bores) : 0 };
 }
 
+/** A screw's catalogue geometry: head d x k and shank d x L (round 17: a countersunk head counts in its length). */
+function screwGeometry(spec, id, t) {
+  const h = t.match(/head ([\d.]+) mm x ([\d.]+) mm/), d = +(id.match(/-m(\d+(?:\.\d+)?)x/)?.[1] ?? NaN);
+  const L = (spec.length_mm ?? +(id.match(/x(\d+(?:\.\d+)?)-/)?.[1] ?? NaN)) / 1000, k = (spec.head_k_mm ?? +h?.[2]) / 1000;
+  const csk = /countersunk/.test(spec.head ?? '');
+  return { kind: 'screw', head_d: (spec.head_d_mm ?? +h?.[1]) / 1000, head_k: k, d: d / 1000, L, shank_L: csk ? L - k : L, countersunk: csk };
+}
+
+/** A nut's catalogue geometry: across flats s x height m and (round 17b) the minor-diameter bore its mass is computed with. */
+function nutGeometry(spec, t) {
+  const n = t.match(/([\d.]+) mm across flats x ([\d.]+) mm high/), b = t.match(/([\d.]+) mm minor-diameter bore/);
+  return { kind: 'nut', s: (spec.s_mm ?? +n?.[1]) / 1000, m: (spec.m_mm ?? +n?.[2]) / 1000, bore: b ? +b[1] / 1000 : null };
+}
+
 /** A fastener's catalogue geometry: screw head d x k and shank d x L, nut across flats s x m, tie band b x t and length. */
 export function fastenerGeometry(spec, id) {
   const t = `${spec.mass_basis ?? ''} ${spec.dimensions ?? ''}`;
-  if (/^screw/.test(id)) {
-    const h = t.match(/head ([\d.]+) mm x ([\d.]+) mm/), d = +(id.match(/-m(\d+(?:\.\d+)?)x/)?.[1] ?? NaN);
-    const L = (spec.length_mm ?? +(id.match(/x(\d+(?:\.\d+)?)-/)?.[1] ?? NaN)) / 1000, k = (spec.head_k_mm ?? +h?.[2]) / 1000;
-    // round 17: a countersunk screw's nominal length includes its head, so its shank is the rest
-    const csk = /countersunk/.test(spec.head ?? '');
-    return { kind: 'screw', head_d: (spec.head_d_mm ?? +h?.[1]) / 1000, head_k: k, d: d / 1000, L, shank_L: csk ? L - k : L, countersunk: csk };
-  }
-  if (/^nut/.test(id)) {
-    const n = t.match(/([\d.]+) mm across flats x ([\d.]+) mm high/);
-    return { kind: 'nut', s: (spec.s_mm ?? +n?.[1]) / 1000, m: (spec.m_mm ?? +n?.[2]) / 1000 };
-  }
+  if (/^screw/.test(id)) return screwGeometry(spec, id, t);
+  if (/^nut/.test(id)) return nutGeometry(spec, t);
   // Round 17 (audit items 7, 8): a DIN 6799 retaining washer or DIN 471 circlip, drawn as one ring of its own
   // thickness; the circlip's "outside diameter" is read as d4, the installed ring's swept diameter (the only one of
   // its dimensions that bounds how far it reaches, SOURCES-retention.md), not its free, unsprung d3.
@@ -198,6 +206,17 @@ export function fastenerGeometry(spec, id) {
   if (/^circlip-din471/.test(id)) return { kind: 'washer', od: spec.d4_mm / 1000, id: spec.groove_diameter_d2_mm / 1000, t: spec.thickness_s_mm / 1000 };
   const b = t.match(/^\s*([\d.]+)[^x]*x\s*([\d.]+)\s*x\s*([\d.]+)\s*mm/) ?? t.match(/([\d.]+)\D+x\s*([\d.]+)\s*x\s*([\d.]+)\s*mm/);
   return { kind: 'tie', L: +b?.[1] / 1000, b: +b?.[2] / 1000, t: +b?.[3] / 1000 };
+}
+
+/**
+ * Round 17b: a nut drawn as its hexagon along x (clearance.js nutSection): across flats (twice the least distance from
+ * its centre to a side), height (its x length) and bore (twice its one hole's radius); null for any other solid.
+ */
+export function hexOf(s, q0) {
+  const sh = shapeOf(s, q0);
+  if (sh?.kind !== 'poly' || sh.pts.length !== 6 || (sh.holes ?? []).length !== 1) return null;
+  const c = sh.holes[0].c, side = (p, q) => Math.abs((q[0] - p[0]) * (p[1] - c[1]) - (p[0] - c[0]) * (q[1] - p[1])) / Math.hypot(q[0] - p[0], q[1] - p[1]);
+  return { flats: 2 * Math.min(...sh.pts.map((p, i) => side(p, sh.pts[(i + 1) % 6]))), L: s.x[1] - s.x[0], bore: 2 * sh.holes[0].r };
 }
 
 /** Each fastener item against its catalogue geometry: a screw's head and shank, a nut's flats and height, a tie's band. */
@@ -210,9 +229,16 @@ function fastenerSize(line, items, catalog, q0) {
       const ht = h && tubeOf(h, q0), st = s && tubeOf(s, q0);
       out.push(row(`${item}: head diameter`, ht && 2 * ht.ro, g.head_d, near(ht && 2 * ht.ro, g.head_d)), row(`${item}: head height`, ht?.L, g.head_k, near(ht?.L, g.head_k)), row(`${item}: shank diameter`, st && 2 * st.ro, g.d, near(st && 2 * st.ro, g.d)), row(`${item}: shank length`, st?.L, g.shank_L, near(st?.L, g.shank_L)));
     } else if (g.kind === 'nut') {
-      const n = tubeOf(solids[0], q0);
-      // drawn as its corner circle: across flats = corner diameter x cos 30 deg
-      out.push(row(`${item}: across flats`, n && 2 * n.ro * Math.cos(Math.PI / 6), g.s, near(n && 2 * n.ro * Math.cos(Math.PI / 6), g.s)), row(`${item}: height`, n?.L, g.m, near(n?.L, g.m)));
+      const hx = hexOf(solids[0], q0);
+      if (hx) {
+        // round 17b: its true section, the hexagon with its bore
+        out.push(row(`${item}: across flats`, hx.flats, g.s, near(hx.flats, g.s)), row(`${item}: height`, hx.L, g.m, near(hx.L, g.m)));
+        if (Number.isFinite(g.bore)) out.push(row(`${item}: minor-diameter bore`, hx.bore, g.bore, near(hx.bore, g.bore)));
+      } else {
+        const n = tubeOf(solids[0], q0);
+        // drawn as its corner circle: across flats = corner diameter x cos 30 deg
+        out.push(row(`${item}: across flats`, n && 2 * n.ro * Math.cos(Math.PI / 6), g.s, near(n && 2 * n.ro * Math.cos(Math.PI / 6), g.s)), row(`${item}: height`, n?.L, g.m, near(n?.L, g.m)));
+      }
     } else if (g.kind === 'washer') {
       const t = tubeOf(solids[0], q0);
       out.push(row(`${item}: outside diameter`, t && 2 * t.ro, g.od, near(t && 2 * t.ro, g.od)), row(`${item}: bore`, t && 2 * t.ri, g.id, near(t && 2 * t.ri, g.id)), row(`${item}: thickness`, t?.L, g.t, near(t?.L, g.t)));

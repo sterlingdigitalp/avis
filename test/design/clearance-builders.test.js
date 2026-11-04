@@ -18,7 +18,7 @@ import {
   channelSolids, riserSolids, bandSlabs, tieXs,
   declaredOpening, solidLoftGaps, markExposed,
   supportRecord, containmentRecord, containmentOf, checkClearance, assembly,
-  CLEARANCE_M,
+  CLEARANCE_M, nutSection, THREAD,
 } from '../../src/design/clearance.js';
 import { driveLayout } from '../../src/design/joints.js';
 import { round15Set } from '../../src/design/round15.mjs';
@@ -378,7 +378,10 @@ test('readheadFixing (round 16: each screw, spacer and nut its own part): heads 
   fx.holes_m.forEach((c, i) => {
     assert.deepEqual(plain(partSolids(asm.parts, `readhead screw ${i + 1}`)), plain([S('head', [e.readhead[0] - k, e.readhead[0]], ring(c, hr)), S('shank', [e.readhead[0], e.readhead[0] + 0.025], ring(c, 0.001))].map((q) => ({ ...q, bom: fx.screw }))));
     assert.deepEqual(plain(partSolids(asm.parts, `readhead spacer ${i + 1}`)), plain([{ ...S('spacer', [e.readhead[1], e.readhead[1] + mm1(fx.spacer_mm)], ring(c, mm1(fx.spacer_od_mm) / 2, mm1(fx.spacer_id_mm) / 2)), bom: 'crank encoder spacers' }]));
-    assert.deepEqual(plain(partSolids(asm.parts, `readhead nut ${i + 1}`)), plain([{ ...S('nut', [riser.x[1], riser.x[1] + mm1(fx.nut_m_mm)], ring(c, nr, 0.001)), bom: fx.nut }]));
+    // round 17b (retain2): the nut its hexagon bored to its catalogue minor diameter (1.6 mm for M2), on the shank's thread
+    assert.deepEqual(plain(partSolids(asm.parts, `readhead nut ${i + 1}`)), plain([{ ...S('nut', [riser.x[1], riser.x[1] + mm1(fx.nut_m_mm)], nutSection(c, { s: mm1(fx.nut_s_mm), bore: 0.0016 }, { d: 0.002 })), bom: fx.nut }]));
+    near(Math.max(...nutSection(c, { s: mm1(fx.nut_s_mm), bore: 0.0016 }, { d: 0.002 }).pts.map((p) => Math.hypot(p[0] - c[0], p[1] - c[1]))), nr, 1e-12);
+    assert.ok(asm.joins.some(([a, b, w]) => a === `readhead screw ${i + 1}/shank` && b === `readhead nut ${i + 1}` && w === THREAD));
   });
   assert.equal(fx.holes_m.length, 3); // BRD01's 3 x M2
   // the shank reaches through the readhead (6.9), the spacer, the riser's 0.8 mm web and the 1.6 mm nut, and past it

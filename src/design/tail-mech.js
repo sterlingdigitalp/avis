@@ -28,9 +28,20 @@ export const TAIL_MECH = {
   pivot: 'tube-rockwest-pultruded-6x5', pin: 'metal-al-7075-t6', washer: 'washer-din6799-4', bushing: 'bushing-igus-GFM-0608-06', rodEnd: 'rodend-igus-KBRM-02', arm: 'horn-hitec-r-ml25',
   screw: 'screw-iso4762-m2x6-8.8', material: 'metal-al-6061-t6', pushrod: 'tube-cst-pultruded-5x4',
   saddle: { sleeve_len: 16, wall: 1.5, boss_wall: 1.0, web_t: 1.0, boss_len: 11, clear: 0.5 },
-  horn: { hub_od: 8, hub_len: 4, arm_t: 3, arm_depth: 8, radius: 13 },
+  // the horn's arm stands above the pivot (+v, side 1): the pushrod's rod end then comes onto it from above, as at the
+  // servo's arm, without passing the horn's hub or the bushing's flange
+  horn: { hub_od: 8, hub_len: 4, arm_t: 3, arm_depth: 8, radius: 13, side: 1 },
   arm_hole_mm: 16, spline_from_aft_mm: 14.5, plug_len: 8, rib_t: 2, pin_in_tube: 10, pin_bore: 4,
 };
+
+/**
+ * The linkage's small-angle ratio (surface turn per servo turn): the servo arm's hole radius over the horn's (the arm
+ * and the horn parallel at zero, the pushrod across both). P0: params.tailMech.
+ */
+export function tailLinkageRatio(P0) {
+  const P = { ...TAIL_MECH, ...(P0 ?? {}), horn: { ...TAIL_MECH.horn, ...(P0?.horn ?? {}) } };
+  return P.arm_hole_mm / P.horn.radius;
+}
 
 /**
  * The mechanism's geometry for one design, shared by the solids, the BOM, the members and the chain record (m).
@@ -42,7 +53,8 @@ export function tailMechGeometry(T, boom, P, catalog) {
   const rBoss = d2 / 2 + mm(S1.boss_wall), rb = boom.r + mm(S1.wall), run = mm(S1.clear); // clear of the saddle's sleeve
   const u0 = [Math.cos(T.dihedral_rad), Math.sin(T.dihedral_rad)];
   // the first s along the axis at which a capsule of radius r centred on it lies `g` clear of the boom's circle
-  const dist = (s) => Math.hypot(T.z_m + s * u0[0], s * u0[1]);
+  // the pivot axis starts at the boom's side (T.pivot_z_m, round 17: the flown root is the covered root, past the saddle)
+  const z0 = T.pivot_z_m ?? T.z_m, dist = (s) => Math.hypot(z0 + s * u0[0], s * u0[1]);
   const clearAt = (r, g) => { let s = 0; while (dist(s) < rb + r + g) s += 1e-5; return s; };
   // the pin's inboard end (n past its groove), the washer, the inner flange, the boss, the outer flange, the horn's hub,
   // the tube on the pin, the root rib: each the first place clear of the boom
@@ -51,12 +63,28 @@ export function tailMechGeometry(T, boom, P, catalog) {
   const sB0 = Math.max(sF1 + bF, clearAt(d3 / 2, run) + bF), sB1 = sB0 + mm(S1.boss_len), sF2 = sB1 + bF;
   const sH0 = sF2, sH1 = sH0 + mm(H.hub_len), sT0 = sH1, sP1 = sT0 + mm(P.pin_in_tube);
   const tRib = mm(P.rib_t), sRoot = sT0 + tRib / 2 + run;
-  return { rT, d2, d3, bF, bL, rBoss, rb, rW, sW, sW0, sP0, sP1, rPin, sB0, sB1, sF1, sF2, sH0, sH1, sT0, sRoot, tRib, run, hornR: mm(H.radius), hornT: mm(H.arm_t), hornD: mm(H.arm_depth), hubR: mm(H.hub_od) / 2, xq: T.x_m, L: T.span_each_m, ri: mm(pv.id_draw) / 2, groove_d: mm(W.groove_diameter_d2_mm), groove_m: mm(W.groove_width_m_mm) };
+  // round 17: with T.pivot_z_m stated, the flown surface starts at the root rib's inboard face (s0) and runs its flown
+  // span from there; without it, from the pivot's origin (s0 0), as drawn before
+  const s0 = T.pivot_z_m != null ? sRoot - tRib / 2 : 0, Ltip = s0 + T.span_each_m;
+  return { rT, d2, d3, bF, bL, rBoss, rb, rW, sW, sW0, sP0, sP1, rPin, sB0, sB1, sF1, sF2, sH0, sH1, sT0, sRoot, tRib, run, s0, hornR: mm(H.radius), hornT: mm(H.arm_t), hornD: mm(H.arm_depth), hubR: mm(H.hub_od) / 2, xq: T.x_m, L: Ltip, ri: mm(pv.id_draw) / 2, groove_d: mm(W.groove_diameter_d2_mm), groove_m: mm(W.groove_width_m_mm) };
+}
+
+/**
+ * Round 17: the flown tail's root where its covering starts (audit item 2's follow-up: the saddle's span is bare, so
+ * the flown surface must not include it): the pivot axis keeps its origin at the boom's side (pivot_z_m), and the
+ * flown root (z_m, y_m) moves out along the dihedral to the root rib's inboard face, the flown span and chords
+ * unchanged from there. T0: the tail block (z_m the boom-side origin, y_m the boom's height). -> { z_m, y_m, pivot_z_m,
+ * root_offset_m }.
+ */
+export function tailRootShift(T0, boomR, P0, catalog) {
+  const P = { ...TAIL_MECH, ...(P0 ?? {}) }, T = { ...T0, pivot_z_m: T0.z_m };
+  const G = tailMechGeometry(T, { y: T0.y_m, r: boomR }, P, catalog), off = G.s0;
+  return { z_m: T0.z_m + off * Math.cos(T0.dihedral_rad), y_m: T0.y_m + off * Math.sin(T0.dihedral_rad), pivot_z_m: T0.z_m, root_offset_m: off };
 }
 
 /** The surface's frame: its root on the boom's side o, u along its dihedral, v normal to it (the (z, y) plane). */
 export function tailFrame(T, yB, sg) {
-  return { o: [sg * T.z_m, yB], u: [sg * Math.cos(T.dihedral_rad), Math.sin(T.dihedral_rad)], v: [-sg * Math.sin(T.dihedral_rad), Math.cos(T.dihedral_rad)] };
+  return { o: [sg * (T.pivot_z_m ?? T.z_m), yB], u: [sg * Math.cos(T.dihedral_rad), Math.sin(T.dihedral_rad)], v: [-sg * Math.sin(T.dihedral_rad), Math.cos(T.dihedral_rad)] };
 }
 
 /**
@@ -81,7 +109,7 @@ export function saddleSolids(T, yB, boomR, G, P) {
 }
 
 /** The surface's chord at s along its span (the flown taper). */
-const chordOf = (T, s) => T.chord_root_m * (1 - (1 - T.taper) * (s / T.span_each_m));
+const chordOf = (T, s, s0 = 0) => T.chord_root_m * (1 - (1 - T.taper) * ((s - s0) / T.span_each_m));
 
 /**
  * The tail and its actuation as solids of the assembly (in place of round 16's tied tail): ax as wing-solids.js
@@ -104,7 +132,7 @@ export function tailMechParts(ax, servoBox) {
   const saddle = saddleSolids(T, yB, boomR, G, P);
   const rows = [];
   for (const [tag, sg] of [['R', 1], ['L', -1]]) {
-    const o = [sg * T.z_m, yB], u = [sg * Math.cos(T.dihedral_rad), Math.sin(T.dihedral_rad)], v = [-sg * Math.sin(T.dihedral_rad), Math.cos(T.dihedral_rad)];
+    const o = [sg * (T.pivot_z_m ?? T.z_m), yB], u = [sg * Math.cos(T.dihedral_rad), Math.sin(T.dihedral_rad)], v = [-sg * Math.sin(T.dihedral_rad), Math.cos(T.dihedral_rad)];
     // the pivot pin (7075, grooved at its inboard end) through both bushings and the horn's hub into the tube's bore; the
     // pivot tube from the horn's hub to the tip (its ribs and trailing edge rod on it)
     const pinId = add(`tail pivot pin ${tag}`, [tube('pin', o, u, G.sP0, G.sT0, G.rPin), tube('spigot', o, u, G.sT0, G.sP1, G.ri - G.run / 10)], { bom: 'tail pivot pins' });
@@ -121,11 +149,12 @@ export function tailMechParts(ax, servoBox) {
     }
     // the horn: its hub bonded on the tube, its arm along -v to the rod end's screw at hornR
     const sHm = (G.sH0 + G.sH1) / 2;
-    const hid = add(`tail horn ${tag}`, [tube('hub', o, u, G.sH0, G.sH1, G.hubR, G.rPin), S('arm', [xq - G.hornD / 2, xq + G.hornD / 2], rect(o, u, v, [sHm - G.hornT / 2, sHm + G.hornT / 2], [-(G.hornR + 3e-3), -G.hubR + 1e-4]))], { bom: 'tail horns' });
+    const hs = P.horn.side ?? -1, armN = hs > 0 ? [G.hubR - 1e-4, G.hornR + 3e-3] : [-(G.hornR + 3e-3), -G.hubR + 1e-4];
+    const hid = add(`tail horn ${tag}`, [tube('hub', o, u, G.sH0, G.sH1, G.hubR, G.rPin), S('arm', [xq - G.hornD / 2, xq + G.hornD / 2], rect(o, u, v, [sHm - G.hornT / 2, sHm + G.hornT / 2], armN))], { bom: 'tail horns' });
     join(hid, pinId, 'bonded on the pin'); join(`${hid}/hub`, `${pinId}/pin`, BORE); join(hid, `tail bushing ${tag} outer`, 'its hub\'s face on the flange (the pin\'s axial stop)'); join(hid, pid, 'the tube\'s end on its hub');
     // the horn's rod end: its ball on the arm's inboard face at hornR (outboard, it would meet the root rib), its bore
     // along u; its shank forward along +x
-    const sE = sHm - G.hornT / 2 - mm(ke.B_mm) / 2, nE = -G.hornR, D2 = mm(ke.d2_mm), Lsh = mm(ke.h1_mm);
+    const sE = sHm - G.hornT / 2 - mm(ke.B_mm) / 2, nE = hs * G.hornR, D2 = mm(ke.d2_mm), Lsh = mm(ke.h1_mm);
     const eH = add(`tail rod end ${tag} horn`, [S('eye', [xq - D2 / 2, xq + D2 / 2], rect(o, u, v, [sE - mm(ke.B_mm) / 2, sE + mm(ke.B_mm) / 2], [nE - D2 / 2, nE + D2 / 2])), S('shank', [xq + D2 / 2, xq + Lsh], ring(add2(add2(o, u, sE), v, nE), mm(ke.d5_mm) / 2))], { bom: P.rodEnd });
     // its screw along u: the head inboard of the ball, the shank through the ball into the arm's tapped hole
     const sid = add(`tail horn screw ${tag}`, [tube('head', o, u, sE - mm(ke.B_mm) / 2 - sg0.head_k, sE - mm(ke.B_mm) / 2, sg0.head_d / 2, 0, nE, v), tube('shank', o, u, sE - mm(ke.B_mm) / 2, sE - mm(ke.B_mm) / 2 + sg0.L, sg0.d / 2, 0, nE, v)], { bom: P.screw });
@@ -145,7 +174,11 @@ export function tailMechParts(ax, servoBox) {
     // the pushrod between the two rod ends' shank ends, with an end plug bonded in each end, its stud in the rod end
     const A = { x: xs - Lsh, p: [zH, armY[1] + mm(ke.B_mm) / 2] }, B = { x: xq + Lsh, p: add2(add2(o, u, sE), v, nE) };
     const ts = tubeSpec(byId(catalog, P.pushrod)), pr = pushrodPieces(A, B, mm(ts.od_draw) / 2, mm(ts.id_draw) / 2, mm(P.plug_len));
-    const rodId = add(`tail pushrod ${tag}`, pr.solids, { bom: 'tail pushrods' });
+    // the direction its assembly step brings it in along (unit [x, y, z]): from forward and above, half as much along
+    // the surface's normal on the horn's side as along x (nothing along the pivot axis), so the horn's rod end comes
+    // along the arm's face and its shank from ahead of the arm, and the servo's comes onto its arm from above
+    const sl = [1, 0.5 * hs * v[1], 0.5 * hs * v[0]], nsl = Math.hypot(...sl);
+    const rodId = add(`tail pushrod ${tag}`, pr.solids, { bom: 'tail pushrods', slide: sl.map((q) => q / nsl) });
     for (const [end, piece, eye] of [['servo', pr.solids[0], eS], ['horn', pr.solids.at(-1), eH]]) {
       // the plug fills its end piece's bore (its centre that piece's), its M2 stud into the rod end's female thread
       const c = piece.shape.c, atA = end === 'servo', xe = atA ? A.x : B.x, dir = atA ? 1 : -1; // dir: from the tube's end toward its rod end
@@ -156,11 +189,11 @@ export function tailMechParts(ax, servoBox) {
     // ribs on the pivot tube from the root rib (its face on the outer flange) to the tip, the trailing edge rod through them
     const rs = ribs(G.sRoot);
     const te = add(`tail trailing edge rod ${tag}`, rs.slice(0, -1).map((a, k) => {
-      const bb = rs[k + 1], x0 = xq - 0.75 * chordOf(T, a) + r, x1 = xq - 0.75 * chordOf(T, bb) + r;
+      const bb = rs[k + 1], x0 = xq - 0.75 * chordOf(T, a, G.s0) + r, x1 = xq - 0.75 * chordOf(T, bb, G.s0) + r;
       return { ...S(`bay ${k + 1}`, [Math.min(x0, x1) - r, Math.max(x0, x1) + r], cap(add2(o, u, a + G.tRib / 2), add2(o, u, bb - G.tRib / 2), r)), tube: { ro: r, ri: 0, L: ((bb - a) * (G.L - G.sRoot + G.tRib / 2)) / (rs[3] - rs[0]), axis: 'span' } };
     }), { bom: 'tail trailing edge rods' });
     rs.forEach((s, k) => {
-      const c = chordOf(T, s), h = E387_THICKNESS * c;
+      const c = chordOf(T, s, G.s0), h = E387_THICKNESS * c;
       const id = add(`tail rib ${tag} ${k + 1}`, [{ ...S('rib', [xq - 0.75 * c + 2 * r, xq + 0.25 * c], rect(o, u, v, [s - G.tRib / 2, s + G.tRib / 2], [-h / 2, h / 2])), envelope: true, rib_t: G.tRib }], { bom: 'tail ribs' });
       join(id, pid, 'bonded on the tube'); join(id, pid, RIB_HOLE); join(id, te, RIB_HOLE); join(id, pinId, RIB_HOLE);
     });
@@ -208,9 +241,12 @@ export function tailMechBom(T, yB, boomR, P0, catalog) {
   const al7 = byId(catalog, P.pin), al6 = byId(catalog, P.material), rho = (m) => m.specs.density_g_cm3 * 1e6; // g/m3
   const pv = byId(catalog, P.pivot), pr = byId(catalog, P.pushrod), te = byId(catalog, P.teRod ?? 'rod-ec-1-5mm'), ke = byId(catalog, P.rodEnd).specs;
   const pinV = Math.PI * G.rPin ** 2 * (G.sT0 - G.sP0) + Math.PI * (G.ri - G.run / 10) ** 2 * (G.sP1 - G.sT0);
-  const saddleV = saddleSolids(T, yB, boomR, G, P).reduce((a, q) => a + shapeArea(q.shape) * (q.x[1] - q.x[0]), 0);
+  // the saddle's material as drawn (a boss's own material is its box less the bushings' bore: its area_m2)
+  const saddleV = saddleSolids(T, yB, boomR, G, P).reduce((a, q) => a + (q.area_m2 ?? shapeArea(q.shape)) * (q.x[1] - q.x[0]), 0);
   const hornV = Math.PI * (G.hubR ** 2 - G.rPin ** 2) * (G.sH1 - G.sH0) + G.hornT * (G.hornR + 3e-3 - G.hubR + 1e-4) * G.hornD;
-  const Lp = mm(P.pushrod_L_mm ?? NaN), plugX = mm(P.plug_len), plugV = Math.PI * (G.ri - 1e-5) ** 2 * plugX + Math.PI * 1e-6 * mm(ke.l1_mm);
+  // the end plugs fill the pushrod's bore (not the pivot tube's)
+  const rPr = mm(tubeSpec(pr).id_draw) / 2;
+  const Lp = mm(P.pushrod_L_mm ?? NaN), plugX = mm(P.plug_len), plugV = Math.PI * (rPr - 1e-5) ** 2 * plugX + Math.PI * 1e-6 * mm(ke.l1_mm);
   const LTE = G.L - G.sRoot + G.tRib / 2;
   const gm = (id) => tubeSpec(byId(catalog, id)).g_per_m;
   const structure = [
@@ -220,7 +256,7 @@ export function tailMechBom(T, yB, boomR, P0, catalog) {
     { name: 'tail saddle', material: al6, mass_g: saddleV * rho(al6), basis: `a ${P.saddle.sleeve_len} mm sleeve ${((boomR + mm(P.saddle.wall)) * 2000).toFixed(1)}/${(boomR * 2000).toFixed(2)} mm bonded on the boom's end, and per side a ${P.saddle.boss_len} mm boss round two ${P.bushing} on the pivot axis with its webs to the sleeve (${(saddleV * 1e9).toFixed(0)} mm3, the drawn solids); ${al6.specs.density_g_cm3} g/cm3` },
     { name: 'tail horns, 2 off', material: al6, mass_g: 2 * hornV * rho(al6), basis: `each a ${P.horn.hub_od} mm hub x ${P.horn.hub_len} mm bonded on the pivot pin and a ${P.horn.arm_t} x ${P.horn.arm_depth} mm arm to its rod end's screw at ${P.horn.radius} mm; ${al6.specs.density_g_cm3} g/cm3`, count: 2 },
     { name: 'tail pushrods, 2 off', material: pr, mass_g: 2 * gm(P.pushrod) * Lp, basis: `${gm(P.pushrod)} g/m x ${Lp.toFixed(4)} m x 2 (between the two rod ends' shanks)`, count: 2 },
-    { name: 'tail pushrod end plugs, 4 off', material: al6, mass_g: 4 * plugV * rho(al6), basis: `each a ${((G.ri - 1e-5) * 2000).toFixed(2)} mm plug x ${P.plug_len} mm bonded in the pushrod's end with an M2 stud x ${ke.l1_mm} mm into the rod end; ${al6.specs.density_g_cm3} g/cm3`, count: 4 },
+    { name: 'tail pushrod end plugs, 4 off', material: al6, mass_g: 4 * plugV * rho(al6), basis: `each a ${((rPr - 1e-5) * 2000).toFixed(2)} mm plug x ${P.plug_len} mm bonded in the pushrod's end with an M2 stud x ${ke.l1_mm} mm into the rod end; ${al6.specs.density_g_cm3} g/cm3`, count: 4 },
   ];
   const parts = [
     { id: P.bushing, count: 4, role: 'tail pivot bushings, two per surface' },
@@ -243,7 +279,8 @@ export function tailMechMembers(ax) {
   const T = d.tail, P = { ...TAIL_MECH, ...(d.params.tailMech ?? {}) }, yB = d.params.tailY_m ?? T.y_m;
   const boomR = byId(catalog, d.params.parts.keel).specs.od_mm / 2000;
   const G = tailMechGeometry(T, { y: yB, r: boomR }, P, catalog);
-  const lam = T.taper, sBar = (T.span_each_m * (1 + 2 * lam)) / (3 * (1 + lam)); // the area centroid along the span
+  // the area centroid along the span, from the pivot's origin (the flown root at G.s0)
+  const lam = T.taper, sBar = G.s0 + (T.span_each_m * (1 + 2 * lam)) / (3 * (1 + lam));
   const sIn = (G.sB0 + G.sB0 + G.bL) / 2, sOut = G.sB1, Lb = sOut - sIn, arm = sBar - sOut, armT = sBar - G.sT0;
   const al7 = mat(P.pin), al6 = mat(P.material), ig = byId(catalog, P.bushing).specs, ke = byId(catalog, P.rodEnd).specs;
   const pr = tubeAllowableOf(catalog, P.pushrod), pv = tubeAllowableOf(catalog, P.pivot), W = byId(catalog, P.washer).specs;
@@ -264,11 +301,24 @@ export function tailMechMembers(ax) {
     members.push({ name: `tail pivot pin ${t} spigot bond`, kind: 'bond', check: 'bond', material: glueCf, dims: { d_mm: +(G.ri * 2000).toFixed(3), L_mm: P.pin_in_tube }, sections: [sect('T', Mh), sect('F', inSurf)], uses: { T: 'T', F: 'F' }, note: 'Araldite 2011 on CFRP (typical, half): the hinge moment and the surface\'s inertia along its span' });
     members.push({ name: `tail horn ${t} hub bond`, kind: 'bond', check: 'bond', material: glueAl, dims: { d_mm: +(G.rPin * 2000).toFixed(3), L_mm: P.horn.hub_len }, sections: [sect('T', Mh)], uses: { T: 'T' }, note: 'Araldite 2011 on aluminium: the hinge moment' });
     members.push({ name: `tail horn ${t} arm`, kind: 'plate', check: 'plate', material: al6, dims: { b_mm: P.horn.arm_depth, t_mm: P.horn.arm_t }, sections: [sect('M', [{ ch: `tail_M_${t}`, k: +((Rh - G.hubR) / Rh).toFixed(6) }])], uses: { M: 'M' }, note: 'the pushrod\'s force at the screw, bending the arm in its plane at the hub' });
+    members.push({ name: `tail bushing ${t} flanges, axial thrust`, kind: 'seat', check: 'flange', material: { id: P.bushing, static_surface_pressure_mpa: ig.static_surface_pressure_mpa }, dims: { D_mm: ig.d3_mm, d_mm: ig.d2_mm }, sections: [sect('F', inSurf)], uses: { F: 'F' }, note: `the pin's axial stops (the washer inboard, the horn's hub outboard) thrust the surface's spanwise inertia into a ${P.bushing} flange's ring, at its published static surface pressure; both flanges alike` });
+    { const d2 = 1.74, Le = Math.min(byId(catalog, P.screw).specs.length_mm - ke.B_mm, P.horn.arm_t), A = (Math.PI * d2 * Le) / 2;
+      members.push({ name: `tail horn ${t} screw thread in the arm`, kind: 'pin', check: 'pin-shear', material: al6, dims: { d_mm: +Math.sqrt((4 * A) / Math.PI).toFixed(4), planes: 1, Le_mm: +Le.toFixed(2), area_mm2: +A.toFixed(3) }, sections: [sect('F', Fp)], uses: { F: 'F' }, note: `the M2 internal thread in the 6061 horn arm over ${Le.toFixed(1)} mm engaged (the screw's length less the rod end's ball): shear area pi d2 Le / 2 = ${A.toFixed(2)} mm2 (d2 the pitch diameter ${d2} mm), as a pin of that area, under the pushrod's whole force (conservative: its part along the screw is smaller)` }); }
+    // round 17b: the ribs (balsa) on the pivot tube and the trailing edge rod: the surface's force and hinge moment shared
+    // over its ribs (each taken at a third, the four ribs bounding three bays), the bond on the tube limited by the
+    // balsa's published shear (Wood Handbook Table 5-5a, at half) below the adhesive's on CFRP; the rib on the
+    // trailing edge rod by crushing at half the species-average crushing strength, at the tip rib's (smallest) lever
+    { const bal = byId(catalog, 'reference-balsa-usda-wood-handbook-2021').specs.design_values, crush = byId(catalog, 'balsa-wood-database').specs.crushing_strength_mpa;
+      const glueBal = { id: `${glueCf.id} on balsa`, shear_MPa: Math.min(glueCf.shear_MPa, bal.shear_MPa), basis: `the lower of ${glueCf.basis} and the balsa's own shear, ${bal.basis}` };
+      const teR = mm(byId(catalog, d.params.parts.teRod).specs.od_mm) / 2, lev = 0.75 * T.chord_root_m * T.taper - teR, sh = 1 / 3;
+      members.push({ name: `tail ribs ${t} on the pivot tube, each`, kind: 'bond', check: 'bond', material: glueBal, dims: { d_mm: +(2 * G.rT * 1000).toFixed(3), L_mm: P.rib_t }, sections: [sect('T', [{ ch: `tail_M_${t}`, k: sh }]), sect('F', [{ ch: `tail_F_${t}`, k: sh }])], uses: { T: 'T', F: 'F' }, note: `each rib's bond round the pivot tube over its ${P.rib_t} mm thickness: a third of the surface's hinge moment and force` });
+      members.push({ name: `tail ribs ${t} on the trailing edge rod, each`, kind: 'seat', check: 'seat', material: { id: 'balsa-wood-database', yield_MPa: crush / 2, basis: `balsa crushing ${crush} MPa (species average, wood-database) at half` }, dims: { d_mm: +(teR * 2000).toFixed(3), t_mm: P.rib_t, crush: true }, sections: [sect('F', [{ ch: `tail_M_${t}`, k: +(sh / lev).toFixed(6) }, { ch: `tail_F_${t}`, k: sh }])], uses: { F: 'F' }, note: `the rib's hole bearing on the trailing edge rod: a third of the hinge moment over the tip rib's ${(lev * 1000).toFixed(0)} mm lever, and a third of the force` });
+      members.push({ name: `tail trailing edge rod ${t} in its ribs`, kind: 'bond', check: 'bond', material: glueBal, dims: { d_mm: +(teR * 2000).toFixed(3), L_mm: 4 * P.rib_t }, sections: [sect('F', inSurf)], uses: { F: 'F' }, note: 'the rod bonded through its four ribs: the surface\'s inertia along the span (all of it, conservative)' }); }
     members.push({ name: `tail pin washer ${t}`, kind: 'retainer', check: 'rated', dims: { rating_N: 1000 * Math.min(W.load_columns.FN_kN, W.load_columns.Fs_kN), rating_basis: `${P.washer}: the lower of FN ${W.load_columns.FN_kN} kN (groove) and Fs ${W.load_columns.Fs_kN} kN (washer) as tabulated (DIN 6799 convention; the groove's figure is for steel shafts and the pin is 7075)` }, sections: [sect('F', inSurf)], uses: { F: 'F' }, note: 'the surface\'s inertia along its span (every axis counted)' });
     members.push({ name: `tail pushrod ${t}`, kind: 'strut', check: 'strut', material: { id: P.pushrod, E_GPa: pr.E_GPa, yield_MPa: pr.sigma_MPa }, dims: { L_mm: +(P.pushrod_L_mm ?? 0).toFixed(1), d_mm: pr.od_rate, di_mm: pr.id_rate }, sections: [sect('F', Fp)], uses: { F: 'F' }, note: `the hinge moment over the horn's ${(Rh * 1000).toFixed(0)} mm, pinned at its rod ends: Euler on the published modulus, the strength at ${pr.basis}` });
     members.push({ name: `tail pushrod ${t} rod ends`, kind: 'rod end', check: 'rated', dims: { rating_N: ke.max_static_tensile_long_term_n, rating_basis: `${P.rodEnd}: maximum static tensile load, long term (igus)` }, sections: [sect('F', Fp)], uses: { F: 'F' }, note: 'the pushrod\'s force through each rod end' });
     members.push({ name: `tail pushrod ${t} screws`, kind: 'fasteners', check: 'bolts', fastener: fastenerOfCat(catalog, P.screw), dims: { n: 1 }, sections: [sect('V', Fp)], uses: { V: 'V' }, note: 'each rod end\'s M2 screw in shear' });
-    members.push({ name: `tail pushrod ${t} end plug bonds`, kind: 'bond', check: 'bond', material: glueCf, dims: { d_mm: +(G.ri * 2000).toFixed(3), L_mm: P.plug_len }, sections: [sect('F', Fp)], uses: { F: 'F' }, note: 'Araldite 2011 on CFRP (typical, half): the pushrod\'s force on each end plug' });
+    members.push({ name: `tail pushrod ${t} end plug bonds`, kind: 'bond', check: 'bond', material: glueCf, dims: { d_mm: tubeSpec(byId(catalog, P.pushrod)).id_draw, L_mm: P.plug_len }, sections: [sect('F', Fp)], uses: { F: 'F' }, note: 'Araldite 2011 on CFRP (typical, half): the pushrod\'s force on each end plug' });
     if (sv) members.push({ name: `tail servo arm ${t}`, kind: 'arm', check: 'rated', dims: { rating_N: +(sv.servo_stall_Nm ?? sv.stall_Nm * (sv.linkage_ratio ?? 1)) / rArm, rating_basis: `the maker's own arm for this servo (${P.arm}, supplied with the MD89MW): no load rating of its own is published, so it is held to the servo's published stall torque at its ${P.arm_hole_mm} mm hole` }, sections: [sect('F', Fp)], uses: { F: 'F' }, note: 'the pushrod\'s force at the arm\'s hole' });
     if (tieL) members.push({ name: `tail servo ${t} ties under its arm's reaction`, kind: 'tie', check: 'tie', tie: { id: tieL.id, loop_N: tieL.loop_N }, dims: { n: 2 }, sections: [sect('F', [...Fp, ...inertial(sv?.mass_kg ?? 0.0215, [-0.04, -0.065, 0])])], uses: { F: 'F' }, note: 'the servo\'s two T40R carry the pushrod\'s force at its arm and its own inertia' });
   }
@@ -283,3 +333,99 @@ function tubeAllowableOf(catalog, id) {
   const tr = s.part_number ? catalog.find((q) => q.id === `composite-rockwest-${s.part_number.toLowerCase()}-transverse`) : null;
   return { od_rate: t.od_rate, id_rate: t.id_rate, E_GPa: a.E_GPa, sigma_MPa: a.sigma_MPa, basis: a.basis, composite: { id, axial_MPa: a.sigma_MPa, shear_MPa: tr?.specs.design_values.xy_shear_MPa ?? null, shear_basis: tr?.specs.design_values.xy_shear_basis ?? 'no published shear strength', note: s.strength_note ?? null } };
 }
+
+/**
+ * The tail's actuation chains (chains.js format), from the drawn mechanism (asm.tailMech, placed by clearance.js
+ * afterPacked): each servo's spline to its surface's pivot tube, with the pivot, ratio, travel and law against the
+ * flown ones. The servo's travel is not published (its speed is given per 60 deg): P.servo_travel_deg, an assumption
+ * stated in the chain. Through the travel the horn's rod end turns about the pivot past the saddle's boss (the only
+ * neighbour sharing its span): the smallest gap is computed over the commanded travel.
+ */
+export function tailChains(asm, d, catalog) {
+  const tm = asm.tailMech;
+  if (!tm) return [];
+  const { G, rows, P } = tm, T = d.tail, sv = d.servos?.tail ?? {}, ke = byId(catalog, P.rodEnd).specs;
+  const DEG = Math.PI / 180, dMax = T.deflection_max_rad, thS = (P.servo_travel_deg ?? 30) * DEG;
+  const members = (d.structure?.members ?? []).map((m) => m.name);
+  return rows.map((r) => {
+    const t = r.tag, k = Math.abs(r.zH - r.zs) / Math.abs(r.nE);
+    // the drawn law: the pushrod moves its two ends alike along x, r_arm sin(servo) = r_horn sin(surface)
+    const delivered = Math.asin(Math.min(1, k * Math.sin(thS)));
+    let maxErr = 0;
+    for (let i = 1; i <= 60; i++) { const dl = (i / 60) * dMax, th = Math.asin(Math.sin(dl) / k), local = (k * Math.cos(th)) / Math.cos(dl); maxErr = Math.max(maxErr, Math.abs(local / k - 1)); }
+    // the horn's rod end (its housing, d2) turning about the pivot axis over +-dMax against the boss's box (x +-xb, n +-rBoss)
+    const xb = Math.max(G.hubR, G.d3 / 2, G.rW) + G.run + mm(P.saddle.web_t ?? P.saddle.wall), rE = mm(ke.d2_mm) / 2, R = Math.abs(r.nE);
+    let gap = Infinity;
+    for (let i = -60; i <= 60; i++) {
+      const ph = (i / 60) * dMax, cx = R * Math.sin(ph), cn = Math.sign(r.nE) * R * Math.cos(ph);
+      const dx = Math.max(0, Math.abs(cx) - xb), dn = Math.max(0, Math.abs(cn) - G.rBoss);
+      gap = Math.min(gap, Math.hypot(dx, dn) - rE);
+    }
+    const want = [`tail pushrod ${t}`, `tail horn ${t} arm`, `tail horn ${t} hub bond`, `tail pivot pin ${t} at the outer bushing`, `tail pivot tube ${t} at its root`, `tail servo arm ${t}`, `tail pushrod ${t} rod ends`];
+    return {
+      name: `tail ${t}`, actuator: { part: `packed servo_tail_${t}`, bom: sv.id ?? null, output: 'its spline' },
+      path: [`packed servo_tail_${t}`, `tail servo arm ${t}`, `tail rod end ${t} servo`, `tail pushrod plug ${t} servo`, `tail pushrod ${t}`, `tail pushrod plug ${t} horn`, `tail rod end ${t} horn`, `tail horn ${t}`, `tail pivot pin ${t}`, `tail pivot tube ${t}`],
+      figures: {
+        pivot_x: { flown: T.x_m, drawn: G.xq, tol: 0.0005, units: 'm', basis: 'the flight model turns each surface about its quarter chord at tail.x_m; the drawn pivot pin\'s axis' },
+        root_z: { flown: T.z_m, drawn: Math.abs(r.o[0] + r.u[0] * G.s0), tol: 0.0005, units: 'm', basis: 'the flown surface\'s root (tail.z_m) against the drawn root rib\'s inboard face, where the covering starts' },
+        root_y: { flown: T.y_m, drawn: r.o[1] + r.u[1] * G.s0, tol: 0.0005, units: 'm', basis: 'the flown root\'s height (tail.y_m) against the drawn root rib\'s inboard face' },
+        pivot_dihedral: { flown: T.dihedral_rad, drawn: Math.atan2(r.u[1], Math.abs(r.u[0])), tol: 0.1 * DEG, units: 'rad', basis: 'the pivot along the surface\'s dihedral' },
+        ratio: { flown: sv.linkage_ratio ?? 1, drawn: k, tol: 1e-4, rel: true, units: '-', basis: 'the surface\'s turn per servo turn the flight model flies (design.servos.tail.linkage_ratio) against the drawn arm\'s hole radius over the horn\'s' },
+        travel: { required_rad: dMax, delivered_rad: delivered, basis: `the commanded deflection (tail.deflection_max_rad) against asin(k sin ${(thS / DEG).toFixed(0)} deg) at the servo's travel (an assumption: not published)` },
+        law: { flown: 'surface = k x servo', drawn: 'sin(surface) = k sin(servo)', max_err: maxErr, tol: 0.06, basis: 'the drawn linkage\'s local ratio against the flown constant one over the commanded travel; the flight model\'s torque and speed at the surface carry it within 6 %' },
+        travel_clearance: { required: 0.0005, delivered: gap, units: 'm', basis: 'the horn\'s rod end turning about the pivot over the commanded travel: its smallest gap to the saddle\'s boss (the one neighbour in its span), against the 0.5 mm assembly clearance' },
+        loads: { members: want.filter((w) => members.includes(w)), missing: want.filter((w) => !members.includes(w)), basis: 'the M7 members carrying the chain\'s loads (tail_F, tail_M channels), from the flown peaks' },
+      },
+      assumptions: [`the servo's travel ${(thS / DEG).toFixed(0)} deg each way (not published; Hitec gives the speed per 60 deg)`, `the servo's output spline on its case's top face centre line, ${P.spline_from_aft_mm} mm from its aft end (not published)`, `the maker's arm (${P.arm}) has no published load rating: held to the servo's stall torque`],
+    };
+  });
+}
+
+/**
+ * The tail's interface-ledger rows (interfaces.js format, passed ahead of INTERFACE_RULES): every join tailMechParts
+ * makes, with the M7 members that rate its load and what holds it axially (tailMechMembers). The servo arm is the
+ * maker's (no published rating): it and its tapped hole are held to the servo's stall torque at the hole, disclosed.
+ */
+const side = (a, b) => /(?:^| )([RL])(?: |$|\/)/.exec(`${a} ${b}`)?.[1] ?? null;
+const nm = (re) => (d, a, b) => { const t = side(a, b); return t ? re.map((f) => f(t, a, b)) : []; };
+const bushOf = (a, b) => /(inner|outer)/.exec(`${a} ${b}`)?.[1];
+const TBOND = "the adhesive maker's published lap shear on that substrate, at half the typical figure, and no more than the balsa's published shear at half where a rib is bonded (SPEC round 7)";
+const RIB_HOLE_TXT = 'through its hole in the rib \\(not drawn: the rib lies across the span, not across x\\)';
+const BORE_TXT = "in the other tube's bore \\(not drawn: a tube along the span is drawn as its capsule across x\\)";
+/** The tail's BORE pairs: the real fit each stands for, by its two parts. */
+function tailBore(d, a, b) {
+  const t = side(a, b), w = `${a} | ${b}`, has = (re) => re.test(w);
+  if (!t) return [];
+  if (has(/spigot/) && has(/pivot tube/)) return [`tail pivot pin ${t} spigot bond`];
+  if (has(/pin washer/)) return [`tail pin washer ${t}`];
+  if (has(/horn/)) return [`tail horn ${t} hub bond`];
+  const bu = /(inner|outer)/.exec(w)?.[1];
+  if (has(/bushing/) && has(/saddle/)) return bu ? [`tail bushing ${t} ${bu}`, `tail saddle boss ${t} round the ${bu} bushing`] : [];
+  if (has(/bushing/) && has(/pivot pin/)) return bu ? [`tail bushing ${t} ${bu}`, `tail pivot pin ${t} at the outer bushing`] : [];
+  if (has(/saddle/) && has(/pivot pin/)) return [`tail bushing ${t} inner`, `tail bushing ${t} outer`];
+  return [];
+}
+const TSEAT = "the bushing maker's static surface pressure at FoS 1.5 (igus), the housing at its design yield (SPEC round 4)";
+const TRATED = 'a published load rating at FoS 1.5 (members.js rated)';
+const tr = (why, kind, load, axial, note = '') => ({ why: typeof why === 'string' ? new RegExp(`^${why.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`) : why, part: /^tail /, kind, load, axial, note });
+export const TAIL_INTERFACE_RULES = [
+  tr("its spigot bonded in the tube's bore", 'bonded', { by: 'the spigot bond (Araldite 2011 on CFRP)', rating: nm([(t) => `tail pivot pin ${t} spigot bond`, (t) => `tail pivot pin ${t} spigot`]), rule: TBOND }, { by: 'the same bond', rating: nm([(t) => `tail pivot pin ${t} spigot bond`]), rule: TBOND }),
+  tr('in its groove on the pin', 'retained', { by: 'the DIN 6799 washer in its groove', rating: nm([(t) => `tail pin washer ${t}`]), rule: TRATED }, { by: 'the washer itself', rating: nm([(t) => `tail pin washer ${t}`]), rule: TRATED }),
+  tr("against the flange (the pin's axial stop)", 'thrust', { by: "the washer's thrust on the inner bushing's flange", rating: nm([(t) => `tail pin washer ${t}`, (t) => `tail bushing ${t} flanges, axial thrust`]), rule: TRATED }, { by: 'the washer', rating: nm([(t) => `tail pin washer ${t}`]), rule: TRATED }),
+  tr('pressed in the housing', 'seat', { by: 'the bushing in the saddle\'s boss', rating: (d, a, b) => { const t = side(a, b), w = bushOf(a, b); return t && w ? [`tail bushing ${t} ${w}`, `tail saddle boss ${t} round the ${w} bushing`] : []; }, rule: TSEAT }, { by: "its flange against the boss's face, held there by the pin's stops (washer inboard, horn outboard)", rating: nm([(t) => `tail bushing ${t} flanges, axial thrust`, (t) => `tail pin washer ${t}`, (t) => `tail horn ${t} hub bond`]), rule: TRATED }),
+  tr('journal on its shaft', 'rotating fit', { by: 'the bushing on the pivot pin', rating: (d, a, b) => { const t = side(a, b), w = bushOf(a, b); return t && w ? [`tail bushing ${t} ${w}`, `tail pivot pin ${t} at the outer bushing`] : []; }, rule: TSEAT }, { by: "the pin's stops: the washer and the horn's hub on the two flanges", rating: nm([(t) => `tail pin washer ${t}`, (t) => `tail horn ${t} hub bond`]), rule: TRATED }),
+  tr('bonded on the pin', 'bonded', { by: "the horn's hub bond (Araldite 2011 on aluminium)", rating: nm([(t) => `tail horn ${t} hub bond`]), rule: TBOND }, { by: 'the same bond', rating: nm([(t) => `tail horn ${t} hub bond`]), rule: TBOND }),
+  tr("its hub's face on the flange (the pin's axial stop)", 'thrust', { by: "the horn's hub on the outer flange", rating: nm([(t) => `tail horn ${t} hub bond`, (t) => `tail bushing ${t} flanges, axial thrust`]), rule: TBOND }, { by: "the horn's hub bond", rating: nm([(t) => `tail horn ${t} hub bond`]), rule: TBOND }),
+  tr("the tube's end on its hub", 'resting', { by: "the tube's end bearing on the hub; the tube is carried by the spigot bond", rating: nm([(t) => `tail pivot pin ${t} spigot bond`]), rule: TBOND }, { by: 'the spigot bond', rating: nm([(t) => `tail pivot pin ${t} spigot bond`]), rule: TBOND }),
+  tr(/^its ball on the (horn's arm|servo's arm), on its screw$/, 'pinned', { by: 'the rod end on its screw', rating: nm([(t) => `tail pushrod ${t} rod ends`, (t) => `tail pushrod ${t} screws`]), rule: TRATED }, { by: 'the screw', rating: nm([(t) => `tail pushrod ${t} screws`]), rule: "ISO 898-1 proof load (SPEC round 7)" }),
+  tr('through the ball', 'fastened', { by: 'the screw in shear', rating: nm([(t) => `tail pushrod ${t} screws`]), rule: "ISO 898-1 proof load (SPEC round 7)" }, { by: 'the screw', rating: nm([(t) => `tail pushrod ${t} screws`]), rule: "ISO 898-1 proof load (SPEC round 7)" }),
+  tr("screwed into the arm's tapped hole", 'threaded', { by: 'the screw in shear', rating: nm([(t) => `tail pushrod ${t} screws`]), rule: "ISO 898-1 proof load (SPEC round 7)" }, { by: "the thread in the arm: the horn's in 6061, the servo's arm the maker's (held to the servo's stall torque at its hole)", rating: (d, a, b) => { const t = side(a, b); return !t ? [] : /servo arm/.test(`${a} ${b}`) ? [`tail servo arm ${t}`] : [`tail horn ${t} screw thread in the arm`]; }, rule: 'pin-in-shear on the thread\'s stripping area at the material\'s shear yield (the horn); the maker\'s arm held to the servo\'s published stall torque (disclosed: no rating published)' }),
+  tr("on the servo's output spline (the maker's arm and its centre screw)", 'keyed', { by: "the maker's arm on the servo's spline", rating: nm([(t) => `tail servo arm ${t}`]), rule: "the maker's arm held to the servo's published stall torque (disclosed: no rating published)" }, { by: "the maker's centre screw (supplied with the servo)", rating: nm([(t) => `tail servo arm ${t}`]), rule: "the maker's arm and screw held to the servo's published stall torque; the axial force on the arm is the pushrod's slope times its force (disclosed: no rating published)" }, 'the R-ML25 arm and its centre screw are the maker\'s, with no published rating: held to the servo\'s stall torque (orchestrator\'s decision, round 17)'),
+  tr("bonded in the tube's end", 'bonded', { by: 'the end plug bond (Araldite 2011 on CFRP)', rating: nm([(t) => `tail pushrod ${t} end plug bonds`]), rule: TBOND }, { by: 'the same bond', rating: nm([(t) => `tail pushrod ${t} end plug bonds`]), rule: TBOND }),
+  tr("its stud in the rod end's thread", 'threaded', { by: "the rod end's rating on its thread", rating: nm([(t) => `tail pushrod ${t} rod ends`]), rule: TRATED }, { by: "the rod end's thread", rating: nm([(t) => `tail pushrod ${t} rod ends`]), rule: TRATED }),
+  tr("its end on the rod end's shank", 'resting', { by: "the pushrod's force through the plug's stud into the rod end", rating: nm([(t) => `tail pushrod ${t} end plug bonds`, (t) => `tail pushrod ${t} rod ends`]), rule: TRATED }, { by: 'the plug bond and the stud', rating: nm([(t) => `tail pushrod ${t} end plug bonds`]), rule: TBOND }),
+  tr('bonded on the tube', 'bonded', { by: "the rib's bond on the pivot tube (balsa-limited)", rating: nm([(t) => `tail ribs ${t} on the pivot tube, each`]), rule: TBOND }, { by: 'the same bond', rating: nm([(t) => `tail ribs ${t} on the pivot tube, each`]), rule: TBOND }),
+  { why: new RegExp(`^${RIB_HOLE_TXT}$`), part: /^tail rib /, kind: 'through hole', load: { by: 'the rib on the tube (its bond) or on the trailing edge rod (crushing at half)', rating: (d, a, b) => { const t = side(a, b), w = `${a} ${b}`; return !t ? [] : /trailing edge rod/.test(w) ? [`tail ribs ${t} on the trailing edge rod, each`] : [`tail ribs ${t} on the pivot tube, each`]; }, rule: TBOND }, axial: { by: "the rib's bond on the tube; the rod's in its ribs", rating: (d, a, b) => { const t = side(a, b), w = `${a} ${b}`; return !t ? [] : /trailing edge rod/.test(w) ? [`tail trailing edge rod ${t} in its ribs`] : [`tail ribs ${t} on the pivot tube, each`]; }, rule: TBOND }, note: 'the pivot pin\'s hole rows: the pin runs inside the tube at the root rib; the rib\'s own interface is its bond on the tube' },
+  { why: new RegExp(`^${BORE_TXT}$`), part: /^tail /, kind: 'in a bore', load: { by: 'the part in the bore: the spigot bond, the washer, the bushing in its boss or on its pin, the horn hub\'s bond', rating: tailBore, rule: TSEAT }, axial: { by: 'the same', rating: tailBore, rule: TRATED }, note: 'a tube along the span drawn as its capsule: the pair is the real fit it stands for' },
+  tr("bonded on the boom's end", 'bonded', { by: 'the saddle bond on the boom (Araldite 2011 on CFRP)', rating: () => ['tail saddle bond on the boom'], rule: TBOND }, { by: 'the same bond', rating: () => ['tail saddle bond on the boom'], rule: TBOND }),
+];

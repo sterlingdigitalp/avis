@@ -157,7 +157,11 @@ test('round 16 sections: a screw along x and along y, a capsule with a bore, a c
   const s = screwX([0, 0], 0.01, -1, m3, 0.004, { s: 0.0055, m: 0.0024 });
   assert.deepEqual(s.screw.map((q) => q.x.map((v) => +v.toFixed(6))), [[0.01, 0.013], [0.002, 0.01]]); // head behind the face, shank 8 mm on
   assert.deepEqual(s.nut[0].x.map((v) => +v.toFixed(6)), [0.0016, 0.004]); // the nut from its face along the shank
-  near(s.nut[0].shape.ro, 0.0055 / Math.sqrt(3)); near(s.nut[0].shape.ri, 0.0015);
+  // round 17b (retain2): the nut's true section, its hexagon (corners at 5.5 / sqrt 3) bored to the screw (no minor
+  // diameter given here) or to its catalogue minor diameter
+  assert.equal(s.nut[0].shape.kind, 'poly'); assert.equal(s.nut[0].shape.pts.length, 6);
+  near(Math.max(...s.nut[0].shape.pts.map((p) => Math.hypot(...p))), 0.0055 / Math.sqrt(3)); near(s.nut[0].shape.holes[0].r, 0.0015);
+  near(screwX([0, 0], 0.01, -1, m3, 0.004, { s: 0.0055, m: 0.0024, bore: 0.0025 }).nut[0].shape.holes[0].r, 0.00125);
   const y = screwY([0.1, 0.02], -0.05, -1, m3, -0.054, { s: 0.0055, m: 0.0024 });
   assert.deepEqual(y.screw[1].x.map((v) => +v.toFixed(6)), [0.0985, 0.1015]);
   near(y.screw[1].tube.L, 0.008); near(y.screw[0].tube.L, 0.003); near(y.nut[0].tube.L, 0.0024);
@@ -620,9 +624,10 @@ test('v24-like fixings: each screw\'s head on its face, its shank through what i
     assert.equal(joinOf(`${sc.id}/shank`, nut.id), THREAD);
     assert.equal(joinOf(nut.id, b.through.at(-1)), 'on its face');
     if (b.axis !== 'x') continue;
-    // the nut: 5.5 mm across flats (drawn to its corners, 5.5 / sqrt 3 radius), 2.4 mm high, from the far face out
+    // the nut: 5.5 mm across flats (round 17b: its hexagon, corners at 5.5 / sqrt 3), 2.4 mm high, from the far face out,
+    // bored to the catalogue's 2.5 mm minor diameter
     const ns = nut.solids[0];
-    near(ns.shape.ro, 0.0055 / Math.sqrt(3), 1e-12); near(ns.shape.ri, 0.0015, 1e-12);
+    near(Math.max(...ns.shape.pts.map((p) => Math.hypot(p[0] - b.c[0], p[1] - b.c[1]))), 0.0055 / Math.sqrt(3), 1e-12); near(ns.shape.holes[0].r, 0.00125, 1e-12);
     near(b.dir > 0 ? ns.x[0] : ns.x[1], b.nut_face, 1e-12); near(ns.x[1] - ns.x[0], 0.0024, 1e-12);
   }
   assert.equal(n.size, 9);

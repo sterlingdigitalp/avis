@@ -27,8 +27,9 @@ test('TECS weights: speed only at the floor, (2 - spdWeight, spdWeight) above th
 test('airframe load channels: the four round-8 channels follow the drive channels in this order', () => {
   assert.deepEqual(LOAD_CHANNELS.slice(11, 15), ['sf_origin', 'wdot', 'w2', 'tail_F']);
   // round 17: the per-surface tail and per-wing twist channels come after them, so no earlier index moves
-  assert.deepEqual(LOAD_CHANNELS.slice(15), ['tail_F_R', 'tail_F_L', 'tail_M_R', 'tail_M_L', 'twist_R', 'twist_L']);
-  assert.equal(LOAD_CHANNELS.length, 21);
+  assert.deepEqual(LOAD_CHANNELS.slice(15), ['tail_F_R', 'tail_F_L', 'tail_M_R', 'tail_M_L', 'twist_R', 'twist_L', 'elbow_R', 'elbow_L']);
+  // round 17b: each wing's elbow moment (the twist drive's joiner) after them
+  assert.equal(LOAD_CHANNELS.length, 23);
 });
 
 test('airframe checks by hand: fastener group, strut, shear panel, ties and a flat lap', async () => {

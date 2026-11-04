@@ -74,7 +74,8 @@ export function round6Params(base, set, catalog) {
   const p = { ...base.params, ...ROUND6, ...set, joints: { ...ROUND6.joints, ...(set.joints ?? {}) }, linkage: set.linkage === null ? undefined : { ...ROUND6.linkage, ...(set.linkage ?? {}) }, parts: { ...base.params.parts, ...ROUND6.parts, ...(set.parts ?? {}) } };
   if (!p.linkage) delete p.linkage;
   p.gearRatio = gearRatioOf(p.parts.gears, catalog);
-  p.crankRating = trainCrankRating(buildDesign(p, catalog).structure.gear_stages);
+  // round 17: the gear stages only (p._massPass: with p.massFromSolids the lumps are not drawn yet at this point)
+  p.crankRating = trainCrankRating(buildDesign({ ...p, _massPass: true }, catalog).structure.gear_stages);
   return p;
 }
 

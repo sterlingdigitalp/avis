@@ -115,7 +115,10 @@ export function outsideDrag(d) {
   const f = d.structure.clearance?.containment?.frontal;
   if (!f) return d;
   const pod = d.body.CdA_front_pod_m2 ?? d.body.CdA_front_m2;
-  d.body = { ...d.body, CdA_front_pod_m2: pod, CdA_front_outside_m2: f.CdA_m2, CdA_front_m2: pod + f.CdA_m2, outside_frontal: { area_mm2: f.area_mm2, Cd: f.Cd, basis: f.basis } };
+  // round 17b (SPEC Function completeness, "the real section"): what stands out of the wing's E387 surface (the twist
+  // drive's section record: the parts declared outside it, at their Cd) counts in the drag too, added at the body
+  const sec = d.structure.clearance?.section, wingOut = sec?.CdA_m2 ?? 0;
+  d.body = { ...d.body, CdA_front_pod_m2: pod, CdA_front_outside_m2: f.CdA_m2, ...(sec ? { CdA_front_wing_protrusions_m2: +wingOut.toFixed(7), wing_protrusions_basis: 'the section record (twist-drive.js sectionRecord): each declared protrusion\'s frontal area outside the E387 at its Cd, both wings; added to the body\'s frontal CdA (conservative: Cd 1.2 on the projected height outside the section)' } : {}), CdA_front_m2: pod + f.CdA_m2 + wingOut, outside_frontal: { area_mm2: f.area_mm2, Cd: f.Cd, basis: f.basis } };
   return d;
 }
 

@@ -1,6 +1,7 @@
 // From parameters and a catalogue to a complete design: geometry, BOM, sized structure, CG, margin (M6).
 import { rateStages } from './gearing.js';
-import { tailMechBom } from './tail-mech.js';
+import { tailMechBom, tailLinkageRatio, tailRootShift } from './tail-mech.js';
+import { twistParams, twistBom, twistStiffness, twistChainFigures, twistPoints, chainCompliance } from './twist-drive.js';
 import { byId, ofCategory, servoAt, motorModel, batteryModel, tubeAllowable, tubeSection, tubeSpec, becOf, escCellsCover, servoVoltageRange, servoStallCurrentConservative } from './catalog.js';
 import { batteryOcv } from '../physics/flight.js';
 import { makeFlapDrive, makeWing, wingArea, mac, wingSpan, linkageCycleStats } from '../physics/kinematics.js';
@@ -101,10 +102,14 @@ export function buildDesign(params, catalog) {
   // round 16 (p.wingStructure, SPEC completeness): the inner spar from its socket's base, the edge rods from the root rib,
   // as the assembly check draws them (src/design/wing-solids.js)
   const WS = p.wingStructure;
-  const innerLen = WS ? elbow - (WS.spar_from_m ?? p.linkage.rocker.hub_od_mm / 2000) : elbow, rodLen = WS ? semi - WS.rib_root_m : semi;
+  // round 17b (p.twistDrive, src/design/twist-drive.js): the wing redrawn in the real E387 with the twist drive; its spar,
+  // rod and rib lines from the drawn solids
+  const ribCount0 = 2 * Math.ceil(semi / (p.ribSpacing_m ?? 0.1));
+  const tw = WS && twistParams(p) ? twistBom({ params: p, wing, bom: { structure: [{ name: `ribs, ${ribCount0} off` }] } }, catalog) : null;
+  const innerLen = tw ? tw.lines['inner spar'] : WS ? elbow - (WS.spar_from_m ?? p.linkage.rocker.hub_od_mm / 2000) : elbow, rodLen = tw ? tw.lines['leading edge rod'] : WS ? semi - WS.rib_root_m : semi;
   const innerMass = (inner.mass_g * innerLen);
   // round 16: the outer spar to where the swept leading edge still clears it (WS.spar_to_m)
-  const outerLen = WS?.spar_to_m ? WS.spar_to_m - elbow : outer;
+  const outerLen = tw ? tw.lines['outer spar'] : WS?.spar_to_m ? WS.spar_to_m - elbow : outer;
   // round 17: weighed at the heavier of the listing's and the spec sheet's figures (catalog.js tubeSpec)
   const specSheet = !!p.tubeSpecSheet, outerGm = tubeSpec(outerSpar, specSheet).g_per_m, outerMass = (outerGm * outerLen);
   addStruct('inner spar, 2 off', inner, 2 * innerMass, `${inner.mass_g} g/m x ${innerLen.toFixed(WS ? 4 : 3)} m x 2`);
@@ -125,8 +130,10 @@ export function buildDesign(params, catalog) {
   const meanc = Sact / (2 * semi);
   const ribArea = 0.06 * meanc * meanc * 0.45;
   const ribDensity = rib.specs.density_kg_m3 ?? (rib.specs.density_g_cm3 ?? 0) * 1000;
-  const ribMassEach = ribArea * tRib * ribDensity * 1000;
-  addStruct(`ribs, ${ribCount} off`, rib, ribCount * ribMassEach, `area ${ribArea.toExponential(2)} m2 x ${tRib} m x ${ribDensity} kg/m3 each`);
+  // round 17b: the ribs' material as drawn (built-up ribs in chordwise pieces, src/design/twist-drive.js ribPieces)
+  const ribMassEach = tw ? (tw.lines.ribsV_m3 * ribDensity * 1000) / (ribCount / 2) : ribArea * tRib * ribDensity * 1000;
+  addStruct(`ribs, ${ribCount} off`, rib, ribCount * ribMassEach, tw ? `${(tw.lines.ribsV_m3 * 1e9).toFixed(0)} mm3 per wing as drawn (built-up ribs: caps, webs and full depth round the spar, the bar and the edge rods, inside the E387) x 2 x ${ribDensity} kg/m3` : `area ${ribArea.toExponential(2)} m2 x ${tRib} m x ${ribDensity} kg/m3 each`);
+  if (tw) for (const q of tw.structure) addStruct(q.name, q.material, q.mass_g, q.basis, { count: q.count });
   const wingStructG = 2 * innerMass + 2 * outerMass + 2 * leMass + 2 * teMass + filmG + ribCount * ribMassEach;
   // ---- Tail: V surfaces. Horizontal volume coefficient VH = St_proj * lt / (S macv)
   const lt = (p.tailArmChords ?? 2.4) * cr;
@@ -143,7 +150,10 @@ export function buildDesign(params, catalog) {
   const tailSparG = tailRod.mass_g * spanEach * 2 * 2; // spar + edge per surface
   const tailRibG = 8 * ribMassEach * (chordT / meanc) ** 2;
   // round 17 (p.tailMech: the all-moving tail's pivots and linkage, src/design/tail-mech.js): its lines from its geometry
-  const tailMech = p.tailMech ? tailMechBom({ x_m: -lt, z_m: 0.005, y_m: p.tailY_m ?? 0.02, span_each_m: spanEach, chord_root_m: chordT, taper: p.tailTaper ?? 0.7, dihedral_rad: dih }, p.tailY_m ?? 0.02, byId(catalog, parts.keel).specs.od_mm / 2000, { ...p.tailMech, teRod: parts.teRod }, catalog) : null;
+  // round 17 (p.tailMech): the flown root where the covering starts, past the saddle (tail-mech.js tailRootShift)
+  const tail0 = { x_m: -lt, z_m: 0.005, y_m: p.tailY_m ?? 0.02, span_each_m: spanEach, chord_root_m: chordT, taper: p.tailTaper ?? 0.7, dihedral_rad: dih };
+  const tailRoot = p.tailMech ? tailRootShift(tail0, byId(catalog, parts.keel).specs.od_mm / 2000, p.tailMech, catalog) : null;
+  const tailMech = p.tailMech ? tailMechBom({ ...tail0, ...tailRoot }, p.tailY_m ?? 0.02, byId(catalog, parts.keel).specs.od_mm / 2000, { ...p.tailMech, teRod: parts.teRod }, catalog) : null;
   const tailMechStructG = tailMech ? tailMech.structure.reduce((a, q) => a + q.mass_g, 0) : 0;
   if (tailMech) {
     addStruct('tail film, both faces', film, tailFilm, `${(film.specs.areal_density_g_m2 ?? film.mass_g)} g/m2 over both faces of both surfaces, with the wing's curvature allowance`);
@@ -215,7 +225,7 @@ export function buildDesign(params, catalog) {
   const twistAtElbow = p.twistServoAt === 'elbow';
   const twistRod = twistAtElbow && parts.twistRod ? byId(catalog, parts.twistRod) : null;
   // round 16: in the outer spar's bore, from the running clearance past the inner spar's end to the spar's end
-  const twistRodLen = twistRod ? (WS?.spar_to_m ? WS.spar_to_m - elbow - (p.layout?.running_mm ?? 0.5) / 1000 : semi - elbow) : 0;
+  const twistRodLen = twistRod ? (tw ? tw.lines['twist torque rods'] : WS?.spar_to_m ? WS.spar_to_m - elbow - (p.layout?.running_mm ?? 0.5) / 1000 : semi - elbow) : 0;
   if (twistRod) addStruct('twist torque rods, 2 off', twistRod, 2 * twistRod.mass_g * twistRodLen, `${twistRod.mass_g} g/m x ${twistRodLen.toFixed(3)} m x 2`);
   // ---- Parts
   const motorP = byId(catalog, parts.motor);
@@ -236,6 +246,7 @@ export function buildDesign(params, catalog) {
   add(twistP, 2, 'wing twist servo');
   add(tailP, 2, 'tail servo');
   for (const q of tailMech?.parts ?? []) add(byId(catalog, q.id), q.count, q.role);
+  for (const q of tw?.parts ?? []) add(byId(catalog, q.id), q.count, q.role);
   if (strokeP) add(strokeP, 1, 'stroke amplitude servo');
   add(fcP, 1, 'flight controller with IMU and baro');
   // Round 6: the hardware variant the design needs (the F405-WMO's corrected current-sense PDB), on its BOM line.
@@ -292,12 +303,20 @@ export function buildDesign(params, catalog) {
     spar_kg_per_m: (((innerMass + outerMass + leMass + teMass) / semi) / 1000) * marginFrac,
     skin_kg_per_m2: skinKgM2 * marginFrac,
     point: [
-      { name: 'twist servo', s_m: twistS, mass_kg: (twistP.mass_g / 1000) * marginFrac, d_m: 0 },
+      // round 17b: the servo and the rod where they are drawn, and every part of the drive at its drawn centroid
+      { name: 'twist servo', s_m: tw ? tw.by[twistP.id].c[1] : twistS, mass_kg: (twistP.mass_g / 1000) * marginFrac, d_m: tw ? tw.by[twistP.id].c[0] : 0 },
       // The torque rod as two halves at the quarter points of its run.
-      ...(twistRod ? [0.25, 0.75].map((q) => ({ name: 'twist torque rod', s_m: elbow + q * twistRodLen, mass_kg: 0.5 * rodKg * marginFrac, d_m: 0 })) : []),
+      ...(twistRod ? [0.25, 0.75].map((q) => ({ name: 'twist torque rod', s_m: (tw ? tw.G.rodS0 : elbow) + q * twistRodLen, mass_kg: 0.5 * rodKg * marginFrac, d_m: 0 })) : []),
+      ...(tw ? twistPoints(tw, catalog).map((q) => ({ ...q, mass_kg: q.mass_kg * marginFrac })) : []),
     ],
-    one_wing_kg: massWingOne * marginFrac + (twistP.mass_g / 1000) * marginFrac + rodKg * marginFrac,
+    one_wing_kg: massWingOne * marginFrac + (twistP.mass_g / 1000) * marginFrac + rodKg * marginFrac + (tw ? twistPoints(tw, catalog).reduce((a, q) => a + q.mass_kg, 0) * marginFrac : 0),
   };
+  if (tw) {
+    // the twist stiffness from the edge rods' bending energy (twist-drive.js twistStiffness), replacing the unsourced 0.05
+    const k = twistStiffness({ params: p, wing, bom: { structure: [{ name: `ribs, ${ribCount} off` }] } }, catalog);
+    wing.twist_stiffness_Nm_rad = k.K_Nm_rad;
+    wing.twist_stiffness_basis = k.basis;
+  }
   // Neutral point (x forward) and CG target. Wing AC near c/4 of MAC; tail adds a share by its volume.
   const xAcWing = xleRoot - 0.25 * macv - 0.05 * macv;
   const AR = span * span / Sact;
@@ -335,7 +354,8 @@ export function buildDesign(params, catalog) {
   lump('GPS', gpsP.mass_g, -0.03, 0.03, 0, 0, [gpsP.id]);
   const tmPart = (re) => (tailMech?.parts ?? []).filter((q) => re.test(q.role));
   const tmG = (list) => list.reduce((a, q) => a + byId(catalog, q.id).mass_g * q.count, 0), tmS = (re) => (tailMech?.structure ?? []).filter((q) => re.test(q.name));
-  lump('tail servos', 2 * tailP.mass_g + tmG(tmPart(/servo arms/)), -0.08, 0.0, 0, 0, [tailP.id, ...tmPart(/servo arms/).map((q) => q.id)]);
+  // round 17: the tail servos' own solids (the twist servo may be the same part: its solids are the wing's)
+  lump('tail servos', 2 * tailP.mass_g + tmG(tmPart(/servo arms/)), -0.08, 0.0, 0, 0, [`${tailP.id}@^packed servo_tail_`, ...tmPart(/servo arms/).map((q) => `${q.id}@^tail servo arm `)]);
   // round 17: the tail's pushrods with their plugs, rod ends and screws, a lump of their own along the boom
   if (tailMech) lump('tail pushrods', tmS(/pushrod/).reduce((a, q) => a + q.mass_g, 0) + tmG(tmPart(/rod ends|linkage screws/)), -0.5, 0.0, 0, 0, [...tmS(/pushrod/).map((q) => q.name), ...tmPart(/rod ends|linkage screws/).map((q) => q.id)]);
   if (strokeP) lump('stroke servo', strokeP.mass_g + strokeLinkG, -0.03, 0.0, 0, 0, [strokeP.id]);
@@ -424,13 +444,21 @@ export function buildDesign(params, catalog) {
   };
   // Twist linkage ratio k: the wing sees the servo's published torque / k and its no-load speed x k. Current is from
   // the torque at the servo (wing torque x k), which stall_A x (wing torque / (stall / k)) gives unchanged.
-  const kTw = p.twistLinkageRatio ?? 1;
+  // round 17b: the drawn chain's ratio (twist-drive.js: the four-bar at its centre, the bar to the tip) and travel
+  const twChain = tw ? twistChainFigures({ params: p, wing, bom: { structure: [{ name: `ribs, ${ribCount} off` }] } }, catalog) : null;
+  const kTw = twChain ? twChain.ratio : p.twistLinkageRatio ?? 1;
   if (!(kTw > 0)) throw new Error('twistLinkageRatio must be positive');
   const twistSpec = servoSpec(twistP, supplyV);
   const twistAtWing = kTw === 1 ? twistSpec : { ...twistSpec, stall_Nm: twistSpec.stall_Nm / kTw, speed_rad_s: twistSpec.speed_rad_s * kTw, linkage_ratio: kTw, servo_stall_Nm: twistSpec.stall_Nm, servo_speed_rad_s: twistSpec.speed_rad_s, linkage_note: `horn linkage ${kTw}:1 (wing twist per servo turn); torque, speed and stall current at the wing, from the servo's published row` };
+  // round 17b: the chain as drawn: its ratio at the four-bar's centre, its travel at the servo's published travel (the
+  // speed is published over 60 deg: +-30 deg is the most the page states), the pivot (the spar axis)
+  if (twChain) Object.assign(twistAtWing, { linkage_ratio: kTw, travel_rad: twChain.travel_rad, travel_basis: `the drawn four-bar at the servo's +-${(twChain.servo_travel_rad * 180 / Math.PI).toFixed(0)} deg (the published speed is over 60 deg; no travel is published), the bar to the tip`, axis: { x_m: wing.spar_x, n_m: twChain.G.sparN, basis: 'the spar axis, sparN above the chord line (the flight model twists about the chord line at spar_x)' }, linkage_note: `the drawn chain (src/design/twist-drive.js): R-ML25 at ${twChain.G.rs * 1000} mm, a parallel four-bar to a ${(twChain.G.rl * 1000).toFixed(1)} mm lever on the torque rod (${twChain.rod_ratio.toFixed(4)}:1 at its centre), the rod to the tip plate and the bar (x ${twChain.kq.toFixed(4)}): ${kTw.toFixed(4)}:1 wing twist per servo turn; torque, speed and stall current at the wing from the servo's published row` });
+  const atSurface = (sp, k, what) => (k === 1 ? sp : { ...sp, stall_Nm: sp.stall_Nm / k, speed_rad_s: sp.speed_rad_s * k, linkage_ratio: +k.toFixed(6), servo_stall_Nm: sp.stall_Nm, servo_speed_rad_s: sp.speed_rad_s, linkage_note: `${what} ${k.toFixed(4)}:1 (surface turn per servo turn, small angles); torque, speed and stall current at the surface, from the servo's published row` });
   const servos = {
     twist: twistAtWing,
-    tail: servoSpec(tailP, supplyV),
+    // round 17 (p.tailMech): the all-moving tail's drawn linkage, the servo's arm hole over the horn's radius (tail-mech.js
+    // tailLinkageRatio): the surface sees the servo's torque / k and its speed x k, as the twist's ratio does
+    tail: atSurface(servoSpec(tailP, supplyV), p.tailMech ? tailLinkageRatio(p.tailMech) : 1, 'arm-pushrod-horn linkage (tail-mech.js)'),
     ...(strokeP ? { stroke: { ...servoSpec(strokeP, supplyV), amp_rate_rad_s: 0.5 } } : {}),
   };
   // Body geometry: pod from the nose (ahead of the battery and receiver) back bodyLen, then the keel tube as a boom to
@@ -468,7 +496,7 @@ export function buildDesign(params, catalog) {
     geometry: { span_m: wingSpan(w), area_m2: Sact, AR: wingSpan(w) ** 2 / Sact, mac_m: macv, chord_root_m: cr, chord_elbow_m: ce, chord_tip_m: ct, tail_arm_m: lt, wing_loading_N_m2: (total * 9.80665) / Sact, x_np_m: xNP, x_cg_m: xCGtarget, static_margin: p.staticMargin ?? 0.1 },
     drive,
     // round 16 (p.tailY_m): the V-tail's roots on the boom's sides, at its height
-    tail: { x_m: -lt, y_m: p.tailY_m ?? 0.02, z_m: 0.005, span_each_m: spanEach, chord_root_m: chordT, taper: p.tailTaper ?? 0.7, dihedral_rad: dih, incidence_rad: (p.tailIncidence_deg ?? 0) * DEG, polar: 'thin-plate', AR_each: ARtail, lift_factor: ARtail / (ARtail + 2) * 1.05, kEps: 1.0, area_total_m2: Stail, deflection_max_rad: 30 * DEG },
+    tail: { x_m: -lt, y_m: p.tailY_m ?? 0.02, z_m: 0.005, ...(tailRoot ?? {}), span_each_m: spanEach, chord_root_m: chordT, taper: p.tailTaper ?? 0.7, dihedral_rad: dih, incidence_rad: (p.tailIncidence_deg ?? 0) * DEG, polar: 'thin-plate', AR_each: ARtail, lift_factor: ARtail / (ARtail + 2) * 1.05, kEps: 1.0, area_total_m2: Stail, deflection_max_rad: 30 * DEG },
     body,
     mass: {
       total_kg: total,
@@ -518,6 +546,8 @@ export function buildDesign(params, catalog) {
       if (lm.airframe) d.structure.airframe = lm.airframe;
     }
   }
+  // round 17b: the twist chain's series compliance, flown (flight.js winds the wing off the servo by it)
+  if (twChain) { const c = chainCompliance(d, catalog); d.servos.twist.compliance_rad_per_Nm = +c.rad_per_Nm.toFixed(6); d.servos.twist.compliance_basis = `the drawn chain (twist-drive.js chainCompliance): the titanium rod in torsion ${c.rod.toFixed(4)} and the bar in bending ${c.bar.toFixed(4)} rad per N m at the tip; ${c.G_basis}`; }
   return d;
 }
 

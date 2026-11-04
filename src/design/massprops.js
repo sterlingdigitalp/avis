@@ -165,13 +165,23 @@ export function massPropsRecord(asm, d, catalog, q0, { tol = CG_TOL_M } = {}) {
   };
 }
 
+/**
+ * A lump's line reference: a BOM line's key or tag, or (round 17) 'tag@<part regex>', the line's solids on the parts
+ * whose ids match (a line shared by two lumps: the MD89MW drives the tail and the twist), with the line's mass shared
+ * by volume. -> { key, re }.
+ */
+function lineRef(t, byKey, lines) {
+  const at = t.indexOf('@'), tag = at < 0 ? t : t.slice(0, at), re = at < 0 ? null : new RegExp(t.slice(at + 1));
+  return { key: byKey.has(tag) ? tag : resolveTag(lines, tag), re };
+}
+
 function lumpRow(l, byKey, sols, films, lines, q0, tol) {
-  const keys = (l.lines ?? []).map((t) => (byKey.has(t) ? t : resolveTag(lines, t))), acc = { m: 0, s: [0, 0, 0], I: [0, 0, 0, 0, 0, 0] };
+  const refs = (l.lines ?? []).map((t) => lineRef(t, byKey, lines)), acc = { m: 0, s: [0, 0, 0], I: [0, 0, 0, 0, 0, 0] };
   const missing = [], used = [];
-  for (const k of keys) {
+  for (const { key: k, re } of refs) {
     const line = k ? byKey.get(k) : null;
     if (!line) { missing.push('a line the lump names is not in the BOM'); continue; }
-    const ss = sols.get(k) ?? [];
+    const all = sols.get(k) ?? [], ss = re ? all.filter((s) => re.test(s.part)) : all;
     if (!ss.length) {
       const film = line.exempt ? (/film shell/.test(line.name) ? films.pod : /^tail film/.test(line.name) ? films.tail : null) : null;
       if (film) { accumulate(acc, line.mass_g, film.c, film.I_per_m2.map((v) => v * line.mass_g)); used.push(`${k} (over its surface)`); continue; }
@@ -180,8 +190,10 @@ function lumpRow(l, byKey, sols, films, lines, q0, tol) {
     }
     const pr = ss.map((s) => solidProps(s, q0)), V = pr.reduce((a, q) => a + q.V, 0);
     if (!(V > 0)) { missing.push(`${k}: no volume`); continue; }
-    for (const q of pr) { const m = (line.mass_g * q.V) / V; accumulate(acc, m, q.c, q.J.map((v) => (v * m) / q.V)); }
-    used.push(k);
+    // the line's share on these parts (all of it without a part filter)
+    const Vall = re ? all.reduce((a, s) => a + solidProps(s, q0).V, 0) : V, share = line.mass_g * (V / Vall);
+    for (const q of pr) { const m = (share * q.V) / V; accumulate(acc, m, q.c, q.J.map((v) => (v * m) / q.V)); }
+    used.push(re ? `${k} (on ${re.source})` : k);
   }
   if (!l.lines?.length) missing.push('the lump names no BOM lines');
   const g = acc.m > 0 ? central(acc) : null;

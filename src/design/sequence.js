@@ -39,6 +39,13 @@ function bbox(sh) {
   return [[Math.min(...z), Math.min(...y)], [Math.max(...z), Math.max(...y)]];
 }
 
+/** A step's direction as a drawn part states it (its `slide`, a unit [x, y, z]; times sign); throws if it states none. */
+function axisOf(asm, { slide_of, sign = 1 }) {
+  const a = asm.parts.find((p) => p.id === slide_of)?.slide;
+  if (!a) throw new Error(`sequence: no part '${slide_of}' stating a slide direction`);
+  return a.map((v) => sign * v);
+}
+
 /**
  * The steps of a stated sequence resolved against an assembly: each member pattern (a regular expression on part ids,
  * or 'part/solid' for one solid) picks the parts or solids it names, in order, each solid taken by the first step that
@@ -53,8 +60,11 @@ export function resolveSteps(asm, seq) {
     ids.forEach((id) => taken.add(id));
     if (!ids.length) { empty.push(st.name); continue; }
     if (st.threaded) { steps.push({ name: st.name, threaded: true, solids: ids, ...(st.why ? { why: st.why } : {}) }); continue; }
-    const n = Math.hypot(...st.dir);
-    steps.push({ name: st.name, dir: st.dir.map((v) => v / n), dist: st.dist_m ?? 0.08, solids: ids, ...(st.why ? { why: st.why } : {}) });
+    // round 17: a step may move along a direction a drawn part states (dir { slide_of: '<part id>', sign }: its `slide`,
+    // a unit [x, y, z]; the pushrods, along their length)
+    const dir = Array.isArray(st.dir) ? st.dir : axisOf(asm, st.dir);
+    const n = Math.hypot(...dir);
+    steps.push({ name: st.name, dir: dir.map((v) => v / n), dist: st.dist_m ?? 0.08, solids: ids, ...(st.why ? { why: st.why } : {}) });
   }
   return { steps, missing: all.filter((id) => !taken.has(id)), empty };
 }
