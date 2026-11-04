@@ -148,6 +148,14 @@ Round 4 passed M1-M8 on v12 but found loads and functions that no gate checked. 
     - It never covers structural members, bearings, gear teeth, seats, lugs or fasteners in tension or shear. Those keep every rule above.
   - **Published figures still bind.** If the maker publishes any figure for the fixing, even a reference one such as KHK DSF slipping torque or a set-screw holding-torque table, the fixing must stay within that figure at full value.
   - **Disclosure.** M7 reports each such joint as "unrated, RC practice", with its peak torque. The README lists every one.
+- **Maker's part (operator's decision, 2026-11-03).** Some interfaces belong to a bought part, and its maker publishes no figure for them.
+  - **Scope.** It covers only an interface that is either:
+    - inside a bought part, such as a motor's own bearings carrying its shaft; or
+    - between a bought part and its maker's own fittings, such as the maker's mounting threads, or the maker's arm on its own servo's spline.
+
+    It never covers parts we design or machine, or a joint between our part and a bought part. Those keep every rule above, including the RC-practice scope.
+  - **Condition.** The bought part must stay within every figure its maker does publish: current, voltage, speed, torque, temperature. A maker's arm can never carry more than its own servo delivers, so it is checked under that servo's own rule, at the published row for its real supply voltage.
+  - **Disclosure.** M7 reports each one as "unrated, maker's part", with its peak load. The README lists every one, beside the RC-practice joints.
 - **Launch speed.** M1's "8 m/s or less" caps the release speed. The design names its release speed, which must be 8 m/s or less, and M1 is gated at that speed. Report the lowest passing speed for information.
 
 ### Rulings after physics round 11 (2026-11-02)
