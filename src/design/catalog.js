@@ -171,8 +171,23 @@ export function tubeAllowable(part) {
   return { sigma_MPa: sigma, E_GPa: E, basis };
 }
 
-export function tubeSection(part) {
-  const od = part.specs.od_mm / 1000;
-  const id = (part.specs.id_mm ?? 0) / 1000; // inner diameter, m
-  return { od, id_m: id, I: (Math.PI * (od ** 4 - id ** 4)) / 64, c: od / 2, kgPerM: part.mass_g / 1000 };
+/**
+ * Round 17 (audit item 17): a tube whose listing and maker's spec sheet give different sections (CST: listing 8 x 7 mm,
+ * spec sheet 7.8 x 6.8 mm, 18.1 g/m) is drawn on the envelope of both (the larger outside, the smaller bore), rated on
+ * the weaker section and weighed at the heavier figure. Dimensions in mm, mass in g/m. A tube with one section is that.
+ * specSheet false (designs before round 17, params.tubeSpecSheet unset) keeps the listing's section and mass, so their
+ * records rebuild as they were.
+ */
+export function tubeSpec(part, specSheet = true) {
+  const s = part.specs, od = s.od_mm, id = s.id_mm ?? 0, g = specSheet ? Math.max(part.mass_g, s.mass_g_per_m_spec_sheet ?? 0) : part.mass_g;
+  if (!specSheet || !Number.isFinite(s.od_mm_spec_sheet)) return { od_draw: od, id_draw: id, od_rate: od, id_rate: id, g_per_m: g, basis: 'one published section' };
+  const od2 = s.od_mm_spec_sheet, id2 = s.id_mm_spec_sheet ?? id, Z = (D, d) => (D ** 4 - d ** 4) / D;
+  const spec = Z(od2, id2) < Z(od, id);
+  return { od_draw: Math.max(od, od2), id_draw: Math.min(id, id2), od_rate: spec ? od2 : od, id_rate: spec ? id2 : id, g_per_m: g, basis: `two published sections (listing ${od} x ${id} mm, spec sheet ${od2} x ${id2} mm): drawn on their envelope (${Math.max(od, od2)} outside, ${Math.min(id, id2)} bore), rated on the weaker (${spec ? od2 : od} x ${spec ? id2 : id} mm), weighed at the heavier ${g} g/m` };
+}
+
+export function tubeSection(part, specSheet = true) {
+  const t = tubeSpec(part, specSheet), od = t.od_rate / 1000;
+  const id = t.id_rate / 1000; // inner diameter, m
+  return { od, id_m: id, I: (Math.PI * (od ** 4 - id ** 4)) / 64, c: od / 2, kgPerM: t.g_per_m / 1000 };
 }

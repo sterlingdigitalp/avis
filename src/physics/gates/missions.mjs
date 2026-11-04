@@ -75,7 +75,7 @@ for (const m of ['M1', 'M2', 'M3', 'M5']) {
   const rOk = robustOk(m);
   const h = nominalHalf[m];
   const change = Object.fromEntries(Object.entries(r.measured).filter(([k, v]) => typeof v === 'number' && typeof h.measured[k] === 'number').map(([k, v]) => [k, v ? +((h.measured[k] / v - 1) * 100).toFixed(2) : null]));
-  writeGate({ gate: m, design: name, passed: r.passed && rOk !== false, measured: { ...r.measured, nominal_passed: r.passed, robustness_passed: rOk, robustness: robustNote(m), timestep_check: { dt_half_s: DT / 2, passed_at_half_step: h.passed, measured_at_half_step: h.measured, change_pct: change } }, limit: LIMITS[m], evidence: `out/flight/${name}-${m}.json` });
+  writeGate({ notCountedBecause: [], gate: m, design: name, passed: r.passed && rOk !== false, measured: { ...r.measured, nominal_passed: r.passed, robustness_passed: rOk, robustness: robustNote(m), timestep_check: { dt_half_s: DT / 2, passed_at_half_step: h.passed, measured_at_half_step: h.measured, change_pct: change } }, limit: LIMITS[m], evidence: `out/flight/${name}-${m}.json` });
 }
 const m4dt = (() => {
   const full = halfSeeds.map((s) => m4[s - 1]).filter((r) => r && !r.error);
@@ -83,13 +83,13 @@ const m4dt = (() => {
   const w = (arr, k) => Math.max(0, ...arr.map((r) => r.measured[k]));
   return { dt_half_s: DT / 2, seeds_rerun: halfSeeds.length, seeds_rerun_rule: passingSeeds.length ? 'the seeds that passed at the full step' : 'seeds 1-20 (none passed)', passed_at_full: full.filter((r) => r.passed).length, passed_at_half: hf.filter((r) => r.passed).length, worst: Object.fromEntries(['max_roll_deg', 'max_pitch_deg', 'altitude_dev_m'].map((k) => [k, { dt: w(full, k), dt_half: w(hf, k), change_pct: w(full, k) ? (w(hf, k) / w(full, k) - 1) * 100 : null }])) };
 })();
-writeGate({ gate: 'M4', design: name, passed: m4ok >= 98 * (seeds / 100) && robustOk('M4') !== false && seeds >= 100, measured: { seeds_passed: m4ok, seeds_run: seeds, worst_H_m: worstH ? +worstH : null, by_H: byH, robustness_passed: robustOk('M4'), robustness: robustNote('M4'), timestep_check: m4dt }, limit: LIMITS.M4, evidence: rel(ev4) });
+writeGate({ notCountedBecause: [], gate: 'M4', design: name, passed: m4ok >= 98 * (seeds / 100) && robustOk('M4') !== false && seeds >= 100, measured: { seeds_passed: m4ok, seeds_run: seeds, worst_H_m: worstH ? +worstH : null, by_H: byH, robustness_passed: robustOk('M4'), robustness: robustNote('M4'), timestep_check: m4dt }, limit: LIMITS.M4, evidence: rel(ev4) });
 
 // ---- M6 mass: BOM completeness and margin ---------------------------------------------------------------------
 const bom = design.bom;
 const missing = bom.parts.filter((p) => !p.source_url || !p.id);
 const m6ok = missing.length === 0 && Math.abs(bom.margin_g - 0.15 * (bom.parts_g + bom.structure_g)) < 1e-6 && Math.abs(bom.total_g - design.mass.total_g) < 0.5;
-writeGate({ gate: 'M6', design: name, passed: m6ok, measured: { total_g: design.mass.total_g, parts_g: bom.parts_g, structure_g: bom.structure_g, margin_g: bom.margin_g, margin_frac: 0.15, parts_without_source: missing.map((p) => p.id), structure_items: bom.structure.length }, limit: { margin_frac: 0.15, every_part_cited: true }, evidence: rel(path) });
+writeGate({ notCountedBecause: [], gate: 'M6', design: name, passed: m6ok, measured: { total_g: design.mass.total_g, parts_g: bom.parts_g, structure_g: bom.structure_g, margin_g: bom.margin_g, margin_frac: 0.15, parts_without_source: missing.map((p) => p.id), structure_items: bom.structure.length }, limit: { margin_frac: 0.15, every_part_cited: true }, evidence: rel(path) });
 
 // Round 6: the motor bearing nearest the first pinion, with the outboard bearing as the other support: information only
 // (its maker is not named, so the lowest C0 read for its published sizes is shown, not credited).
@@ -174,7 +174,11 @@ const membersOk = mb ? mb.ok : null;
 // Round 4: the twist torque rod (elbow servo to the hand wing) carries the hand wing's twist torque in torsion.
 const tr = st.twist_rod ? { id: st.twist_rod.id, torque_Nm: twistT, ...torsionCheck(st.twist_rod, twistT) } : null;
 const fosMin = Math.min(fosIn, fosOut, fosRodBuckle, fosRodStress, ...(tr ? [tr.fos ?? 0] : []), ...(bj ? [bj.fos_min ?? 0] : []), ...(mb ? [mb.fos_min ?? 0] : []));
+// Round 17: a pass resting on an RC-practice joint outside the ruling's scope (only a gear, pulley or coupling held to
+// its shaft) is not counted; v24's crank-web LOCTITE 638 bond was the case
+const m7NotCounted = (mb?.members ?? []).filter((r) => r.check === 'rc practice' && r.kind !== 'gear fixing').map((r) => `${r.name}: RC practice outside the ruling's scope (a gear, pulley or coupling on its shaft only)`);
 writeGate({
+  notCountedBecause: m7NotCounted,
   gate: 'M7', design: name, passed: fosMin >= 1.5 && gearOk && meshesOk && servoOk && bearingsOk && membersOk !== false && seeds >= 100 && loadsConverged && m4passRuns.length > 0,
   measured: {
     spar_inner: { id: sIn.id, moment_Nm: worst('rootBend'), stress_MPa: sigIn, allowable_MPa: sIn.allowable_MPa, fos: fosIn },
@@ -219,7 +223,7 @@ const m8 = {
   timestep_check: { motor_rms_dt_half_A: rmsHalf.motor, battery_rms_dt_half_A: rmsHalf.batt, motor_change_pct: (rmsHalf.motor / motorRms - 1) * 100, battery_change_pct: (rmsHalf.batt / battRms - 1) * 100, servo_peak_change_pct: dtCheck.servoI.change_pct },
 };
 const m8ok = motorRms <= design.motor.I_cont && motorRms <= design.esc.I_cont && battRms <= (design.battery.I_cont ?? 0) && servo5 <= (design.esc.bec_A ?? 0) && (!servoReg || regPeak <= servoReg.I_cont_A) && m4passRuns.length > 0;
-writeGate({ gate: 'M8', design: name, passed: m8ok && seeds >= 100, measured: m8, limit: { continuous: 'rms over 2 s windows within published continuous ratings (SPEC rule where none published)' }, evidence: rel(ev4) });
+writeGate({ notCountedBecause: [], gate: 'M8', design: name, passed: m8ok && seeds >= 100, measured: m8, limit: { continuous: 'rms over 2 s windows within published continuous ratings (SPEC rule where none published)' }, evidence: rel(ev4) });
 
 }
 let robust = null;

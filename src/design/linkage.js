@@ -12,8 +12,8 @@
 //  - seats with no published bearing strength are judged against the material's tensile yield (a lower bound).
 import { byId } from './catalog.js';
 import { shaftMomentSections } from '../physics/members.js';
-import { linkageAt, journalBodyLength } from '../../sims/avis-shared/model.js';
-import { airframeMembers } from './airframe.js';
+import { linkageAt, journalBodyLength, journalDims, journalEdges } from '../../sims/avis-shared/model.js';
+import { airframeMembers, inertialTerms, fastenerOf } from './airframe.js';
 
 const PI4 = Math.PI / 4;
 const rodV = (d, L) => PI4 * d * d * L; // m^3
@@ -72,6 +72,7 @@ export function driveMembers(d, catalog, L, lay, joints) {
   // The first pinion on the motor shaft: its fixing is the same Duracon question.
   cx.members.push(gearFixing(`${s0.pinion.id} on the motor shaft, fixing`, catalog, s0.pinion.id, L.fixings, byId(catalog, s0.pinion.id).specs?.bore_mm ?? null, [{ ch: 'crank_torque', k: +(1 / lay.below(0) / (s0.wheel.z / s0.pinion.z)).toFixed(8) }]));
   for (const [side, w] of [['right', 'R'], ['left', 'L']]) wingSideMembers(cx, side, w);
+  retentionBom(cx);
   const coupler = couplerLinks(cx);
   plateSeats(cx);
   let airframe = null;
@@ -89,6 +90,30 @@ export function driveMembers(d, catalog, L, lay, joints) {
     cx.members.push(unrated('gearbox plates between seats', 'plate', 'the drive layout (model.js) gives the two plates no mounts to the airframe, so the path from the seats to the keel cannot be sized or rated', [{ ch: 'crank_torque', k: 1 }]));
   }
   return { members: cx.members, items: cx.items, coupler, unchecked: cx.unchecked, airframe };
+}
+
+/**
+ * Round 17 (audit items 7, 8, F4/F5): one BOM line per retaining-hardware catalogue part (params.linkage.retention),
+ * however many places use it: gearShaftMembers and wingSideMembers draw on the same part (washer8mm, shared between
+ * the two horn pins and the two bushing shafts' four ends so they consolidate here, not as four separate lines) and
+ * only rate and mass what is drawn; this is the one place that counts how many.
+ */
+function retentionBom(cx) {
+  const { d, catalog, lay, items } = cx, Ret = cx.L.retention;
+  if (!Ret) return;
+  if (Ret.washer8mm) {
+    const w = byId(catalog, Ret.washer8mm);
+    const shafts = d.params.joints.shafts ?? [];
+    const nBushingShafts = Array.from({ length: lay.n - 1 }, (_, i) => shafts[i] ?? shafts.at(-1)).filter((id) => byId(catalog, id).category !== 'bearing').length;
+    const nExcluded = (Ret.washer8mmForwardExclude ?? []).length; // found to clash: see clearance.js gearParts
+    const nHorn = Ret.hornPinWasher ? 2 : 0; // off by default: see clearance.js pinGroove
+    const n = nHorn + 2 * nBushingShafts - nExcluded;
+    if (n > 0) items.push({ name: `${w.name}, ${n} off`, material_id: w.id, material: w.name, mass_g: n * w.mass_g, basis: `${n} x ${w.mass_g} g each (${w.specs.mass_basis}): ${nHorn} horn pins and ${nBushingShafts} gear shaft${nBushingShafts === 1 ? '' : 's'} at both ends${nExcluded ? `, less ${nExcluded} excluded (found to clash with an adjacent shaft's gear)` : ''}`, source_url: w.source_url, count: n });
+  }
+  if (Ret.gearShaft3Circlip) {
+    const c = byId(catalog, Ret.gearShaft3Circlip);
+    items.push({ name: `${c.name}, 1 off`, material_id: c.id, material: c.name, mass_g: c.mass_g, basis: `1 x ${c.mass_g} g (${c.specs.mass_basis})`, source_url: c.source_url, count: 1 });
+  }
 }
 
 /** The one-piece crank (shaft, web and pin) of L.crank.material, so torque and pin moment cross no joint. */
@@ -132,20 +157,61 @@ function crankMembers(cx) {
  * its wheel seat and goes into the aft plate's bushing from forward. The shaft is checked again at the keyseat's root.
  */
 function crankSplit(cx, { c, m, od, id, tw, bw, dp, pinL, lenS, wheel, seatL }) {
-  const { d, catalog, planes, members, items, item } = cx;
-  const a = d.drive.a, K = c.web.key, T = [{ ch: 'crank_torque', k: 1 }];
-  const webA = Math.PI * (bw / 2) ** 2 + bw * a - Math.PI * (od / 2) ** 2; // the web's capsule round the throw, less its bore
-  item('crank shaft', m, ringV(od, id, lenS) + PI4 * od * od * tw + (c.seat_od_mm ? ringV(c.seat_od_mm / 1000, od, seatL) : 0), `${c.shaft_od_mm}${id ? `/${c.shaft_id_mm}` : ''} mm shaft x ${(lenS * 1000).toFixed(1)} mm, a solid ${c.shaft_od_mm} mm stub x ${(tw * 1000).toFixed(0)} mm under the web (keyseated)${c.seat_od_mm ? `, ${c.seat_od_mm} mm wheel seat x ${(seatL * 1000).toFixed(0)} mm (the ${wheel.id}, ${boreText(catalog, wheel.id)}, keyed)` : ''}; ${m.density_g_cm3} g/cm3`);
-  item('crank web and pin', m, webA * tw + rodV(dp, pinL), `web ${c.web_b_mm} mm wide round the ${(a * 1000).toFixed(0)} mm throw x ${c.web_t_mm} mm, bored ${c.shaft_od_mm} mm on the shaft's stub (keyed), ${(dp * 1000).toFixed(0)} mm pin x ${(pinL * 1000).toFixed(1)} mm in one piece; ${m.density_g_cm3} g/cm3`);
+  const { d, catalog, L, planes, members, items, item } = cx;
+  const a = d.drive.a, K = c.web.key, T = [{ ch: 'crank_torque', k: 1 }], W = c.web;
+  // round 17: the web's hub boss (W.hub_od_mm) round its bore, and an end lip (W.lip_mm) over the stub's end that takes
+  // the axial screw; the key under the rest of the web
+  const rh = (W.hub_od_mm ?? c.web_b_mm) / 2000, rb = bw / 2, lip = (W.lip_mm ?? 0) / 1000;
+  const hull = hullArea(rh, rb, a), boreA = Math.PI * (od / 2) ** 2;
+  const screw = W.axial ? byId(catalog, W.axial.screw) : null, dS = screw ? +/M(\d+(?:\.\d+)?)/.exec(screw.specs.thread ?? '')[1] / 1000 : 0;
+  const holeR = screw ? (W.axial.countersunk ? screw.specs.head_d_mm / 2000 : dS / 2) + (W.axial.clearance_mm ?? 0.2) / 1000 : 0;
+  const webV = (hull - boreA) * (tw - lip) + (hull - Math.PI * holeR * holeR) * lip;
+  const solidEnd = screw && W.axial.solid_mm ? W.axial.solid_mm / 1000 : 0;
+  item('crank shaft', m, ringV(od, id, lenS - solidEnd) + PI4 * od * od * (tw - lip + solidEnd) + (c.seat_od_mm ? ringV(c.seat_od_mm / 1000, od, seatL) : 0), `${c.shaft_od_mm}${id ? `/${c.shaft_id_mm}` : ''} mm shaft x ${(lenS * 1000).toFixed(1)} mm, a solid ${c.shaft_od_mm} mm stub x ${((tw - lip) * 1000).toFixed(1)} mm under the web (keyseated${screw ? `, its end tapped for the web's axial screw, solid ${(solidEnd * 1000).toFixed(1)} mm on beyond the web for its thread` : ''})${c.seat_od_mm ? `, ${c.seat_od_mm} mm wheel seat x ${(seatL * 1000).toFixed(0)} mm (the ${wheel.id}, ${boreText(catalog, wheel.id)}, keyed)` : ''}; ${m.density_g_cm3} g/cm3`);
+  item('crank web and pin', m, webV + rodV(dp, pinL), `web ${c.web_b_mm} mm wide at the throw, a ${(rh * 2000).toFixed(0)} mm hub round its ${c.shaft_od_mm} mm bore (keyed on the shaft's stub), ${c.web_t_mm} mm thick${lip ? ` with a ${(lip * 1000).toFixed(1)} mm end lip over the stub (the axial screw's ${(holeR * 2000).toFixed(1)} mm hole)` : ''}, ${(dp * 1000).toFixed(0)} mm pin x ${(pinL * 1000).toFixed(1)} mm in one piece; ${m.density_g_cm3} g/cm3`);
   members.push(keyMember('key, crank web', catalog, K, m, c.shaft_od_mm, T, items));
   const km = materialOf(catalog, K.material);
   members.push({ name: 'key, crank web, web side', kind: 'key', check: 'key', material: km, side_material: m, dims: { d_mm: c.shaft_od_mm, b_mm: K.b_mm, h_mm: +(K.h_mm - K.shaft_depth_mm).toFixed(3), L_mm: K.L_mm }, sections: [sect('T', T)], uses: { T: 'T' }, note: `bearing on the web's keyway (${(K.h_mm - K.shaft_depth_mm).toFixed(1)} mm deep), the web's own ${m.id}` });
+  // round 17 (audit item 13): the hub's wall behind the keyway, in shear on two planes under the key's force (T / r):
+  // the wall from the keyway's bottom to the hub's outside, over the key's length
+  const wall = rh * 1000 - c.shaft_od_mm / 2 - (K.h_mm - K.shaft_depth_mm);
+  members.push({ name: 'crank web hub wall at the keyway', kind: 'web', check: 'pin-shear', material: m, dims: { d_mm: +Math.sqrt((4 * 2 * wall * K.L_mm) / Math.PI / 2).toFixed(4), planes: 2, area_mm2: +(2 * wall * K.L_mm).toFixed(3) }, sections: [sect('F', [{ ch: 'crank_torque', k: +(2000 / c.shaft_od_mm).toFixed(6) }])], uses: { F: 'F' }, note: `the key's force (crank torque / ${(c.shaft_od_mm / 2).toFixed(1)} mm) shearing the hub's ${wall.toFixed(2)} mm wall behind the keyway on two planes over the key's ${K.L_mm} mm (as a pin of that shear area in double shear)` });
   const Mweb = [{ ch: 'coupler_R', k: +(planes.crankArm - planes.couplerR).toFixed(6) }, { ch: 'coupler_L', k: +(planes.crankArm - planes.couplerL).toFixed(6) }];
   // the keyseated solid stub as the round section of the same bending modulus: Z = pi d^3 / 32 - b t (d - t)^2 / (2 d)
   // (a shaft with one keyseat of width b and depth t, the standard section property), smaller than its torsion one's
   const D = c.shaft_od_mm, bk = K.b_mm, tk = K.shaft_depth_mm, dEq = Math.cbrt(D ** 3 - (16 * bk * tk * (D - tk) ** 2) / (Math.PI * D));
   members.push({ name: 'crank shaft at the web\'s keyseat', kind: 'shaft', check: 'round', material: m, dims: { d_mm: +dEq.toFixed(3), di_mm: 0 }, sections: [sect('M', Mweb), sect('T', T), sect('V', [{ ch: 'coupler_R', k: 1 }, { ch: 'coupler_L', k: 1 }])], uses: { M: 'M', T: 'T', V: 'V' }, note: `the solid ${D} mm stub under the web with its ${bk} x ${tk} mm keyseat, as a ${dEq.toFixed(2)} mm round of the same bending modulus (pi d^3/32 - b t (d - t)^2 / 2 d): the coupler forces at the web's mid-plane as bending, the whole crank torque` });
-  members.push({ name: 'crank web on the crank shaft, axial fixing', kind: 'shaft fixing', check: 'rc practice', material: null, dims: { d_mm: c.shaft_od_mm, L_mm: c.web_t_mm }, sections: [sect('T', T)], uses: { T: 'T' }, rc: { method: `keyed (the key rated above) and held axially with LOCTITE 638 on the web's bore: LOCTITE publishes no strength on titanium, so the axial fixing is unrated`, published_Nm: null, published_basis: null }, note: 'SPEC ruling "RC practice for joints no one can rate": a hub (the crank web) held to its shaft by a bond no maker rates on this material; its torque is the key\'s' });
+  if (!screw) {
+    members.push({ name: 'crank web on the crank shaft, axial fixing', kind: 'shaft fixing', check: 'rc practice', material: null, dims: { d_mm: c.shaft_od_mm, L_mm: c.web_t_mm }, sections: [sect('T', T)], uses: { T: 'T' }, rc: { method: `keyed (the key rated above) and held axially with LOCTITE 638 on the web's bore: LOCTITE publishes no strength on titanium, so the axial fixing is unrated`, published_Nm: null, published_basis: null }, note: 'SPEC ruling "RC practice for joints no one can rate": a hub (the crank web) held to its shaft by a bond no maker rates on this material; its torque is the key\'s' });
+    return;
+  }
+  // round 17: the web held axially by one screw into the stub's tapped end, its head on the end lip (ISO 898-1); the
+  // web, its pin and the two coupler links that ride on the pin (their eyes retained on it) pull on it under the bird's
+  // accelerations (inertial terms: every axis counted, conservative for the axial one)
+  items.push({ name: `${screw.name}, 1 off`, material_id: screw.id, material: screw.name, mass_g: screw.mass_g, basis: `1 x ${screw.mass_g} g (${screw.specs.mass_basis})`, source_url: screw.source_url, count: 1 });
+  const fx = fastenerOf(catalog, W.axial.screw), mAx = (gOf(m, webV + rodV(dp, pinL)) + couplerMassG(cx)) / 1000;
+  const rAx = [planes.crankArm, (cx.lay?.fb?.O2?.[1] ?? 0), 0];
+  members.push({ name: 'crank web axial screw', kind: 'fasteners', check: 'bolts', fastener: fx, dims: { n: 1 }, sections: [sect('F', inertialTerms(mAx, rAx))], uses: { F: 'F' }, note: `one ${W.axial.screw} into the stub's tapped end, in tension under the web, pin and couplers' ${(mAx * 1000).toFixed(1)} g` });
+  // its thread in the titanium stub: stripping over the engaged length, the pitch cylinder's half (the usual area for a
+  // thread in the softer part), against the stub's shear yield
+  const pitch = +(/pitch ([\d.]+)/.exec(screw.specs.thread ?? '')?.[1] ?? (dS * 1000 >= 3 ? 0.5 : 0.4)), Le = Math.min(screw.specs.length_mm - (W.lip_mm ?? 0), c.web_t_mm - (W.lip_mm ?? 0) + (W.axial.solid_mm ?? 0)), d2 = dS * 1000 - 0.6495 * pitch;
+  members.push({ name: 'crank web axial screw thread in the stub', kind: 'pin', check: 'pin-shear', material: m, dims: { d_mm: +Math.sqrt(4 * (Math.PI * d2 * Le / 2) / Math.PI).toFixed(4), planes: 1, Le_mm: +Le.toFixed(2), area_mm2: +(Math.PI * d2 * Le / 2).toFixed(3) }, sections: [sect('F', inertialTerms(mAx, rAx))], uses: { F: 'F' }, note: `the internal thread in the ${m.id} stub over ${Le.toFixed(1)} mm engaged (the solid stub under the web and the shaft's solid end beyond it): shear area pi d2 Le / 2 = ${(Math.PI * d2 * Le / 2).toFixed(2)} mm2 (d2 the pitch diameter ${d2.toFixed(3)} mm), as a pin of that area` });
+  const dPunch = W.axial.countersunk ? (screw.specs.head_d_mm + dS * 1000) / 2 : screw.specs.head_d_mm;
+  members.push({ name: 'crank web end lip under the screw head', kind: 'web', check: 'pin-shear', material: m, dims: { d_mm: +Math.sqrt(4 * (Math.PI * dPunch * (W.lip_mm ?? 0)) / Math.PI).toFixed(4), planes: 1, area_mm2: +(Math.PI * dPunch * (W.lip_mm ?? 0)).toFixed(3) }, sections: [sect('F', inertialTerms(mAx, rAx))], uses: { F: 'F' }, note: `the ${W.lip_mm} mm lip punched out round the screw's head (${W.axial.countersunk ? `countersunk: the cone's mean diameter ${dPunch.toFixed(2)} mm` : `${dPunch} mm`}): shear area pi x that x t, as a pin of that area` });
+}
+
+/** The area (m2) of the convex hull of two circles of radii r1 and r2, centres a apart (the crank web with its hub). */
+export function hullArea(r1, r2, a) {
+  if (a <= Math.abs(r1 - r2)) return Math.PI * Math.max(r1, r2) ** 2;
+  const phi = Math.asin((r1 - r2) / a), L = a * Math.cos(phi);
+  // two tangent segments, the larger circle's arc (pi + 2 phi), the smaller's (pi - 2 phi)
+  return L * (r1 + r2) + 0.5 * r1 * r1 * (Math.PI + 2 * phi) + 0.5 * r2 * r2 * (Math.PI - 2 * phi);
+}
+
+/** The two coupler links' mass (g), as couplerLinks weighs them. */
+function couplerMassG(cx) {
+  const { d, L, mat, eyeD } = cx, cm = mat(L.coupler.material), bL = (d.params.coupler_mm ?? 70) / 1000;
+  return 2 * gOf(cm, rodV(L.coupler.body_d_mm / 1000, bL - L.coupler.eye_od_mm / 1000) + 2 * ringV(L.coupler.eye_od_mm / 1000, eyeD.D, eyeD.B));
 }
 
 const plateTOf = (cx) => cx.plateT ?? 0.002;
@@ -153,7 +219,7 @@ const plateTOf = (cx) => cx.plateT ?? 0.002;
 /** Gear shaft j (crank side first): the wheel of stage n-1-j and the pinion of stage n-j, with their keys. */
 function gearShaftMembers(cx, j) {
   // ---- Gear shafts j = 1..n-1 (crank side first): the wheel of stage n-1-j and the pinion of stage n-j.
-  const { catalog, L, lay, planes, members, items, unchecked, mat, item, jointByName, shaftLen } = cx;
+  const { d, catalog, L, lay, planes, members, items, unchecked, mat, item, jointByName, shaftLen } = cx;
   const { train, n, below, meshPerNm } = lay;
     const g = L.gearShafts[j - 1], m = mat(g.material);
     const kw = n - 1 - j, kp = n - j;
@@ -179,6 +245,45 @@ function gearShaftMembers(cx, j) {
       const gid = k === kw ? wheel.id : train.stages[kp].pinion.id;
       // A maker keyway only ("keyway 3 x 1.4 mm"); "plain bore, no keyway ..." is not one (round 10 fix).
       if (!/^keyway\s/.test(byId(catalog, gid).specs?.fastening ?? '')) members.push(gearFixing(`${gid} on gear shaft ${j}, fixing`, catalog, gid, L.fixings, byId(catalog, gid).specs?.bore_mm ?? null, [{ ch: 'crank_torque', k: +Tk.toFixed(8) }]));
+    }
+    // round 17 (audit items 7, 8, F4): this shaft's own axial retention (clearance.js gearShaftRetention draws it):
+    // a DIN 6799 washer at each end outside the bushing's flange, or a DIN 471 circlip at the aft end against the
+    // aft bearing's inner ring; 6061 spacer tubes fill the gaps so the gears can no longer slide on their keys.
+    if (L.retention) {
+      const Ret = L.retention, isBearing = byId(catalog, jt.part_id).category === 'bearing', pinion = train.stages[kp].pinion;
+      const dShaft = g.d_mm / 1000, spacerOD = dShaft + 0.004, spacerMat = mat(Ret.spacerMaterial ?? 'metal-al-6061-t6');
+      const tA = L.plates.t_mm / 1000, tF = (L.plates.t_fwd_mm ?? L.plates.t_mm) / 1000;
+      const jd = (id) => journalDims(byId(catalog, id).specs);
+      const edges = (side) => journalEdges(L.plates, side, side === 'aft' ? planes.plateAft : planes.plateFwd, side === 'aft' ? tA : tF, jd(jt.part_id));
+      const pinionAft = planes.stage[kp] - pinion.face / 2, pinionFwd = planes.stage[kp] + pinion.face / 2 + (pinion.hubW ?? 0);
+      const wheelAft = planes.stage[kw] - wheel.face / 2, wheelFwd = planes.stage[kw] + wheel.face / 2 + (wheel.hubW ?? 0);
+      let spacerV = 0; const spacerNote = [];
+      const addSpacer = (nm, x0, x1) => { const Ls = x1 - x0; if (Ls > 1e-9) { spacerV += ringV(spacerOD, dShaft, Ls); spacerNote.push(`${nm} ${(Ls * 1000).toFixed(1)} mm`); } };
+      // the held mass: this shaft's own mass, its wheel and pinion (every axis counted, inertialTerms); the shaft
+      // and its gears can only slide one way at a time, so each end's washer or the circlip is checked against it in full
+      const shPos = lay.train.shafts[j], heldMass_kg = (gOf(m, v) + byId(catalog, wheel.id).mass_g + byId(catalog, pinion.id).mass_g) / 1000;
+      const rPos = [planes.stage[kw], shPos[1], shPos[0]];
+      if (!isBearing && Ret.washer8mm) {
+        const w = byId(catalog, Ret.washer8mm).specs, jd0 = jd(jt.part_id);
+        const aft = edges('aft'), fwd = edges('fwd');
+        // found by probing (clearance.js gearParts): this shaft's forward end may be excluded, within 0.5 mm of an
+        // adjacent shaft's gear tip circle; its spacer still runs to the bushing's own (unextended) inner edge
+        const fwdExcluded = (Ret.washer8mmForwardExclude ?? []).includes(j);
+        addSpacer('aft bushing to the pinion', aft.inner, pinionAft);
+        addSpacer('pinion to the wheel', pinionFwd, wheelAft);
+        addSpacer('wheel to the forward bushing', wheelFwd, fwd.inner - (d.params?.layout?.running_mm ?? 0.5) / 1000);
+        for (const end of fwdExcluded ? ['aft'] : ['aft', 'forward']) members.push({ name: `gear shaft ${j} washer ${end}`, kind: 'retainer', check: 'rated', dims: { rating_N: 1000 * Math.min(w.load_columns.FN_kN, w.load_columns.Fs_kN), rating_basis: `${Ret.washer8mm}: the lower of FN ${w.load_columns.FN_kN} kN (groove) and Fs ${w.load_columns.Fs_kN} kN (washer) as tabulated (DIN 6799 convention; the groove's figure is for steel shafts and the shaft is ${m.id})` }, sections: [sect('F', inertialTerms(heldMass_kg, rPos))], uses: { F: 'F' }, note: `the shaft, its wheel and pinion sliding the other way, caught at the ${end} washer against the ${jt.part_id} flange` });
+        if (!fwdExcluded) members.push({ name: `gear shaft ${j} bushing flanges, axial thrust`, kind: 'seat', check: 'flange', material: { id: jt.part_id, static_surface_pressure_mpa: byId(catalog, jt.part_id).specs.static_surface_pressure_mpa }, dims: { D_mm: jd0.flangeD * 1000, d_mm: jd0.D * 1000 }, sections: [sect('F', inertialTerms(heldMass_kg, rPos))], uses: { F: 'F' }, note: `the end washer's thrust into the ${jt.part_id} flange's ring, at its published static surface pressure (the same figure the bushing's own radial seat is judged against); both flanges alike` });
+        else members.push({ name: `gear shaft ${j} bushing flange aft, axial thrust`, kind: 'seat', check: 'flange', material: { id: jt.part_id, static_surface_pressure_mpa: byId(catalog, jt.part_id).specs.static_surface_pressure_mpa }, dims: { D_mm: jd0.flangeD * 1000, d_mm: jd0.D * 1000 }, sections: [sect('F', inertialTerms(heldMass_kg, rPos))], uses: { F: 'F' }, note: `the aft washer's thrust into the ${jt.part_id} flange's ring, at its published static surface pressure; the forward flange has no washer against it (excluded, F4: stated rather than invented)` });
+      } else if (isBearing && Ret.gearShaft3Circlip) {
+        const c = byId(catalog, Ret.gearShaft3Circlip).specs;
+        const aft = edges('aft'), fwd = edges('fwd');
+        addSpacer('aft inner ring to the pinion', aft.inner, pinionAft);
+        // the pinion-to-forward-bearing gap is already the running clearance (audit: 0.5 mm): left alone, no spacer
+        addSpacer('forward inner ring to the bonded wheel', fwd.outer, wheelAft);
+        members.push({ name: `gear shaft ${j} circlip aft`, kind: 'retainer', check: 'rated', dims: { rating_N: 1000 * Math.min(c.load_columns.FN_kN, c.load_columns.FR_kN), rating_basis: `${Ret.gearShaft3Circlip}: the lower of FN ${c.load_columns.FN_kN} kN (groove) and FR ${c.load_columns.FR_kN} kN (ring) as tabulated (DIN 471 convention; the groove's figure is for steel shafts and the shaft is ${m.id})` }, sections: [sect('F', inertialTerms(heldMass_kg, rPos))], uses: { F: 'F' }, note: 'the shaft, its pinion and the bonded DS1-60 sliding aft, caught at the circlip against the aft bearing\'s inner ring; forward, nothing is rated (F4: a direction with no rated retention, stated rather than invented, the aft bearing\'s own axial capacity not credited here)' });
+      }
+      if (spacerV > 0) item(`gear shaft ${j} spacers`, spacerMat, spacerV, `6061 tube ${(spacerOD * 1000).toFixed(1)}/${(dShaft * 1000).toFixed(1)} mm: ${spacerNote.join(', ')}; ${spacerMat.density_g_cm3} g/cm3`, { count: spacerNote.length });
     }
 }
 
@@ -253,6 +358,17 @@ function wingSideMembers(cx, side, w) {
     item(`horn pin ${side}`, mh, rodV(eyeD.d, pinLen), `${(eyeD.d * 1000).toFixed(0)} mm x ${(pinLen * 1000).toFixed(1).replace(/\.0$/, '')} mm; ${mh.density_g_cm3} g/cm3`);
     members.push({ name: `horn pin ${side}`, kind: 'pin', check: 'round', material: mh, dims: { d_mm: +(eyeD.d * 1000).toFixed(3) }, sections: [sect('M root', [{ ch: `coupler_${w}`, k: +lever.toFixed(6) }]), sect('V root', [{ ch: `coupler_${w}`, k: 1 }])], uses: { M: 'M root', V: 'V root' }, note: `the coupler eye at half its length plus ${+(gapH * 1000).toFixed(2)} mm from the boss face` });
     members.push({ name: `horn boss ${side}`, kind: 'seat', check: 'seat', material: mr, dims: { d_mm: +(eyeD.d * 1000).toFixed(3), t_mm: r.boss_len_mm, e_over_d: +(r.boss_od_mm / 2 / (eyeD.d * 1000)).toFixed(4) }, sections: [sect('F', [{ ch: `coupler_${w}`, k: 1 }]), sect('M', [{ ch: `coupler_${w}`, k: +lever.toFixed(6) }])], uses: { F: 'F', M: 'M' } });
+    // Round 17 (audit item 7, F5): a DIN 6799 washer in a groove at the pin's free end, against the coupler's horn
+    // eye free face (clearance.js hornPinWasher draws it; params.linkage.retention.washer8mm, shared with the gear
+    // shafts' end washers so they consolidate into one BOM line). Held: the coupler and its horn-end bushing sliding
+    // off the pin the other way. Gated on retention.hornPinWasher too: see clearance.js pinGroove for why it is off
+    // by default on this design's own spacing (both pins' free ends point in toward the opposite coupler).
+    if (L.retention?.hornPinWasher && L.retention?.washer8mm) {
+      const wC = byId(cx.catalog, L.retention.washer8mm).specs;
+      const xHorn = w === 'R' ? cx.planes.couplerR : cx.planes.couplerL, O4 = cx.lay.fb.O4;
+      const heldMass_kg = (couplerMassG(cx) / 2 + eye.mass_g) / 1000;
+      members.push({ name: `horn pin washer ${side}`, kind: 'retainer', check: 'rated', dims: { rating_N: 1000 * Math.min(wC.load_columns.FN_kN, wC.load_columns.Fs_kN), rating_basis: `${L.retention.washer8mm}: the lower of FN ${wC.load_columns.FN_kN} kN (groove) and Fs ${wC.load_columns.Fs_kN} kN (washer) as tabulated (DIN 6799 convention; the groove's figure is for steel shafts and the pin is ${mh.id})` }, sections: [sect('F', inertialTerms(heldMass_kg, [xHorn, O4[1], O4[0]]))], uses: { F: 'F' }, note: 'the coupler and its horn-end bushing sliding off the pin, caught at the washer against the eye\'s free face' });
+    }
     // Coupler link: one piece with its two eyes (no bonded end fitting: no published bond strength to carbon).
     members.push({ name: `coupler eye ${side}`, kind: 'end fitting', check: 'lug', material: mat(L.coupler.material), dims: { d_mm: +(eyeD.D * 1000).toFixed(3), D_mm: L.coupler.eye_od_mm, t_mm: +(eyeD.B * 1000).toFixed(3) }, sections: [sect('F', [{ ch: `coupler_${w}`, k: 1 }])], uses: { F: 'F' }, note: `the eye round the ${eye.id} bushing (both ends alike)` });
     // Shoulder housings: a ring round each shoulder bushing.

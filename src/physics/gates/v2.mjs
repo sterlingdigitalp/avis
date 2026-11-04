@@ -89,7 +89,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const judged = rows.filter((r) => r.judged);
   const maxErr = Math.max(...judged.map((r) => Math.abs(r.error_pct)));
   const worst = judged.reduce((p, q) => (Math.abs(q.error_pct) > Math.abs(p.error_pct) ? q : p));
-  writeGate({
+  writeGate({ notCountedBecause: [],
     gate: 'V2',
     passed: maxErr <= LIMIT_PCT && !quick,
     measured: {

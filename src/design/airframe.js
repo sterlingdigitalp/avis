@@ -24,6 +24,7 @@ import { byId } from './catalog.js';
 import { shaftMomentSections, channelSection } from '../physics/members.js';
 import { packedSpecs, partsIndex, loftHalf } from '../../sims/avis-shared/model.js';
 import { fixingLayout, fixingCounts } from './fixings.js';
+import { tailMechMembers } from './tail-mech.js';
 
 const PI4 = Math.PI / 4;
 const AL7 = 'metal-al-7075-t6', AL6 = 'metal-al-6061-t6';
@@ -330,8 +331,13 @@ export function carrierGeometry(A, planes, tF, tA, crank = null) {
 
 /** Volume (m3) of a channel of the carrier geometry over length L, with its root tab when it has one. */
 const channelVolume = (c, L, tab = 0) => (c.w + 2 * c.h) * c.t * (L + tab);
-/** Volume (m3) of the riser: web, two flanges, foot and tab. */
-const riserVolume = (r) => { const h = r.y[1] - r.y[0]; return r.t * (r.w * h + 2 * r.f * (h - 2 * r.t) + 2 * r.w * r.foot - (r.hole ? Math.PI * r.hole.r ** 2 : 0)); };
+/**
+ * Volume (m3) of the riser: web, two flanges, foot and tab, less the actuator hole. Round 17 (audit item 23): the
+ * hole came within 1.09 mm of the tab's bend, so it opens into a slot of its own width up to the top edge instead of
+ * leaving a thin captive strip there that would distort when the tab is formed; the slot's rectangle (a superset of
+ * the round hole) is what is removed.
+ */
+const riserVolume = (r) => { const h = r.y[1] - r.y[0]; const slot = r.hole ? 2 * r.hole.r * (r.y[1] - (r.hole.c[1] - r.hole.r)) : 0; return r.t * (r.w * h + 2 * r.f * (h - 2 * r.t) + 2 * r.w * r.foot - slot); };
 
 /** A cable tie's catalogue geometry: bundle diameters and band width x thickness (m), from its dimensions text. */
 export function tieGeometry(specs) {
@@ -391,7 +397,14 @@ function af_carriers(ax) {
   };
   const fr = rootChecks('forward tray', A.tray, F, [F.x[0], F.y, 0], fwdItems, tFwd, 'the forward plate');
   flangePlate('forward plate under the forward tray flange', A.tray.w_mm, fr.M, A.tray.doubler_mm);
-  rootChecks('nose tray riser', { ...A.noseTray.riser, w_mm: A.noseTray.riser.w_mm, flange_h_mm: A.noseTray.riser.flange_mm, material: R.material }, R, [R.x[0], R.y[0], 0], riserItems, A.tray.t_mm, 'the forward tray\'s base');
+  const rr = rootChecks('nose tray riser', { ...A.noseTray.riser, w_mm: A.noseTray.riser.w_mm, flange_h_mm: A.noseTray.riser.flange_mm, material: R.material }, R, [R.x[0], R.y[0], 0], riserItems, A.tray.t_mm, 'the forward tray\'s base');
+  if (R.hole) {
+    // Round 17 (audit item 23): the root check alone cannot see the actuator opening. Its width is taken out of the
+    // web (now a slot open to the tab's bend, clearance.js riserSolids), checked at the root moment unreduced
+    // (conservative: the opening sits above the root, where the moment is smaller).
+    const holeMm = R.hole.r * 2000, csHole = channelSection(A.noseTray.riser.w_mm - holeMm, A.noseTray.riser.flange_mm, A.noseTray.riser.t_mm);
+    members.push({ name: 'nose tray riser at the hole', kind: 'beam', check: 'beam', material: mat(R.material), dims: { A_mm2: +csHole.A_mm2.toFixed(3), Zi_mm3: +csHole.Zi_mm3.toFixed(3), Zo_mm3: +csHole.Zo_mm3.toFixed(3), section: `channel ${A.noseTray.riser.w_mm} mm less the ${holeMm.toFixed(1)} mm actuator opening x ${A.noseTray.riser.flange_mm} x ${A.noseTray.riser.t_mm} mm` }, sections: [sect('M', rr.M), sect('Mo', rr.M)], uses: { M: 'M', Mo: 'Mo' }, note: `the actuator opening (slotted to the tab's bend) takes ${holeMm.toFixed(1)} mm out of the web's width at its height; the root's own moment is used unreduced` });
+  }
   rootChecks('nose tray', A.noseTray, N, [R.x[1], N.y, 0], noseItems, A.noseTray.riser.t_mm, 'the riser\'s tab');
   const ar = rootChecks('aft tray', A.aftTray, AT, [AT.x[1], AT.y, 0], aftItems, tAft, 'the aft plate');
   flangePlate('aft plate under the aft tray flange', A.aftTray.w_mm, ar.M, A.aftTray.doubler_mm);
@@ -604,7 +617,8 @@ function af_ties(ax) {
   // ---- Pod formers, the pitot and the tail surfaces on ties ------------------------------------------------------
   podTies(ax, rho);
   probeTies(ax, rho);
-  tailTies(ax);
+  // round 17: the all-moving tail turns on pivots in a saddle (tail-mech.js), rated by its own members, not tied
+  if (ax.d.params.tailMech) tailMechMembers(ax); else tailTies(ax);
 }
 
 const airDensity = (d) => d.atmosphere?.rho_kg_m3 ?? d.atmosphere?.rho ?? 1.0;

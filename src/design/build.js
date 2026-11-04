@@ -1,6 +1,7 @@
 // From parameters and a catalogue to a complete design: geometry, BOM, sized structure, CG, margin (M6).
 import { rateStages } from './gearing.js';
-import { byId, ofCategory, servoAt, motorModel, batteryModel, tubeAllowable, tubeSection, becOf, escCellsCover, servoVoltageRange, servoStallCurrentConservative } from './catalog.js';
+import { tailMechBom } from './tail-mech.js';
+import { byId, ofCategory, servoAt, motorModel, batteryModel, tubeAllowable, tubeSection, tubeSpec, becOf, escCellsCover, servoVoltageRange, servoStallCurrentConservative } from './catalog.js';
 import { batteryOcv } from '../physics/flight.js';
 import { makeFlapDrive, makeWing, wingArea, mac, wingSpan, linkageCycleStats } from '../physics/kinematics.js';
 import { designAtmosphere, DESIGN_ALTITUDE_M, DESIGN_TEMPERATURE_C } from '../physics/atmosphere.js';
@@ -104,9 +105,10 @@ export function buildDesign(params, catalog) {
   const innerMass = (inner.mass_g * innerLen);
   // round 16: the outer spar to where the swept leading edge still clears it (WS.spar_to_m)
   const outerLen = WS?.spar_to_m ? WS.spar_to_m - elbow : outer;
-  const outerMass = (outerSpar.mass_g * outerLen);
+  // round 17: weighed at the heavier of the listing's and the spec sheet's figures (catalog.js tubeSpec)
+  const specSheet = !!p.tubeSpecSheet, outerGm = tubeSpec(outerSpar, specSheet).g_per_m, outerMass = (outerGm * outerLen);
   addStruct('inner spar, 2 off', inner, 2 * innerMass, `${inner.mass_g} g/m x ${innerLen.toFixed(WS ? 4 : 3)} m x 2`);
-  addStruct('outer spar, 2 off', outerSpar, 2 * outerMass, `${outerSpar.mass_g} g/m x ${outerLen.toFixed(WS ? 4 : 3)} m x 2`);
+  addStruct('outer spar, 2 off', outerSpar, 2 * outerMass, `${outerGm} g/m x ${outerLen.toFixed(WS ? 4 : 3)} m x 2`);
   // LE and TE members run the whole span of each wing.
   const leMass = leRod.mass_g * rodLen;
   const teMass = teRod.mass_g * rodLen;
@@ -140,7 +142,14 @@ export function buildDesign(params, catalog) {
   const tailFilm = filmG / filmArea * 2 * Stail * 1.03;
   const tailSparG = tailRod.mass_g * spanEach * 2 * 2; // spar + edge per surface
   const tailRibG = 8 * ribMassEach * (chordT / meanc) ** 2;
-  if (p.tailLines === 'split') {
+  // round 17 (p.tailMech: the all-moving tail's pivots and linkage, src/design/tail-mech.js): its lines from its geometry
+  const tailMech = p.tailMech ? tailMechBom({ x_m: -lt, z_m: 0.005, y_m: p.tailY_m ?? 0.02, span_each_m: spanEach, chord_root_m: chordT, taper: p.tailTaper ?? 0.7, dihedral_rad: dih }, p.tailY_m ?? 0.02, byId(catalog, parts.keel).specs.od_mm / 2000, { ...p.tailMech, teRod: parts.teRod }, catalog) : null;
+  const tailMechStructG = tailMech ? tailMech.structure.reduce((a, q) => a + q.mass_g, 0) : 0;
+  if (tailMech) {
+    addStruct('tail film, both faces', film, tailFilm, `${(film.specs.areal_density_g_m2 ?? film.mass_g)} g/m2 over both faces of both surfaces, with the wing's curvature allowance`);
+    addStruct('tail ribs, 8 off', rib, tailRibG, `8 x the wing rib (area ${(ribArea).toExponential(2)} m2 at the mean chord) scaled to the tail's root chord squared, x ${tRib} m x ${ribDensity} kg/m3`, { count: 8 });
+    for (const q of tailMech.structure) addStruct(q.name, q.material, q.mass_g, q.basis, { count: q.count });
+  } else if (p.tailLines === 'split') {
     // round 16 (SPEC completeness): the tail's covering, rods and ribs as their own lines (the rods and ribs have solids)
     addStruct('tail film, both faces', film, tailFilm, `${(film.specs.areal_density_g_m2 ?? film.mass_g)} g/m2 over both faces of both surfaces, with the wing's curvature allowance`);
     addStruct('tail rods, 4 off', tailRod, tailSparG, `${tailRod.mass_g} g/m x ${spanEach.toFixed(4)} m x 4 (a spar and a trailing edge per surface)`, { count: 4 });
@@ -226,6 +235,7 @@ export function buildDesign(params, catalog) {
   add(batP, 1, 'battery');
   add(twistP, 2, 'wing twist servo');
   add(tailP, 2, 'tail servo');
+  for (const q of tailMech?.parts ?? []) add(byId(catalog, q.id), q.count, q.role);
   if (strokeP) add(strokeP, 1, 'stroke amplitude servo');
   add(fcP, 1, 'flight controller with IMU and baro');
   // Round 6: the hardware variant the design needs (the F405-WMO's corrected current-sense PDB), on its BOM line.
@@ -302,29 +312,45 @@ export function buildDesign(params, catalog) {
   const lumps = [];
   // Round 4: p.lumpPos { name: [x, y, z] } places a lump where the packing check put the real part (sims/avis-shared
   // model.js layoutParts), so the CG and inertia follow the parts as fitted in the body.
-  const lump = (name, g, x, y = 0, z = 0, k = 0) => lumps.push({ name, mass_kg: (g / 1000) * marginFrac, pos: p.lumpPos?.[name] ?? [x, y, z], gyration_m: k });
+  // Round 17 (SPEC "Function completeness": mass properties from the drawn solids): each lump names the BOM lines it
+  // carries (lump.lines, src/design/massprops.js); with p.massFromSolids its position and inertia are those of its
+  // lines' drawn solids (p.lumpPos, p.lumpInertia per kg from fit.js / round11 fittedBuild), and a lump with no drawn
+  // position is an error, not a placeholder.
+  const fromSolids = !!p.massFromSolids && !p._massPass;
+  const lump = (name, g, x, y = 0, z = 0, k = 0, lines = []) => {
+    if (fromSolids && !p.lumpPos?.[name]) throw new Error(`mass from solids: lump '${name}' has no drawn position (p.lumpPos)`);
+    const J = fromSolids ? p.lumpInertia?.[name] : null, m = (g / 1000) * marginFrac;
+    lumps.push({ name, mass_kg: m, pos: p.lumpPos?.[name] ?? [x, y, z], gyration_m: J ? 0 : k, ...(J ? { inertia_kg_m2: J.map((v) => v * m) } : {}), lines });
+  };
   const motorX = 0.04;
-  lump('flap motor', motorP.mass_g, motorX, 0.0);
-  lump('gears and bearings', bom.filter((b) => b.role === 'gear' || /^(bearing|bushing|rod end)/.test(b.role)).reduce((a, b) => a + b.mass_g, 0), 0.015, 0.0);
-  lump('crank, rockers, plates', drivePlatesG, 0.01, 0.01);
-  lump('couplers', couplerG, 0.0, 0.0);
-  lump('ESC', escP.mass_g, 0.07, -0.01);
-  lump('flight controller', fcP.mass_g, 0.0, -0.01);
-  lump('receiver and airspeed', rxP.mass_g + aspdP.mass_g, 0.11, 0.0);
-  lump('GPS', gpsP.mass_g, -0.03, 0.03);
-  lump('tail servos', 2 * tailP.mass_g, -0.08, 0.0);
-  if (strokeP) lump('stroke servo', strokeP.mass_g + strokeLinkG, -0.03, 0.0);
+  const linkNames = (re) => (linkItems ?? []).filter((it) => re.test(it.name)).map((it) => it.name);
+  lump('flap motor', motorP.mass_g, motorX, 0.0, 0, 0, [motorP.id]);
+  const gearRows = bom.filter((b) => b.role === 'gear' || /^(bearing|bushing|rod end)/.test(b.role));
+  lump('gears and bearings', gearRows.reduce((a, b) => a + b.mass_g, 0), 0.015, 0.0, 0, 0, [...new Set(gearRows.map((b) => b.id))]);
+  lump('crank, rockers, plates', drivePlatesG, 0.01, 0.01, 0, 0, linkItems ? linkNames(/^(?!coupler links|keel and tail boom$|fuselage formers$)/) : ['crank, rockers and gearbox plates']);
+  lump('couplers', couplerG, 0.0, 0.0, 0, 0, linkItems ? linkNames(/^coupler links/) : ['couplers, 2 off']);
+  lump('ESC', escP.mass_g, 0.07, -0.01, 0, 0, [escP.id]);
+  lump('flight controller', fcP.mass_g, 0.0, -0.01, 0, 0, [fcP.id]);
+  lump('receiver and airspeed', rxP.mass_g + aspdP.mass_g, 0.11, 0.0, 0, 0, [rxP.id, aspdP.id]);
+  lump('GPS', gpsP.mass_g, -0.03, 0.03, 0, 0, [gpsP.id]);
+  const tmPart = (re) => (tailMech?.parts ?? []).filter((q) => re.test(q.role));
+  const tmG = (list) => list.reduce((a, q) => a + byId(catalog, q.id).mass_g * q.count, 0), tmS = (re) => (tailMech?.structure ?? []).filter((q) => re.test(q.name));
+  lump('tail servos', 2 * tailP.mass_g + tmG(tmPart(/servo arms/)), -0.08, 0.0, 0, 0, [tailP.id, ...tmPart(/servo arms/).map((q) => q.id)]);
+  // round 17: the tail's pushrods with their plugs, rod ends and screws, a lump of their own along the boom
+  if (tailMech) lump('tail pushrods', tmS(/pushrod/).reduce((a, q) => a + q.mass_g, 0) + tmG(tmPart(/rod ends|linkage screws/)), -0.5, 0.0, 0, 0, [...tmS(/pushrod/).map((q) => q.name), ...tmPart(/rod ends|linkage screws/).map((q) => q.id)]);
+  if (strokeP) lump('stroke servo', strokeP.mass_g + strokeLinkG, -0.03, 0.0, 0, 0, [strokeP.id]);
   // Round 5: the crank encoder sits on the crank axis with its magnet; a separate power module or servo regulator sits
   // with the flight controller.
   const sensorG = ['crankEncoder', 'encoderMagnet'].reduce((a, k) => a + (parts[k] ? byId(catalog, parts[k]).mass_g : 0), 0);
-  if (sensorG > 0) lump('crank encoder', sensorG, 0.0, -0.05);
+  if (sensorG > 0) lump('crank encoder', sensorG, 0.0, -0.05, 0, 0, ['crankEncoder', 'encoderMagnet'].filter((k) => parts[k]).map((k) => parts[k]));
   const supplyG = ['powerModule', 'servoRegulator'].reduce((a, k) => a + (parts[k] ? byId(catalog, parts[k]).mass_g : 0), 0);
-  if (supplyG > 0) lump('power module and regulator', supplyG, -0.01, -0.03);
-  if (pitotG) lump('pitot-static probe', pitotG, Math.max(0.45 * bodyLen, 0.14) + 0.04, 0.0);
-  if (keelItem) lump('keel and boom', keelItem.mass_g, keelItem.lump.pos[0], keelItem.lump.pos[1], keelItem.lump.pos[2], keelItem.lump.gyration_m);
-  else lump('keel and boom', keel.mass_g * keelLen, -lt / 2 + noseLen * 0.25, 0.0, 0, 0.29 * keelLen);
-  lump('fuselage shell and formers', (film.specs.areal_density_g_m2 ?? film.mass_g) * shell + formersG, -0.05, 0.0, 0, 0.3 * bodyLen);
-  lump('tail surfaces', tailFilm + tailSparG + tailRibG, -lt, p.tailY_m ?? 0.02);
+  if (supplyG > 0) lump('power module and regulator', supplyG, -0.01, -0.03, 0, 0, ['powerModule', 'servoRegulator'].filter((k) => parts[k]).map((k) => parts[k]));
+  if (pitotG) lump('pitot-static probe', pitotG, Math.max(0.45 * bodyLen, 0.14) + 0.04, 0.0, 0, 0, ['pitot-static probe']);
+  if (keelItem) lump('keel and boom', keelItem.mass_g, keelItem.lump.pos[0], keelItem.lump.pos[1], keelItem.lump.pos[2], keelItem.lump.gyration_m, ['keel and tail boom']);
+  else lump('keel and boom', keel.mass_g * keelLen, -lt / 2 + noseLen * 0.25, 0.0, 0, 0.29 * keelLen, ['keel and tail boom']);
+  lump('fuselage shell and formers', (film.specs.areal_density_g_m2 ?? film.mass_g) * shell + formersG, -0.05, 0.0, 0, 0.3 * bodyLen, ['fuselage film shell', 'fuselage formers']);
+  if (tailMech) lump('tail surfaces', tailFilm + tailRibG + tmS(/^(?!tail pushrod)/).reduce((a, q) => a + q.mass_g, 0) + tmG(tmPart(/bushings|washers/)), -lt, p.tailY_m ?? 0.02, 0, 0, ['tail film, both faces', 'tail ribs, 8 off', ...tmS(/^(?!tail pushrod)/).map((q) => q.name), ...tmPart(/bushings|washers/).map((q) => q.id)]);
+  else lump('tail surfaces', tailFilm + tailSparG + tailRibG, -lt, p.tailY_m ?? 0.02, 0, 0, p.tailLines === 'split' ? ['tail film, both faces', 'tail rods, 4 off', 'tail ribs, 8 off'] : ['tail surfaces, film, spar and ribs']);
   // Mean position of the wing mass, for the CG budget
   const wingOneKg = wingMass.one_wing_kg;
   const xWing = xleRoot - 0.42 * meanc; // skin centroid, spar at 0: weighted below
@@ -336,8 +362,12 @@ export function buildDesign(params, catalog) {
     sumMx += l.mass_kg * l.pos[0];
   }
   const battKg = (batP.mass_g / 1000) * marginFrac;
+  // the battery placed for the CG target (rounds 1-16, before its drawn place is known); round 17 (p.massFromSolids): at
+  // its drawn place, like every lump, so the CG is the drawn one and the target only states the design's intent
   const xBattery = (xCGtarget * (sumM + battKg) - sumMx) / battKg;
-  lumps.push({ name: 'battery', mass_kg: battKg, pos: [xBattery, -0.005, 0], gyration_m: 0.02 });
+  if (fromSolids && !p.lumpPos?.battery) throw new Error('mass from solids: the battery has no drawn position (p.lumpPos)');
+  const JB = fromSolids ? p.lumpInertia?.battery : null;
+  lumps.push({ name: 'battery', mass_kg: battKg, pos: fromSolids ? p.lumpPos.battery : [xBattery, -0.005, 0], gyration_m: JB ? 0 : 0.02, ...(JB ? { inertia_kg_m2: JB.map((v) => v * battKg) } : {}), lines: [batP.id] });
   const total = sumM + battKg;
   // Crank-rocker sized from amplitude
   const ampNom = (p.amp_deg ?? 25) * DEG;
@@ -405,7 +435,8 @@ export function buildDesign(params, catalog) {
   };
   // Body geometry: pod from the nose (ahead of the battery and receiver) back bodyLen, then the keel tube as a boom to
   // the tail's trailing edge. The tunnels, page and film build from this loft (src/physics/geometry.js).
-  const noseX = Math.max(0.45 * bodyLen, xBattery + 0.05, 0.14);
+  // round 17: the nose where the design states it (p.noseX_m: its nose block, round 17), else from the CG-placed battery
+  const noseX = p.noseX_m ?? Math.max(0.45 * bodyLen, xBattery + 0.05, 0.14);
   const loft = podAndBoomLoft({ noseX_m: noseX, podLength_m: bodyLen, width_m: bodyW, height_m: bodyH, boomOd_m: keel.specs.od_mm / 1000, tailEndX_m: -lt - 0.75 * chordT, y_m: bodyY, boomY_m: 0 });
   const body = {
     loft,
@@ -426,7 +457,7 @@ export function buildDesign(params, catalog) {
   const allow = tubeAllowable(inner);
   const allowOuter = tubeAllowable(outerSpar);
   const sparInner = { ...tubeSection(inner), id: inner.id, allowable_MPa: allow.sigma_MPa, allowable_basis: allow.basis, mass_g_per_m: inner.mass_g };
-  const sparOuter = { ...tubeSection(outerSpar), id: outerSpar.id, allowable_MPa: allowOuter.sigma_MPa, allowable_basis: allowOuter.basis, mass_g_per_m: outerSpar.mass_g };
+  const sparOuter = { ...tubeSection(outerSpar, specSheet), id: outerSpar.id, allowable_MPa: allowOuter.sigma_MPa, allowable_basis: allowOuter.basis, mass_g_per_m: outerGm, section_basis: tubeSpec(outerSpar, specSheet).basis };
   const gearStages = stages(parts.gears, catalog);
 
   const d = {
@@ -521,9 +552,10 @@ export function regulatorServoSupply(reg, batt) {
   if (pack.performance_V < s.min_input_v) throw new Error(`regulator ${reg.id}: the pack's lowest terminal voltage ${pack.performance_V} V is below its published minimum input ${s.min_input_v} V`);
   if (pack.current_V > s.max_input_v) throw new Error(`regulator ${reg.id}: full charge ${pack.current_V} V is above its published maximum input ${s.max_input_v} V`);
   const lo = s.output_v * (1 - s.output_accuracy_frac), hi = s.output_v * (1 + s.output_accuracy_frac);
-  const performance_V = +Math.min(lo, pack.performance_V - s.dropout_v_max).toFixed(3);
+  // round 17: a regulator whose page gives no dropout figure is held to its published minimum input, which includes it
+  const performance_V = +Math.min(lo, Number.isFinite(s.dropout_v_max) ? pack.performance_V - s.dropout_v_max : Infinity).toFixed(3);
   const current_V = +hi.toFixed(3);
-  return { performance_V, current_V, output_V: s.output_v, I_cont_A: s.continuous_current_a, eta: s.efficiency_min_frac, input_V: [pack.performance_V, pack.current_V], rule: `regulated ${s.output_v} V +-${(100 * s.output_accuracy_frac).toFixed(0)}%: torque and speed at ${performance_V} V (the lower of ${lo.toFixed(3)} V and the lowest input ${pack.performance_V} V less ${s.dropout_v_max} V dropout), stall current at ${current_V} V; battery draw at ${current_V} V output through ${s.efficiency_min_frac} efficiency (lower end of the published typical range); continuous ${s.continuous_current_a} A (published)` };
+  return { performance_V, current_V, output_V: s.output_v, I_cont_A: s.continuous_current_a, eta: s.efficiency_min_frac, input_V: [pack.performance_V, pack.current_V], rule: `regulated ${s.output_v} V +-${(100 * s.output_accuracy_frac).toFixed(0)}%: torque and speed at ${performance_V} V (${Number.isFinite(s.dropout_v_max) ? `the lower of ${lo.toFixed(3)} V and the lowest input ${pack.performance_V} V less ${s.dropout_v_max} V dropout` : `${lo.toFixed(3)} V; the lowest input ${pack.performance_V} V is above the published ${s.min_input_v} V minimum input`}), stall current at ${current_V} V; battery draw at ${current_V} V output through ${s.efficiency_min_frac} efficiency (lower end of the published typical range); continuous ${s.continuous_current_a} A (published)` };
 }
 
 /** The design's electrical block: servo supply and the 5 V regulator for the avionics (ESC's BEC or the FC's). */

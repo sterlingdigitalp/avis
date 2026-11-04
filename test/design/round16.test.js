@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { bomLines, resolveTag, completenessRecord, fastenerGeometry, shapeArea, solidVolume, EXEMPT, VOLUME_TOL } from '../../src/design/completeness.js';
 import { slideGap, resolveSteps, sequenceRecord, STEP_MAX_M } from '../../src/design/sequence.js';
 import { pickScrew } from '../../src/design/fixings.js';
-import { ring, cap, poly, segSegDist, screwX, screwY, capsulePoly, circlePoly, gap2, addPart, EXEMPT_JOINTS, KEYWAY, THROUGH, MESH } from '../../src/design/clearance.js';
+import { ring, cap, poly, segSegDist, screwX, screwY, capsulePoly, circlePoly, gap2, addPart, EXEMPT_JOINTS, KEYWAY, THROUGH, MESH, GROOVE } from '../../src/design/clearance.js';
 import { frameRect, chordAt } from '../../src/design/wing-solids.js';
 import { officialRefusal, SEQUENCE, ROUND16 } from '../../src/design/round16.mjs';
 import { insideConvex, clipConvex } from '../../src/design/airframe.js';
@@ -278,9 +278,9 @@ test('steps resolve each solid once, in order; a step that names nothing is repo
   near(Math.hypot(...resolveSteps(toyBird(), { steps: [{ name: 'a', members: ['.'], dir: [3, 0, 4] }] }).steps[0].dir), 1, 1e-12);
 });
 
-test('exempt joint classes: mesh, keyway, a shank through its hole, its tapped hole, a rib\'s hole, a tube\'s bore', () => {
-  assert.equal(EXEMPT_JOINTS.length, 6);
-  for (const j of [MESH, KEYWAY, THROUGH]) assert.ok(EXEMPT_JOINTS.includes(j));
+test('exempt joint classes: mesh, keyway, a shank through its hole, its tapped hole, a rib\'s hole, a tube\'s bore, a washer or circlip\'s groove', () => {
+  assert.equal(EXEMPT_JOINTS.length, 7);
+  for (const j of [MESH, KEYWAY, THROUGH, GROOVE]) assert.ok(EXEMPT_JOINTS.includes(j));
 });
 
 // ---- round 16's stated design and its refusal ----------------------------------------------------------------------

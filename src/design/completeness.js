@@ -9,7 +9,7 @@
 // Only things with no fixed place are exempt: glue, wire and the unlisted margin (none of them is a BOM line), and the
 // covering film (EXEMPT): the pod's covering is the loft the containment check already holds every part inside, the
 // wing's and tail's covering is the surface the flight model flies. Each exemption is in the record with its reason.
-import { byId } from './catalog.js';
+import { byId, tubeSpec } from './catalog.js';
 import { parseDims, catalogueDims } from '../../sims/avis-shared/model.js';
 
 const TWO_PI = 2 * Math.PI;
@@ -182,12 +182,20 @@ export function fastenerGeometry(spec, id) {
   const t = `${spec.mass_basis ?? ''} ${spec.dimensions ?? ''}`;
   if (/^screw/.test(id)) {
     const h = t.match(/head ([\d.]+) mm x ([\d.]+) mm/), d = +(id.match(/-m(\d+(?:\.\d+)?)x/)?.[1] ?? NaN);
-    return { kind: 'screw', head_d: (spec.head_d_mm ?? +h?.[1]) / 1000, head_k: (spec.head_k_mm ?? +h?.[2]) / 1000, d: d / 1000, L: (spec.length_mm ?? +(id.match(/x(\d+(?:\.\d+)?)-/)?.[1] ?? NaN)) / 1000 };
+    const L = (spec.length_mm ?? +(id.match(/x(\d+(?:\.\d+)?)-/)?.[1] ?? NaN)) / 1000, k = (spec.head_k_mm ?? +h?.[2]) / 1000;
+    // round 17: a countersunk screw's nominal length includes its head, so its shank is the rest
+    const csk = /countersunk/.test(spec.head ?? '');
+    return { kind: 'screw', head_d: (spec.head_d_mm ?? +h?.[1]) / 1000, head_k: k, d: d / 1000, L, shank_L: csk ? L - k : L, countersunk: csk };
   }
   if (/^nut/.test(id)) {
     const n = t.match(/([\d.]+) mm across flats x ([\d.]+) mm high/);
     return { kind: 'nut', s: (spec.s_mm ?? +n?.[1]) / 1000, m: (spec.m_mm ?? +n?.[2]) / 1000 };
   }
+  // Round 17 (audit items 7, 8): a DIN 6799 retaining washer or DIN 471 circlip, drawn as one ring of its own
+  // thickness; the circlip's "outside diameter" is read as d4, the installed ring's swept diameter (the only one of
+  // its dimensions that bounds how far it reaches, SOURCES-retention.md), not its free, unsprung d3.
+  if (/^washer-din6799/.test(id)) return { kind: 'washer', od: spec.outer_diameter_d3_mm / 1000, id: spec.groove_diameter_d2_mm / 1000, t: spec.thickness_s_mm / 1000 };
+  if (/^circlip-din471/.test(id)) return { kind: 'washer', od: spec.d4_mm / 1000, id: spec.groove_diameter_d2_mm / 1000, t: spec.thickness_s_mm / 1000 };
   const b = t.match(/^\s*([\d.]+)[^x]*x\s*([\d.]+)\s*x\s*([\d.]+)\s*mm/) ?? t.match(/([\d.]+)\D+x\s*([\d.]+)\s*x\s*([\d.]+)\s*mm/);
   return { kind: 'tie', L: +b?.[1] / 1000, b: +b?.[2] / 1000, t: +b?.[3] / 1000 };
 }
@@ -200,11 +208,14 @@ function fastenerSize(line, items, catalog, q0) {
     if (g.kind === 'screw') {
       const h = by(/head/), s = by(/shank/);
       const ht = h && tubeOf(h, q0), st = s && tubeOf(s, q0);
-      out.push(row(`${item}: head diameter`, ht && 2 * ht.ro, g.head_d, near(ht && 2 * ht.ro, g.head_d)), row(`${item}: head height`, ht?.L, g.head_k, near(ht?.L, g.head_k)), row(`${item}: shank diameter`, st && 2 * st.ro, g.d, near(st && 2 * st.ro, g.d)), row(`${item}: shank length`, st?.L, g.L, near(st?.L, g.L)));
+      out.push(row(`${item}: head diameter`, ht && 2 * ht.ro, g.head_d, near(ht && 2 * ht.ro, g.head_d)), row(`${item}: head height`, ht?.L, g.head_k, near(ht?.L, g.head_k)), row(`${item}: shank diameter`, st && 2 * st.ro, g.d, near(st && 2 * st.ro, g.d)), row(`${item}: shank length`, st?.L, g.shank_L, near(st?.L, g.shank_L)));
     } else if (g.kind === 'nut') {
       const n = tubeOf(solids[0], q0);
       // drawn as its corner circle: across flats = corner diameter x cos 30 deg
       out.push(row(`${item}: across flats`, n && 2 * n.ro * Math.cos(Math.PI / 6), g.s, near(n && 2 * n.ro * Math.cos(Math.PI / 6), g.s)), row(`${item}: height`, n?.L, g.m, near(n?.L, g.m)));
+    } else if (g.kind === 'washer') {
+      const t = tubeOf(solids[0], q0);
+      out.push(row(`${item}: outside diameter`, t && 2 * t.ro, g.od, near(t && 2 * t.ro, g.od)), row(`${item}: bore`, t && 2 * t.ri, g.id, near(t && 2 * t.ri, g.id)), row(`${item}: thickness`, t?.L, g.t, near(t?.L, g.t)));
     } else {
       // a tie's slabs: the band width along x and the band thickness across it; the loop no longer than the tie
       const widths = solids.map((x) => x.x[1] - x.x[0]), thin = solids.map((x) => { const e = envelope([x], q0); return Math.min(e.dz, e.dy); });
@@ -223,16 +234,17 @@ function tieLoop(solids, q0) {
 
 /** Stock bought by the metre: every item's section against the catalogue, the items' total length against the BOM's. */
 function stockSize(line, items, catalog, q0) {
-  const p = byId(catalog, line.id), s = p.specs ?? {}, out = [];
-  const lenBom = /^([\d.]+) mm of /.test(line.basis ?? '') ? +line.basis.match(/^([\d.]+) mm of /)[1] / 1000 * (line.count ?? 1) : line.mass_g / p.mass_g;
+  const p = byId(catalog, line.id), s = p.specs ?? {}, out = [], ts = tubeSpec(p, !!line.specSheet);
+  // round 17: a tube with two published sections is drawn on their envelope and weighed at the heavier figure
+  const lenBom = /^([\d.]+) mm of /.test(line.basis ?? '') ? +line.basis.match(/^([\d.]+) mm of /)[1] / 1000 * (line.count ?? 1) : line.mass_g / ts.g_per_m;
   let total = 0;
   for (const { item, solids } of items) {
     const t = solids.map((x) => tubeOf(x, q0)).filter(Boolean);
     const L = t.reduce((a, q) => a + q.L, 0);
     total += L;
     const od = Math.max(...t.map((q) => 2 * q.ro)), id = Math.min(...t.map((q) => 2 * q.ri));
-    out.push(row(`${item}: outside diameter`, od, s.od_mm / 1000, near(od, s.od_mm / 1000)));
-    if (!/^pitot/.test(line.name)) out.push(row(`${item}: bore`, id, (s.id_mm ?? 0) / 1000, near(id, (s.id_mm ?? 0) / 1000)));
+    out.push(row(`${item}: outside diameter`, od, ts.od_draw / 1000, near(od, ts.od_draw / 1000)));
+    if (!/^pitot/.test(line.name)) out.push(row(`${item}: bore`, id, ts.id_draw / 1000, near(id, ts.id_draw / 1000)));
   }
   out.push(row('total length', total, lenBom, near(total, lenBom, LEN_TOL * items.length), LEN_TOL * items.length));
   return out;
@@ -275,7 +287,7 @@ export function completenessRecord(asm, d, catalog, q0) {
     if (!L.items.has(item)) L.items.set(item, { item, solids: [] });
     L.items.get(item).solids.push({ ...s, id });
   }
-  const rows = [...byKey.values()].map((L) => lineRow(L, catalog, q0));
+  const rows = [...byKey.values()].map((L) => lineRow({ ...L, specSheet: !!d.params?.tubeSpecSheet }, catalog, q0));
   return {
     rule: 'SPEC Completeness and assembly order (2026-11-03): every BOM line that is a physical object has solids in the check, each tagged with its BOM line; a discrete line has as many items as the BOM counts; each item\'s size matches its line (catalogue dimensions within the rounding tolerance, stock length within the length tolerance, volume within the volume tolerance); only covering film, glue, wire and the unlisted margin are exempt; src/design/completeness.js',
     tolerances: { dimension_mm: DIM_TOL * 1000, length_per_item_mm: LEN_TOL * 1000, volume_frac: VOLUME_TOL },

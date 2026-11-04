@@ -30,7 +30,7 @@ writeJson('out/verification/evidence/V1V3_table.json', { rows, grid, AR, h0_over
 
 const maxAmp = Math.max(...rows.map((r) => Math.abs(r.amp_error_pct)));
 const maxPhase = Math.max(...rows.map((r) => Math.abs(r.phase_error_deg)));
-writeGate({
+writeGate({ notCountedBecause: [],
   gate: 'V1',
   passed: maxAmp <= 5 && maxPhase <= 5,
   measured: { max_amp_error_pct: +maxAmp.toFixed(3), max_phase_error_deg: +maxPhase.toFixed(3), k: KS, amp_error_pct: rows.map((r) => +r.amp_error_pct.toFixed(2)), phase_error_deg: rows.map((r) => +r.phase_error_deg.toFixed(2)), grid_at_k05: grid.map((r) => [r.nc, +r.amp_error_pct.toFixed(2), +r.phase_error_deg.toFixed(2)]) },
@@ -41,7 +41,7 @@ writeGate({
 const maxCt = Math.max(...rows.map((r) => Math.abs(r.ct_error_pct)));
 const ratioU = rows.map((r) => r.ct_uvlm);
 const monotonic = ratioU.every((v, i) => i === 0 || v > ratioU[i - 1]);
-writeGate({
+writeGate({ notCountedBecause: [],
   gate: 'V3',
   passed: maxCt <= 15 && monotonic,
   measured: { max_ct_error_pct: +maxCt.toFixed(3), trend_monotonic: monotonic, k: KS, ct_uvlm: rows.map((r) => +r.ct_uvlm.toExponential(4)), ct_garrick: rows.map((r) => +r.ct_garrick.toExponential(4)), ct_error_pct: rows.map((r) => +r.ct_error_pct.toFixed(2)) },

@@ -10,7 +10,7 @@
 // The spar's or a rod's hole in a rib, and a tube in another's bore, are not drawn: such pairs are exempt (RIB_HOLE,
 // BORE in clearance.js) and every other pair is checked.
 import { poly, cap, S, M, tagged, bandSlabs, RIB_HOLE, BORE } from './clearance.js';
-import { byId } from './catalog.js';
+import { byId, tubeSpec } from './catalog.js';
 import { E387_THICKNESS } from '../../sims/avis-shared/model.js';
 
 const mm = (v) => v / 1000;
@@ -74,7 +74,8 @@ export function wingParts(ax, tag, frame) {
   const W = d.params.wingStructure;
   if (!W) return;
   const P = d.params.parts, side = tag === 'R' ? 'right' : 'left', wing = d.wing, L = wing.segments.reduce((a, g) => a + g.length, 0), elbow = wing.segments[0].length;
-  const tube = (id) => { const s = byId(catalog, id).specs; return { ro: mm(s.od_mm) / 2, ri: mm(s.id_mm ?? 0) / 2 }; };
+  // round 17: drawn on the envelope of a tube's published sections (catalog.js tubeSpec)
+  const tube = (id) => { const t = tubeSpec(byId(catalog, id), !!d.params.tubeSpecSheet); return { ro: mm(t.od_draw) / 2, ri: mm(t.id_draw) / 2 }; };
   const si = tube(P.sparInner), so = tube(P.sparOuter), le = tube(P.leRod), te = tube(P.teRod);
   const xs = wing.spar_x;
   // a tube along the span from s0 to s1 (its capsule ends reach its radius past the segment's ends)
@@ -169,7 +170,8 @@ export function wingStructureFor(d, catalog, lay, { phases = 72, required = 0.00
  */
 export function tailParts(ax) {
   const { d, catalog, af, add, join, assumptions } = ax;
-  if (d.params.tailLines !== 'split' || !af) return;
+  // round 17: the all-moving tail with its linkage is placed after the packed parts (tail-mech.js, clearance.js afterPacked)
+  if (d.params.tailLines !== 'split' || !af || d.params.tailMech) return;
   const T = d.tail, yB = af.boom_y_m, rod = byId(catalog, d.params.parts.teRod).specs, r = mm(rod.od_mm) / 2;
   const rb = mm(byId(catalog, d.params.parts.keel).specs.od_mm) / 2, L = T.span_each_m, t = mm(d.params.wingStructure?.rib_t_mm ?? 2);
   const tie = d.params.linkage?.airframe?.tieSmall ?? 'tie-hellermanntyton-t18r';

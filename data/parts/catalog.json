@@ -2814,7 +2814,36 @@
    "position_sensor": "Contactless: Magnetic Encoder",
    "control": "PWM/TTL (Half Duplex)",
    "mass_note": "Page: 'Weight: 21.5g (0.758oz) - Excluding the weight of Horn'.",
-   "note": "Page title 'MD89MW Magnetic Encoder Metal Gear 25T Digital Micro Servo Retail'; the description paragraph names it 'MD89MW-DroneCAN' while the spec block lists 'Control System: PWM/TTL (Half Duplex)'. Page shows price and add-to-cart; schema.org availability InStock."
+   "note": "Page title 'MD89MW Magnetic Encoder Metal Gear 25T Digital Micro Servo Retail'; the description paragraph names it 'MD89MW-DroneCAN' while the spec block lists 'Control System: PWM/TTL (Half Duplex)'. Page shows price and add-to-cart; schema.org availability InStock.",
+   "reverified": {
+    "retrieved": "2026-11-03",
+    "url": "https://hitecrcd.com/md89mw-magnetic-encoder-metal-gear-25t-digital-micro-servo/",
+    "result": "All rows, the voltage range and the mass agree with this entry as first read on 2026-11-02.",
+    "quotes": [
+     "Operating Voltage Range: 3.5 ~ 8.4V",
+     "@ 4.8V: No Load Speed: 0.17sec/60\u02da; Stall Torque: 5.3kgf\u00b7cm (73.6 oz\u00b7in); Peak Efficiency Torque: 1.1kgf\u00b7cm (15.28oz\u00b7in); Standing Current: 30mA; No Load Running Current: 200mA; Stall Current: 1,800mA",
+     "@ 6.0V: No Load Speed: 0.13sec/60\u02da; Stall Torque: 6.4kgf\u00b7cm (88.88oz\u00b7in); Peak Efficiency Torque: 1.3kgf\u00b7cm (18.05oz\u00b7in); Standing Current: 30mA; No Load Running Current: 250mA; Stall Current: 2,200mA",
+     "@ 7.4V: No Load Speed: 0.11sec/60\u02da; Stall Torque: 8.5kgf\u00b7cm (118.04oz\u00b7in); Peak Efficiency Torque: 1.7kgf\u00b7cm (23.61oz\u00b7in); Standing Current: 30mA; No Load Running Current: 300mA; Stall Current: 2,700mA",
+     "Weight: 21.5g (0.758oz) - Excluding the weight of Horn",
+     "Dimensions: 29.0mm x 13.0mm x 30.0mm (1.142inch x 0.512inch x 1.181inch)",
+     "Horn Gear Spline: 25T(\u00d86)",
+     "Bearing Type: 2 Ball Bearing"
+    ]
+   },
+   "published_row_voltages_v": [
+    4.8,
+    6.0,
+    7.4
+   ],
+   "top_published_row_v": 7.4,
+   "row_rule_note": "The published rows stop at 7.4 V although the stated range is 3.5-8.4 V. Under the round-2 ruling (no extrapolation outside a servo's published voltage rows) any supply above 7.4 V, such as the D36V50F7's 7.5 V +-4% (7.2-7.8 V), is outside the rows. A supply of 5.76-6.24 V (D36V50F6) lies between the 4.8, 6.0 and 7.4 V rows.",
+   "output_spline_text": "Horn Gear Spline: 25T(\u00d86)",
+   "bearing_text": "Bearing Type: 2 Ball Bearing",
+   "dimensions_mm": [
+    29.0,
+    13.0,
+    30.0
+   ]
   },
   "price_usd": 104.99,
   "source_url": "https://hitecrcd.com/md89mw-magnetic-encoder-metal-gear-25t-digital-micro-servo/",
@@ -8413,10 +8442,54 @@
    "efficiency_text": "Typical efficiency of 80% to 95%, depending on input voltage, output voltage, and load",
    "efficiency_min_frac": 0.8,
    "efficiency_rule": "the lower end of the published typical efficiency range is used at every load (conservative)",
-   "dropout_v_max": 1.07,
-   "dropout_note": "read from the product page's dropout curve at the published continuous current (approximate)",
+   "dropout_v_max": null,
+   "dropout_note": "no dropout figure in the page text read (only a curve on the description tab, not read); the design keeps the pack's lowest terminal voltage above the published 6.5 V minimum input, which already includes the dropout at that output (round 17)",
    "dimensions_text": "1 x 1 x 0.375 in",
-   "status": "Rationed (Active and Preferred)"
+   "status": "Rationed (Active and Preferred)",
+   "reverified": {
+    "retrieved": "2026-11-03",
+    "urls": [
+     "https://www.pololu.com/product/4092/specs",
+     "https://www.pololu.com/product/4092"
+    ],
+    "result": "Mass, input range, output voltage and continuous current agree with this entry as first read on 2026-11-02.",
+    "quotes": [
+     "6V, 5.5A Step-Down Voltage Regulator D36V50F6",
+     "Size: 1\u2033 \u00d7 1\u2033 \u00d7 0.375\u2033",
+     "Weight: 7.0 g",
+     "Minimum operating voltage: 6.5 V",
+     "Maximum operating voltage: 50 V",
+     "Continuous output current: 5.5 A",
+     "Output voltage: 6 V",
+     "Reverse voltage protection?: Y",
+     "Maximum quiescent current: 4 mA",
+     "6 V with 4% accuracy",
+     "1\u2033 \u00d7 1\u2033 \u00d7 0.375\u2033 (25.4 mm \u00d7 25.4 mm \u00d7 9.5 mm)",
+     "Three 0.086\u2033 mounting holes for #2 or M2",
+     "Typical efficiency of 80% to 95%, depending on input voltage, output voltage, and load",
+     "Actual achievable continuous output current is a function of input voltage."
+    ]
+   },
+   "dimensions_mm": [
+    25.4,
+    25.4,
+    9.5
+   ],
+   "mounting_holes_text": "Three 0.086\u2033 mounting holes for #2 or M2",
+   "mounting_hole_spacing": null,
+   "mounting_hole_spacing_note": "Not given in the page text read; Pololu's dimension diagram was not read.",
+   "max_quiescent_current_ma": 4,
+   "reverse_voltage_protection": true,
+   "enable_pin": true,
+   "power_good_pin": true,
+   "output_range_v": [
+    5.76,
+    6.24
+   ],
+   "output_range_note": "computed: 6.0 V +-4% (published accuracy).",
+   "continuous_current_condition_text": "5.5 A typical max continuous output 'At 36 V in.'; the page says achievable current is a function of input voltage and gives no 12 V figure in text (the curve was not read).",
+   "input_text": "Input voltage: 6.5 V to 50 V (product page); specs page: Minimum operating voltage 6.5 V \"Subject to dropout voltage considerations\", Maximum operating voltage 50 V",
+   "input_source": "https://www.pololu.com/product/4092 and https://www.pololu.com/product/4092/specs, read 2026-11-03 (physics round 17)"
   },
   "price_usd": 39.95,
   "source_url": "https://www.pololu.com/product/4092/specs",
@@ -8478,5 +8551,1062 @@
   "source_url": "https://www.pololu.com/product/3783/specs",
   "retrieved": "2026-11-02",
   "verified": "manufacturer-page"
+ },
+ {
+  "id": "airfoil-e387-nasa-tm4062",
+  "category": "airfoil_reference",
+  "manufacturer": "NASA Langley Research Center (McGhee, Walker & Millard)",
+  "name": "Eppler 387 section coordinates, NASA TM-4062 Table I (design and measured, thickened trailing edge)",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not a part (reference record: published section coordinates)",
+   "mass_note": "A coordinate reference, not a physical part; mass_g 0 follows the catalogue's material_property convention.",
+   "citation": "McGhee, R.J., Walker, B.S., Millard, B.F., 'Experimental Results for the Eppler 387 Airfoil at Low Reynolds Numbers in the Langley Low-Turbulence Pressure Tunnel', NASA TM-4062 (L-16430; NAS 1.15:4062), NASA Langley Research Center, October 1988.",
+   "ntrs_id": "19890001471",
+   "accession": "89N10842",
+   "citation_page_url": "https://ntrs.nasa.gov/citations/19890001471",
+   "table": "Table I. Design and Measured Airfoil Coordinates With Thickened Trailing Edge; [y/(b/2) = -0.14] and Table I. Concluded [y/(b/2) = 0.56]",
+   "pdf_pages": "12-13 of the NTRS PDF (report pages 8-9)",
+   "licence_basis": "Work of the US Government (17 USC 105), public domain in the US. NTRS record: 'Distribution Limits: Public', 'Copyright: Work of the US Gov. Public Use Permitted.'",
+   "coordinate_set_used": "design: the z_des/c columns (Eppler 387 design ordinates with the model's thickened trailing edge). Identical in both halves of Table I.",
+   "coordinate_order": "upper and lower each from the leading edge (x/c 0) to the trailing edge (x/c 1), as printed; x/c and z/c in chord fractions; z positive toward the upper surface",
+   "n_points": {
+    "upper": 30,
+    "lower": 27,
+    "note": "the leading-edge point (0, 0) is printed in both surfaces"
+   },
+   "trailing_edge_note": "Report p. 2: 'the trailing edge of the model was thickened from 0 to 0.01 in. The additional thickness was blended into the Eppler 387 coordinates at x/c = 0.95. (See table I.) The basic camber distribution of the Eppler 387 airfoil was retained. The model had a chord length of 6 in.' So the printed design trailing edge is z/c +0.00083 (upper) and -0.00083 (lower) at x/c 1.00000; the true E387 trailing edge has zero thickness. Points at x/c <= 0.95128 are unaffected (see the comparison).",
+   "model_accuracy_note": "Report p. 2, OCR text layer (not checked against the page image): 'The model design contour accuracy was within +0.001 in.' (the sign is probably a +/- lost in OCR); 6 in chord.",
+   "upper": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     0.00043,
+     0.00233
+    ],
+    [
+     0.00518,
+     0.00932
+    ],
+    [
+     0.01423,
+     0.01727
+    ],
+    [
+     0.02748,
+     0.02562
+    ],
+    [
+     0.04493,
+     0.03408
+    ],
+    [
+     0.06643,
+     0.04238
+    ],
+    [
+     0.09185,
+     0.05033
+    ],
+    [
+     0.12093,
+     0.05775
+    ],
+    [
+     0.15345,
+     0.06448
+    ],
+    [
+     0.18907,
+     0.07037
+    ],
+    [
+     0.22742,
+     0.07528
+    ],
+    [
+     0.26813,
+     0.07908
+    ],
+    [
+     0.31078,
+     0.08157
+    ],
+    [
+     0.35505,
+     0.08247
+    ],
+    [
+     0.40077,
+     0.08173
+    ],
+    [
+     0.44767,
+     0.07937
+    ],
+    [
+     0.49548,
+     0.07547
+    ],
+    [
+     0.54393,
+     0.0702
+    ],
+    [
+     0.59272,
+     0.0639
+    ],
+    [
+     0.64137,
+     0.05697
+    ],
+    [
+     0.68922,
+     0.04975
+    ],
+    [
+     0.73567,
+     0.04248
+    ],
+    [
+     0.78007,
+     0.0354
+    ],
+    [
+     0.82183,
+     0.02867
+    ],
+    [
+     0.86035,
+     0.02242
+    ],
+    [
+     0.8951,
+     0.01678
+    ],
+    [
+     0.92553,
+     0.01183
+    ],
+    [
+     0.95128,
+     0.00763
+    ],
+    [
+     1.0,
+     0.00083
+    ]
+   ],
+   "lower": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     0.00092,
+     -0.00287
+    ],
+    [
+     0.00717,
+     -0.00682
+    ],
+    [
+     0.0189,
+     -0.01017
+    ],
+    [
+     0.03597,
+     -0.01265
+    ],
+    [
+     0.05827,
+     -0.01425
+    ],
+    [
+     0.08568,
+     -0.015
+    ],
+    [
+     0.118,
+     -0.01502
+    ],
+    [
+     0.1549,
+     -0.01442
+    ],
+    [
+     0.19598,
+     -0.01328
+    ],
+    [
+     0.24083,
+     -0.01177
+    ],
+    [
+     0.28892,
+     -0.00998
+    ],
+    [
+     0.33968,
+     -0.00803
+    ],
+    [
+     0.39252,
+     -0.00605
+    ],
+    [
+     0.44678,
+     -0.0041
+    ],
+    [
+     0.50182,
+     -0.00228
+    ],
+    [
+     0.55693,
+     -0.00065
+    ],
+    [
+     0.61147,
+     0.00073
+    ],
+    [
+     0.66472,
+     0.00187
+    ],
+    [
+     0.71602,
+     0.00268
+    ],
+    [
+     0.76475,
+     0.0032
+    ],
+    [
+     0.81027,
+     0.00342
+    ],
+    [
+     0.85202,
+     0.00337
+    ],
+    [
+     0.88943,
+     0.00307
+    ],
+    [
+     0.92205,
+     0.00258
+    ],
+    [
+     0.94942,
+     0.00197
+    ],
+    [
+     1.0,
+     -0.00083
+    ]
+   ],
+   "measured_model": {
+    "note": "z_meas/c columns of Table I at two spanwise stations of the 6 in chord, 36 in span stainless-steel model, at the design x/c stations above. Not the section definition; kept for completeness.",
+    "y_over_b2_minus_0_14": {
+     "upper": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.00043,
+       0.00197
+      ],
+      [
+       0.00518,
+       0.0092
+      ],
+      [
+       0.01423,
+       0.01742
+      ],
+      [
+       0.02748,
+       0.02555
+      ],
+      [
+       0.04493,
+       0.03398
+      ],
+      [
+       0.06643,
+       0.04233
+      ],
+      [
+       0.09185,
+       0.05032
+      ],
+      [
+       0.12093,
+       0.05772
+      ],
+      [
+       0.15345,
+       0.0644
+      ],
+      [
+       0.18907,
+       0.07025
+      ],
+      [
+       0.22742,
+       0.07518
+      ],
+      [
+       0.26813,
+       0.07903
+      ],
+      [
+       0.31078,
+       0.0816
+      ],
+      [
+       0.35505,
+       0.0826
+      ],
+      [
+       0.40077,
+       0.08182
+      ],
+      [
+       0.44767,
+       0.07935
+      ],
+      [
+       0.49548,
+       0.07535
+      ],
+      [
+       0.54393,
+       0.07005
+      ],
+      [
+       0.59272,
+       0.06372
+      ],
+      [
+       0.64137,
+       0.05675
+      ],
+      [
+       0.68922,
+       0.04955
+      ],
+      [
+       0.73567,
+       0.04227
+      ],
+      [
+       0.78007,
+       0.03518
+      ],
+      [
+       0.82183,
+       0.02845
+      ],
+      [
+       0.86035,
+       0.02227
+      ],
+      [
+       0.8951,
+       0.01673
+      ],
+      [
+       0.92553,
+       0.01188
+      ],
+      [
+       0.95128,
+       0.00787
+      ],
+      [
+       1.0,
+       0.00147
+      ]
+     ],
+     "lower": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.00092,
+       -0.00288
+      ],
+      [
+       0.00717,
+       -0.00678
+      ],
+      [
+       0.0189,
+       -0.01017
+      ],
+      [
+       0.03597,
+       -0.01278
+      ],
+      [
+       0.05827,
+       -0.0143
+      ],
+      [
+       0.08568,
+       -0.01498
+      ],
+      [
+       0.118,
+       -0.01497
+      ],
+      [
+       0.1549,
+       -0.01433
+      ],
+      [
+       0.19598,
+       -0.01318
+      ],
+      [
+       0.24083,
+       -0.01165
+      ],
+      [
+       0.28892,
+       -0.00987
+      ],
+      [
+       0.33968,
+       -0.00793
+      ],
+      [
+       0.39252,
+       -0.00597
+      ],
+      [
+       0.44678,
+       -0.00402
+      ],
+      [
+       0.50182,
+       -0.0022
+      ],
+      [
+       0.55693,
+       -0.0006
+      ],
+      [
+       0.61147,
+       0.00077
+      ],
+      [
+       0.66472,
+       0.00187
+      ],
+      [
+       0.71602,
+       0.00265
+      ],
+      [
+       0.76475,
+       0.00317
+      ],
+      [
+       0.81027,
+       0.00333
+      ],
+      [
+       0.85202,
+       0.00323
+      ],
+      [
+       0.88943,
+       0.00317
+      ],
+      [
+       0.92205,
+       0.00257
+      ],
+      [
+       0.94942,
+       0.00182
+      ],
+      [
+       1.0,
+       -0.00098
+      ]
+     ]
+    },
+    "y_over_b2_0_56": {
+     "upper": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.00043,
+       0.0022
+      ],
+      [
+       0.00518,
+       0.00912
+      ],
+      [
+       0.01423,
+       0.01715
+      ],
+      [
+       0.02748,
+       0.02572
+      ],
+      [
+       0.04493,
+       0.03407
+      ],
+      [
+       0.06643,
+       0.0423
+      ],
+      [
+       0.09185,
+       0.05022
+      ],
+      [
+       0.12093,
+       0.05772
+      ],
+      [
+       0.15345,
+       0.06432
+      ],
+      [
+       0.18907,
+       0.07018
+      ],
+      [
+       0.22742,
+       0.07515
+      ],
+      [
+       0.26813,
+       0.079
+      ],
+      [
+       0.31078,
+       0.08153
+      ],
+      [
+       0.35505,
+       0.08247
+      ],
+      [
+       0.40077,
+       0.08172
+      ],
+      [
+       0.44767,
+       0.0793
+      ],
+      [
+       0.49548,
+       0.07535
+      ],
+      [
+       0.54393,
+       0.07008
+      ],
+      [
+       0.59272,
+       0.0638
+      ],
+      [
+       0.64137,
+       0.05688
+      ],
+      [
+       0.68922,
+       0.04967
+      ],
+      [
+       0.73567,
+       0.04237
+      ],
+      [
+       0.78007,
+       0.03535
+      ],
+      [
+       0.82183,
+       0.02863
+      ],
+      [
+       0.86035,
+       0.02243
+      ],
+      [
+       0.8951,
+       0.01685
+      ],
+      [
+       0.92553,
+       0.01197
+      ],
+      [
+       0.95128,
+       0.00788
+      ],
+      [
+       1.0,
+       0.00083
+      ]
+     ],
+     "lower": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.00092,
+       -0.00268
+      ],
+      [
+       0.00717,
+       -0.00695
+      ],
+      [
+       0.0189,
+       -0.01028
+      ],
+      [
+       0.03597,
+       -0.01267
+      ],
+      [
+       0.05827,
+       -0.0143
+      ],
+      [
+       0.08568,
+       -0.01502
+      ],
+      [
+       0.118,
+       -0.01498
+      ],
+      [
+       0.1549,
+       -0.01435
+      ],
+      [
+       0.19598,
+       -0.0132
+      ],
+      [
+       0.24083,
+       -0.01167
+      ],
+      [
+       0.28892,
+       -0.00987
+      ],
+      [
+       0.33968,
+       -0.00793
+      ],
+      [
+       0.39252,
+       -0.00597
+      ],
+      [
+       0.44678,
+       -0.00402
+      ],
+      [
+       0.50182,
+       -0.0022
+      ],
+      [
+       0.55693,
+       -0.00062
+      ],
+      [
+       0.61147,
+       0.00077
+      ],
+      [
+       0.66472,
+       0.00187
+      ],
+      [
+       0.71602,
+       0.00267
+      ],
+      [
+       0.76475,
+       0.00317
+      ],
+      [
+       0.81027,
+       0.00337
+      ],
+      [
+       0.85202,
+       0.0033
+      ],
+      [
+       0.88943,
+       0.00295
+      ],
+      [
+       0.92205,
+       0.00243
+      ],
+      [
+       0.94942,
+       0.0019
+      ],
+      [
+       1.0,
+       -0.0009
+      ]
+     ]
+    }
+   },
+   "transcription": "From the PDF's OCR text layer (pdftotext -layout), checked against 200 dpi renders of PDF pages 12-13 read by eye. One OCR-damaged cell corrected from the image (page 12, lower surface, x/c .55693, z_meas/c: OCR '-- ,000_0', image '-.00060'). Checks passed: every row satisfies z_meas - z_des = (z/c)diff within the table's own last-digit rounding (0.00001); the design x/c and z_des/c columns are identical between the two halves of the table.",
+   "comparison_local_uiuc_file": "Compared only (not a source) with the local gitignored data/references/airfoils/e387.dat (UIUC true E387, 61 points), linear interpolation per surface at these x/c: largest |dz| 0.00002 c (upper, x/c 0.00518) for x/c <= 0.95128 on both surfaces; at x/c 1.00000 the difference is the thickened trailing edge, +0.00083 c upper and -0.00083 c lower."
+  },
+  "price_usd": null,
+  "source_url": "https://ntrs.nasa.gov/api/citations/19890001471/downloads/19890001471.pdf",
+  "retrieved": "2026-11-03",
+  "verified": "datasheet"
+ },
+ {
+  "id": "screw-iso10642-m3x8-10.9",
+  "category": "fastener",
+  "manufacturer": "any ISO 4762 maker (property class 10.9, ISO 898-1)",
+  "name": "ISO 10642 M3 x 8 hexagon socket countersunk head screw, class 10.9",
+  "mass_g": 0.57,
+  "specs": {
+   "mass_basis": "per part, computed: ISO 10642 M3 head dk 6.0 mm (nominal = max), k 1.7 mm max, 90 deg countersunk, as the cone frustum from 6.0 to 3.0 mm over 1.7 mm (fasteners.eu ISO 10642 table, read 2026-11-03, physics round 17), plus a 3 mm shank over the rest of the 8 mm nominal length (a countersunk screw's length includes its head), steel 7.85 g/cm3 (the catalogue steel entries): 0.57 g",
+   "thread": "M3 coarse",
+   "length_mm": 8,
+   "stress_area_mm2": 5.03,
+   "property_class": "10.9",
+   "proof_load_N": 4180,
+   "min_ultimate_tensile_load_N": 5230,
+   "design_values": {
+    "tension_N": 2090.0,
+    "shear_N": 1206.7,
+    "basis": "half the ISO 898-1 class 10.9 M3 figures of screw-iso4762-m3x8-10.9 (proof load 4180 N, As 5.03 mm2, Optimas table): no rating for a countersunk head was read, and its head may not carry its class's full load, so the cap screw's figure counts at half (SPEC round 7: a value with no basis)"
+   },
+   "quotes": {
+    "proof_load": "M3 | 5,03 | 1130 | 1560 | 1410 | 1910 | 2210 | 2920 | 3270 | 4180 | 4880 (Proof Load, Fp (As,nom x Sp,nom), N; According to EN ISO 898-1)",
+    "ultimate": "M3 | 5,03 | 2010 | 2110 | 2510 | 2620 | 3020 | 4020 | 4530 | 5230 | 6140 (minimum ultimate tensile loads)",
+    "head": "M3 (ISO 4762): dk max 5.50 mm; k max 3.00 mm"
+   },
+   "extra_source_urls": [
+    "https://optimas.com/technical-resources/iso-metric-thread-minimum-ultimate-tensile-loads/",
+    "https://www.fasteners.eu/standards/ISO/4762/"
+   ],
+   "head_d_mm": 6.0,
+   "head_k_mm": 1.7,
+   "head": "countersunk, 90 deg",
+   "socket_s_mm": 2,
+   "thread_length_b_mm": 12,
+   "thread_length_note": "fasteners.eu ISO 10642: b 12 mm for l <= 125 mm, so an 8 mm screw is threaded to its head",
+   "lengths_text": "ISO 10642 M3 nominal lengths (fasteners.eu): 8, 10, 12, 16, 20, 25, 30, 35, 40, 50, 60, 70 mm; the smallest size the table lists is M3",
+   "use": "the crank web's axial screw (physics round 17): countersunk flush in the web's end lip, into the crank stub's tapped end"
+  },
+  "price_usd": null,
+  "source_url": "https://www.fasteners.eu/standards/ISO/10642/",
+  "retrieved": "2026-11-03",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "composite-rockwest-t-rnd-236-transverse",
+  "category": "material_property",
+  "manufacturer": "Rock West Composites",
+  "name": "T-RND-236 pultruded tube, transverse (Y) compressive yield and XY shear, CLT estimates",
+  "mass_g": 0,
+  "specs": {
+   "mass_basis": "not a part (property record)",
+   "transverse_compressive_yield_psi": 38600,
+   "xy_shear_psi": 13987,
+   "quote": "Engineering Properties (T-RND-236), read 2026-11-03 (physics round 17): \"Avg EX Young's Modulus: 1.94E7\"; \"Y Compressive Yield Strength: 38600.0\"; \"XY Shear Strength: 13987.0\"; \"Y Tensile Yield Strength: 9190.0\"; \"GXY Shear Modulus: 800000.0\"; \"All laminate properties and mechanical calculations are based on Classical Lamination Theory ... should be used as a reference only.\" (imperial units: psi)",
+   "design_values": {
+    "yield_MPa": 133.1,
+    "basis": "38,600 psi (266 MPa) transverse compressive yield, a classical-lamination-theory estimate on the product page (reference only): counted at half, 133 MPa",
+    "xy_shear_MPa": 48.2,
+    "xy_shear_basis": "XY shear strength 13,987 psi (96.4 MPa), CLT estimate (reference only): counted at half, 48.2 MPa",
+    "G_xy_GPa": 5.516,
+    "G_xy_basis": "GXY shear modulus 800,000 psi (5.516 GPa), CLT: a modulus from lamination theory counts in full (SPEC ruling after catalogue round 2)"
+   },
+   "gxy_shear_modulus_psi": 800000
+  },
+  "price_usd": null,
+  "source_url": "https://www.rockwestcomposites.com/t-rnd-236.html",
+  "retrieved": "2026-11-03",
+  "verified": "manufacturer-page"
+ },
+ {
+  "id": "screw-iso4762-m2x6-8.8",
+  "category": "fastener",
+  "manufacturer": "any ISO 4762 (DIN 912) maker (property class 8.8, ISO 898-1)",
+  "name": "ISO 4762 (DIN 912) M2 x 6 socket head cap screw, class 8.8",
+  "mass_g": 0.326,
+  "specs": {
+   "mass_basis": "per part, computed: ISO 4762 M2 maximum head 3.80 mm x 2.00 mm (fasteners.eu ISO 4762 table) plus a 2 mm x 6 mm shank at nominal diameter, socket not deducted, steel 7.85 g/cm3 (the catalogue steel entries, metal-khk-s45c): 0.326 g",
+   "thread": "M2 coarse (pitch 0.4)",
+   "length_mm": 6,
+   "head_d_mm": 3.8,
+   "head_k_mm": 2,
+   "thread_length_b_mm": null,
+   "stress_area_mm2": 2.07,
+   "property_class": "8.8",
+   "use": "the tail linkage (physics round 17): each rod end to the servo arm's and the horn's tapped M2 holes",
+   "design_values": {
+    "tension_N": 1200.6,
+    "shear_N": 693.2,
+    "basis": "ISO 898-1 minimum stress under proof load Sp 580 MPa for class 8.8 at d <= 16 mm (TR Fastenings ISO 898-1 table) x the M2 tensile stress area 2.07 mm2 (TorqBolt BS 3692 table) = 1200.6 N, in full (a specified minimum); shear against the proof load / sqrt 3, the rule of the M3 entries"
+   },
+   "quotes": {
+    "proof_stress": "Class 8.8: Test stress Sp 580 MPa for \"<= 16mm\" (TR Fastenings, mechanical properties ISO 898-1 EN 20898-1)",
+    "stress_area": "M2 2.07 (Tensile stress area of bolt mm2; TorqBolt, BS 3692 proof loads for steel nuts)",
+    "head": "M2 (ISO 4762): dk max 3,80; k max 2,00; P 0,4; b 16 (fasteners.eu ISO 4762)"
+   },
+   "extra_source_urls": [
+    "https://www.trfastenings.com/knowledge-base/metric-screws/screws-and-bolts-mechanical-properties",
+    "https://TorqBolt.com/bs-3692-bolting-assemblies-fasteners-bolting-stud-bolts-screws-nuts-suppliers-manufacturers"
+   ],
+   "thread_length_note": "6 mm is in the ISO 4762 nominal-length table read at fasteners.eu (2026-11-03, physics round 17: lengths 2.5, 3, 4, 5, 6, 8, 10, 12, 16, 20; short lengths fully threaded)"
+  },
+  "price_usd": null,
+  "source_url": "https://www.fasteners.eu/standards/ISO/4762/",
+  "retrieved": "2026-11-03",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "washer-din6799-4",
+  "category": "fastener",
+  "manufacturer": "any DIN 6799 maker (spring steel; stainless A1/A4 also listed)",
+  "name": "DIN 6799 retaining washer (E-clip) size 4, groove 4 mm, shafts 5-7 mm",
+  "mass_g": 0.158,
+  "specs": {
+   "mass_basis": "per part: table 'Weight kg/1000pcs' 0.158 kg per 1000 = 0.158 g each",
+   "standard": "DIN 6799",
+   "nominal_size_mm": 4.0,
+   "groove_diameter_d2_mm": 4.0,
+   "shaft_diameter_d1_range_mm": [
+    5,
+    7
+   ],
+   "use_for": "5 mm shafts",
+   "thickness_s_mm": 0.7,
+   "outer_diameter_d3_mm": 9.3,
+   "opening_a_mm": 3.34,
+   "groove_width_m_mm": 0.74,
+   "min_groove_to_shaft_end_n_mm": 1.2,
+   "load_columns": {
+    "FN_kN": 0.25,
+    "FN_at_shaft_d1_mm": 5,
+    "Fs_kN": 0.95,
+    "g_mm": 1,
+    "Fsg_kN": 0.47
+   },
+   "max_speed_n_abl_rpm": 32000,
+   "material_text": "Steel: spring steel; Stainless: A1,A4",
+   "legend_quotes": "S - Washer width; d2 - Inner diameter; d3 - Outer diameter; a - opening Range; d1 - shaft diameter; m - groove width; n - minimum length to the face of the shaft; Weight kg/1000pcs",
+   "load_columns_note": "The page tabulates FN (kN, 'for d1'), Fs (kN), g and Fsg (kN) and n abl (min-1) but prints no legend for them. Under DIN 6799's convention FN is the groove's axial load capacity at the listed shaft diameter, Fs the washer's axial load capacity against a sharp-cornered abutment, and Fsg the washer's capacity against an abutment with chamfer or radius g. That reading is the standard's convention, not text on the page: confirm against a maker's catalogue before rating a joint on it.",
+   "row_text": "4 | 5 | 7 | 0,7 | 3,34 | ±0,048 | 0,158 | 4 | 0,74 | 1,2 | 9,3 | 0,25 | 5 | 0,95 | 1 | 0,47 | 32000",
+   "groove_note": "The shaft must be grooved to d2 with width m; the shaft's own check must be made at the groove (audit B, F4)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.fasteners.eu/standards/DIN/6799/",
+  "retrieved": "2026-11-03",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "rodend-igus-KBRM-02",
+  "category": "rod_end",
+  "manufacturer": "igus",
+  "name": "igubal rod end with female thread KBRM-02 (right hand; left hand KBLM-02)",
+  "mass_g": 0.4,
+  "specs": {
+   "part_number": "KBRM-02",
+   "type": "rod end bearing, female thread, spherical ball (DIN ISO 12240 K series)",
+   "housing_material": "igumid G",
+   "ball_material": "iglide W300 (standard spherical ball)",
+   "temperature_text": "-40°C to +120°C, short-term up to +180°C (igus.co.uk igubal rod end page, general to the range)",
+   "bore_d1_mm": 2,
+   "bore_tolerance": "E10",
+   "d2_mm": 9,
+   "thread_d3": "M2",
+   "d4_mm": 4.0,
+   "d5_mm": 4.6,
+   "C1_mm": 3.0,
+   "B_mm": 4,
+   "h1_mm": 12.5,
+   "l1_mm": 6,
+   "l2_mm": 17,
+   "wrench_W": "SW4",
+   "max_pivot_angle_deg": 30,
+   "min_thread_depth_mm": 4,
+   "max_static_tensile_short_term_lbf": 44,
+   "max_static_tensile_long_term_lbf": 22,
+   "max_static_tensile_short_term_n": 195.7,
+   "max_static_tensile_long_term_n": 97.9,
+   "max_static_axial_short_term_lbf": 11,
+   "max_static_axial_long_term_lbf": 6,
+   "max_static_axial_short_term_n": 48.9,
+   "max_static_axial_long_term_n": 26.7,
+   "max_torque_female_thread_ftlb": 0.22,
+   "max_torque_through_ball_ftlb": 0.74,
+   "max_torque_through_ball_mh_ftlb": null,
+   "unit_conversion": "1 lbf = 4.44822 N (computed)",
+   "mass_basis": "per part, published catalogue weight [g]",
+   "dimension_labels": "catalogue column labels used as-is; d1 is the ball bore, d3 the female thread, h1 the centre-to-shank-end length; the B column has a second value for the stainless-sleeve (MH) version",
+   "rule": "use the long-term static tensile figure for a sustained load and the short-term one for a peak, as igus tabulates them",
+   "quotes": {
+    "dimensions": "KB M-02 2 9 M2 4.0 4.6 3.0 4 – 12.5 6 17 SW4 30°",
+    "load_and_weight": "KB M-02 44 22 11 6 4 0.22 0.74 – 0.4 ([lbs] [lbs] [lbs] [lbs] [mm] [ft•lbs] [ft•lbs] [ft•lbs] [g])",
+    "material": "Housing: igumid G ... Standard spherical ball: iglide® W300"
+   },
+   "older_catalogue_note": "igus US 'igubal Rod Ends' PDF (QuarkXPress, 2011) lists KBRM-02 at 134/67 lbs tensile and 13/6 lbs radial, KBRM-03 at 179/89 and 22/11; the 2021 catalogue (source_url) gives the values used here, which are lower for KBRM-02."
+  },
+  "price_usd": null,
+  "source_url": "https://toolbox.igus.com/wp-content/uploads/2023/08/igubal-spherical-bearings-2021-catalog.pdf",
+  "source_url_2": "https://www.igus.com/us/pdf/igubal_rod_end.pdf",
+  "retrieved": "2026-11-03",
+  "verified": "datasheet"
+ },
+ {
+  "id": "horn-hitec-r-ml25",
+  "category": "servo_horn",
+  "manufacturer": "Hitec RCD",
+  "name": "Hitec R-ML25 regular metal horn (aluminium single arm, H25T spline)",
+  "mass_g": 1.61,
+  "specs": {
+   "part_number": "R-ML25",
+   "type": "REGULAR METAL HORN (single arm)",
+   "material": "ALUMINUM (alloy not stated)",
+   "spline": "H25T Serration (25T, Ø6.0)",
+   "fits": "Hitec compatibility table lists MD89MW in the H25T (Ø6.0) group with R-ML25; Multiplex (Hitec distributor) lists the MD89MW package as 'Servo arm set (M-O25, R-ML25)'",
+   "hole_radii_mm": [
+    16.0,
+    19.0
+   ],
+   "hole_thread": "M2.0x0.4 (tapped)",
+   "arm_thickness_mm": 2.5,
+   "hub_od_mm": 9.0,
+   "tip_od_mm": 6.0,
+   "hub_overall_height_mm": 4.7,
+   "hub_boss_beyond_arm_mm": 2.2,
+   "centre_screw_hole_mm": 3.2,
+   "other_drawn_dims_mm": "3.2, 3.7 (axial steps in the hub section), chamfers C0.3, C0.5",
+   "tolerance_text": "0.5 ~ 8.99 ±0.05, 9.0 ~ 119.9 ±0.1, 120 ~ 315 ±0.2 Unit: mm",
+   "mass_basis": "per part, computed (no weight published): arm plate = convex hull of the Ø9.0 hub and Ø6.0 tip circles 19.0 mm apart (188.89 mm2, computed) x 2.5 mm, plus the Ø9.0 x 2.2 mm boss, less a Ø3.2 hole through 4.7 mm; spline and M2 holes not deducted, so an upper bound; x 2.81 g/cm3 (the catalogue's metal-al-7075-t6, the denser of its two aluminium entries; 2.70 g/cm3 for 6061 gives 1.55 g)",
+   "mass_note": "computed volume 574.4 mm3 x 2.81 g/cm3 = 1.614 g (upper bound)",
+   "rating": "none published (no torque or load rating for the horn)",
+   "datasheet_page": 55,
+   "quotes": {
+    "title_block": "PART NAME: R-ML25 MATERIAL: ALUMINUM TYPE: REGULAR METAL HORN",
+    "drawing": "M2.0x0.4; Ø6.0; 19.0; 16.0; 0.0; Ø9.0; 2.5; 2.2; 3.2; 3.7; 4.7; Ø3.2; 25T",
+    "md89mw_spline": "Horn Gear Spline: 25T(Ø6) (hitecrcd.com MD89MW page)",
+    "md89mw_mass": "Weight: 21.5g (0.758oz) - Excluding the weight of Horn",
+    "package": "Servo arm set (M-O25, R-ML25) (shop.multiplex-rc.de MD89MW page, article 1-01237)"
+   }
+  },
+  "price_usd": null,
+  "source_url": "https://shop.multiplex-rc.de/userdata/files/HITEC%20SERVO%20ACTUATOR%20HORN%20%26%20SPLINE%20TECHNICAL%20DATA%20SHEET_v3_0_1_26C.pdf",
+  "source_url_2": "https://shop.multiplex-rc.de/en/servo-md89mw-p4158/",
+  "retrieved": "2026-11-03",
+  "verified": "datasheet"
+ },
+ {
+  "id": "washer-din6799-6",
+  "category": "fastener",
+  "manufacturer": "any DIN 6799 maker (spring steel; stainless A1/A4 also listed)",
+  "name": "DIN 6799 retaining washer (E-clip) size 6, groove 6 mm, shafts 7-9 mm",
+  "mass_g": 0.255,
+  "specs": {
+   "mass_basis": "per part: table 'Weight kg/1000pcs' 0.255 kg per 1000 = 0.255 g each",
+   "standard": "DIN 6799",
+   "nominal_size_mm": 6.0,
+   "groove_diameter_d2_mm": 6.0,
+   "shaft_diameter_d1_range_mm": [
+    7,
+    9
+   ],
+   "use_for": "8 mm shafts (FN tabulated at d1 8)",
+   "thickness_s_mm": 0.7,
+   "outer_diameter_d3_mm": 12.3,
+   "opening_a_mm": 5.26,
+   "groove_width_m_mm": 0.74,
+   "min_groove_to_shaft_end_n_mm": 1.2,
+   "load_columns": {
+    "FN_kN": 1.1,
+    "FN_at_shaft_d1_mm": 8,
+    "Fs_kN": 1.35,
+    "g_mm": 1.1,
+    "Fsg_kN": 0.7
+   },
+   "max_speed_n_abl_rpm": 25000,
+   "material_text": "Steel: spring steel; Stainless: A1,A4",
+   "legend_quotes": "S - Washer width; d2 - Inner diameter; d3 - Outer diameter; a - opening Range; d1 - shaft diameter; m - groove width; n - minimum length to the face of the shaft; Weight kg/1000pcs",
+   "load_columns_note": "The page tabulates FN (kN, 'for d1'), Fs (kN), g and Fsg (kN) and n abl (min-1) but prints no legend for them. Under DIN 6799's convention FN is the groove's axial load capacity at the listed shaft diameter, Fs the washer's axial load capacity against a sharp-cornered abutment, and Fsg the washer's capacity against an abutment with chamfer or radius g. That reading is the standard's convention, not text on the page: confirm against a maker's catalogue before rating a joint on it.",
+   "row_text": "6 | 7 | 9 | 0,7 | 5,26 | 0,255 | 6 | 0,74 | 1,2 | 12,3 | 1,1 | 8 | 1,35 | 1,1 | 0,7 | 25000",
+   "groove_note": "The shaft must be grooved to d2 with width m; the shaft's own check must be made at the groove (audit B, F4)."
+  },
+  "price_usd": null,
+  "source_url": "https://www.fasteners.eu/standards/DIN/6799/",
+  "retrieved": "2026-11-03",
+  "verified": "retailer-page"
+ },
+ {
+  "id": "circlip-din471-8",
+  "category": "fastener",
+  "manufacturer": "any DIN 471 maker (spring steel; stainless 1.4122 also listed)",
+  "name": "DIN 471 external retaining ring (circlip) for 8 mm shaft",
+  "mass_g": 0.158,
+  "specs": {
+   "mass_basis": "per part: table 'weight kg/1000pcs' 0.158 kg per 1000 = 0.158 g each",
+   "standard": "DIN 471",
+   "shaft_diameter_d1_mm": 8,
+   "use_for": "8 mm shafts (gear shaft 3 at the 628/8-2Z; gear shafts 1-2)",
+   "thickness_s_mm": 0.8,
+   "ring_inner_diameter_free_d3_mm": 7.4,
+   "lug_height_a_mm": 3.2,
+   "ring_width_b_mm": 1.5,
+   "plier_hole_d5_mm": 1.2,
+   "groove_diameter_d2_mm": 7.6,
+   "groove_width_m_mm": 0.9,
+   "groove_depth_t_mm": 0.2,
+   "min_groove_to_shaft_end_n_mm": 0.6,
+   "d4_mm": 14.7,
+   "load_columns": {
+    "FN_kN": 0.81,
+    "FR_kN": 3.0,
+    "g_mm": 0.5,
+    "FRg_kN": 2.0
+   },
+   "max_speed_nabl_rpm": 96000,
+   "material_text": "Steel: spring steel; Stainless: 1.4122",
+   "legend_quotes": "a - height foot ring; b - The ring width; d5 - diameter holes for ring opening; s - thickness of the ring; d1 - shaft diameter; d2 - groove diameter; n - minimum length to the face of the shaft; g - chamfer; t - difference averages; d3 - the inner diameter of the ring; d4 - diameter",
+   "load_columns_note": "The page tabulates FN, FR, g and FRg (kN where loads) but gives no legend for FN, FR or FRg, and calls d4 only 'diameter'. Under DIN 471's convention FN is the groove's axial load capacity, FR the ring's axial load capacity against a sharp-cornered abutment, FRg the ring's capacity against an abutment with chamfer or radius g, and d4 the largest diameter the fitted ring sweeps (the clearance it needs). That reading is the standard's convention, not text on the page: confirm against a maker's catalogue before rating a joint on it.",
+   "row_text": "8 | 0,8 | 7,4 | 3,2 | 1,5 | 1,2 | 0,158 | 7,6 | 0,9 | 0,2 | 0,6 | 14,7 | 0,81 | 3 | 0,5 | 2 | 96000",
+   "fit_note": "The fitted ring's d4 must clear any part that turns relative to the shaft (for a bearing, its shield and outer ring); check d4 against the drawn bearing, or put a spacer between ring and inner ring."
+  },
+  "price_usd": null,
+  "source_url": "https://www.fasteners.eu/standards/DIN/471/",
+  "retrieved": "2026-11-03",
+  "verified": "retailer-page"
  }
 ]

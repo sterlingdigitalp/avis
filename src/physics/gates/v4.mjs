@@ -110,7 +110,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     sensitivity_information_only: Object.fromEntries(Object.entries(sens).map(([k, v]) => [k, { converged: v.converged, net_streamwise_force_N: v.net_streamwise_force_N, totals: v.converged ? totals(v) : null, theta_deg: v.theta_deg, stalled_fraction: v.stalled_fraction }])),
     regeneration: 'SPEC ruling: none credited; the ESC (Hobbywing Skywalker 20A V2 mini) documentation read for the catalogue states no regenerative operation.',
   });
-  writeGate({
+  writeGate({ notCountedBecause: [],
     gate: 'V4',
     passed,
     measured: {

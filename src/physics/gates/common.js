@@ -16,8 +16,20 @@ export function writeJson(rel, data) {
   return p;
 }
 
-export function writeGate({ gate, design = null, passed, measured, limit, evidence, file = null, extra = {} }) {
-  const rec = { gate, design, passed: !!passed, measured, limit, evidence, ran_at: new Date().toISOString(), command: commandLine(), ...extra };
+/**
+ * Round 17 (orchestrator, after the v24 film round): every gate record says whether its pass is counted. A pass that
+ * rests on anything SPEC does not count (a joint outside the RC-practice ruling's scope, say) carries counted: false
+ * and the reason; a record whose writer gives no verdict on it is counted: false too ("not stated"), so a missing check
+ * can never read as counted.
+ */
+export function countedFields(notCountedBecause) {
+  if (notCountedBecause === undefined) return { counted: false, not_counted_because: 'the gate writer did not state whether its pass is counted' };
+  const why = [].concat(notCountedBecause ?? []).filter(Boolean);
+  return why.length ? { counted: false, not_counted_because: why.join('; ') } : { counted: true, not_counted_because: null };
+}
+
+export function writeGate({ gate, design = null, passed, measured, limit, evidence, file = null, extra = {}, notCountedBecause = undefined }) {
+  const rec = { gate, design, passed: !!passed, ...countedFields(notCountedBecause), measured, limit, evidence, ran_at: new Date().toISOString(), command: commandLine(), ...extra };
   const name = file ?? gate + (design ? `-${design}` : '');
   writeJson(`out/verification/${name}.json`, rec);
   return rec;

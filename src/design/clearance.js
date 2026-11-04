@@ -16,7 +16,7 @@
 // part, the placement used is listed in the record's assumptions. Exempt from the rule: solids of one part, and two
 // parts joined directly (a journal on its shaft, a part pressed, keyed, bonded or screwed to another, two gears in
 // mesh). Two parts of one rigid assembly that are not joined to each other are checked like any other pair.
-import { drivePose, linkageAt, journalDims, journalBodyLength, partsIndex, prepare, boxProtrusion, parseDims, packRegulator, loftHalf } from '../../sims/avis-shared/model.js';
+import { drivePose, linkageAt, journalDims, journalBodyLength, journalEdges, partsIndex, prepare, boxProtrusion, parseDims, packRegulator, loftHalf } from '../../sims/avis-shared/model.js';
 import { byId } from './catalog.js';
 import { AIRFRAME_DEFAULTS, mergeDefaults, lockFlangeOD, hullOf, lockFlangeCircles, panelFlanges, formerPieces, formerGeometry, clampFlange } from './airframe.js';
 import { driveLayout as driveLayoutOf } from './joints.js';
@@ -24,6 +24,8 @@ import { rockerHub } from './linkage.js';
 import { fastenerGeometry, completenessRecord } from './completeness.js';
 import { sequenceRecord } from './sequence.js';
 import { wingParts, tailParts } from './wing-solids.js';
+import { massPropsRecord } from './massprops.js';
+import { tailMechParts } from './tail-mech.js';
 
 const TWO_PI = 2 * Math.PI;
 export const CLEARANCE_M = 0.0005;
@@ -259,31 +261,62 @@ export function capsulePoly(a, b, r, holes = [], n = 16) {
 }
 
 /**
+ * Round 17: the convex hull of two circles (c1, r1) and (c2, r2), as a polygon that contains both (n points per circle,
+ * circumscribed), with round holes: the crank web with its hub boss larger than its throw end.
+ */
+export function hullPoly(c1, r1, c2, r2, holes = [], n = 32) {
+  const pts = [];
+  for (const [c, r] of [[c1, r1], [c2, r2]]) { const R = r / Math.cos(Math.PI / n); for (let k = 0; k < n; k++) { const t = (k / n) * TWO_PI; pts.push([c[0] + R * Math.cos(t), c[1] + R * Math.sin(t)]); } }
+  pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const half = (list) => { const h = []; for (const p of list) { while (h.length >= 2 && cross(h[h.length - 2], h[h.length - 1], p) <= 0) h.pop(); h.push(p); } h.pop(); return h; };
+  return poly([...half(pts), ...half([...pts].reverse())], holes);
+}
+
+/**
  * Crank: web, pin, shaft and wheel seat in one piece; round 16 (crank.web.separate): the web and its pin one part, keyed
  * on the shaft's aft stub (its key in its keyseat and keyway, KEYWAY), the shaft with its stub and wheel seat another,
  * so the shaft goes into the aft plate's bushing from forward and the web onto its stub from aft.
  */
 function crankParts(ax) {
-  const { L, P, n, fb, lay, eye, plateT, add, join } = ax;
+  const { L, P, n, fb, lay, eye, plateT, add, join, catalog } = ax;
   const C = L.crank, tw = mm(C.web_t_mm), bw = mm(C.web_b_mm);
   const xw = P.crankArm - tw / 2;
   const pinEnd = P.couplerL - eye.B / 2 - 0.001;
   const wheelN = lay.train.stages[n - 1].wheel;
   if (C.web?.separate) {
-    const rs = mm(C.shaft_od_mm) / 2, web = [P.crankArm - tw / 2, P.crankArm + tw / 2];
+    const W = C.web, rs = mm(C.shaft_od_mm) / 2, web = [P.crankArm - tw / 2, P.crankArm + tw / 2];
+    // round 17 (audit items 13 and the axial fixing): a hub boss round the bore (W.hub_od_mm) and, at the web's aft face,
+    // an end lip (W.lip_mm) over the stub's end with the axial screw's clearance hole; the stub (and the key) under the
+    // rest of the web, the screw's head on the lip's aft face, its shank into the stub's tapped end
+    const lip = mm(W.lip_mm ?? 0), rh = mm(W.hub_od_mm ?? C.web_b_mm) / 2, bore = [web[0] + lip, web[1]];
+    const ag = W.axial ? fastenerGeometry(byId(catalog, W.axial.screw).specs ?? {}, W.axial.screw) : null;
+    const webShape = (q, holes) => (rh > bw / 2 + 1e-9 ? hullPoly(q.O2, rh, q.A, bw / 2, holes) : capsulePoly(q.O2, q.A, bw / 2, holes));
     add('crank web', [
-      M('web', web, (q) => capsulePoly(q.O2, q.A, bw / 2, [{ c: q.O2, r: rs }])),
+      M('web', bore, (q) => webShape(q, [{ c: q.O2, r: rs }])),
+      ...(lip > 0 ? [M('web end lip', [web[0], bore[0]], (q) => webShape(q, ag ? [{ c: q.O2, r: (W.axial.countersunk ? ag.head_d : ag.d) / 2 + mm(W.axial.clearance_mm ?? 0.2) }] : []))] : []),
       M('pin', [pinEnd, xw], (q) => ring(q.A, eye.d / 2)),
     ], { bom: 'crank web and pin' });
     add('crank', [
-      S('stub', web, ring(fb.O2, rs)), // solid under the web (its keyseat cut to the key)
-      S('shaft', [P.crankArm + tw / 2, P.crankEnd ?? P.plateFwd + plateT / 2 + 0.001], ring(fb.O2, rs, mm(C.shaft_id_mm ?? 0) / 2)),
+      S('stub', bore, ring(fb.O2, rs)), // solid under the web (its keyseat cut to the key)
+      // round 17: solid for the axial screw's thread beyond the web (W.axial.solid_mm), then bored
+      ...(ag && W.axial.solid_mm ? [S('shaft solid end', [web[1], web[1] + mm(W.axial.solid_mm)], ring(fb.O2, rs))] : []),
+      S('shaft', [web[1] + (ag && W.axial.solid_mm ? mm(W.axial.solid_mm) : 0), P.crankEnd ?? P.plateFwd + plateT / 2 + 0.001], ring(fb.O2, rs, mm(C.shaft_id_mm ?? 0) / 2)),
       ...(C.seat_od_mm ? [S('wheel seat', [P.stage[n - 1] - wheelN.face / 2, P.stage[n - 1] + wheelN.face / 2], ring(fb.O2, mm(C.seat_od_mm) / 2, rs))] : []),
     ], { bom: 'crank shaft' });
-    join('crank web', 'crank', 'keyed on the shaft\'s aft stub, held there with LOCTITE 638');
-    // the web's key: b x h over the web's thickness, its bottom shaft_depth_mm into the stub, at the stub's top
+    if (ag) {
+      // the axial screw along the crank axis from aft: its head on the lip's aft face, its shank through the lip into the stub
+      // a countersunk head lies in the lip's countersink, flush with the web's aft face (nothing stands aft of the web,
+      // where the coupler eyes run 0.5 mm off it); its length includes the head
+      const screw = W.axial.countersunk ? [S('head', [web[0], web[0] + ag.head_k], ring(fb.O2, ag.head_d / 2)), S('shank', [web[0] + ag.head_k, web[0] + ag.L], ring(fb.O2, ag.d / 2))] : screwX(fb.O2, web[0], 1, ag).screw;
+      const sid = add('crank web axial screw', screw, { bom: W.axial.screw });
+      join('crank web', 'crank', 'keyed on the shaft\'s aft stub; held axially by its screw (crank web axial screw)');
+      join(sid, 'crank web', W.axial.countersunk ? 'fastened (its countersunk head in the lip\'s countersink)' : 'fastened (its head on the face)'); join(`${sid}/shank`, 'crank web', THROUGH);
+      join(`${sid}/shank`, 'crank', THREAD); join(sid, 'crank', 'screwed into the stub\'s tapped end');
+    } else join('crank web', 'crank', 'keyed on the shaft\'s aft stub, held there with LOCTITE 638');
+    // the web's key: b x h over the web's bore, its bottom shaft_depth_mm into the stub, at the stub's top
     const K = C.web.key, hw = mm(K.b_mm) / 2, y0 = fb.O2[1] + rs - mm(K.shaft_depth_mm);
-    const kid = add('key, crank web', [S('key', web, boxYZ(fb.O2[0] - hw, fb.O2[0] + hw, y0, y0 + mm(K.h_mm)))], { bom: 'key, crank web' });
+    const kid = add('key, crank web', [S('key', [bore[1] - mm(K.L_mm), bore[1]], boxYZ(fb.O2[0] - hw, fb.O2[0] + hw, y0, y0 + mm(K.h_mm)))], { bom: 'key, crank web' });
     join(kid, 'crank web', KEYWAY); join(kid, 'crank', KEYWAY);
     return;
   }
@@ -360,22 +393,58 @@ function readheadFixing({ add, join, assumptions, catalog }, rh, e, fx, riser) {
 
 const airframeOf = (ax) => ax.af;
 
+/** Round 17: the washer/circlip's groove width (m), minimum land (n) and bore radius (m, metres), from its catalogue entry. */
+const retGroove = (catalog, id) => { const s = byId(catalog, id).specs; return { m: mm(s.groove_width_m_mm), n: mm(s.min_groove_to_shaft_end_n_mm), ri: mm(s.groove_diameter_d2_mm) / 2 }; };
+const retLand = (catalog, id) => { const g = retGroove(catalog, id); return g.m + g.n; };
+
+/**
+ * Round 17 (audit items 7, 8, F4/F5): a shaft's end solids where a washer or circlip sits in a groove against a
+ * face at x = `face` (its journal's outer face): the shaft at full diameter from `start` (the end furthest from the
+ * face) in to the groove's land, cut down to the washer/circlip's own bore over the groove's width, resuming full
+ * diameter only at `face` itself (so a washer drawn at the groove's published bore never overlaps the shaft it sits
+ * on). dir: +1 if `start` is aft of `face` (the aft end), -1 if forward of it. -> [S(...), ...].
+ */
+function shaftEndSegments(name, bom, sh_j, dShaft, start, face, dir, groove) {
+  if (!groove) return [S(name, dir > 0 ? [start, face] : [face, start], ring(sh_j, dShaft / 2))].map((s) => ({ ...s, bom }));
+  const landEnd = face - dir * groove.m, grooveX = [landEnd, face].sort((a, b) => a - b), tipX = [start, landEnd].sort((a, b) => a - b);
+  return [S(name, tipX, ring(sh_j, dShaft / 2)), S(`${name} groove`, grooveX, ring(sh_j, groove.ri))].map((s) => ({ ...s, bom }));
+}
+
 /** Gear shafts, the motor and every gear: link j joins shaft j (wheel of stage n-1-j) to shaft j+1 (its pinion). */
 function gearParts(ax0) {
-  const { d, catalog, L, lay, P, n, sh, plateT, add, join, shaftPart, assumptions } = ax0;
+  const { d, catalog, L, lay, P, n, PL, J, tA, tF, jd, sh, plateT, add, join, shaftPart, assumptions } = ax0;
   const ms = byId(catalog, d.motor?.id ?? d.params.parts.motor).specs;
   const md = parseDims(ms.dimensions_text_mm)?.values ?? [0.035, 0.04];
   const motorShaft = mm(ms.shaft_mm ?? 5);
   // A shaft runs plate to plate, 1 mm proud of each; round 14, to the far face of a gear it carries outside the plates.
   const farEnd = (si, g) => P.stage[si] + g.face / 2 + (g.hubW ?? 0);
+  const Ret = L.retention ?? null;
+  const edges = (side, bushId) => journalEdges(PL, side, side === 'aft' ? P.plateAft : P.plateFwd, side === 'aft' ? tA : tF, jd(bushId));
   for (let j = 1; j < n; j++) {
     const g = L.gearShafts[j - 1];
-    const kw = n - 1 - j, wheel = lay.train.stages[kw].wheel;
-    const xEnd = Math.max(P.plateFwd + plateT / 2 + 0.001, farEnd(kw, wheel), farEnd(n - j, lay.train.stages[n - j].pinion));
+    const bushId = J.shafts[j - 1] ?? J.shafts.at(-1);
+    const isBearing = byId(catalog, bushId).category === 'bearing';
+    const kw = n - 1 - j, kp = n - j, wheel = lay.train.stages[kw].wheel, pinion = lay.train.stages[kp].pinion;
+    let aftStart = P.plateAft - plateT / 2 - 0.001;
+    let xEnd = Math.max(P.plateFwd + plateT / 2 + 0.001, farEnd(kw, wheel), farEnd(kp, pinion));
+    // round 17 (audit items 7, 8, F4): a shaft that gets an end washer or circlip is lengthened past the journal's
+    // own outer face by the part's groove width plus its minimum land, read off the catalogue, not the old 1 mm guess.
+    // Found by probing: gear shaft 2's forward end, lengthened this way, comes within 0.36 mm of the DS1-60 wheel
+    // overhung on gear shaft 3 (its 31 mm tip circle reaches toward the adjacent shaft) — short of the 0.5 mm rule,
+    // so that one end is excluded (retention.washer8mmForwardExclude) rather than forced; its spacer is unaffected.
+    const fwdExcluded = (Ret?.washer8mmForwardExclude ?? []).includes(j);
+    const aftGroove = !isBearing && Ret?.washer8mm ? retGroove(catalog, Ret.washer8mm) : isBearing && Ret?.gearShaft3Circlip ? retGroove(catalog, Ret.gearShaft3Circlip) : null;
+    const fwdGroove = !isBearing && Ret?.washer8mm && !fwdExcluded ? retGroove(catalog, Ret.washer8mm) : null;
+    if (aftGroove) aftStart = edges('aft', bushId).outer - retLand(catalog, isBearing ? Ret.gearShaft3Circlip : Ret.washer8mm);
+    if (fwdGroove) xEnd = Math.max(edges('fwd', bushId).outer + retLand(catalog, Ret.washer8mm), farEnd(kw, wheel), farEnd(kp, pinion));
+    const dShaft = mm(g.d_mm), aftFace = aftGroove ? edges('aft', bushId).outer : aftStart, fwdFace = fwdGroove ? edges('fwd', bushId).outer : xEnd;
     add(`gear shaft ${j}`, [
-      S('shaft', [P.plateAft - plateT / 2 - 0.001, xEnd], ring(sh[j], mm(g.d_mm) / 2)),
-      ...(g.seat_od_mm ? [S('wheel seat', [P.stage[kw] - wheel.face / 2, P.stage[kw] + wheel.face / 2], ring(sh[j], mm(g.seat_od_mm) / 2, mm(g.d_mm) / 2))] : []),
+      ...(aftGroove ? shaftEndSegments('shaft aft tip', `gear shaft ${j}`, sh[j], dShaft, aftStart, aftFace, 1, aftGroove) : []),
+      S('shaft', [aftFace, fwdFace], ring(sh[j], dShaft / 2)),
+      ...(fwdGroove ? shaftEndSegments('shaft forward tip', `gear shaft ${j}`, sh[j], dShaft, xEnd, fwdFace, -1, fwdGroove) : []),
+      ...(g.seat_od_mm ? [S('wheel seat', [P.stage[kw] - wheel.face / 2, P.stage[kw] + wheel.face / 2], ring(sh[j], mm(g.seat_od_mm) / 2, dShaft / 2))] : []),
     ], { bom: `gear shaft ${j}` });
+    if (Ret) gearShaftRetention(ax0, j, bushId, isBearing, kw, kp, wheel, pinion, edges, fwdExcluded);
   }
   const can = P.motorX ?? [P.motorAft, P.motorAft + md[1]], p1 = lay.train.stages[0].pinion;
   add('motor', [
@@ -409,6 +478,60 @@ function gearParts(ax0) {
 }
 
 /**
+ * Round 17 (audit item 8, F4): a gear shaft's own axial retention, outside its torque path (linkage.js
+ * gearShaftMembers rates each part against its catalogue load and masses the spacers).
+ *  - A bushing shaft (1, 2): a DIN 6799 washer at each end, outside the bushing's flange, against its outer face.
+ *    6061 spacer tubes fill the three gaps between the bushings' inner ends (aft bushing to the pinion, pinion to
+ *    the wheel, wheel to the forward bushing); the forward-most is cut params.layout.running_mm short, so the stack
+ *    keeps the usual running clearance once, not three times over.
+ *  - The bearing shaft (3): a DIN 471 circlip at the aft end, against the aft bearing's inner ring. Spacers run from
+ *    that inner ring to the pinion, and from the forward bearing's outer face to the bonded DS1-60 (outside the
+ *    plate). The middle gap (pinion to the forward bearing) is already the running clearance and is left alone: the
+ *    stack's one slack gap lives there instead.
+ */
+function gearShaftRetention(ax0, j, bushId, isBearing, kw, kp, wheel, pinion, edges, fwdExcluded) {
+  const { catalog, L, P, PL, Ly, sh, add, join, shaftPart } = ax0;
+  const Ret = L.retention, run = (Ly.running_mm ?? 0.5) / 1000;
+  const dShaft = mm(L.gearShafts[j - 1].d_mm), spacerOD = dShaft + 0.004;
+  const pinionAft = P.stage[kp] - pinion.face / 2, pinionFwd = P.stage[kp] + pinion.face / 2 + (pinion.hubW ?? 0);
+  const wheelAft = P.stage[kw] - wheel.face / 2, wheelFwd = P.stage[kw] + wheel.face / 2 + (wheel.hubW ?? 0);
+  // bare part ids (not solid-qualified): a spacer's end sits flush with whichever of a gear's solids (teeth or hub),
+  // the shaft's own solids (the wheel seat, or the groove where the washer/circlip also sits) and that gear's key
+  // (round 16: a key reaches the gear's own face) happen to share its exact boundary plane.
+  const pinionId = `stage ${kp + 1} pinion ${pinion.id}`, wheelId = `stage ${kw + 1} wheel ${wheel.id}`;
+  const pinionKey = `key, pinion ${pinion.id} on gear shaft ${j}`, wheelKey = `key, wheel ${wheel.id} on gear shaft ${j}`;
+  const bossed = (side) => (PL.bossed ?? []).includes(`gear shaft ${j}/${side}`);
+  const spacer = (nm, x0, x1, touches) => {
+    if (x1 - x0 <= 1e-9) return;
+    const sid = add(`gear shaft ${j} spacer ${nm}`, [S('spacer', [x0, x1], ring(sh[j], spacerOD / 2, dShaft / 2))], { bom: `gear shaft ${j} spacers`, item: `gear shaft ${j} spacer ${nm}` });
+    for (const to of [shaftPart(j), ...touches]) join(sid, to, 'touching');
+  };
+  if (Ret?.washer8mm && !isBearing) {
+    const w = byId(catalog, Ret.washer8mm).specs, s = mm(w.thickness_s_mm), ro = mm(w.outer_diameter_d3_mm) / 2, ri = mm(w.groove_diameter_d2_mm) / 2;
+    const aft = edges('aft', bushId), fwd = edges('fwd', bushId);
+    const aftJ = `${shaftPart(j)} journal aft (${bushId})`, fwdJ = `${shaftPart(j)} journal forward (${bushId})`;
+    const wAft = add(`gear shaft ${j} washer aft`, [S('washer', [aft.outer - s, aft.outer], ring(sh[j], ro, ri))], { bom: Ret.washer8mm });
+    join(wAft, shaftPart(j), GROOVE); join(wAft, aftJ, 'against its flange');
+    if (!fwdExcluded) {
+      const wFwd = add(`gear shaft ${j} washer forward`, [S('washer', [fwd.outer, fwd.outer + s], ring(sh[j], ro, ri))], { bom: Ret.washer8mm });
+      join(wFwd, shaftPart(j), GROOVE); join(wFwd, fwdJ, 'against its flange');
+    }
+    spacer('aft', aft.inner, pinionAft, [aftJ, pinionId, pinionKey, ...(bossed('aft') ? [`gearbox plate aft/boss gear shaft ${j}/aft`] : [])]);
+    spacer('mid', pinionFwd, wheelAft, [pinionId, pinionKey, wheelId, wheelKey]);
+    spacer('forward', wheelFwd, fwd.inner - run, [wheelId, wheelKey, fwdJ]);
+  } else if (Ret?.gearShaft3Circlip && isBearing) {
+    const c = byId(catalog, Ret.gearShaft3Circlip).specs, s = mm(c.thickness_s_mm), ro = mm(c.d4_mm) / 2, ri = mm(c.groove_diameter_d2_mm) / 2;
+    const aft = edges('aft', bushId), fwd = edges('fwd', bushId);
+    const aftJ = `${shaftPart(j)} journal aft (${bushId})`, fwdJ = `${shaftPart(j)} journal forward (${bushId})`;
+    const cAft = add(`gear shaft ${j} circlip aft`, [S('circlip', [aft.outer - s, aft.outer], ring(sh[j], ro, ri))], { bom: Ret.gearShaft3Circlip });
+    join(cAft, shaftPart(j), GROOVE); join(cAft, aftJ, 'against the inner ring\'s aft face');
+    spacer('aft', aft.inner, pinionAft, [aftJ, pinionId, pinionKey, ...(bossed('aft') ? [`gearbox plate aft/boss gear shaft ${j}/aft`] : [])]);
+    // the pinion-to-forward-bearing gap is already the running clearance (audit: 0.5 mm): left alone, no spacer
+    spacer('forward', fwd.outer, wheelAft, [fwdJ, wheelId, ...(bossed('forward') ? [`gearbox plate forward/boss gear shaft ${j}/forward`] : [])]);
+  }
+}
+
+/**
  * Round 16: a gear's parallel key (params.linkage crank.key, gearShafts[].wheelKey / pinionKey; linkage.js keyMember
  * sizes it and names its BOM line): a b x h box over the gear's face, its bottom `shaft_depth_mm` into the seat or
  * shaft, at the top of the shaft (the design states no angle). The keyseat and the gear's keyway are cut to it and not
@@ -437,7 +560,8 @@ function plateJournal(ax, jname, k, id, side, holes, bosses) {
     S('body', xs.body, ring(sh[k], dims.D / 2, dims.d / 2)),
     ...(xs.flange ? [S('flange', xs.flange, ring(sh[k], dims.flangeD / 2, dims.d / 2))] : []),
   ], { bom: id });
-  join(pid, `${shaftPart(k)}/shaft`, 'journal on its shaft');
+  // round 17: on every solid of the shaft named shaft (the crank's solid end for its web's axial screw too)
+  for (const sol of ax.parts.find((q) => q.id === shaftPart(k))?.solids.filter((q) => /^shaft( |$)/.test(q.name)).map((q) => q.name) ?? ['shaft']) join(pid, `${shaftPart(k)}/${sol}`, 'journal on its shaft');
   join(pid, plateIds[side], 'pressed in its plate seat');
   holes[side].push({ c: sh[k], r: dims.D / 2 });
   if (!(PL.bossed ?? []).includes(`${jname}/${support}`)) return;
@@ -479,9 +603,30 @@ function boomRadius({ d, catalog }) {
   return id ? mm(byId(catalog, id).specs.od_mm) / 2 : 0;
 }
 
-/** One side's rocker (hub, shoulder pin, arm, horn boss and pin, spar socket), shoulder joint and coupler. */
+/**
+ * Round 17 (audit item 7, F5): where a washer's groove sits at the free end of a pin of the hornStack convention
+ * (tip at H.pin[0] for 'fwd', H.pin[1] for 'aft'; toward points from the tip in toward the eye): the groove (the
+ * washer's own catalogue m and n) immediately against the eye's free face, with the land n beyond it to the tip, so
+ * the pin's own diameter resumes at the groove's far (eye) side rather than leaving it reduced out to the tip.
+ * Gated on retention.hornPinWasher (not just washer8mm's presence): on this design's own spacing, both horn pins'
+ * free ends point in toward the crank-pin-stacked opposite coupler (params.layout.horns 'fwd'/'aft'), and lengthening
+ * them by the washer's groove and land closes that gap into a clash (found by probing this round; left disabled by
+ * default rather than forcing it. Widening params.linkage.coupler eye_gap_mm, or the horn stacking itself, would open
+ * room for it, but that is a layout call for whoever owns it, not guessed here).
+ * -> { tip, toward, eyeFace, groove: [x0, x1], washer: [x0, x1] } (m, sorted), or null if not enabled.
+ */
+function pinGroove(d, catalog, H) {
+  const Ret = d.params.linkage.retention;
+  const wid = Ret?.hornPinWasher ? Ret.washer8mm : null;
+  if (!wid) return null;
+  const w = byId(catalog, wid).specs, m = mm(w.groove_width_m_mm), n = mm(w.min_groove_to_shaft_end_n_mm), s = mm(w.thickness_s_mm);
+  const tip = H.side === 'fwd' ? H.pin[0] : H.pin[1], toward = H.side === 'fwd' ? 1 : -1;
+  const eyeFace = tip + toward * (m + n);
+  return { tip, toward, eyeFace, w, groove: [tip + toward * n, eyeFace].sort((a, b) => a - b), washer: [eyeFace - toward * s, eyeFace].sort((a, b) => a - b) };
+}
+
 function sideParts(ax, tag, sg, delta) {
-  const { L, P, x0, fb, eye, shJ, span, add } = ax;
+  const { d, catalog, L, P, x0, fb, eye, shJ, span, add, join } = ax;
   const O4 = sg > 0 ? fb.O4 : mirror(fb.O4);
   const xc = sg > 0 ? P.couplerR : P.couplerL;
   const pose = (q) => (sg > 0 ? q.right : q.left);
@@ -490,19 +635,48 @@ function sideParts(ax, tag, sg, delta) {
   const H = hornStack(ax.Ly, tag, xc, eye.B, mm(R.boss_len_mm)), [bossA, bossF] = H.boss, armX = (bossA + bossF) / 2;
   const so = mm(R.spar_od_mm ?? 10) / 2 + mm(R.socket_wall_mm), r0 = mm(R.hub_od_mm) / 2;
   const sideName = sg > 0 ? 'right' : 'left', pinBom = (s) => ({ ...s, bom: `shoulder pin ${sideName}` });
+  // round 17: with a retaining washer, the pin is cut down to the groove's diameter there (the washer's own bore, the
+  // groove the washer's convention of a catalogue d2 narrower than the plain pin), not left at full diameter out to
+  // the tip, so the two never physically overlap
+  const pg = pinGroove(d, catalog, H);
+  const pinHornBom = (s) => ({ ...s, bom: `horn pin ${sideName}` });
+  const pinSolids = pg
+    ? [
+        pinHornBom(M('horn pin', H.side === 'fwd' ? [pg.groove[1], H.pin[1]] : [H.pin[0], pg.groove[0]], (q) => ring(pose(q).B, eye.d / 2))),
+        pinHornBom(M('horn pin groove', pg.groove, (q) => ring(pose(q).B, mm(pg.w.groove_diameter_d2_mm) / 2))),
+        pinHornBom(M('horn pin tip', H.side === 'fwd' ? [pg.tip, pg.groove[0]] : [pg.groove[1], pg.tip], (q) => ring(pose(q).B, eye.d / 2))),
+      ]
+    : [pinHornBom(M('horn pin', H.pin, (q) => ring(pose(q).B, eye.d / 2)))];
   const rk = add(`rocker ${tag}`, [
     ...(hub.relief ? [S('hub', [hub.x[0], hub.relief[0]], ring(O4, r0, shJ.d / 2)), S('hub relief', hub.relief, ring(O4, mm(R.hub_relief_od_mm) / 2, shJ.d / 2)), S('hub forward', [hub.relief[1], hub.x[1]], ring(O4, r0, shJ.d / 2))] : [S('hub', hub.x, ring(O4, r0, shJ.d / 2))]),
     ...(hub.collar ? [pinBom(S('pin collar', hub.collar, ring(O4, mm(R.hub_collar_od_mm) / 2, shJ.d / 2)))] : []),
     pinBom(S('shoulder pin', [x0 - (span + shJ.B) / 2, x0 + (span + shJ.B) / 2], ring(O4, shJ.d / 2))),
     M('arm', [armX - mm(R.arm_t_mm) / 2, armX + mm(R.arm_t_mm) / 2], (q) => cap(O4, pose(q).B, mm(R.arm_w_mm) / 2)),
     M('horn boss', [bossA, bossF], (q) => ring(pose(q).B, mm(R.boss_od_mm) / 2, eye.d / 2)),
-    { ...M('horn pin', H.pin, (q) => ring(pose(q).B, eye.d / 2)), bom: `horn pin ${sideName}` },
+    ...pinSolids,
     { ...M('spar socket', [x0 - so, x0 + so], (q) => { const u = sparDir(q); return cap(add2(O4, u, r0), add2(O4, u, r0 + mm(R.socket_len_mm)), so); }), tube: { ro: so, ri: mm(R.spar_od_mm ?? 10) / 2, L: mm(R.socket_len_mm), axis: 'spar' } },
   ], { bom: `rocker ${sideName}` });
   for (const [nm, xs, fl] of [['aft', x0 - span / 2, 1], ['forward', x0 + span / 2, -1]]) shoulderParts(ax, tag, sg, O4, nm, xs, fl, rk);
   // round 16: the wing on its spar socket (params.wingStructure), in the socket's frame
   wingParts(ax, tag, (q) => { const u = sparDir(q); return { o: O4, u, v: sg > 0 ? [-u[1], u[0]] : [u[1], -u[0]] }; });
   couplerParts(ax, tag, xc, pose, rk);
+  if (pg) hornPinWasher(ax, tag, sg, rk, pg, pose);
+}
+
+/**
+ * Round 17 (audit item 7, F5): the DIN 6799 washer itself, in the groove pinGroove sizes, against the coupler's horn
+ * eye free face (params.linkage.retention.washer8mm, shared with the gear shafts' end washers so they consolidate
+ * into one BOM line). Joined to the whole rocker (covers both the pin and its groove solid) and to the whole
+ * coupler (its horn eye, touching the washer's far face; its bushing, which the groove also runs under).
+ */
+function hornPinWasher(ax, tag, sg, rk, pg, pose) {
+  const { d, catalog, add, join } = ax;
+  const wid = d.params.linkage.retention?.washer8mm;
+  const w = byId(catalog, wid).specs, ro = mm(w.outer_diameter_d3_mm) / 2, ri = mm(w.groove_diameter_d2_mm) / 2;
+  const sideName = sg > 0 ? 'right' : 'left';
+  const wk = add(`horn pin washer ${sideName}`, [M('washer', pg.washer, (q) => ring(pose(q).B, ro, ri))], { bom: wid });
+  join(wk, rk, GROOVE);
+  join(wk, `coupler ${tag}`, 'against the eye\'s free face');
 }
 
 /**
@@ -656,12 +830,21 @@ const rootTab = (c, x) => S('root tab', x, boxYZ(-c.w / 2, c.w / 2, c.y + c.t / 
 
 /**
  * The riser's solids (round 15): its web across the pod, a flange forward along each vertical edge, its foot aft on
- * the forward tray's base and its tab forward under the nose tray.
+ * the forward tray's base and its tab forward under the nose tray. holes: small round pass-throughs (readhead
+ * screws), left as holes in the web. slot (round 17, audit item 23): the actuator opening, which came within 1.09 mm
+ * of the tab's bend; instead of a plain round hole, the web is split either side of a slot of the opening's own
+ * width that runs open to the top edge, so there is no thin captive strip there to distort when the tab is formed.
+ * Each piece stays a plain box (never a concave polygon), which keeps the SAT clash check, poly-poly, exact.
  */
-export function riserSolids(r, holes = []) {
+export function riserSolids(r, holes = [], slot = null) {
   const [x0, x1] = r.x, [y0, y1] = r.y, hw = r.w / 2;
+  const web = slot ? [
+    S('web below the opening', [x0, x1], boxYZ(-hw, hw, y0, slot.c[1] - slot.r).withHoles(holes)),
+    S('web left of the opening', [x0, x1], boxYZ(-hw, slot.c[0] - slot.r, slot.c[1] - slot.r, y1).withHoles(holes)),
+    S('web right of the opening', [x0, x1], boxYZ(slot.c[0] + slot.r, hw, slot.c[1] - slot.r, y1).withHoles(holes)),
+  ] : [S('web', [x0, x1], boxYZ(-hw, hw, y0, y1).withHoles(holes))];
   return [
-    S('web', [x0, x1], boxYZ(-hw, hw, y0, y1).withHoles(holes)),
+    ...web,
     S('flange right', [x1, x1 + r.f], boxYZ(hw - r.t, hw, y0, y1 - r.t)),
     S('flange left', [x1, x1 + r.f], boxYZ(-hw, -hw + r.t, y0, y1 - r.t)),
     S('foot', [x0 - r.foot, x0], boxYZ(-hw, hw, y0, y0 + r.t)),
@@ -675,8 +858,9 @@ function carrierParts({ af, add, join, plateIds, assumptions }) {
   const f = add('forward tray', [...channelSolids(G.forward, G.forward.x), rootTab(G.forward, [G.forward.x[0], G.forward.x[0] + G.forward.t])], { bom: 'forward tray' });
   join(f, plateIds.fwd, 'its root tab screwed to the plate');
   // round 16: the readhead screws' clearance holes in the web (ISO 273 medium, an M2's 2.4 mm)
-  const rhx = af.support?.readhead, holes = [...(rhx ? rhx.holes_m.map((c) => ({ c, r: 0.0012 })) : []), ...(G.riser.hole ? [G.riser.hole] : [])];
-  const r = add('nose tray riser', riserSolids(G.riser, holes), { bom: 'nose tray riser' });
+  const rhx = af.support?.readhead, holes = rhx ? rhx.holes_m.map((c) => ({ c, r: 0.0012 })) : [];
+  // round 17 (audit item 23): the actuator opening is a slot open to the tab's bend, not a plain hole (riserSolids)
+  const r = add('nose tray riser', riserSolids(G.riser, holes, G.riser.hole ?? null), { bom: 'nose tray riser' });
   join(r, f, 'its foot screwed to the tray\'s base');
   const n = add('nose tray', channelSolids(G.nose, G.nose.x), { bom: 'nose tray' });
   join(n, r, 'screwed to the riser\'s tab');
@@ -822,7 +1006,8 @@ function formerParts({ af, catalog, d, add, join, assumptions }) {
 
 /** Whether a cross-section, holes aside, holds point p with `edge` to spare (m). */
 function holds(sh, p, edge) {
-  if (sh.kind === 'ring') { const r = len(sub(p, sh.c)); return r <= sh.ro - edge + 1e-12 && r >= (sh.ri ?? 0) + edge - 1e-12; }
+  // a ring's material is its annulus; round 17: a solid ring (no bore) holds a point anywhere inside it, its centre too
+  if (sh.kind === 'ring') { const r = len(sub(p, sh.c)); return r <= sh.ro - edge + 1e-12 && ((sh.ri ?? 0) > 0 ? r >= sh.ri + edge - 1e-12 : true); }
   if (sh.kind === 'cap') return segPointDist(p, sh.a, sh.b) <= sh.r - edge + 1e-12;
   return polySd(sh.pts, p) <= -edge + 1e-12;
 }
@@ -833,7 +1018,7 @@ function holds(sh, p, edge) {
  * or its square across the sheet (a y screw) inside a solid of the part, holes aside, where their ranges overlap.
  * -> { rule, holes, failures: [{ screw, part }], passed }.
  */
-export function holeRecord(asm) {
+export function holeRecord(asm, q0 = null) {
   const byPart = new Map(asm.parts.map((p) => [p.id, p]));
   const rows = [], failures = [];
   for (const [a, b, w] of asm.joins) {
@@ -841,7 +1026,8 @@ export function holeRecord(asm) {
     const sp = byPart.get(a.slice(0, -'/shank'.length)), sh = sp?.solids.find((s) => s.name === 'shank'), part = byPart.get(b.split('/')[0]);
     if (!sh || !part) { failures.push({ screw: a, part: b, why: 'no such part' }); continue; }
     if (part.solids.every((s) => s.name === 'nut')) continue; // its nut, threaded on (its bore is the shank)
-    const ok = part.solids.some((s) => (s.shape && shankIn(sh, s)));
+    // round 17: a moving part's solids at the reference pose (the crank web's axial screw lies on the crank axis)
+    const ok = part.solids.some((s) => { const shp = s.shape ?? (q0 && s.at ? s.at(q0) : null); return shp && shankIn(sh, { ...s, shape: shp }); });
     rows.push({ screw: a, part: b, in_material: ok });
     if (!ok) failures.push({ screw: a, part: b });
   }
@@ -850,6 +1036,14 @@ export function holeRecord(asm) {
 
 /** Whether a shank lies in a fixed solid's material where their ranges overlap. */
 function shankIn(sh, s) {
+  if (sh.tube?.axis === 'span') {
+    // round 17: a screw across x (the tail linkage's, along a surface's span): its axis (the capsule's or the box's
+    // centre line) passes through the solid, the shank's radius inside it, at an x the solid spans
+    const sp = sh.shape, ends = sp.kind === 'cap' ? [sp.a, sp.b] : [lerp(sp.pts[0], sp.pts[3], 0.5), lerp(sp.pts[1], sp.pts[2], 0.5)];
+    const xm = (sh.x[0] + sh.x[1]) / 2;
+    if (!(xm >= s.x[0] - 1e-12 && xm <= s.x[1] + 1e-12)) return false;
+    return Array.from({ length: 11 }, (_, k) => lerp(ends[0], ends[1], k / 10)).some((p) => holds(s.shape, p, sh.tube.ro));
+  }
   if (sh.tube?.axis === 'y') {
     // a vertical screw (c = [x, z]): its square across x and z inside the solid at a height both share
     const pts = sh.shape.pts, x = (sh.x[0] + sh.x[1]) / 2, r = (sh.x[1] - sh.x[0]) / 2, z = (Math.min(...pts.map((p) => p[0])) + Math.max(...pts.map((p) => p[0]))) / 2;
@@ -1063,8 +1257,19 @@ export function containmentOf(d, catalog, opts = {}) {
   if (!decl || !d.params.linkage || !d.structure?.airframe) return null;
   const lay = driveLayoutOf(d, catalog);
   const asm = assembly(d, catalog, d.params.linkage, lay, d.structure.airframe);
-  packedParts((id, solids, extra) => addPart(asm.parts, id, solids, extra), (a, b, w) => asm.joins.push([a, b, w]), d, catalog, d.structure.airframe.parts);
+  const pk = packedParts((id, solids, extra) => addPart(asm.parts, id, solids, extra), (a, b, w) => asm.joins.push([a, b, w]), d, catalog, d.structure.airframe.parts);
+  afterPacked(asm, d, catalog, d.structure.airframe, pk);
   return containmentRecord(asm, d, lay, decl, opts);
+}
+
+/**
+ * Round 17: the parts placed from the packed parts (they need the packing's boxes): the all-moving tail's linkage,
+ * from its servos on the aft tray (tail-mech.js), when the design states it (params.tailMech).
+ */
+export function afterPacked(asm, d, catalog, airframe, pk) {
+  if (!d.params.tailMech || !airframe?.parts || !pk?.model) return;
+  const ax = { d, catalog, af: airframe.parts, add: (id, solids, extra) => addPart(asm.parts, id, solids, extra), join: (a, b, w) => asm.joins.push([a, b, w]), assumptions: asm.assumptions };
+  tailMechParts(ax, (tag) => pk.model.layout.parts.find((p) => p.name === `servo_tail_${tag}`).box);
 }
 
 /**
@@ -1074,6 +1279,7 @@ export function containmentOf(d, catalog, opts = {}) {
 export function fullAssembly(d, catalog, L = d.params.linkage, lay = driveLayoutOf(d, catalog), airframe = d.structure.airframe) {
   const asm = assembly(d, catalog, L, lay, airframe);
   const pk = packedParts((id, solids, extra) => addPart(asm.parts, id, solids, extra), (a, b, w) => asm.joins.push([a, b, w]), d, catalog, airframe?.parts);
+  afterPacked(asm, d, catalog, airframe, pk);
   return { asm, lay, pod: pk.pod, model: pk.model };
 }
 
@@ -1104,8 +1310,12 @@ export const THREAD = 'shank in its tapped hole (not drawn)';
 export const RIB_HOLE = 'through its hole in the rib (not drawn: the rib lies across the span, not across x)';
 /** Round 16: a tube inside another's bore (not drawn: a tube along the span is drawn as its capsule across x). */
 export const BORE = 'in the other tube\'s bore (not drawn: a tube along the span is drawn as its capsule across x)';
+/** Round 17: a retaining washer or circlip in its groove, cut into the shaft or pin to its own published diameter
+ * (drawn, unlike a key's keyseat, but still exactly touching there by construction: like KEYWAY, a step sampling the
+ * slide at 0.1 mm resolution can read that exact touch as a hair of overlap). */
+export const GROOVE = 'in its groove, cut to its own published diameter';
 /** The joint classes exempt from the pair check, with their reasons. */
-export const EXEMPT_JOINTS = [MESH, KEYWAY, THROUGH, THREAD, RIB_HOLE, BORE];
+export const EXEMPT_JOINTS = [MESH, KEYWAY, THROUGH, THREAD, RIB_HOLE, BORE, GROOVE];
 
 /**
  * Every pair of solids of two different parts. Round 14 (the brief's check of the check: fastened faces may touch, at
@@ -1191,6 +1401,7 @@ export function checkClearance(d, catalog, L, lay, airframe, { phases = 360, req
   const asm = assembly(d, catalog, L, lay, airframe);
   const add = (id, solids, extra) => addPart(asm.parts, id, solids, extra);
   const pk = pack ? packedParts(add, (a, b, w) => asm.joins.push([a, b, w]), d, catalog, airframe?.parts) : { pod: [], model: null };
+  if (pack) afterPacked(asm, d, catalog, airframe, pk);
   const { solids, pairs, nExempt } = solidPairs(asm, required);
   const amps = [...new Set([d.drive.ampMin, d.drive.ampNominal, d.drive.ampMax].filter(Number.isFinite))];
   const poseAt = (amp, ph) => drivePose({ law: lay.law, fourBar: lay.fb }, ph, amp);
@@ -1228,6 +1439,8 @@ export function designRecords(asm, d, catalog, lay, airframe, pk, q0, { required
   if (Ly.containment) out.containment = containmentRecord(asm, d, lay, Ly.containment, { required });
   if (Ly.completeness && pack) out.completeness = completenessRecord(asm, d, catalog, q0);
   if (Ly.sequence && pack) out.assembly = sequenceRecord(asm, d, lay);
-  if (airframe?.parts?.fixings) out.holes = holeRecord(asm);
+  if (airframe?.parts?.fixings) out.holes = holeRecord(asm, q0);
+  // round 17 (SPEC "Function completeness"): the lumps at their drawn parts' centroids
+  if (Ly.massprops && pack) out.massprops = massPropsRecord(asm, d, catalog, q0);
   return out;
 }

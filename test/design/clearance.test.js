@@ -219,7 +219,7 @@ test('the gear fold reads the motor from the catalogue ("37.5 dia x 33.75" mm) a
 import { hornStack, sleeveX, lockFlangeShape, MESH } from '../../src/design/clearance.js';
 import { rockerHub } from '../../src/design/linkage.js';
 import { ROUND14 } from '../../src/design/round14.mjs';
-import { encoderDims, journalDims } from '../../sims/avis-shared/model.js';
+import { encoderDims, journalDims, journalEdges } from '../../sims/avis-shared/model.js';
 import { protrusions } from '../../src/design/fit.js';
 import { lockFlangeCircles, hullOf } from '../../src/design/airframe.js';
 
@@ -354,6 +354,28 @@ test('round 14 parts: the encoder\'s catalogue sizes, the outward motor bearing,
   assert.ok(lockFlangeShape({ ...ROUND14.set.linkage.airframe.rail }, [0.0265, 0.001], 1, 0.0065).kind === 'poly');
   const fit = { issues: [{ mm: 0.3 }, { mm: 0 }] };
   assert.equal(protrusions(fit, d).length, 1); assert.equal(protrusions(fit, v21()).length, 0);
+});
+
+// ---- Round 17: axial retention (journalEdges, shared by clearance.js and linkage.js) -----------------------------
+
+test('journalEdges: a flanged bushing\'s outer face (its flange) and the body\'s inner end, by hand and against plateJournalX', () => {
+  const dims = journalDims(catalog.find((p) => p.id === 'bushing-igus-GFM-0810-06').specs); // 8/10/6 mm, flange 15/1 mm
+  // gear shaft 1's own aft and forward plates (v24: aft 14.2 mm centre x 2 mm, forward 75.6 mm centre x 1.2 mm)
+  const aft = journalEdges({ flange: 'face' }, 'aft', 0.0142, 0.002, dims);
+  near(aft.outer * 1000, 12.2, 1e-9); near(aft.inner * 1000, 18.2, 1e-9);
+  const fwd = journalEdges({ flange: 'face' }, 'fwd', 0.0756, 0.0012, dims);
+  near(fwd.outer * 1000, 77.2, 1e-9); near(fwd.inner * 1000, 71.2, 1e-9);
+  // agrees with plateJournalX's own body and flange on an arbitrary plate, both sides (plates.flange 'face' only:
+  // the design this serves always sets it; the v21 convention counterbores the flange into the body's own outer
+  // span instead of standing it beyond the plate's face, which journalEdges does not reproduce)
+  for (const plates of [{ flange: 'face' }]) {
+    for (const [side, xp, tp] of [['aft', 0.02, 0.0015], ['fwd', 0.09, 0.0012]]) {
+      const e = journalEdges(plates, side, xp, tp, dims), xs = plateJournalX(plates, side, xp, tp, dims);
+      const seg = xs.flange ?? xs.body;
+      near(e.outer, side === 'aft' ? Math.min(...seg) : Math.max(...seg), 1e-12);
+      near(e.inner, side === 'aft' ? Math.max(...xs.body) : Math.min(...xs.body), 1e-12);
+    }
+  }
 });
 
 test('plane geometry, mutation follow-up: asymmetric crossings, scaled and small polygons, corners, V-shaped minima', () => {

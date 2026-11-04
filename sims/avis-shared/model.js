@@ -350,6 +350,23 @@ export function journalBodyLength(plates, dims) {
 }
 
 /**
+ * Round 17 (axial retention, audit items 7, 8 and 16): where a plate journal's exposed face sits (its flange's outer
+ * face, or the body's own outer face where it has none) and where its body's inner end sits (toward the gearbox
+ * centre), on plateJournalX's `plates.flange === 'face'` convention only (clearance.js; every design this serves
+ * sets it). Shared by clearance.js (drawing a shaft's retaining washer or circlip, and the spacer gaps between a
+ * journal and the gear it carries) and linkage.js (sizing and rating the same parts), so both read one set of
+ * numbers. side: 'aft' or 'fwd'; xPlate, tp: that plate's centre and thickness (m); dims: journalDims.
+ * -> { outer, inner } (m).
+ */
+export function journalEdges(plates, side, xPlate, tp, dims) {
+  const sgn = side === 'aft' ? 1 : -1;
+  const outerFace = xPlate - sgn * tp / 2;
+  const inner = outerFace + sgn * journalBodyLength(plates, dims);
+  const outer = dims.flangeB > 0 ? outerFace - sgn * dims.flangeB : outerFace;
+  return { outer, inner };
+}
+
+/**
  * Drive planes under the assembly clearance rule (params.layout.rule 'clearance', SPEC "Assembly clearance"): every
  * running pair along the crank pin and the plate-adjacent stages keeps params.layout.running_mm (0.5 mm):
  *  - the right coupler eye that far aft of the crank web, the left eye that far aft of the right one;

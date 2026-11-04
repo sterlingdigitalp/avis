@@ -88,7 +88,10 @@ export const SERVO_TAU_MECH_S = 0.01;
 // wdot and w2, the magnitudes of the body's angular acceleration (rad/s2) and of its angular rate squared (rad2/s2),
 // so a part of mass m at distance r from the origin carries at most m (sf_origin + r wdot + r w2); tail_F, the
 // magnitude of the tail surfaces' aerodynamic force (N).
-export const LOAD_CHANNELS = ['coupler_R', 'coupler_L', 'slot_R', 'slot_L', 'crank_torque', 'root_yz_R', 'root_x_R', 'root_mperp_R', 'root_yz_L', 'root_x_L', 'root_mperp_L', 'sf_origin', 'wdot', 'w2', 'tail_F'];
+// Round 17 (SPEC "Function completeness": the all-moving tail's pivots and the twist chain are linkage): each tail
+// surface's force (tail_F_R, tail_F_L) and hinge moment (tail_M_R, tail_M_L), and each twist servo's torque at the wing
+// (twist_R, twist_L), so the members of those chains carry their own loads.
+export const LOAD_CHANNELS = ['coupler_R', 'coupler_L', 'slot_R', 'slot_L', 'crank_torque', 'root_yz_R', 'root_x_R', 'root_mperp_R', 'root_yz_L', 'root_x_L', 'root_mperp_L', 'sf_origin', 'wdot', 'w2', 'tail_F', 'tail_F_R', 'tail_F_L', 'tail_M_R', 'tail_M_L', 'twist_R', 'twist_L'];
 
 /**
  * Supports of design.structure.joints as channel indices and coefficients: { key, rc, rk, ac, ak, X0, Y0 } per support.
@@ -110,6 +113,21 @@ export function compileSupports(joints) {
     out.push({ key: `${j.name}/${s.name}`, rc: (s.radial ?? []).map((t) => idx(t.ch)), rk: (s.radial ?? []).map((t) => Math.abs(t.k)), ac: (s.axial ?? []).map((t) => idx(t.ch)), ak: (s.axial ?? []).map((t) => Math.abs(t.k)), X0: Number.isFinite(s.X0) ? s.X0 : null, Y0: Number.isFinite(s.Y0) ? s.Y0 : 0 });
   }
   return out;
+}
+
+/**
+ * A body lump's inertia about its own centroid, [Ixx, Iyy, Izz, -Ixy, -Ixz, -Iyz] (kg m2, the accumulator form used
+ * below): round 17 carries it from the lump's drawn solids (lump.inertia_kg_m2, src/design/massprops.js); earlier
+ * designs give a gyration radius, the same about every axis.
+ */
+export function lumpOwnInertia(l) {
+  if (Array.isArray(l.inertia_kg_m2)) return l.inertia_kg_m2;
+  const k = l.gyration_m ?? 0, I = l.mass_kg * k * k;
+  return [I, I, I, 0, 0, 0];
+}
+/** The inertia (accumulator form) times a rate vector w. */
+export function inertiaTimes(J, w) {
+  return [J[0] * w[0] + J[3] * w[1] + J[4] * w[2], J[3] * w[0] + J[1] * w[1] + J[5] * w[2], J[4] * w[0] + J[5] * w[1] + J[2] * w[2]];
 }
 
 /**
@@ -146,10 +164,9 @@ export function buildBird(design, { cal = null, perturb = {}, n = 8, inviscid = 
     Ib[3] -= m * r[0] * r[1];
     Ib[4] -= m * r[0] * r[2];
     Ib[5] -= m * r[1] * r[2];
-    const k = l.gyration_m ?? 0;
-    Ib[0] += m * k * k;
-    Ib[1] += m * k * k;
-    Ib[2] += m * k * k;
+    // its own inertia about its centroid: from its drawn solids (round 17, inertia_kg_m2) or a gyration radius
+    const J = lumpOwnInertia(l);
+    for (let i = 0; i < 6; i++) Ib[i] += J[i] * kMass;
   }
   // Wing lumps: per-station mass and chord offset from the spar axis. mass.wing: spar_kg_per_m per segment
   // weight, skin area density. Point masses on a wing (servo) are assigned to their nearest station.
@@ -333,6 +350,7 @@ export function createFlight(design, opts = {}) {
   // Round 5: load channels of the drive and the supports of design.structure.joints, compiled to channel indices.
   const rootLoad = new Float64Array(6); // per wing: |F| normal to the hinge axis, |F| along it, |M| normal to it
   const chv = new Float64Array(LOAD_CHANNELS.length);
+  const tailSide = new Float64Array(6); // round 17: each tail surface's force (right x y z, left x y z)
   // Round 6: the loaded members' sections (shafts, pins, seats, fittings, adapters: src/physics/members.js) follow the
   // joints' supports, combined the same way at every step.
   const sup = compileSupports([...(design.structure?.joints ?? []), ...(design.structure?.members ?? []).map((m) => ({ name: m.name, supports: m.sections }))]);
@@ -414,6 +432,7 @@ export function createFlight(design, opts = {}) {
     let tailPower = 0;
     let tailMR = 0, tailML = 0;
     let tFx = 0, tFy = 0, tFz = 0; // round 8: the tail's aerodynamic force (load channel tail_F)
+    tailSide[0] = tailSide[1] = tailSide[2] = tailSide[3] = tailSide[4] = tailSide[5] = 0; // round 17: per surface
     for (let i = 0; i < tailStations.length; i++) {
       const ts = tailStations[i];
       const r = ts.r;
@@ -450,6 +469,7 @@ export function createFlight(design, opts = {}) {
       My += r[2] * fx - r[0] * fz;
       Mz += r[0] * fy - r[1] * fx;
       tFx += fx; tFy += fy; tFz += fz;
+      { const k = ts.side > 0 ? 0 : 3; tailSide[k] += fx; tailSide[k + 1] += fy; tailSide[k + 2] += fz; }
       tailPower += 0;
       // Hinge moment about the surface's quarter chord; pivot assumed at 25% c: from the moment coefficient.
       const hm = Math.abs(qq * ts.c * pol[2]) + 0.02 * Math.abs(qq * ts.c * pol[0]);
@@ -850,6 +870,12 @@ export function createFlight(design, opts = {}) {
       chv[12] = Math.hypot(wDot[0], wDot[1], wDot[2]);
       chv[13] = wx * wx + wy * wy + wz * wz;
       chv[14] = Math.hypot(tFx, tFy, tFz);
+      chv[15] = Math.hypot(tailSide[0], tailSide[1], tailSide[2]);
+      chv[16] = Math.hypot(tailSide[3], tailSide[4], tailSide[5]);
+      chv[17] = tailMR;
+      chv[18] = tailML;
+      chv[19] = Math.abs(lastTwistTorque[0]);
+      chv[20] = Math.abs(lastTwistTorque[1]);
       for (let k = 0; k < sup.length; k++) {
         const s = sup[k];
         let Fr = 0, Fa = 0;
@@ -1060,9 +1086,9 @@ export function createFlight(design, opts = {}) {
     // Body lumps (with their gyration radius as extra rotational inertia)
     for (const l of design.mass.lumps) {
       addPoint(l.mass_kg * (opts.perturb?.mass ?? 1), [l.pos[0] + (opts.perturb?.cgx ?? 0), l.pos[1], l.pos[2]], [0, 0, 0]);
-      const k = l.gyration_m ?? 0;
-      if (k) {
-        const Iw = toW([l.mass_kg * k * k * w[0], l.mass_kg * k * k * w[1], l.mass_kg * k * k * w[2]]);
+      const Jw = inertiaTimes(lumpOwnInertia(l), w);
+      if (Jw[0] || Jw[1] || Jw[2]) {
+        const Iw = toW(Jw);
         H[0] += Iw[0]; H[1] += Iw[1]; H[2] += Iw[2];
       }
     }
@@ -1097,8 +1123,8 @@ export function createFlight(design, opts = {}) {
     const km = opts.perturb?.mass ?? 1, cg = opts.perturb?.cgx ?? 0;
     for (const l of design.mass.lumps) {
       addPoint(l.mass_kg * km, [l.pos[0] + cg, l.pos[1], l.pos[2]], [0, 0, 0]);
-      const k = l.gyration_m ?? 0;
-      KE += 0.5 * l.mass_kg * km * k * k * (w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
+      const Jw = inertiaTimes(lumpOwnInertia(l), w);
+      KE += 0.5 * km * (w[0] * Jw[0] + w[1] * Jw[1] + w[2] * Jw[2]);
     }
     for (let i = 0; i < lumpsN; i++) {
       const q = 3 * i;

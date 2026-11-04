@@ -2,7 +2,7 @@
 // published table (never against this code's own output).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { enBoltBearing, bearingAllowable, lugCheck, seatCheck, crushingAllowable, edgeDistances, GAMMA_M2, EDGE_MIN_OVER_D0 } from '../../src/physics/members.js';
+import { enBoltBearing, bearingAllowable, lugCheck, seatCheck, crushingAllowable, edgeDistances, GAMMA_M2, EDGE_MIN_OVER_D0, flangeThrustCheck } from '../../src/physics/members.js';
 import { contactRatio, khBeta, kvBand, zvFactor, duraconKv, pitchLineSpeed, jgmaGearRating, lewisDuraconRating } from '../../src/physics/gears.js';
 import { createFlight, buildBird, quatFromEuler } from '../../src/physics/flight.js';
 import { strokeAngle } from '../../src/physics/kinematics.js';
@@ -235,4 +235,16 @@ test('condition records: which hold, and the half rule where no correction exist
 test('hand-launch release speed: the design names it, capped by the gate at 8 m/s', () => {
   assert.equal(releaseSpeedOf({ launch: { release_speed_m_s: 7.5 } }), 7.5);
   assert.equal(releaseSpeedOf({}), 8);
+});
+
+// ---- Round 17 (axial retention): a washer's thrust into a bushing's flange ring, at its published static pressure --
+
+test('flangeThrustCheck: pressure on the flange ring (D less d) against the bushing material\'s static surface pressure, by hand', () => {
+  // GFM-0810-06: body D 10 mm, flange D 15 mm, static surface pressure 80 MPa (igus iglidur G)
+  const r = flangeThrustCheck({ D_mm: 15, d_mm: 10 }, { static_surface_pressure_mpa: 80 }, 500);
+  const area = (Math.PI / 4) * (15 ** 2 - 10 ** 2); // 98.17477 mm2
+  near(r.p_MPa, 500 / area, 1e-9); near(r.allowable_MPa, 80, 1e-12); near(r.fos, 80 / (500 / area), 1e-9);
+  assert.equal(r.ok, r.fos >= 1.5);
+  assert.equal(flangeThrustCheck({ D_mm: 15, d_mm: 10 }, {}, 500).ok, false); // no published static surface pressure
+  assert.equal(flangeThrustCheck({ D_mm: 15, d_mm: 10 }, { static_surface_pressure_mpa: 80 }, 0).fos, Infinity);
 });

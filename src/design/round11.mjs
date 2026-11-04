@@ -8,7 +8,9 @@
 // of round 11 (the negative-stall refit, polar-fit.js; bushings on their supported length, bearings.js and
 // linkage.js jointHousings) live in the physics and design code, so they apply to every build. --out other than
 // data/designs/ is for exploration.
-import { clearanceRecord } from './clearance.js';
+import { clearanceRecord, fullAssembly } from './clearance.js';
+import { massPropsRecord, drawnLumps } from './massprops.js';
+import { drivePose } from '../../sims/avis-shared/model.js';
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -122,15 +124,31 @@ export function outsideDrag(d) {
  * calibrationOf). -> { p, d } or { failed }.
  */
 export function fittedBuild(p0, catalog, fit, calPath = null) {
-  const f = fit ? fitBody(p0, catalog) : null;
+  // round 17 (p.massFromSolids): the fit with the lumps where the rules put them (p._massPass), then every lump at its
+  // drawn parts' centroid with their inertia (massprops.js), and the design built on those
+  const f = fit ? fitBody(p0.massFromSolids ? { ...p0, _massPass: true } : p0, catalog) : null;
   if (f?.failed) return { failed: `body fit failed: ${f.failed} ${JSON.stringify(f.best)}` };
-  const p = f ? f.params : p0;
+  let p = f ? f.params : p0;
+  if (p.massFromSolids) p = solidMassParams(p, catalog);
   const d = buildDesign(p, catalog);
   if (f) d.packing = packingOf(d, f, p, catalog);
   recordClearance(d, p, catalog);
   const cal = calibrationOf(calPath, d);
   if (cal) d.calibration = cal;
   return { p, d };
+}
+
+/**
+ * Round 17: the build parameters with every lump at its drawn parts' centroid and their inertia (massprops.js), from
+ * the design built with the lumps where the rules put them. -> params (without p._massPass).
+ */
+export function solidMassParams(p, catalog) {
+  const { _massPass, ...q } = p;
+  const d0 = buildDesign({ ...q, _massPass: true }, catalog);
+  const { asm, lay } = fullAssembly(d0, catalog);
+  const q0 = drivePose({ law: lay.law, fourBar: lay.fb }, 0, d0.drive.ampNominal);
+  const { lumpPos, lumpInertia } = drawnLumps(massPropsRecord(asm, d0, catalog, q0));
+  return { ...q, lumpPos: { ...(q.lumpPos ?? {}), ...lumpPos }, lumpInertia };
 }
 
 /** The records a finished round-11 design carries: launch, options, selection and assumptions. Mutates d. */

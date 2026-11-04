@@ -267,6 +267,20 @@ export function tieCheck({ n, extra_N = 0 }, tie, F) {
 }
 
 /**
+ * Round 17 (audit items 7 and 8): axial thrust F reacted by a bushing's flange ring (outside diameter D_mm less the
+ * body D_mm) at the bushing material's published static surface pressure (the same figure bearings.js's flangeCheck
+ * uses for the bushing's own radial seat).
+ */
+export function flangeThrustCheck({ D_mm, d_mm }, material, F) {
+  const area = (Math.PI / 4) * (D_mm ** 2 - d_mm ** 2);
+  const p = area > 0 ? F / area : Infinity;
+  const p0 = material.static_surface_pressure_mpa;
+  if (!Number.isFinite(p0)) return { p_MPa: p, allowable_MPa: null, fos: null, ok: false, why: 'no published static surface pressure' };
+  const fos = p > 0 ? p0 / p : Infinity;
+  return { p_MPa: p, allowable_MPa: p0, fos, ok: fos >= FOS };
+}
+
+/**
  * A rectangular plate section b x t (b in the plate's plane) under axial force F, in-plane bending M (about the
  * thickness axis, section modulus t b^2 / 6) and out-of-plane bending Mo (b t^2 / 6): the corner stress, summed,
  * against the yield. Linear in the loads, so yield / stress is the load factor.
@@ -325,6 +339,12 @@ export function memberPeaks(members, supPeaks, offset) {
   return out;
 }
 
+/** Round 17: a published load rating (dims.rating_N, dims.rating_basis) against the peak force F, FoS 1.5. */
+export function ratedCheck({ rating_N, rating_basis = null }, F) {
+  const fos = F > 0 ? rating_N / F : Infinity;
+  return { force_N: F, rating_N, rating_basis, fos, ok: Number.isFinite(rating_N) && fos >= FOS };
+}
+
 /** Each member check kind: (member, its section peaks, the peak of named sections, its uses) -> result. */
 const MEMBER_CHECKS = {
   round: (m, l) => roundMemberCheck(m.dims, m.material, l),
@@ -343,7 +363,11 @@ const MEMBER_CHECKS = {
   beam: (m, l, val, u) => beamSectionCheck(m.dims, m.material, { F: l.F, M: l.M, Mo: val(u.Mo) }),
   'cfrp tube': (m, l) => cfrpTubeCheck(m.dims, m.material, { M: l.M, T: l.T, V: l.V }),
   unrated: (m) => ({ fos: null, ok: false, why: m.why ?? 'no published rating' }),
+  // round 17: a part with a published load rating (N) read like a rated value (a rod end's static tensile load, a
+  // retaining washer's axial load, a servo's torque at its arm), FoS 1.5 against the peak
+  rated: (m, l) => ratedCheck(m.dims, l.F),
   'rc practice': (m, l) => rcPracticeCheck(m, l.T),
+  flange: (m, l) => flangeThrustCheck(m.dims, m.material, l.F),
 };
 
 /**
